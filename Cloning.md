@@ -13,18 +13,32 @@ Clone the repository along with its requisite repositories to their respective r
 The repositories listed in [external repositories] are required:
 
 [Core repository]
+[Winsock repository] 
+[MVVM repository] (pending)
+[IEEE488 repository] 
+[VI repository] 
 
 ```
 git clone https://github.com/ATECoder/vba.core.git
+git clone https://github.com/ATECoder/vba.mvvm.git
 git clone https://github.com/ATECoder/vba.winsock.git
+git clone https://github.com/ATECoder/vba.tcp.ieee488.git
+git clone https://github.com/ATECoder/vba.tcp.vi.git
 ```
 
 Clone the repositories into the following folders (parents of the .git folder):
 ```
 %vba%\core\core
+%vba%\core\mvvm
 %vba%\iot\winsock
+%vba%\iot\tcp.ieee488
+%vba%\iot\tcp.vi
 ```
 where %vba% is the root folder of the VBA libraries, e.g., %my%\lib\vba, and %my%, e.g., c:\my is the overall root folder.
 
 [external repositories]: ExternalReposCommits.csv
 [Core repository]: https://github.com/ATECoder/vba.core.git
+[MVVM repository]: https://github.com/ATECoder/vba.mvvm.git
+[Winsock repository]: https://github.com/ATECoder/vba.winsock.git
+[IEEE488 repository]: https://github.com/ATECoder/vba.tcp.ieee488.git
+[VI repository]: https://github.com/ATECoder/vba.tcp.vi.git

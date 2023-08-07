@@ -1,4 +1,4 @@
-# [VBA Winsock]
+# [VBA TCP VI]
 
 TCP Socket-based control and communication workbooks for LXI-based instruments. 
 
@@ -6,9 +6,9 @@ TCP Socket-based control and communication workbooks for LXI-based instruments.
 * [Issues](#Issues)
 * [Supported VBA Releases](#Supported-VBA-Releases)
 * Project README files:
-  * [winsock](/src/winsock/readme.md)
-  * [winsock demo](/src/winsock.demo/readme.md)
-  * [winsock test](/src/winsock.test/readme.md)
+  * [VI](/src/vi/readme.md)
+  * [VI demo](/src/vi.demo/readme.md)
+  * [VI test](/src/vi.test/readme.md)
 * [Using Prologix](Prologix.md)
 * [Attributions](Attributions.md)
 * [Change Log](./CHANGELOG.md)
@@ -24,17 +24,11 @@ TCP Socket-based control and communication workbooks for LXI-based instruments.
 
 ## Description
 
-The ISR VBA Winsock workbooks provide VBA classes for communicating with LXI instruments in desktop platforms using Winsock.
+The ISR VBA TCP VI workbooks provide VBA classes for communicating with LXI instruments in desktop platforms using Winsock.
 
 Using the [Prologix] GPIB to Ethernet interface, Winsock can be used to implement some of the capabilities of VXI-11 such as device clear and serial poll.
 
 Otherwise,  Unlike VXI-11 or HiSlip, using these classes these classes do not implement the bus level method for issuing device clear, reading service requests or responding to instrument initiated event. While  control ports for these methods are available in some Keysight instruments, these ports are not part of the standard LXI framework.
-
-## Issues
-
-### read after write delay is required  for Async methods
-
-A delay of 1 ms is required for implementing the asynchronous query method using the TCP Client write and read asynchronous methods. Neither the console nor unit tests are succeptible to this issue. 
 
 ## Supported VBA Releases
 
@@ -63,5 +57,5 @@ Integrated Scientific Resources, Inc., and any contributors reserve all other ri
  
 [ATE Coder]: https://www.IntegratedScientificResources.com
 
-[VBA Winsock]: https://github.com/ATECoder/vba.winsock.git
+[VBA TCP VI]: https://github.com/ATECoder/vba.tcp.vi.git
 
