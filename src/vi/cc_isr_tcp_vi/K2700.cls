@@ -460,8 +460,8 @@ Public Sub SetExternalTriggerResistanceMode()
     ' input from the front panel
     
     If Not Me.IsFrontInputs Then
-        cc_isr_Core.UserDefinedErrors.RaiseError UserDefinedErrors.InvalidOperationError.Code, _
-            "cc_isr_VI.K2700.SetExternalTriggerResistanceMode", _
+        cc_isr_Core.UserDefinedErrors.RaiseError UserDefinedErrors.InvalidOperationError, _
+            "cc_isr_TCP_VI.K2700.SetExternalTriggerResistanceMode", _
             " The instrument Inputs must be set for Front inputs"
     End If
     
@@ -617,7 +617,7 @@ End Sub
 ''' <para name="a_resistance">     [double] The resistance. </param>
 Private Sub OnResistanceNumberMeasured(ByVal a_resistanceNo As Integer, ByVal a_resistance As Double)
     RaiseEvent ResistanceNumberMeasured( _
-            cc_isr_VI.Factory.NewResistanceNumberEventArgs(a_resistanceNo, a_resistance))
+            cc_isr_TCP_VI.Factory.NewResistanceNumberEventArgs.Initialize(a_resistanceNo, a_resistance))
 End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -720,7 +720,7 @@ Private Function IConnectable_OpenConnection(ByVal a_host As String, ByVal a_por
         Optional ByVal a_timeoutMs As Long = 500&) As Boolean
 
     Dim p_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs
-    Set p_eventArgs = cc_isr_Winsock.Factory.NewConnectionChangingEventArgs(Me.Connected)
+    Set p_eventArgs = cc_isr_Winsock.Factory.NewConnectionChangingEventArgs.Initialize(Me.Connected)
     IConnectable_OnConnectionChanging p_eventArgs
     
     If Not p_eventArgs.Cancel Then
@@ -735,7 +735,7 @@ Private Function IConnectable_OpenConnection(ByVal a_host As String, ByVal a_por
     
 End Function
 
-''' <summary>   Closes the <see cref="cc_isr_ieee488.Ieee488Session">IEEE488 Session</see> connection. </summary>
+''' <summary>   Closes the <see cref="cc_isr_Ieee488.Ieee488Session">IEEE488 Session</see> connection. </summary>
 ''' <returns>   [Boolean] True if disconnection succeeded; otherwise, false. </returns>
 Public Function CloseConnection() As Boolean
     
@@ -748,7 +748,7 @@ End Function
 Private Function IConnectable_CloseConnection() As Boolean
 
     Dim p_args As cc_isr_Winsock.ConnectionChangingEventArgs
-    Set p_args = cc_isr_Winsock.Factory.NewConnectionChangingEventArgs(Me.Connected)
+    Set p_args = cc_isr_Winsock.Factory.NewConnectionChangingEventArgs.Initialize(Me.Connected)
     IConnectable_OnConnectionChanging p_args
    
     If Not p_args.Cancel Then
@@ -779,7 +779,7 @@ Private Sub OnConnectionChanged(ByVal a_isConnected As Boolean)
     
     End If
     
-    IConnectable_OnConnectionChanged cc_isr_Winsock.Factory.NewConnectionChangedEventArgs(a_isConnected)
+    IConnectable_OnConnectionChanged cc_isr_Winsock.Factory.NewConnectionChangedEventArgs.Initialize(a_isConnected)
 
 End Sub
 

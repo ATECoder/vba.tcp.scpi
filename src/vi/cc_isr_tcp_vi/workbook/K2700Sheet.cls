@@ -70,9 +70,9 @@ Private m_stopWatch As StopWatch
 
 ''' <summary>   Gets the singleton instance of the 2700 virtual instrument. </summary>
 ''' <value>   The singleton instance of the 2700 virtual instrument. </value>
-Public Property Get K2700() As cc_isr_VI.K2700
+Public Property Get K2700() As cc_isr_TCP_VI.K2700
     If m_k2700 Is Nothing Then
-        Set m_k2700 = cc_isr_VI.Factory.NewK2700
+        Set m_k2700 = cc_isr_TCP_VI.Factory.NewK2700
     End If
     Set K2700 = m_k2700
 End Property
@@ -244,34 +244,34 @@ Friend Sub PopulateCommandsComboBox()
     
     Me.CommandsComboBox.Clear
     Me.CommandsComboBox.AddItem cc_isr_Ieee488.ClearExecutionStateCommand
-    Me.CommandsComboBox.AddItem cc_isr_Ieee488.ClearExecutionStateCommand & _
-            ";" & cc_isr_Ieee488.OperationCompletedQueryCommand
+    Me.CommandsComboBox.AddItem cc_isr_Ieee488.ClearExecutionStateCommand & ";" & _
+                                cc_isr_Ieee488.OperationCompletedQueryCommand
     Me.CommandsComboBox.AddItem cc_isr_Ieee488.IdentityQueryCommand
     Me.CommandsComboBox.AddItem cc_isr_Ieee488.OperationCompleteCommand
     Me.CommandsComboBox.AddItem cc_isr_Ieee488.OperationCompletedQueryCommand
     Me.CommandsComboBox.AddItem cc_isr_Ieee488.OptionsQueryCommand
     Me.CommandsComboBox.AddItem cc_isr_Ieee488.ResetKnownStateCommand
-    Me.CommandsComboBox.AddItem cc_isr_Ieee488.ResetKnownStateCommand & _
-            ";" & cc_isr_Ieee488.OperationCompletedQueryCommand
+    Me.CommandsComboBox.AddItem cc_isr_Ieee488.ResetKnownStateCommand & ";" & _
+                                cc_isr_Ieee488.OperationCompletedQueryCommand
     Me.CommandsComboBox.AddItem cc_isr_Core.StringExtensions.StringFormat( _
-            cc_isr_Ieee488.StandardEventEnableCommand, &H7F) & _
-            ";" & cc_isr_Ieee488.OperationCompletedQueryCommand
+                                cc_isr_Ieee488.StandardEventEnableCommand, &H7F) & ";" & _
+                                cc_isr_Ieee488.OperationCompletedQueryCommand
     Me.CommandsComboBox.AddItem cc_isr_Ieee488.StandardEventEnableQueryCommand
     Me.CommandsComboBox.AddItem cc_isr_Ieee488.StandardEventStatusQueryCommand
     Me.CommandsComboBox.AddItem cc_isr_Core.StringExtensions.StringFormat( _
-            cc_isr_Ieee488.ServiceRequestEnableCommand, &H7F) & _
-            ";" & cc_isr_Ieee488.OperationCompletedQueryCommand
+                                cc_isr_Ieee488.ServiceRequestEnableCommand, &H7F) & ";" & _
+                                cc_isr_Ieee488.OperationCompletedQueryCommand
     Me.CommandsComboBox.AddItem cc_isr_Core.StringExtensions.StringFormat( _
-            cc_isr_Ieee488.StandardServiceEnableCommand, &H7F, &H7F) & _
-            ";" & cc_isr_Ieee488.OperationCompletedQueryCommand
+                                cc_isr_Ieee488.StandardServiceEnableCommand, &H7F, &H7F) & ";" & _
+                                cc_isr_Ieee488.OperationCompletedQueryCommand
     Me.CommandsComboBox.AddItem cc_isr_Core.StringExtensions.StringFormat( _
-            cc_isr_Ieee488.StandardServiceEnableCommand, &H7F, &H7F) & _
-            ";" & cc_isr_Ieee488.OperationCompletedQueryCommand
+                                cc_isr_Ieee488.StandardServiceEnableCommand, &H7F, &H7F) & ";" & _
+                                cc_isr_Ieee488.OperationCompletedQueryCommand
     Me.CommandsComboBox.AddItem cc_isr_Ieee488.ServiceRequestEnableQueryCommand
     Me.CommandsComboBox.AddItem cc_isr_Ieee488.ServiceRequestQueryCommand
     Me.CommandsComboBox.AddItem cc_isr_Ieee488.WaitCommand
-    Me.CommandsComboBox.AddItem cc_isr_Ieee488.WaitCommand & _
-            ";" & cc_isr_Ieee488.OperationCompletedQueryCommand
+    Me.CommandsComboBox.AddItem cc_isr_Ieee488.WaitCommand & ";" & _
+                                cc_isr_Ieee488.OperationCompletedQueryCommand
    
     Me.CommandsComboBox.AddItem "SYST:BEEP OFF"
     Me.CommandsComboBox.AddItem "SYST:CLE"
@@ -1851,7 +1851,7 @@ Friend Sub StartTimer(Optional ByVal a_interval As Long = 100)
     m_handlingTimerEvent = False
     m_pauseRequested = False
     If m_eventTimer Is Nothing Then
-        Set m_eventTimer = cc_isr_Core.Factory.NewEventTimer(a_interval)
+        Set m_eventTimer = cc_isr_Core.Factory.NewEventTimer.Initialize(a_interval)
         m_eventTimer.StartTimer
     Else
         m_eventTimer.ResumeTimer
@@ -1895,9 +1895,9 @@ End Sub
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Handles the K2700 <see cref="cc_isr_VI.ResistanceNumberMeasured"/> event. </summary>
-''' <param name="a_eventArgs">   [<see cref="cc_isr_VI.ResistanceNumberEventArgs"/>] event arguments. </param>
-Private Sub m_k2700_ResistanceNumberMeasured(ByVal a_eventArgs As cc_isr_VI.ResistanceNumberEventArgs)
+''' <summary>   Handles the K2700 <see cref="cc_isr_TCP_VI.ResistanceNumberMeasured"/> event. </summary>
+''' <param name="a_eventArgs">   [<see cref="cc_isr_TCP_VI.ResistanceNumberEventArgs"/>] event arguments. </param>
+Private Sub m_k2700_ResistanceNumberMeasured(ByVal a_eventArgs As cc_isr_TCP_VI.ResistanceNumberEventArgs)
 
     Const p_procedureName = "m_session_ConnectionChanged"
     
@@ -1937,7 +1937,7 @@ err_Handler:
     
 End Sub
 
-''' <summary>   Handles the K2700 <see cref="cc_isr_VI.K2700.ConnectionChanged"/> event. </summary>
+''' <summary>   Handles the K2700 <see cref="cc_isr_TCP_VI.K2700.ConnectionChanged"/> event. </summary>
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/>] event arguments. </param>
 Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
 
@@ -1990,7 +1990,7 @@ err_Handler:
     
 End Sub
 
-''' <summary>   Handles the <see cref="cc_isr_VI.K2700.ConnectionChanging"/> event. </summary>
+''' <summary>   Handles the <see cref="cc_isr_TCP_VI.K2700.ConnectionChanging"/> event. </summary>
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangingEventArgs"/>] event arguments. </param>
 Private Sub m_k2700_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
 End Sub

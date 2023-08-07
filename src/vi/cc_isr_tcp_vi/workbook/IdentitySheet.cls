@@ -115,8 +115,8 @@ Finally:
     Dim p_errorMessage As String
     If Not Err Is Nothing Then
         If Err.Number <> 0 Then
-            p_errorMessage = "Reading identity failed using Tcp session " & UserDefinedErrors.FormattedErr & _
-                             " Last DLL error = 0x" & VBA.LCase$(VBA.Hex$(Err.LastDllError))
+            p_errorMessage = "Reading identity failed using Tcp session. " & _
+                             ThisWorkbook.BuildStandardErrorMessage
         End If
     End If
     
