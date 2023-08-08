@@ -51,28 +51,35 @@ Private Const m_resistanceFormat As String = "0.00"
 Private WithEvents m_eventTimer As cc_isr_Core.EventTimer
 Attribute m_eventTimer.VB_VarHelpID = -1
 
-' true if a pause is requested so that the timer event is not handled
-' and the timer is paused on the next event.
-Private m_pauseRequested As Boolean
-
-' true when handling the timer event to prevent timer
-' event handler overrun.
-Private m_handlingTimerEvent As Boolean
-
-Private m_extTrigInitiated  As Boolean
-
-Private m_currentResistanceNo As Integer
-
 Private WithEvents m_k2700 As K2700
 Attribute m_k2700.VB_VarHelpID = -1
 
-Private m_stopWatch As StopWatch
+Private Type ThisData
+
+    ' true if a pause is requested so that the timer event is not handled
+    ' and the timer is paused on the next event.
+    PauseRequested As Boolean
+    
+    ' true when handling the timer event to prevent timer
+    ' event handler overrun.
+    HandlingTimerEvent As Boolean
+    
+    ExtTrigInitiated  As Boolean
+    
+    CurrentResistanceNo As Integer
+    
+    StopWatch As StopWatch
+    
+End Type
+
+Private This As ThisData
+
 
 ''' <summary>   Gets the singleton instance of the 2700 virtual instrument. </summary>
 ''' <value>   The singleton instance of the 2700 virtual instrument. </value>
 Public Property Get K2700() As cc_isr_TCP_VI.K2700
     If m_k2700 Is Nothing Then
-        Set m_k2700 = cc_isr_TCP_VI.Factory.NewK2700
+        Set m_k2700 = cc_isr_TCP_VI.Factory.NewK2700.Initialize(New ErrTracer)
     End If
     Set K2700 = m_k2700
 End Property
@@ -86,10 +93,10 @@ End Property
 ''' <summary>   Gets the singleton instance of the <see cref="cc_isr_Core.StopWatch"/>. </summary>
 ''' <value>   The singleton instance of the <see cref="cc_isr_Core.StopWatch"/>. </value>
 Public Property Get StopWatch() As cc_isr_Core.StopWatch
-    If m_stopWatch Is Nothing Then
-        Set m_stopWatch = cc_isr_Core.Factory.NewStopWatch
+    If This.StopWatch Is Nothing Then
+        Set This.StopWatch = cc_isr_Core.Factory.NewStopWatch
     End If
-    Set StopWatch = m_stopWatch
+    Set StopWatch = This.StopWatch
 End Property
 
 ''' <summary>   Dispose of the worksheet objects. </summary>
@@ -100,7 +107,7 @@ Public Sub Dispose()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Set m_stopWatch = Nothing
+    Set This.StopWatch = Nothing
     
     If Not m_eventTimer Is Nothing Then
       m_eventTimer.StopTimer
@@ -1506,7 +1513,7 @@ Private Sub ReadResistanceButton_Click()
             DoEvents
             
             ' set the current resistance
-            m_currentResistanceNo = p_resistanceNo
+            This.CurrentResistanceNo = p_resistanceNo
             
             Me.RestartStopWatch
             If Me.FrontReadRequired Then
@@ -1617,7 +1624,7 @@ Private Sub SetExternalTriggerMode(Optional ByVal a_timerInterval As Integer = 1
     If Me.ExternalTrigEnabled Then
   
         ' clear the triggered flag
-        m_extTrigInitiated = False
+        This.ExtTrigInitiated = False
         
         ' make sure that the instrument is ready to accept
         ' input from the front panel
@@ -1656,12 +1663,12 @@ Private Sub SetExternalTriggerMode(Optional ByVal a_timerInterval As Integer = 1
         If Me.AutoIncrementResistanceNoEnabled Then
         
             ' set the first resistance for manual scan
-            m_currentResistanceNo = 1
+            This.CurrentResistanceNo = 1
         
         Else
         
             ' set the single resistance for manual scan
-            m_currentResistanceNo = Me.SelectedResistanceNumber
+            This.CurrentResistanceNo = Me.SelectedResistanceNumber
         
         End If
        
@@ -1772,10 +1779,10 @@ Private Sub HandleTimerEvent()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    If m_pauseRequested Or m_handlingTimerEvent Then Exit Sub
+    If This.PauseRequested Or This.HandlingTimerEvent Then Exit Sub
    
     ' prevent reentry
-    m_handlingTimerEvent = True
+    This.HandlingTimerEvent = True
     
     Dim p_resistanceNo As Integer
     
@@ -1783,7 +1790,7 @@ Private Sub HandleTimerEvent()
     If AutoIncrementResistanceNoEnabled Then
       
         ' select the current resistance
-        p_resistanceNo = m_currentResistanceNo
+        p_resistanceNo = This.CurrentResistanceNo
           
     Else
     
@@ -1817,7 +1824,7 @@ Private Sub HandleTimerEvent()
 exit_Handler:
 
     ' release reentry prevention
-    m_handlingTimerEvent = False
+    This.HandlingTimerEvent = False
 
     On Error GoTo 0
     Exit Sub
@@ -1848,8 +1855,8 @@ End Sub
 ''' <param name="a_interval">   [Long] Specifies the timer interval in milliseconds. </param>
 Friend Sub StartTimer(Optional ByVal a_interval As Long = 100)
     
-    m_handlingTimerEvent = False
-    m_pauseRequested = False
+    This.HandlingTimerEvent = False
+    This.PauseRequested = False
     If m_eventTimer Is Nothing Then
         Set m_eventTimer = cc_isr_Core.Factory.NewEventTimer.Initialize(a_interval)
         m_eventTimer.StartTimer
@@ -1862,7 +1869,7 @@ End Sub
 ''' <summary>   Requests pausing the timer. </summary>
 Friend Sub PauseTimer()
     
-    m_pauseRequested = True
+    This.PauseRequested = True
 
 End Sub
 
@@ -1880,7 +1887,7 @@ End Sub
 Private Sub m_eventTimer_Tick()
     
     On Error Resume Next
-    If m_pauseRequested Then
+    If This.PauseRequested Then
         If Not m_eventTimer Is Nothing Then m_eventTimer.PauseTimer
     Else
         HandleTimerEvent
@@ -1909,9 +1916,9 @@ Private Sub m_k2700_ResistanceNumberMeasured(ByVal a_eventArgs As cc_isr_TCP_VI.
     If Me.AutoIncrementResistanceNoEnabled Then
     
         ' increment the resistance for the next reading
-        m_currentResistanceNo = a_eventArgs.ResistanceNumber + 1
-        If m_currentResistanceNo > Me.ResistanceCount Then
-            m_currentResistanceNo = 1
+        This.CurrentResistanceNo = a_eventArgs.ResistanceNumber + 1
+        If This.CurrentResistanceNo > Me.ResistanceCount Then
+            This.CurrentResistanceNo = 1
         End If
     
     End If

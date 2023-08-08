@@ -67,7 +67,7 @@ Private Sub ReadIdentity(ByVal a_host As String, ByVal a_port As Long, ByVal a_r
     Dim p_totalMilliseconds As Double
     
     Dim p_device As K2700
-    Set p_device = cc_isr_TCP_VI.Factory.NewK2700
+    Set p_device = cc_isr_TCP_VI.Factory.NewK2700.Initialize(New ErrTracer)
     
     p_device.OpenConnection a_host, a_port
     
