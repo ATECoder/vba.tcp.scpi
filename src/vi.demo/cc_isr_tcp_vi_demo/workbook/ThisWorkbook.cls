@@ -49,6 +49,7 @@ Public Property Let Deployed(ByVal a_value As Boolean)
     cc_isr_Core.ThisWorkbook.Deployed = a_value
     cc_isr_Winsock.ThisWorkbook.Deployed = a_value
     cc_isr_Ieee488.ThisWorkbook.Deployed = a_value
+    cc_isr_TCP_VI.ThisWorkbook.Deployed = a_value
 
 End Property
 
@@ -228,6 +229,7 @@ Private Sub Workbook_BeforeClose(ByRef a_cancel As Boolean)
     Me.MarkAsSaved cc_isr_Core.ThisWorkbook, Me.Deployed
     Me.MarkAsSaved cc_isr_Winsock.ThisWorkbook, Me.Deployed
     Me.MarkAsSaved cc_isr_Ieee488.ThisWorkbook, Me.Deployed
+    Me.MarkAsSaved cc_isr_TCP_VI.ThisWorkbook, Me.Deployed
     Me.MarkAsSaved ThisWorkbook, Me.Deployed
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -265,6 +267,7 @@ Private Sub Workbook_Open()
     Me.DisableSavingCode cc_isr_Core.ThisWorkbook, Me.Deployed
     Me.DisableSavingCode cc_isr_Winsock.ThisWorkbook, Me.Deployed
     Me.DisableSavingCode cc_isr_Ieee488.ThisWorkbook, Me.Deployed
+    Me.DisableSavingCode cc_isr_TCP_VI.ThisWorkbook, Me.Deployed
     Me.DisableSavingCode ThisWorkbook, Me.Deployed
     
     ' hide the referenced workbooks
@@ -272,10 +275,16 @@ Private Sub Workbook_Open()
     Application.Windows(cc_isr_Core.ThisWorkbook.name).Visible = False
     Application.Windows(cc_isr_Winsock.ThisWorkbook.name).Visible = False
     Application.Windows(cc_isr_Ieee488.ThisWorkbook.name).Visible = False
+    Application.Windows(cc_isr_TCP_VI.ThisWorkbook.name).Visible = False
     
     ' show work book
     Application.Windows(ThisWorkbook.name).Visible = True
     
+    ' intialize the sheets to initial values.
+    K2700Sheet.Initialize
+    IdentitySheet.Initialize
+    TestSheet.Initialize
+   
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 

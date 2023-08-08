@@ -56,7 +56,6 @@ Public Event ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionCh
 Private Sub Class_Initialize()
 
     Set m_ieee488Session = cc_isr_Ieee488.Factory.NewIeee488Session
-    m_ieee488Session.Initialize New ErrTracer
 
 End Sub
 
