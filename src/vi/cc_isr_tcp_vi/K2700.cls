@@ -59,7 +59,7 @@ Private Sub Class_Initialize()
 
 End Sub
 
-''' <summary>   Initializes and resturns the <see cref="IErrTracer"/> for the <see cref="Ieee488Session"/>. </summary>
+''' <summary>   Initializes and returns the <see cref="IErrTracer"/> for the <see cref="Ieee488Session"/>. </summary>
 ''' <param name="a_tracer">   <see cref="IErrTracer"/> implementation. </param>
 ''' <returns>   [<see cref="K2700"/>]. </returns>
 Public Function Initialize(ByVal a_tracer As IErrTracer) As K2700
@@ -496,7 +496,7 @@ Public Sub SetExternalTriggerResistanceMode()
     
 #If False Then
     ' legacy code used the operation register going to idle to indicate that
-    ' a measurment is available. This did not work when testing
+    ' a measurement is available. This did not work when testing
     ' the VI code.
     
     ' enable idle operation SRQ
@@ -784,7 +784,7 @@ End Sub
 
 ''' <summary>   Raises the <see cref="ConnectionChanged"/> event after the
 ''' connection was established and ended. </summary>
-''' <para name="a_eventArgs">   [<<see cref="cc_isr_Winsock.ConnectionchangedEventArgs"/>]. </param>
+''' <para name="a_eventArgs">   [<<see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/>]. </param>
 Private Sub IConnectable_OnConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
     
     RaiseEvent ConnectionChanged(a_eventArgs)

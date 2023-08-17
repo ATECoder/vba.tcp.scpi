@@ -284,7 +284,7 @@ Private Sub Workbook_Open()
     ' show work book
     Application.Windows(ThisWorkbook.name).Visible = True
     
-    ' intialize the sheets to initial values.
+    ' initialize the sheets to initial values.
     UnitTestSheet.Initialize
    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
