@@ -127,10 +127,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -163,10 +163,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -304,10 +304,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -361,10 +361,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -397,10 +397,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -432,10 +432,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -481,10 +481,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -516,10 +516,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -568,10 +568,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -603,10 +603,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -638,10 +638,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -673,10 +673,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -718,10 +718,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -767,10 +767,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -807,10 +807,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -850,10 +850,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -989,10 +989,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1024,10 +1024,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1061,10 +1061,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1098,10 +1098,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1133,10 +1133,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1168,10 +1168,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1203,10 +1203,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1238,10 +1238,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1274,10 +1274,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1309,10 +1309,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1419,10 +1419,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1460,10 +1460,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1550,10 +1550,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1589,10 +1589,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1692,10 +1692,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1748,10 +1748,10 @@ err_Handler:
     Me.PauseTimer
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1840,10 +1840,10 @@ err_Handler:
     Me.ReadResistanceButton.Enabled = True
     
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1933,10 +1933,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1986,10 +1986,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    ThisWorkbook.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
     
     ' display the error message
-    Me.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage()
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next

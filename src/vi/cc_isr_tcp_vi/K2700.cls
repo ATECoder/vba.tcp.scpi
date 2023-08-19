@@ -459,8 +459,8 @@ Public Sub SetExternalTriggerResistanceMode()
     ' input from the front panel
     
     If Not Me.IsFrontInputs Then
-        cc_isr_Core.UserDefinedErrors.RaiseError UserDefinedErrors.InvalidOperationError, _
-            "cc_isr_TCP_VI.K2700.SetExternalTriggerResistanceMode", _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".SetExternalTriggerResistanceMode", _
             " The instrument Inputs must be set for Front inputs"
     End If
     

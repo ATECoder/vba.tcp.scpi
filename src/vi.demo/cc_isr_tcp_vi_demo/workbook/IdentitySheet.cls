@@ -117,7 +117,7 @@ Finally:
     If Not Err Is Nothing Then
         If Err.Number <> 0 Then
             p_errorMessage = "Reading identity failed using Tcp session. " & _
-                             ThisWorkbook.BuildStandardErrorMessage
+                             cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage
         End If
     End If
     

@@ -12,6 +12,6 @@ Option Explicit
 Implements cc_isr_Core.IErrTracer
 
 Private Sub IErrTracer_TraceError()
-    K2700Sheet.LastErrorMessage = ThisWorkbook.BuildStandardErrorMessage
+    UnitTestSheet.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage
 End Sub
 

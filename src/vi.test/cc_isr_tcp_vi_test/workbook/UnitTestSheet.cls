@@ -9,9 +9,21 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
 Option Explicit
 
+Private Const m_lastErrorMessageCell As String = "C4"
+
 ''' <summary>   Initialize this worksheet. </summary>
 Public Sub Initialize()
 End Sub
+
+''' <summary>   Gets the Last Error Message. </summary>
+Friend Property Get LastErrorMessage() As String
+    LastErrorMessage = Range(m_lastErrorMessageCell).value
+End Property
+
+''' <summary>   Sets the Last Error Message. </summary>
+Friend Property Let LastErrorMessage(ByVal a_value As String)
+    Range(m_lastErrorMessageCell).value = a_value
+End Property
 
 ''' <summary>   Populates a combo box with the list of tests. </summary>
 Private Sub ListTestsButton_Click()
@@ -28,7 +40,7 @@ End Sub
 ''' <summary>   Runs the selected test. </summary>
 Private Sub RunTestsButton_Click()
     
-    cc_isr_Test_Fx.TestExecutive.Execute TestSheet, True
+    cc_isr_Test_Fx.TestExecutive.Execute UnitTestSheet, True
 
 End Sub
 
