@@ -531,7 +531,6 @@ End Sub
 ''' <remarks>   Sets the instrument to turn on the RQS bit on external trigger. </remarks>
 Private Sub InitExtTrigButton_Click()
 
-
     Const p_procedureName = "ReadStandardEventStatusButton"
     
     ' Trap errors to the error handler
@@ -963,7 +962,230 @@ Friend Sub EnableGpibLanControls(ByVal a_usingGpibLanController As Boolean)
     Me.SetGpibAddressButton.Enabled = a_usingGpibLanController
     Me.ReadTimeoutGetButton.Enabled = a_usingGpibLanController
     Me.ReadTimeoutSetButton.Enabled = a_usingGpibLanController
+    Me.ReadGpibLanButton.Enabled = a_usingGpibLanController
+    Me.WriteGpibLanButton.Enabled = a_usingGpibLanController
+    Me.QueryGpibLanButton.Enabled = a_usingGpibLanController
 End Sub
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' GPIB LAN Control
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Write a message to the device via the GPIB Lan. </summary>
+''' <param name="a_message">   [String] to send to the instrument. </param>
+Friend Sub QueryGpibLan(ByVal a_message As String)
+
+    Const p_procedureName = "QueryGpibLan"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Me.RestartStopwatch
+    
+    If 0 < Me.Session.ViSession.GpibLan.SendToController(a_message) Then
+        QueryGpibLan = Me.Session.ViSession.GpibLan.ReceiveFromDevice()
+    End If
+    
+    Me.ReadStopwatch
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+    
+End Sub
+
+Private Sub QueryGpibLanButton_Click()
+
+    Const p_procedureName = "ReadGpibLanButton_Click"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_messageToSend As String: p_messageToSend = Me.CommandsComboBox.value
+    
+    Me.receivedMessage = vbNullString
+    Me.SentMessage = vbNullString
+    p_messageReceived = Me.QueryGpibLan(p_messageToSend)
+    Me.SentMessage = p_messageToSend
+    Me.receivedMessage = Me.ReadGpibLan()
+   
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+
+''' <summary>   Read from the device using the GPIB LAN. </summary>
+Friend Function ReadGpibLan() As String
+
+    Const p_procedureName = "ReadGpibLan"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Me.RestartStopwatch
+    
+    ReadGpibLan = Me.Session.ViSession.GpibLan.ReceiveFromDevice()
+    
+    Me.ReadStopwatch
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+    
+End Function
+
+Private Sub ReadGpibLanButton_Click()
+
+    Const p_procedureName = "ReadGpibLanButton_Click"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Me.receivedMessage = vbNullString
+    p_messageReceived = Me.ReadGpibLan()
+    Me.receivedMessage = Me.ReadGpibLan()
+   
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+
+''' <summary>   Write a message to the device via the GPIB Lan. </summary>
+''' <param name="a_message">   [String] to send to the instrument. </param>
+Friend Function WriteGpibLan(ByVal a_message As String) As Long
+
+    Const p_procedureName = "WriteLine"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Me.RestartStopwatch
+    
+    WriteGpibLan = Me.Session.ViSession.GpibLan.SendToController(a_message)
+    
+    Me.ReadStopwatch
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+    
+End Function
+
+Private Sub WriteGpibLanButton_Click()
+
+    Const p_procedureName = "WriteGpibLanButton_Click"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Me.SentMessage = vbNullString
+    Dim p_messageToSend As String: p_messageToSend = Me.CommandsComboBox.value
+    Me.WriteGpibLan p_messageToSend
+    Me.SentMessage = p_messageToSend
+        
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+
+End Sub
+
 
 ''' <summary>   Handles the Go To Local button click event. </summary>
 Private Sub GoToLocalButton_Click()
@@ -1606,6 +1828,7 @@ Public Sub ClearReadings(ByVal a_offsetResistance As Single)
 
     Dim p_resistanceNumber As Integer
     For p_resistanceNumber = 1 To Me.ResistanceCount
+        VBA.DoEvents
         SetResistance p_resistanceNumber, a_offsetResistance
     Next p_resistanceNumber
   
@@ -2001,8 +2224,4 @@ End Sub
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangingEventArgs"/>] event arguments. </param>
 Private Sub m_k2700_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
 End Sub
-
-
-
-
 
