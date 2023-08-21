@@ -72,10 +72,11 @@ Private Sub ReadIdentity(ByVal a_host As String, ByVal a_port As Long, ByVal a_r
     p_device.OpenConnection a_host, a_port
     
     ' report the socket number
-    Range(m_connectedSocketIdCell).value = p_device.Session.VISession.SocketId
+    Range(m_connectedSocketIdCell).value = p_device.Session.ViSession.SocketId
    
     ' report the connection state
     Range(m_connectedCell).value = p_device.Connected
+    Range(m_socketAddressCell).value = p_device.Session.ViSession.SocketAddress
     
     If a_repeatCount > 0 And p_device.Connected Then
     

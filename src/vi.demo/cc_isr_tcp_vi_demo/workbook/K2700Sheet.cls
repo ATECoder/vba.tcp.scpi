@@ -200,7 +200,7 @@ Friend Sub EnableControls(ByVal a_connected As Boolean)
     Me.EnableExtTrigToggleButton
     
     If a_connected Then
-        Me.EnableGpibLanControls Me.Session.VISession.UsingGpibLan
+        Me.EnableGpibLanControls Me.Session.ViSession.UsingGpibLan
     Else
         Me.EnableGpibLanControls False
     End If
@@ -465,7 +465,7 @@ Friend Sub ConnectToggleButton_Click()
     
         Me.K2700.OpenConnection p_host, p_port
         
-        Me.K2700.Session.VISession.SessionReadTimeout = p_sessionReadTimeout
+        Me.K2700.Session.ViSession.SessionReadTimeout = p_sessionReadTimeout
         
     End If
     
@@ -659,7 +659,7 @@ Private Sub SDCButton_Click()
     
     Me.RestartStopwatch
     
-    Me.Session.VISession.GpibLan.SelectiveDeviceClear
+    Me.Session.ViSession.GpibLan.SelectiveDeviceClear
     
     Me.ReadStopwatch
     
@@ -692,11 +692,11 @@ Friend Sub ReadStatusByteButton_Click()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    If Me.Session.VISession.UsingGpibLan Then
+    If Me.Session.ViSession.UsingGpibLan Then
     
         Me.RestartStopwatch
         
-        Range(m_serialPollCell).value = Me.Session.VISession.GpibLan.SerialPoll
+        Range(m_serialPollCell).value = Me.Session.ViSession.GpibLan.SerialPoll
         
         Me.ReadStopwatch
         
@@ -747,8 +747,8 @@ Private Sub WriteButton_Click()
     Me.ReadStopwatch
     
     Me.SentMessage = p_messageToSend
-    If Me.Session.VISession.UsingGpibLan And Me.AutoStatusReadCheckBox.value Then
-        Range(m_serialPollCell).value = Me.Session.VISession.GpibLan.SerialPoll
+    If Me.Session.ViSession.UsingGpibLan And Me.AutoStatusReadCheckBox.value Then
+        Range(m_serialPollCell).value = Me.Session.ViSession.GpibLan.SerialPoll
     End If
     
     Dim p_isQuery As Boolean: p_isQuery = cc_isr_Core.StringExtensions.EndsWith(p_messageToSend, "?")
@@ -975,7 +975,7 @@ Private Sub GoToLocalButton_Click()
     
     Me.RestartStopwatch
     
-    Me.Session.VISession.GpibLan.GoToLocal
+    Me.Session.ViSession.GpibLan.GoToLocal
     
     Me.ReadStopwatch
     
@@ -1010,7 +1010,7 @@ Private Sub LocalLockoutButton_Click()
     
     Me.RestartStopwatch
     
-    Me.Session.VISession.GpibLan.LocalLockout
+    Me.Session.ViSession.GpibLan.LocalLockout
     
     Me.ReadStopwatch
     
@@ -1045,11 +1045,11 @@ Private Sub ReadAfterWriteSetButton_Click()
     
     Me.RestartStopwatch
     
-    Me.Session.VISession.GpibLan.ReadAfterWriteEnabledSetter Me.ReadAfterWriteEnabled
+    Me.Session.ViSession.GpibLan.ReadAfterWriteEnabledSetter Me.ReadAfterWriteEnabled
     
     Me.ReadStopwatch
     
-    Me.Session.VISession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
+    Me.Session.ViSession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1082,11 +1082,11 @@ Private Sub ReadAfterWriteGetButton_Click()
     
     Me.RestartStopwatch
     
-    Me.ReadAfterWriteEnabled = Me.Session.VISession.GpibLan.ReadAfterWriteEnabledGetter
+    Me.ReadAfterWriteEnabled = Me.Session.ViSession.GpibLan.ReadAfterWriteEnabledGetter
     
     Me.ReadStopwatch
     
-    Me.Session.VISession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
+    Me.Session.ViSession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1119,7 +1119,7 @@ Private Sub SerialPollButton_Click()
     
     Me.RestartStopwatch
     
-    Range(m_serialPollCell).value = Me.Session.VISession.GpibLan.SerialPoll
+    Range(m_serialPollCell).value = Me.Session.ViSession.GpibLan.SerialPoll
     
     Me.ReadStopwatch
     
@@ -1154,7 +1154,7 @@ Private Sub SRQButton_Click()
     
     Me.RestartStopwatch
     
-    Range(m_srqCell).value = Me.Session.VISession.GpibLan.ServiceRequested
+    Range(m_srqCell).value = Me.Session.ViSession.GpibLan.ServiceRequested
     
     Me.ReadStopwatch
     
@@ -1189,7 +1189,7 @@ Private Sub GetGpibAddressButton_Click()
     
     Me.RestartStopwatch
     
-    Range(m_gpibAddressCell).value = Me.Session.VISession.GpibLan.GpibAddressGetter
+    Range(m_gpibAddressCell).value = Me.Session.ViSession.GpibLan.GpibAddressGetter
 
     Me.ReadStopwatch
     
@@ -1224,7 +1224,7 @@ Private Sub SetGpibAddressButton_Click()
     
     Me.RestartStopwatch
     
-    Me.Session.VISession.GpibLan.GpibAddressSetter CInt(Range(m_gpibAddressCell).value)
+    Me.Session.ViSession.GpibLan.GpibAddressSetter CInt(Range(m_gpibAddressCell).value)
 
     Me.ReadStopwatch
     
@@ -1260,7 +1260,7 @@ Private Sub ReadTimeoutGetButton_Click()
     
     Me.RestartStopwatch
     
-    Range(m_readTimeoutCell).value = Me.Session.VISession.GpibLan.ReadTimeoutGetter
+    Range(m_readTimeoutCell).value = Me.Session.ViSession.GpibLan.ReadTimeoutGetter
 
     Me.ReadStopwatch
     
@@ -1295,7 +1295,7 @@ Private Sub ReadTimeoutSetButton_Click()
     
     Me.RestartStopwatch
     
-    Me.Session.VISession.GpibLan.ReadTimeoutSetter (CInt(Range(m_readTimeoutCell).value))
+    Me.Session.ViSession.GpibLan.ReadTimeoutSetter (CInt(Range(m_readTimeoutCell).value))
     
     Me.ReadStopwatch
     
@@ -1958,15 +1958,15 @@ Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Connec
     If a_eventArgs.Connected Then
     
         ' report the socket number
-        Range(m_socketAddressCell).value = Me.Session.VISession.socketAddress
+        Range(m_socketAddressCell).value = Me.Session.ViSession.SocketAddress
         Range(m_socketIdCell).value = Me.Session.SocketId
         
-        Me.Session.VISession.GpibLan.SelectiveDeviceClear
+        Me.Session.ViSession.GpibLan.SelectiveDeviceClear
         Me.Session.ResetKnownState
         Me.Session.ClearExecutionState
         
-        If Me.Session.VISession.UsingGpibLan Then
-            Me.ReadAfterWriteEnabled = Me.Session.VISession.GpibLan.ReadAfterWriteEnabledGetter
+        If Me.Session.ViSession.UsingGpibLan Then
+            Me.ReadAfterWriteEnabled = Me.Session.ViSession.GpibLan.ReadAfterWriteEnabledGetter
         End If
     
     Else
