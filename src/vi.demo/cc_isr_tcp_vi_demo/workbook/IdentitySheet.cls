@@ -63,7 +63,7 @@ Private Sub ReadIdentity(ByVal a_host As String, ByVal a_port As Long, ByVal a_r
     Range(m_elapsedTimeCell).value = vbNullString
     Range(m_errorMessageCell).value = vbNullString
 
-    Dim p_stopper As Stopwatch: Set p_stopper = cc_isr_Core.Factory.NewStopwatch()
+    Dim p_stopper As cc_isr_Core_IO.Stopwatch: Set p_stopper = cc_isr_Core_IO.Factory.NewStopwatch()
     Dim p_totalMilliseconds As Double
     
     Dim p_device As K2700

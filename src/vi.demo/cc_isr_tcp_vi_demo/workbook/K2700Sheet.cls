@@ -90,11 +90,11 @@ Public Property Get Session() As cc_isr_Ieee488.Ieee488Session
     Set Session = Me.K2700.Session
 End Property
 
-''' <summary>   Gets the singleton instance of the <see cref="cc_isr_Core.Stopwatch"/>. </summary>
-''' <value>   The singleton instance of the <see cref="cc_isr_Core.Stopwatch"/>. </value>
-Public Property Get Stopwatch() As cc_isr_Core.Stopwatch
+''' <summary>   Gets the singleton instance of the <see cref="cc_isr_Core_IO.Stopwatch"/>. </summary>
+''' <value>   The singleton instance of the <see cref="cc_isr_Core_IO.Stopwatch"/>. </value>
+Public Property Get Stopwatch() As cc_isr_Core_IO.Stopwatch
     If This.Stopwatch Is Nothing Then
-        Set This.Stopwatch = cc_isr_Core.Factory.NewStopwatch
+        Set This.Stopwatch = cc_isr_Core_IO.Factory.NewStopwatch
     End If
     Set Stopwatch = This.Stopwatch
 End Property
