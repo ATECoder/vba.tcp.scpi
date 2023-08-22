@@ -1,15 +1,17 @@
 # About
 
-[cc.isr.tcp.vi] is an Excel workbook for controlling and querying SCPI based instruments over TCP/IP.
+[cc.isr.tcp.scpi.test] is an Excel workbook for testing the [cc.isr.tcp.scpi] workbook.
 
 Presently supported is the Keithley 2700 instrument either as an LXI instrument or a GPIB instrument by way of a GPIB-Lan controller such as the [Prologix] GPIB to LAN device.
 
 ## Workbook references
 
+* [cc.isr.tcp.scpi] - Controls and queries specific virtual instruments such as the Keithley 2700.
 * [cc.isr.tcp.Ieee488] - Controls and queries instruments that support the IEEE 488.2 standard.
 * [cc.isr.Winsock] - Implements TCP Client and Server classes with Windows Winsock API.
 * [cc.isr.Core] - Core work book.
 * [cc.isr.core.io] - Core I/O workbook.
+* [cc.isr.test.fx] - Test framework workbook.
 
 ## Object Libraries references
 
@@ -17,37 +19,30 @@ Presently supported is the Keithley 2700 instrument either as an LXI instrument 
 * [Microsoft Visual Basic for Applications Extensibility 5.3]
 * [Microsoft VBScript Regular Expression 5.5]
 
-## Key Features
+## Worksheets
 
-* Provides commands and queries for communicating with IEEE488.2 instruments.
-* Uses Windows Winsock32 calls to construct sockets for communicating with the instrument by way of a GPIB-Lan controller such as the [Prologix GPIB-Lan controller].
-* Provides GPIB-Lan commands and queries for communicating with the GPIB-Lan controller.
-* Provides an extended sets of methods to control the Keithley 2700 instrument.
-* Provides a custom sets of methods to control the Keithley 2700 instrument for measuring 4-wire resistances from the front or read panel using internal or external triggers.
+* UnitTestSheet -- To run unit tests (pending).
 
-## Main Types
+## Scripts
 
-The main types provided by this library are:
-
-* _K2700_ Implements some basic 2700 scanning multimeter functionality.
-* _scpi system_ Implements some basic SCPI SSystem subsystem commands.
+* [unit test]: shortcut to run unit tests.
+* [deploy]: copy the workbook and its dependencies to the deployment `..\..\bin` folder.
+* [localize]: sets workbook references to the local deployment `..\..\bin` folder.
 
 ## Unit Testing
 
-See [cc.isr.tcp.vi.test]
+At this time, the [cc.isr.tcp.ieee488] workbooks exclusively employs integration testing using the IEEE488 and Identity worksheets. 
 
-## Integration Testing
-
-See [cc.isr.tcp.vi.demo]
+Units testing will be added in future releases.
 
 # Feedback
 
-[cc.isr.tcp.vi] is released as open source under the MIT license.
-Bug reports and contributions are welcome at the [cc.isr.tcp.vi] repository.
+[cc.isr.tcp.scpi] is released as open source under the MIT license.
+Bug reports and contributions are welcome at the [cc.isr.tcp.scpi] repository.
 
-[cc.isr.tcp.vi]: https://github.com/ATECoder/vba.tcp.vi
-[cc.isr.tcp.vi.test]: https://github.com/ATECoder/vba.tcp.iv/src/test
-[cc.isr.tcp.vi.demo]: https://github.com/ATECoder/vba.tcp.vi/src/demo
+[cc.isr.tcp.scpi]: https://github.com/ATECoder/vba.tcp.scpi
+[cc.isr.tcp.scpi.test]: https://github.com/ATECoder/vba.tcp.iv/src/test
+[cc.isr.tcp.scpi.demo]: https://github.com/ATECoder/vba.tcp.scpi/src/demo
 
 [cc.isr.tcp.ieee488]: https://github.com/ATECoder/vba.tcp.ieee488
 [cc.isr.winsock]: https://github.com/ATECoder/vba.winsock/src/

@@ -1,4 +1,4 @@
-# [VBA TCP VI]
+# [VBA TCP Scpi]
 
 TCP Socket-based control and communication workbooks for LXI-based instruments. 
 
@@ -6,9 +6,9 @@ TCP Socket-based control and communication workbooks for LXI-based instruments.
 * [Issues](#Issues)
 * [Supported VBA Releases](#Supported-VBA-Releases)
 * Project README files:
-  * [VI](/src/vi/readme.md)
-  * [VI demo](/src/vi.demo/readme.md)
-  * [VI test](/src/vi.test/readme.md)
+  * [SCPI](/src/scpi/readme.md)
+  * [SCPI demo](/src/scpi.demo/readme.md)
+  * [SCPI test](/src/scpi.test/readme.md)
 * [Using Prologix](Prologix.md)
 * [Attributions](Attributions.md)
 * [Change Log](./CHANGELOG.md)
@@ -24,7 +24,7 @@ TCP Socket-based control and communication workbooks for LXI-based instruments.
 
 ## Description
 
-The ISR VBA TCP VI workbooks provide VBA classes for communicating with LXI instruments in desktop platforms using Winsock.
+The ISR VBA TCP Scpi workbooks provide VBA classes for communicating with LXI instruments in desktop platforms using Winsock.
 
 Using the [Prologix] GPIB to Ethernet interface, Winsock can be used to implement some of the capabilities of VXI-11 such as device clear and serial poll.
 
@@ -57,5 +57,5 @@ Integrated Scientific Resources, Inc., and any contributors reserve all other ri
  
 [ATE Coder]: https://www.IntegratedScientificResources.com
 
-[VBA TCP VI]: https://github.com/ATECoder/vba.tcp.vi.git
+[VBA TCP Scpi]: https://github.com/ATECoder/vba.tcp.scpi.git
 

@@ -199,6 +199,11 @@ Private Sub Workbook_Open()
     Application.Windows(cc_isr_Winsock.ThisWorkbook.Name).Visible = False
     Application.Windows(cc_isr_Ieee488.ThisWorkbook.Name).Visible = False
     
+    Dim p_endTime As Double: p_endTime = VBA.Now + (1# / (60# * 60# * 2400#))
+    While CDbl(VBA.Now) < p_endTime
+        DoEvents
+    Wend
+    
     ' show work book
     Application.Windows(ThisWorkbook.Name).Visible = True
     

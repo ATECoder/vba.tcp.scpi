@@ -1,12 +1,12 @@
 # About
 
-[cc.isr.tcp.vi] is an Excel workbook for controlling and querying SCPI based instruments over TCP/IP.
+[cc.isr.tcp.scpi.demo] is an Excel workbook for demonstrating control and communication with some SCPI based instruments over TCP/IP.
 
 Presently supported is the Keithley 2700 instrument either as an LXI instrument or a GPIB instrument by way of a GPIB-Lan controller such as the [Prologix] GPIB to LAN device.
 
 ## Workbook references
 
-* [cc.isr.tcp.vi] - Controls and queries specific virtual instruments such as the Keithley 2700.
+* [cc.isr.tcp.scpi] - Controls and queries specific virtual instruments such as the Keithley 2700.
 * [cc.isr.tcp.Ieee488] - Controls and queries instruments that support the IEEE 488.2 standard.
 * [cc.isr.Winsock] - Implements TCP Client and Server classes with Windows Winsock API.
 * [cc.isr.Core] - Core work book.
@@ -162,12 +162,12 @@ The resistance measurements are controlled by command and option buttons as foll
 
 # Feedback
 
-[cc.isr.tcp.vi] is released as open source under the MIT license.
-Bug reports and contributions are welcome at the [cc.isr.tcp.vi] repository.
+[cc.isr.tcp.scpi] is released as open source under the MIT license.
+Bug reports and contributions are welcome at the [cc.isr.tcp.scpi] repository.
 
-[cc.isr.tcp.vi]: https://github.com/ATECoder/vba.tcp.vi
-[cc.isr.tcp.vi.test]: https://github.com/ATECoder/vba.tcp.iv/src/test
-[cc.isr.tcp.vi.demo]: https://github.com/ATECoder/vba.tcp.vi/src/demo
+[cc.isr.tcp.scpi]: https://github.com/ATECoder/vba.tcp.scpi
+[cc.isr.tcp.scpi.test]: https://github.com/ATECoder/vba.tcp.iv/src/test
+[cc.isr.tcp.scpi.demo]: https://github.com/ATECoder/vba.tcp.scpi/src/demo
 
 [cc.isr.tcp.ieee488]: https://github.com/ATECoder/vba.tcp.ieee488
 [cc.isr.winsock]: https://github.com/ATECoder/vba.winsock/src/

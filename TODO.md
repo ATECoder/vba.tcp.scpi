@@ -1,5 +1,25 @@
 # TODO
 
+## Beta 202308
+
+* rename project to cc.isr.tcp.scpi.
+* issue reset clear whenever switching model. 
+* Add MultiplexerCard class.
+* Add Route subsystem class.
+
+* Add ChannelReadingEventArgs
+* Add ?ChannelResistanceEventArgs
+* test: disable all buttons when monitoring the triggers.
+
+* flying:
+* on device initialized
+	* make sure the device is in the correct state;
+	* detect if the device was disconnected. 
+	* ensure the 2700 device is set to read after write false.
+* issue reset clear whenever switching model. 
+* add operation completion queries to settings commands.
+
+
 ## Tests
 
 ## Fixes

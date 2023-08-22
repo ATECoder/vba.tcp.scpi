@@ -173,7 +173,7 @@ Public Function ContinuousResistanceAutoRange()
 End Function
 
 ''' <summary>   Gets the options value. </summary>
-''' <value> A String. </value>
+''' <value> [String]. </value>
 Public Property Get Options() As String
         
     Options = This.Options
@@ -181,7 +181,7 @@ Public Property Get Options() As String
 End Property
 
 ''' <summary>   Gets the top card. </summary>
-''' <value> A String. </value>
+''' <value> [String]. </value>
 Public Property Get Card1() As String
         
     Card1 = This.Card1
@@ -190,7 +190,7 @@ End Property
 
 ''' <summary>   Sets the top card. </summary>
 ''' <param name="a_value">   [String] The name of the top card. </param>
-''' <value> A String. </value>
+''' <value> [String]. </value>
 Public Property Let Card1(ByVal a_value As String)
     This.Card1 = a_value
     This.HasMux20A = 0 < InStr(1, Mux20Cards, a_value, vbTextCompare)
@@ -198,7 +198,7 @@ Public Property Let Card1(ByVal a_value As String)
 End Property
 
 ''' <summary>   Gets the top card scan list. </summary>
-''' <value> A String. </value>
+''' <value> [String]. </value>
 Public Property Get Card1ScanList() As String
         
     Card1ScanList = This.Card1ScanList
@@ -206,7 +206,7 @@ Public Property Get Card1ScanList() As String
 End Property
 
 ''' <summary>   Gets the bottom card. </summary>
-''' <value> A String. </value>
+''' <value> [String]. </value>
 Public Property Get Card2() As String
         
     Card2 = This.Card2
@@ -215,7 +215,7 @@ End Property
 
 ''' <summary>   Sets the bottom card. </summary>
 ''' <param name="a_value">   [String] The name of the bottom card. </param>
-''' <value> A String. </value>
+''' <value> [String]. </value>
 Public Property Let Card2(ByVal a_value As String)
     This.Card2 = a_value
     This.HasMux40B = 0 < InStr(1, Mux40Cards, a_value, vbTextCompare)
@@ -223,7 +223,7 @@ Public Property Let Card2(ByVal a_value As String)
 End Property
 
 ''' <summary>   Gets the bottom card scan list. </summary>
-''' <value> A String. </value>
+''' <value> [String]. </value>
 Public Property Get Card2ScanList() As String
         
     Card2ScanList = This.Card2ScanList
