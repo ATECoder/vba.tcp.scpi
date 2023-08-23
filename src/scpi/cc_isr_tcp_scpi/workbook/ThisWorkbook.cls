@@ -199,10 +199,8 @@ Private Sub Workbook_Open()
     Application.Windows(cc_isr_Winsock.ThisWorkbook.Name).Visible = False
     Application.Windows(cc_isr_Ieee488.ThisWorkbook.Name).Visible = False
     
-    Dim p_endTime As Double: p_endTime = VBA.Now + (1# / (60# * 60# * 2400#))
-    While CDbl(VBA.Now) < p_endTime
-        DoEvents
-    Wend
+    ' wait a bit for the workbooks to hide.
+    cc_isr_Core_IO.CoreExtensions.Wait 0.25
     
     ' show work book
     Application.Windows(ThisWorkbook.Name).Visible = True
@@ -227,4 +225,5 @@ err_Handler:
     GoTo exit_Handler
     
 End Sub
+
 

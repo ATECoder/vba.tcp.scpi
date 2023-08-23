@@ -70,34 +70,15 @@ Private Type ThisData
     
     Stopwatch As Stopwatch
     
+    K2700 As K2700
+    
+    Device As cc_isr_Ieee488.Device
+    
+    VISession As cc_isr_Ieee488.VISession
+    
 End Type
 
 Private This As ThisData
-
-
-''' <summary>   Gets the singleton instance of the 2700 virtual instrument. </summary>
-''' <value>   The singleton instance of the 2700 virtual instrument. </value>
-Public Property Get K2700() As cc_isr_TCP_VI.K2700
-    If m_k2700 Is Nothing Then
-        Set m_k2700 = cc_isr_TCP_VI.Factory.NewK2700.Initialize(New ErrTracer)
-    End If
-    Set K2700 = m_k2700
-End Property
-
-''' <summary>   Gets the singleton instance of the <see cref="cc_isr_Ieee488.Ieee488Session"/>. </summary>
-''' <value>   The singleton instance of the <see cref="cc_isr_Ieee488.Ieee488Session"/>. </value>
-Public Property Get Session() As cc_isr_Ieee488.Ieee488Session
-    Set Session = Me.K2700.Session
-End Property
-
-''' <summary>   Gets the singleton instance of the <see cref="cc_isr_Core_IO.Stopwatch"/>. </summary>
-''' <value>   The singleton instance of the <see cref="cc_isr_Core_IO.Stopwatch"/>. </value>
-Public Property Get Stopwatch() As cc_isr_Core_IO.Stopwatch
-    If This.Stopwatch Is Nothing Then
-        Set This.Stopwatch = cc_isr_Core_IO.Factory.NewStopwatch
-    End If
-    Set Stopwatch = This.Stopwatch
-End Property
 
 ''' <summary>   Dispose of the worksheet objects. </summary>
 Public Sub Dispose()
@@ -110,12 +91,23 @@ Public Sub Dispose()
     Set This.Stopwatch = Nothing
     
     If Not m_eventTimer Is Nothing Then
-      m_eventTimer.StopTimer
-      Set m_eventTimer = Nothing
+    
+        m_eventTimer.StopTimer
+      
+        ' allow the timer to stop.
+        cc_isr_Core_IO.CoreExtensions.Wait 0.0015 * Me.TimerInterval
+        
+        Set m_eventTimer = Nothing
+        
     End If
+    
+    This.Device = Nothing
+    This.VISession = Nothing
     
     If Not m_k2700 Is Nothing Then m_k2700.Dispose
     Set m_k2700 = Nothing
+    Set This.K2700 = Nothing
+    
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -152,6 +144,14 @@ Public Sub Initialize()
     
     ' populate the combo box commands
     PopulateCommandsComboBox
+    
+    Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize(New ErrTracer)
+    Set m_k2700 = This.K2700
+    Set This.Device = This.K2700.Device
+    Set This.VISession = This.Device.VISession
+    
+    Set This.Stopwatch = cc_isr_Core_IO.Factory.NewStopwatch()
+  
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -178,10 +178,10 @@ End Sub
 ''' <param name="a_connected">   [Boolean] True if connected; otherwise, false. </param>
 Friend Sub EnableControls(ByVal a_connected As Boolean)
 
-    Me.ConnectToggleButton.value = a_connected
+    Me.ConnectToggleButton.Value = a_connected
     
     ' report the connection state
-    Range(m_connectedCell).value = a_connected
+    Range(m_connectedCell).Value = a_connected
         
     Me.RSTButton.Enabled = a_connected
     Me.CLSButton.Enabled = a_connected
@@ -191,7 +191,6 @@ Friend Sub EnableControls(ByVal a_connected As Boolean)
     Me.ReadStandardEventStatusButton.Enabled = a_connected
     Me.WriteButton.Enabled = a_connected
     
-    Me.InitExtTrigButton.Enabled = a_connected
     Me.ReadCardsButton.Enabled = a_connected
     Me.SetScansButton.Enabled = a_connected
     Me.QueryInputsButton.Enabled = a_connected
@@ -200,7 +199,7 @@ Friend Sub EnableControls(ByVal a_connected As Boolean)
     Me.EnableExtTrigToggleButton
     
     If a_connected Then
-        Me.EnableGpibLanControls Me.Session.ViSession.UsingGpibLan
+        Me.EnableGpibLanControls This.VISession.UsingGpibLan
     Else
         Me.EnableGpibLanControls False
     End If
@@ -212,15 +211,16 @@ End Sub
 Friend Sub EnableReadResistanceButton()
     
     Dim p_enable As Boolean
-    p_enable = Not K2700 Is Nothing
+    p_enable = Not This.K2700 Is Nothing
     If p_enable Then
-        p_enable = Me.K2700.Connected
+        p_enable = This.K2700.Connected
     End If
     If p_enable Then
-        p_enable = Me.K2700.HasMuxCards
+        p_enable = This.K2700.HasMuxCards
     End If
     
-    Me.ReadResistanceButton.Enabled = p_enable
+    Me.ImmediateTriggerOptionButton.Enabled = p_enable
+    Me.ReadResistanceButton.Enabled = False
 
 End Sub
 
@@ -229,15 +229,16 @@ End Sub
 Friend Sub EnableExtTrigToggleButton()
     
     Dim p_enable As Boolean
-    p_enable = Not K2700 Is Nothing
+    p_enable = Not This.K2700 Is Nothing
     If p_enable Then
-        p_enable = Me.K2700.Connected
+        p_enable = This.K2700.Connected
     End If
     If p_enable Then
-        p_enable = Me.K2700.HasMuxCards
+        p_enable = This.K2700.HasMuxCards
     End If
     
-    Me.ExtTrigToggleButton.Enabled = p_enable
+    Me.ExternalTriggerOptionButton.Enabled = p_enable
+    Me.ExtTrigToggleButton.Enabled = False
 
 End Sub
 
@@ -318,15 +319,15 @@ End Sub
 ''' <summary>   Restarts the stop watch and clears the elapsed time cell. </summary>
 Friend Sub RestartStopwatch()
     
-    Range(m_elapsedTimeCell).value = vbNullString
-    Me.Stopwatch.Restart
+    Range(m_elapsedTimeCell).Value = vbNullString
+    This.Stopwatch.Restart
 
 End Sub
 
 ''' <summary>   Reads the stop watch and updates the elapsed time cell. </summary>
 Friend Sub ReadStopwatch()
     
-    Range(m_elapsedTimeCell).value = Format(Me.Stopwatch.ElapsedMilliseconds, m_elapsedTimeFormat)
+    Range(m_elapsedTimeCell).Value = Format(This.Stopwatch.ElapsedMilliseconds, m_elapsedTimeFormat)
 
 End Sub
 
@@ -347,7 +348,7 @@ Friend Sub WriteLine(ByVal a_message As String)
     
     Me.RestartStopwatch
     
-    Me.Session.WriteLine a_message
+    This.VISession.WriteLine a_message
     
     Me.ReadStopwatch
     
@@ -383,7 +384,7 @@ Friend Function QueryLine(ByVal a_message As String) As String
     
     Me.RestartStopwatch
     
-    QueryLine = Me.Session.QueryLine(a_message)
+    QueryLine = This.VISession.QueryLine(a_message)
     
     Me.ReadStopwatch
 
@@ -418,7 +419,7 @@ Friend Function Read() As String
     
     Me.RestartStopwatch
     
-    Read = Me.Session.Read()
+    Read = This.VISession.Read()
     
     Me.ReadStopwatch
 
@@ -457,15 +458,15 @@ Friend Sub ConnectToggleButton_Click()
     Dim p_port As Integer: p_port = Me.port
     Dim p_sessionReadTimeout As Integer: p_sessionReadTimeout = Me.SessionReadTimeout
       
-    If Not ConnectToggleButton.value And Me.K2700.Connected Then
+    If Not ConnectToggleButton.Value And This.K2700.Connected Then
         
-        Me.K2700.CloseConnection
+        This.K2700.CloseConnection
         
-    ElseIf ConnectToggleButton.value And Not Me.K2700.Connected Then
+    ElseIf ConnectToggleButton.Value And Not This.K2700.Connected Then
     
-        Me.K2700.OpenConnection p_host, p_port
+        This.K2700.OpenConnection p_host, p_port
         
-        Me.K2700.Session.ViSession.SessionReadTimeout = p_sessionReadTimeout
+        This.VISession.SessionReadTimeout = p_sessionReadTimeout
         
     End If
     
@@ -502,7 +503,7 @@ Private Sub CLSButton_Click()
     
     Me.RestartStopwatch
     
-    Me.Session.ClearExecutionState
+    This.Device.ClearExecutionState
     
     Me.ReadStopwatch
     
@@ -527,6 +528,68 @@ err_Handler:
     
 End Sub
 
+''' <summary>   Turns on external trigger mode. </summary>
+Private Sub ExternalTriggerOptionButton_Click()
+
+    Const p_procedureName = "ExternalTriggerOptionButton_Click"
+    
+    If Not ExternalTriggerOptionButton.Value Then Exit Sub
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+   
+    This.VISession.WriteLine ":TRIG:SOUR IMM"
+    
+    This.VISession.WriteLine ":TRIG:SOUR EXT"
+    
+    ' clear the serial poll register
+    
+    This.VISession.WriteLine "*ESE 0"
+    This.VISession.WriteLine "*SRE 63"
+    
+    ' clear the measurement event enable register
+    This.VISession.WriteLine "STAT:PRES"
+    
+    ' enable the reading available bit of the measurement event register.
+    This.VISession.WriteLine "STAT:MEAS:ENAB 32"
+    
+    This.Device.QueryServiceRequestStatus
+    
+    ' initiate awaiting for the external trigger
+    
+    This.VISession.WriteLine ":INIT; *CLS"
+   
+    ' disable the immediate reading mode buttons
+    
+    ReadResistanceButton.Enabled = False
+    
+   
+    ' enable toggling the external trigger monitoring.
+    
+    Me.ExtTrigToggleButton.Enabled = True
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+    
+
+End Sub
+
 ''' <summary>   Handles the Initialize External Trigger Button click event. </summary>
 ''' <remarks>   Sets the instrument to turn on the RQS bit on external trigger. </remarks>
 Private Sub InitExtTrigButton_Click()
@@ -536,26 +599,26 @@ Private Sub InitExtTrigButton_Click()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
    
-    Me.Session.WriteLine ":TRIG:SOUR IMM"
+    This.VISession.WriteLine ":TRIG:SOUR IMM"
     
-    Me.Session.WriteLine ":TRIG:SOUR EXT"
+    This.VISession.WriteLine ":TRIG:SOUR EXT"
     
     ' clear the serial poll register
     
-    Me.Session.WriteLine "*ESE 0"
-    Me.Session.WriteLine "*SRE 63"
+    This.VISession.WriteLine "*ESE 0"
+    This.VISession.WriteLine "*SRE 63"
     
     ' clear the measurement event enable register
-    Me.Session.WriteLine "STAT:PRES"
+    This.VISession.WriteLine "STAT:PRES"
     
     ' enable the reading available bit of the measurement event register.
-    Me.Session.WriteLine "STAT:MEAS:ENAB 32"
+    This.VISession.WriteLine "STAT:MEAS:ENAB 32"
     
-    Me.Session.QueryServiceRequestStatus
+    This.Device.QueryServiceRequestStatus
     
     ' initiate awaiting for the external trigger
     
-    Me.Session.WriteLine ":INIT; *CLS"
+    This.VISession.WriteLine ":INIT; *CLS"
    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -578,6 +641,42 @@ err_Handler:
     
 End Sub
 
+''' <summary>   Configure immediate trigger mode and enables the read button. </summary>
+Private Sub ImmediateTriggerOptionButton_Click()
+
+    Const p_procedureName = "ImmediateTriggerOptionButton_Click"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    ' configure measuring a single resistance on each read.
+    This.K2700.ConfigureSingleResistanceReading
+
+    Me.ReadResistanceButton.Enabled = True
+    
+    Me.ExternalTriggerOptionButton.Enabled = False
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
 ''' <summary>   Handles the Read Status Byte button click event. </summary>
 Private Sub ReadStandardEventStatusButton_Click()
 
@@ -588,7 +687,7 @@ Private Sub ReadStandardEventStatusButton_Click()
     
     Me.RestartStopwatch
     
-    Me.StandardByte = Me.Session.QueryStandardEventsStatus
+    Me.StandardByte = This.Device.QueryStandardEventsStatus
     
     Me.ReadStopwatch
     
@@ -623,7 +722,7 @@ Private Sub RSTButton_Click()
     
     Me.RestartStopwatch
     
-    Me.Session.ResetKnownState
+    This.Device.ResetKnownState
     
     Me.ReadStopwatch
     
@@ -658,7 +757,7 @@ Private Sub SDCButton_Click()
     
     Me.RestartStopwatch
     
-    Me.Session.ViSession.GpibLan.SelectiveDeviceClear
+    This.VISession.GpibLan.SelectiveDeviceClear
     
     Me.ReadStopwatch
     
@@ -691,11 +790,11 @@ Friend Sub ReadStatusByteButton_Click()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    If Me.Session.ViSession.UsingGpibLan Then
+    If This.VISession.UsingGpibLan Then
     
         Me.RestartStopwatch
         
-        Range(m_serialPollCell).value = Me.Session.ViSession.GpibLan.SerialPoll
+        Range(m_serialPollCell).Value = This.VISession.GpibLan.SerialPoll
         
         Me.ReadStopwatch
         
@@ -703,7 +802,7 @@ Friend Sub ReadStatusByteButton_Click()
     
     Me.RestartStopwatch
     
-    Me.StatusByte = Me.Session.QueryServiceRequestStatus
+    Me.StatusByte = This.Device.QueryServiceRequestStatus
     
     Me.ReadStopwatch
     
@@ -737,7 +836,7 @@ Private Sub WriteButton_Click()
     On Error GoTo err_Handler
     
     Me.SentMessage = vbNullString
-    Dim p_messageToSend As String: p_messageToSend = Me.CommandsComboBox.value
+    Dim p_messageToSend As String: p_messageToSend = Me.CommandsComboBox.Value
     
     Me.RestartStopwatch
     
@@ -746,14 +845,14 @@ Private Sub WriteButton_Click()
     Me.ReadStopwatch
     
     Me.SentMessage = p_messageToSend
-    If Me.Session.ViSession.UsingGpibLan And Me.AutoStatusReadCheckBox.value Then
-        Range(m_serialPollCell).value = Me.Session.ViSession.GpibLan.SerialPoll
+    If This.VISession.UsingGpibLan And Me.AutoStatusReadCheckBox.Value Then
+        Range(m_serialPollCell).Value = This.VISession.GpibLan.SerialPoll
     End If
     
     Dim p_isQuery As Boolean: p_isQuery = cc_isr_Core.StringExtensions.EndsWith(p_messageToSend, "?")
-    If Not p_isQuery And Me.AutoStatusReadCheckBox.value Then
-        Me.StatusByte = Me.Session.QueryServiceRequestStatus
-        Me.StandardByte = Me.Session.QueryStandardEventsStatus
+    If Not p_isQuery And Me.AutoStatusReadCheckBox.Value Then
+        Me.StatusByte = This.Device.QueryServiceRequestStatus
+        Me.StandardByte = This.Device.QueryStandardEventsStatus
     End If
         
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -827,7 +926,7 @@ Private Sub QueryButton_Click()
     
     Me.receivedMessage = vbNullString
     Me.SentMessage = vbNullString
-    Dim p_messageToSend As String: p_messageToSend = Me.CommandsComboBox.value
+    Dim p_messageToSend As String: p_messageToSend = Me.CommandsComboBox.Value
     Dim p_messageReceived As String
     
     Me.RestartStopwatch
@@ -868,78 +967,78 @@ End Sub
 
 ''' <summary>   Gets the host dotted IP Address. </summary>
 Friend Property Get host() As String
-    host = Range(m_inputHostCell).value
+    host = Range(m_inputHostCell).Value
 End Property
 
 ''' <summary>   Gets the port number. </summary>
 Friend Property Get port() As Integer
-    port = CInt(Range(m_inputPortCell).value)
+    port = CInt(Range(m_inputPortCell).Value)
 End Property
 
 ''' <summary>   Get the receive timeout. </summary>
 Friend Property Get SessionReadTimeout() As Integer
-    SessionReadTimeout = CInt(Range(m_sessionReadTimeoutCell).value)
+    SessionReadTimeout = CInt(Range(m_sessionReadTimeoutCell).Value)
 End Property
 
 ''' <summary>   Gets the received message. </summary>
 Friend Property Get receivedMessage() As String
-    receivedMessage = Range(m_receivedMessageCell).value
+    receivedMessage = Range(m_receivedMessageCell).Value
 End Property
 
 ''' <summary>   Sets the received message. </summary>
 Friend Property Let receivedMessage(ByVal a_value As String)
-    Range(m_receivedMessageCell).value = a_value
-    Range(m_receivedMessageLengthCell).value = Len(a_value)
+    Range(m_receivedMessageCell).Value = a_value
+    Range(m_receivedMessageLengthCell).Value = Len(a_value)
 End Property
 
 ''' <summary>   Gets the Read After Write Enabled. </summary>
 Friend Property Get ReadAfterWriteEnabled() As Boolean
-    ReadAfterWriteEnabled = Range(m_readAfterWriteEnabledCell).value
+    ReadAfterWriteEnabled = Range(m_readAfterWriteEnabledCell).Value
 End Property
 
 ''' <summary>   Sets the Read After Write Enabled. </summary>
 Friend Property Let ReadAfterWriteEnabled(ByVal a_value As Boolean)
-    Range(m_readAfterWriteEnabledCell).value = a_value
+    Range(m_readAfterWriteEnabledCell).Value = a_value
 End Property
 
 ''' <summary>   Gets the sent message. </summary>
 Friend Property Get SentMessage() As String
-    SentMessage = Range(m_sentMessageCell).value
+    SentMessage = Range(m_sentMessageCell).Value
 End Property
 
 ''' <summary>   Sets the sent message. </summary>
 Friend Property Let SentMessage(ByVal a_value As String)
-    Range(m_sentMessageCell).value = a_value
+    Range(m_sentMessageCell).Value = a_value
 End Property
 
 ''' <summary>   Gets the status byte. </summary>
 Friend Property Get StatusByte() As Integer
-    StatusByte = Range(m_statusByteCell).value
+    StatusByte = Range(m_statusByteCell).Value
 End Property
 
 ''' <summary>   Sets the status byte. </summary>
 Friend Property Let StatusByte(ByVal a_value As Integer)
-    Range(m_statusByteCell).value = a_value
+    Range(m_statusByteCell).Value = a_value
 End Property
 
 ''' <summary>   Gets the Standard byte. </summary>
 Friend Property Get StandardByte() As Integer
-    StandardByte = Range(m_standardByteCell).value
+    StandardByte = Range(m_standardByteCell).Value
 End Property
 
 ''' <summary>   Sets the Standard byte. </summary>
 Friend Property Let StandardByte(ByVal a_value As Integer)
-    Range(m_standardByteCell).value = a_value
+    Range(m_standardByteCell).Value = a_value
 End Property
 
 ''' <summary>   Gets the Last Error Message. </summary>
 Friend Property Get LastErrorMessage() As String
-    LastErrorMessage = Range(m_lastErrorMessageCell).value
+    LastErrorMessage = Range(m_lastErrorMessageCell).Value
 End Property
 
 ''' <summary>   Sets the Last Error Message. </summary>
 Friend Property Let LastErrorMessage(ByVal a_value As String)
-    Range(m_lastErrorMessageCell).value = a_value
+    Range(m_lastErrorMessageCell).Value = a_value
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -975,7 +1074,7 @@ End Sub
 
 ''' <summary>   Write a message to the device via the GPIB Lan. </summary>
 ''' <param name="a_message">   [String] to send to the instrument. </param>
-Friend Sub QueryGpibLan(ByVal a_message As String)
+Friend Function QueryGpibLan(ByVal a_message As String) As String
 
     Const p_procedureName = "QueryGpibLan"
     
@@ -984,8 +1083,8 @@ Friend Sub QueryGpibLan(ByVal a_message As String)
     
     Me.RestartStopwatch
     
-    If 0 < Me.Session.ViSession.GpibLan.SendToController(a_message) Then
-        QueryGpibLan = Me.Session.ViSession.GpibLan.ReceiveFromDevice()
+    If 0 < This.VISession.GpibLan.SendToController(a_message) Then
+        QueryGpibLan = This.VISession.GpibLan.ReceiveFromDevice()
     End If
     
     Me.ReadStopwatch
@@ -994,7 +1093,7 @@ Friend Sub QueryGpibLan(ByVal a_message As String)
 exit_Handler:
 
     On Error GoTo 0
-    Exit Sub
+    Exit Function
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 err_Handler:
@@ -1009,7 +1108,7 @@ err_Handler:
     On Error Resume Next
     GoTo exit_Handler
     
-End Sub
+End Function
 
 Private Sub QueryGpibLanButton_Click()
 
@@ -1018,13 +1117,12 @@ Private Sub QueryGpibLanButton_Click()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Dim p_messageToSend As String: p_messageToSend = Me.CommandsComboBox.value
+    Dim p_messageToSend As String: p_messageToSend = Me.CommandsComboBox.Value
     
     Me.receivedMessage = vbNullString
     Me.SentMessage = vbNullString
-    p_messageReceived = Me.QueryGpibLan(p_messageToSend)
+    Me.receivedMessage = Me.QueryGpibLan(p_messageToSend)
     Me.SentMessage = p_messageToSend
-    Me.receivedMessage = Me.ReadGpibLan()
    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1058,7 +1156,7 @@ Friend Function ReadGpibLan() As String
     
     Me.RestartStopwatch
     
-    ReadGpibLan = Me.Session.ViSession.GpibLan.ReceiveFromDevice()
+    ReadGpibLan = This.VISession.GpibLan.ReceiveFromDevice()
     
     Me.ReadStopwatch
 
@@ -1091,7 +1189,6 @@ Private Sub ReadGpibLanButton_Click()
     On Error GoTo err_Handler
     
     Me.receivedMessage = vbNullString
-    p_messageReceived = Me.ReadGpibLan()
     Me.receivedMessage = Me.ReadGpibLan()
    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -1127,7 +1224,7 @@ Friend Function WriteGpibLan(ByVal a_message As String) As Long
     
     Me.RestartStopwatch
     
-    WriteGpibLan = Me.Session.ViSession.GpibLan.SendToController(a_message)
+    WriteGpibLan = This.VISession.GpibLan.SendToController(a_message)
     
     Me.ReadStopwatch
     
@@ -1160,7 +1257,7 @@ Private Sub WriteGpibLanButton_Click()
     On Error GoTo err_Handler
     
     Me.SentMessage = vbNullString
-    Dim p_messageToSend As String: p_messageToSend = Me.CommandsComboBox.value
+    Dim p_messageToSend As String: p_messageToSend = Me.CommandsComboBox.Value
     Me.WriteGpibLan p_messageToSend
     Me.SentMessage = p_messageToSend
         
@@ -1197,7 +1294,7 @@ Private Sub GoToLocalButton_Click()
     
     Me.RestartStopwatch
     
-    Me.Session.ViSession.GpibLan.GoToLocal
+    This.VISession.GpibLan.GoToLocal
     
     Me.ReadStopwatch
     
@@ -1232,7 +1329,7 @@ Private Sub LocalLockoutButton_Click()
     
     Me.RestartStopwatch
     
-    Me.Session.ViSession.GpibLan.LocalLockout
+    This.VISession.GpibLan.LocalLockout
     
     Me.ReadStopwatch
     
@@ -1267,11 +1364,11 @@ Private Sub ReadAfterWriteSetButton_Click()
     
     Me.RestartStopwatch
     
-    Me.Session.ViSession.GpibLan.ReadAfterWriteEnabledSetter Me.ReadAfterWriteEnabled
+    This.VISession.GpibLan.ReadAfterWriteEnabledSetter Me.ReadAfterWriteEnabled
     
     Me.ReadStopwatch
     
-    Me.Session.ViSession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
+    This.VISession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1304,11 +1401,11 @@ Private Sub ReadAfterWriteGetButton_Click()
     
     Me.RestartStopwatch
     
-    Me.ReadAfterWriteEnabled = Me.Session.ViSession.GpibLan.ReadAfterWriteEnabledGetter
+    Me.ReadAfterWriteEnabled = This.VISession.GpibLan.ReadAfterWriteEnabledGetter
     
     Me.ReadStopwatch
     
-    Me.Session.ViSession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
+    This.VISession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1341,7 +1438,7 @@ Private Sub SerialPollButton_Click()
     
     Me.RestartStopwatch
     
-    Range(m_serialPollCell).value = Me.Session.ViSession.GpibLan.SerialPoll
+    Range(m_serialPollCell).Value = This.VISession.GpibLan.SerialPoll
     
     Me.ReadStopwatch
     
@@ -1376,7 +1473,7 @@ Private Sub SRQButton_Click()
     
     Me.RestartStopwatch
     
-    Range(m_srqCell).value = Me.Session.ViSession.GpibLan.ServiceRequested
+    Range(m_srqCell).Value = This.VISession.GpibLan.ServiceRequested
     
     Me.ReadStopwatch
     
@@ -1411,7 +1508,7 @@ Private Sub GetGpibAddressButton_Click()
     
     Me.RestartStopwatch
     
-    Range(m_gpibAddressCell).value = Me.Session.ViSession.GpibLan.GpibAddressGetter
+    Range(m_gpibAddressCell).Value = This.VISession.GpibLan.GpibAddressGetter
 
     Me.ReadStopwatch
     
@@ -1446,7 +1543,7 @@ Private Sub SetGpibAddressButton_Click()
     
     Me.RestartStopwatch
     
-    Me.Session.ViSession.GpibLan.GpibAddressSetter CInt(Range(m_gpibAddressCell).value)
+    This.VISession.GpibLan.GpibAddressSetter CInt(Range(m_gpibAddressCell).Value)
 
     Me.ReadStopwatch
     
@@ -1482,7 +1579,7 @@ Private Sub ReadTimeoutGetButton_Click()
     
     Me.RestartStopwatch
     
-    Range(m_readTimeoutCell).value = Me.Session.ViSession.GpibLan.ReadTimeoutGetter
+    Range(m_readTimeoutCell).Value = This.VISession.GpibLan.ReadTimeoutGetter
 
     Me.ReadStopwatch
     
@@ -1517,7 +1614,7 @@ Private Sub ReadTimeoutSetButton_Click()
     
     Me.RestartStopwatch
     
-    Me.Session.ViSession.GpibLan.ReadTimeoutSetter (CInt(Range(m_readTimeoutCell).value))
+    This.VISession.GpibLan.ReadTimeoutSetter (CInt(Range(m_readTimeoutCell).Value))
     
     Me.ReadStopwatch
     
@@ -1550,42 +1647,42 @@ End Sub
 
 ''' <summary> Get the timer interval. </summary>
 Friend Property Get TimerInterval() As Integer
-    TimerInterval = CInt(Range(m_timerIntervalCell).value)
+    TimerInterval = CInt(Range(m_timerIntervalCell).Value)
 End Property
 
 ''' <summary> Get the resistance count. </summary>
 Friend Property Get ResistanceCount() As Integer
-    ResistanceCount = CInt(Range(m_resistanceCountCell).value)
+    ResistanceCount = CInt(Range(m_resistanceCountCell).Value)
 End Property
 
 ''' <summary>   Indicates that front inputs are required for this mode. </summary>
 Friend Property Get FrontReadRequired() As Boolean
-    FrontReadRequired = Me.FrontRearToggleButton.value
+    FrontReadRequired = Me.FrontRearToggleButton.Value
 End Property
 
 ''' <summary>   Gets the external trigger status. </summary>
 Friend Property Get ExternalTrigEnabled() As Boolean
-    ExternalTrigEnabled = Me.ExtTrigToggleButton.value
+    ExternalTrigEnabled = Me.ExtTrigToggleButton.Value
 End Property
 
 ''' <summary>   Enables or disables external triggering. </summary>
 Friend Property Let ExternalTrigEnabled(ByVal a_value As Boolean)
-    Me.ExtTrigToggleButton.value = a_value
+    Me.ExtTrigToggleButton.Value = a_value
 End Property
 
 ''' <summary>   Gets the auto increment resistance number status. </summary>
 Friend Property Get AutoIncrementResistanceNoEnabled() As Boolean
-    AutoIncrementResistanceNoEnabled = Me.AutoIncrementToggleButton.value
+    AutoIncrementResistanceNoEnabled = Me.AutoIncrementToggleButton.Value
 End Property
 
 ''' <summary>   Gets the single read enabled. </summary>
 Friend Property Get SingeReadEnabled() As Boolean
-    SingeReadEnabled = Me.SingleAllToggleButton.value
+    SingeReadEnabled = Me.SingleAllToggleButton.Value
 End Property
 
 ''' <summary>   Gets the resistance number. </summary>
 Friend Property Get SelectedResistanceNumber() As Integer
-    SelectedResistanceNumber = CInt(Range(m_resistanceNoCell).value)
+    SelectedResistanceNumber = CInt(Range(m_resistanceNoCell).Value)
 End Property
 
 ''' <summary>   Sets the resistance display. </summary>
@@ -1593,28 +1690,28 @@ End Property
 ''' <param name="resistanceValue">   [double] the resistance. </param>
 Private Sub SetResistance(ByVal a_resistanceNo As Integer, ByVal a_resistance As Double)
 
-    Range(m_resistanceNoCell).value = a_resistanceNo
-    Range(m_resistanceCell).value = a_resistance
+    Range(m_resistanceNoCell).Value = a_resistanceNo
+    Range(m_resistanceCell).Value = a_resistance
     
     Dim p_rowNo As Integer: p_rowNo = m_resistanceNoTopRow + a_resistanceNo - 1
-    Range(m_resistanceNoCol & CStr(p_rowNo)).value = "R" & CStr(a_resistanceNo)
-    Range(m_resistanceCol & CStr(p_rowNo)).value = Format(a_resistance, m_resistanceFormat)
+    Range(m_resistanceNoCol & CStr(p_rowNo)).Value = "R" & CStr(a_resistanceNo)
+    Range(m_resistanceCol & CStr(p_rowNo)).Value = Format(a_resistance, m_resistanceFormat)
     
 End Sub
 
 ''' <summary>   Handles the front/read toggle button click event. </summary>
 Private Sub FrontRearToggleButton_Click()
-    FrontRearToggleButton.Caption = IIf(FrontRearToggleButton.value, "Front", "Rear")
+    FrontRearToggleButton.Caption = IIf(FrontRearToggleButton.Value, "Front", "Rear")
 End Sub
 
 ''' <summary>   Handles the auto-increment toggle button click event. </summary>
 Private Sub AutoIncrementToggleButton_Click()
-    AutoIncrementToggleButton.Caption = IIf(AutoIncrementToggleButton.value, "Auto", "Manual")
+    AutoIncrementToggleButton.Caption = IIf(AutoIncrementToggleButton.Value, "Auto", "Manual")
 End Sub
 
 ''' <summary>   Handles the single/all button click event. </summary>
 Private Sub SingleAllToggleButton_Click()
-    SingleAllToggleButton.Caption = IIf(SingleAllToggleButton.value, "Single", "All")
+    SingleAllToggleButton.Caption = IIf(SingleAllToggleButton.Value, "Single", "All")
 End Sub
 
 ''' <summary> Queries the Inputs status. </summary>
@@ -1627,7 +1724,7 @@ Private Sub QueryInputsButton_Click()
     
     Me.RestartStopwatch
     
-    Range(m_inputsCell).value = IIf(Me.K2700.IsFrontInputs, "Front", "Rear")
+    Range(m_inputsCell).Value = IIf(This.K2700.IsFrontInputs, "Front", "Rear")
     
     Me.ReadStopwatch
 
@@ -1662,12 +1759,12 @@ Private Sub ReadCardsButton_Click()
     
     Me.RestartStopwatch
     
-    Me.K2700.ReadCards
+    This.K2700.ReadCards
     
     Me.ReadStopwatch
     
-    Range(m_card1Cell).value = Me.K2700.Card1
-    Range(m_card2Cell).value = Me.K2700.Card2
+    Range(m_card1Cell).Value = This.K2700.Card1
+    Range(m_card2Cell).Value = This.K2700.Card2
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1703,23 +1800,21 @@ Private Sub ReadResistanceButton_Click()
     On Error GoTo err_Handler
     
     Me.ReadResistanceButton.Enabled = False
-    Me.ExtTrigToggleButton.Enabled = False
+    Me.ImmediateTriggerOptionButton.Enabled = False
+    Me.ExternalTriggerOptionButton.Enabled = False
     
     ' reinitialize if device not defined
-    If Not Me.K2700.Connected Then
-        ' Me.K2700.InitializeLegacy Me.host, Me.port, Me.ReceiveTimeout
+    If Not This.K2700.Connected Then
+        ' This.K2700.InitializeLegacy Me.host, Me.port, Me.ReceiveTimeout
     End If
     
-    If Me.FrontReadRequired And Not Me.K2700.IsFrontInputs Then
+    If Me.FrontReadRequired And Not This.K2700.IsFrontInputs Then
         Me.LastErrorMessage = "Please release the front panel INPUTS button to its FRONT (F) position"
         GoTo exit_Handler
-    ElseIf Not Me.FrontReadRequired And Me.K2700.IsFrontInputs Then
+    ElseIf Not Me.FrontReadRequired And This.K2700.IsFrontInputs Then
         Me.LastErrorMessage = "Please depress the front panel INPUTS button to its REAR (R) position"
         GoTo exit_Handler
     End If
-
-    ' configure measuring a single resistance on each read.
-    Me.K2700.ConfigureSingleResistanceReading
 
     Dim p_resistanceNo As Integer
 
@@ -1739,9 +1834,9 @@ Private Sub ReadResistanceButton_Click()
             
             Me.RestartStopwatch
             If Me.FrontReadRequired Then
-                Me.K2700.ReadFrontResistance p_resistanceNo
+                This.K2700.TakeFrontReading p_resistanceNo
             Else
-                Me.K2700.ReadRearResistance p_resistanceNo
+                This.K2700.TakeRearReading p_resistanceNo
             End If
             Me.ReadStopwatch
         
@@ -1751,11 +1846,11 @@ Private Sub ReadResistanceButton_Click()
         p_resistanceNo = Me.SelectedResistanceNumber
         Me.RestartStopwatch
         If Me.FrontReadRequired Then
-            Me.K2700.ReadFrontResistance p_resistanceNo
+            This.K2700.TakeFrontReading p_resistanceNo
         Else
-            Me.K2700.ReadRearResistance p_resistanceNo
+            This.K2700.TakeRearReading p_resistanceNo
         End If
-        ' Range("C22").value = Me.K2700.ReadRearResistance(ResistanceNumber)
+        ' Range("C22").value = This.K2700.TakeRearReading(ResistanceNumber)
         Me.ReadStopwatch
     End If
 
@@ -1763,8 +1858,8 @@ Private Sub ReadResistanceButton_Click()
 exit_Handler:
 
     Me.ReadResistanceButton.Enabled = True
-    Me.ExtTrigToggleButton.Enabled = True
-    
+    Me.ImmediateTriggerOptionButton.Enabled = True
+    Me.ExternalTriggerOptionButton.Enabled = True
     On Error GoTo 0
     Exit Sub
 
@@ -1794,12 +1889,12 @@ Private Sub SetScansButton_Click()
     
     Me.RestartStopwatch
     
-    Me.K2700.DefineResistanceScanLists
+    This.K2700.DefineResistanceScanLists
     
     Me.ReadStopwatch
     
-    Range(m_card1ScanListCell).value = Me.K2700.Card1ScanList
-    Range(m_card2ScanListCell).value = Me.K2700.Card2ScanList
+    Range(m_card1ScanListCell).Value = This.K2700.Card1ScanList
+    Range(m_card2ScanListCell).Value = This.K2700.Card2ScanList
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1853,7 +1948,7 @@ Private Sub SetExternalTriggerMode(Optional ByVal a_timerInterval As Integer = 1
         ' input from the front panel
      
         ' check if front or read
-        If Me.FrontReadRequired And Not Me.K2700.IsFrontInputs Then
+        If Me.FrontReadRequired And Not This.K2700.IsFrontInputs Then
         
             ' if rear, toggle back the button
             Me.ExternalTrigEnabled = False
@@ -1864,7 +1959,7 @@ Private Sub SetExternalTriggerMode(Optional ByVal a_timerInterval As Integer = 1
             ' and get out
             GoTo exit_Handler
               
-        ElseIf Not Me.FrontReadRequired And Me.K2700.IsFrontInputs Then
+        ElseIf Not Me.FrontReadRequired And This.K2700.IsFrontInputs Then
         
         
             ' if rear, toggle back the button
@@ -1881,7 +1976,7 @@ Private Sub SetExternalTriggerMode(Optional ByVal a_timerInterval As Integer = 1
         Range(m_externalTriggerStatusCell) = "External Trigger On"
 
         ' set the instrument for externally triggered measurements
-        Me.K2700.SetExternalTriggerResistanceMode
+        This.K2700.SetExternalTriggerResistanceMode
     
         If Me.AutoIncrementResistanceNoEnabled Then
         
@@ -1936,8 +2031,8 @@ Private Sub ExtTrigToggleButton_Click()
     
     If Me.ExternalTrigEnabled Then
     
-        Me.ExtTrigToggleButton.Enabled = True
-        Me.ReadResistanceButton.Enabled = False
+        Me.ImmediateTriggerOptionButton.Enabled = False
+        Me.ExternalTriggerOptionButton.Enabled = False
         
         If Me.AutoIncrementResistanceNoEnabled Then
             
@@ -1953,8 +2048,10 @@ Private Sub ExtTrigToggleButton_Click()
     
     Else
     
-      ' one external triggering is turned off, the timer
-      ' is allowed to turn itself off
+        ' one external triggering is turned off, the timer
+        ' is allowed to turn itself off
+        Me.ImmediateTriggerOptionButton.Enabled = False
+        Me.ExternalTriggerOptionButton.Enabled = False
     
     End If
  
@@ -2030,7 +2127,7 @@ Private Sub HandleTimerEvent()
     ' stop the timer.
     If p_isDone Then Me.PauseTimer
     
-    Me.K2700.MonitorExternalTrigger p_resistanceNo, p_isDone
+    This.K2700.MonitorExternalTrigger p_resistanceNo, p_isDone
     
     ' if we ended manual mode, enable the rest of the buttons
     If p_isDone Then
@@ -2125,21 +2222,25 @@ End Sub
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Handles the K2700 <see cref="cc_isr_TCP_VI.ResistanceNumberMeasured"/> event. </summary>
-''' <param name="a_eventArgs">   [<see cref="cc_isr_TCP_VI.ResistanceNumberEventArgs"/>] event arguments. </param>
-Private Sub m_k2700_ResistanceNumberMeasured(ByVal a_eventArgs As cc_isr_TCP_VI.ResistanceNumberEventArgs)
+''' <summary>   Handles the K2700 <see cref="cc_isr_Tcp_Scpi.ChannelMeasured"/> event. </summary>
+''' <param name="a_eventArgs">   [<see cref="cc_isr_Tcp_Scpi.ChannelReadingEventArgs"/>] event arguments. </param>
+Private Sub m_k2700_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.ChannelReadingEventArgs)
 
     Const p_procedureName = "m_session_ConnectionChanged"
     
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    SetResistance a_eventArgs.ResistanceNumber, a_eventArgs.Resistance
+    If VBA.vbNullString = a_eventArgs.Reading Then
+        SetResistance a_eventArgs.ChannelNumber, -1#
+    Else
+        SetResistance a_eventArgs.ChannelNumber, CDbl(a_eventArgs.Reading)
+    End If
     
     If Me.AutoIncrementResistanceNoEnabled Then
     
         ' increment the resistance for the next reading
-        This.CurrentResistanceNo = a_eventArgs.ResistanceNumber + 1
+        This.CurrentResistanceNo = a_eventArgs.ChannelNumber + 1
         If This.CurrentResistanceNo > Me.ResistanceCount Then
             This.CurrentResistanceNo = 1
         End If
@@ -2167,7 +2268,7 @@ err_Handler:
     
 End Sub
 
-''' <summary>   Handles the K2700 <see cref="cc_isr_TCP_VI.K2700.ConnectionChanged"/> event. </summary>
+''' <summary>   Handles the K2700 <see cref="cc_isr_Tcp_Scpi.K2700.ConnectionChanged"/> event. </summary>
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/>] event arguments. </param>
 Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
 
@@ -2181,21 +2282,21 @@ Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Connec
     If a_eventArgs.Connected Then
     
         ' report the socket number
-        Range(m_socketAddressCell).value = Me.Session.ViSession.SocketAddress
-        Range(m_socketIdCell).value = Me.Session.SocketId
+        Range(m_socketAddressCell).Value = This.VISession.SocketAddress
+        Range(m_socketIdCell).Value = This.VISession.SocketId
         
-        Me.Session.ViSession.GpibLan.SelectiveDeviceClear
-        Me.Session.ResetKnownState
-        Me.Session.ClearExecutionState
+        This.VISession.GpibLan.SelectiveDeviceClear
+        This.Device.ResetKnownState
+        This.Device.ClearExecutionState
         
-        If Me.Session.ViSession.UsingGpibLan Then
-            Me.ReadAfterWriteEnabled = Me.Session.ViSession.GpibLan.ReadAfterWriteEnabledGetter
+        If This.VISession.UsingGpibLan Then
+            Me.ReadAfterWriteEnabled = This.VISession.GpibLan.ReadAfterWriteEnabledGetter
         End If
     
     Else
     
-        Range(m_socketAddressCell).value = vbNullString
-        Range(m_socketIdCell).value = vbNullString
+        Range(m_socketAddressCell).Value = vbNullString
+        Range(m_socketIdCell).Value = vbNullString
         
     End If
 
@@ -2220,7 +2321,7 @@ err_Handler:
     
 End Sub
 
-''' <summary>   Handles the <see cref="cc_isr_TCP_VI.K2700.ConnectionChanging"/> event. </summary>
+''' <summary>   Handles the <see cref="cc_isr_Tcp_Scpi.K2700.ConnectionChanging"/> event. </summary>
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangingEventArgs"/>] event arguments. </param>
 Private Sub m_k2700_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
 End Sub

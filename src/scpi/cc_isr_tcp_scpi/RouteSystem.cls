@@ -14,10 +14,9 @@ Attribute VB_Exposed = True
 Option Explicit
 
 Private Type ThisData
-    ' reference to the VI session
-    Session As cc_isr_Ieee488.VISession
-        InstrumentFamilyCards As Collection
-        InstalledCards As Collection
+    ViSession As cc_isr_Ieee488.ViSession
+    InstrumentFamilyCards As Collection
+    InstalledCards As Collection
 End Type
 
 Private This As ThisData
@@ -25,10 +24,10 @@ Private This As ThisData
 ''' <summary>   Returns a reference to the <see cref="RouteSystem"/>. </summary>
 ''' <param name="a_session">    [<see cref="<see cref="cc_isr_IEEE488.VISession"/>"/>] A connected session. </param>
 ''' <value>   [<see cref="RouteSystem"/>]. </returns>
-Public Function Initialize(ByVal a_session As cc_isr_Ieee488.VISession) As RouteSystem
-    Set This.Session = a_session
+Public Function Initialize(ByVal a_session As cc_isr_Ieee488.ViSession) As RouteSystem
+    Set This.ViSession = a_session
     Set This.InstrumentFamilyCards = New Collection
-    Set This.MultiplexerCards = New Collection
+    Set This.InstalledCards = New Collection
     Set Initialize = Me
 End Function
 
@@ -36,18 +35,12 @@ End Function
 ''' <returns>   True if the <see cref="cc_isr_IEEE488.VISession"/>  is connected; otherwise, False. </returns>
 Public Property Get Connected() As Boolean
     
-    If This.Session Is Nothing Then
+    If This.ViSession Is Nothing Then
         Connected = False
     Else
-        Connected = This.Session.Connected
+        Connected = This.ViSession.Connected
     End If
 
-End Property
-
-''' <summary>   Returns a reference to the <see cref="cc_isr_IEEE488.VISession"/>. </summary>
-''' <value>   [<see cref="cc_isr_IEEE488.VISession"/>]. </returns>
-Public Property Get Session() As cc_isr_Ieee488.VISession
-    Set Session = This.Session
 End Property
 
 '''  <summary>   Gets or sets the dictionary of cards that are available for this
@@ -60,72 +53,101 @@ End Property
 
 '''  <summary>   Populates the 7700 cards family dictionary. </summary>
 '''  <remarks>   2023-08-17. </remarks>
-Public Sub Populate7700Cards()
+''' <returns>   [Integer] the number of items. </returns>
+Public Function Populate7700Cards() As Integer
 
-        this.InstrumentFamilyCards.Clear()
-        Dim p_name As String
-        Dim p_capacity As Integer
-        p_name = "7700": p_capacity = 20: this.InstrumentFamilyCards.Add new MultiplexerCard( p_name, p_capacity ), p_name
-        p_name = "7702": p_capacity = 20: this.InstrumentFamilyCards.Add new MultiplexerCard( p_name, p_capacity ), p_name
-        p_name = "7708": p_capacity = 40: this.InstrumentFamilyCards.Add new MultiplexerCard( p_name, p_capacity ), p_name
-        p_name = "7710": p_capacity = 20: this.InstrumentFamilyCards.Add new MultiplexerCard( p_name, p_capacity ), p_name
+    Dim p_cards As New Collection
+    Dim p_name As String
+    Dim p_capacity As Integer
+    Dim p_card As MultiplexerCard
+    Set p_card = New MultiplexerCard: p_cards.Add p_card.Initialize("7700", 20), p_card.Name
+    Set p_card = New MultiplexerCard: p_cards.Add p_card.Initialize("7702", 40), p_card.Name
+    Set p_card = New MultiplexerCard: p_cards.Add p_card.Initialize("7708", 40), p_card.Name
+    Set p_card = New MultiplexerCard: p_cards.Add p_card.Initialize("7710", 20), p_card.Name
+    Set This.InstrumentFamilyCards = p_cards
+    Populate7700Cards = This.InstrumentFamilyCards.Count
 
-End Sub
+End Function
 
 '''  <summary>   Gets or sets the installed cards for this instrument instance
 '''              keyed by the card slot number. </summary>
-'''  <value> The installed cards. </value>
+'''  <value>   [Collection] The installed cards. </value>
 Public Property Get InstalledCards() As Collection
     Set InstalledCards = This.InstalledCards
 End Property
 
-'''  <summary>   Populates the cards using the <see cref="Ieee488.Syntax.OptionsQueryCommand"/> reply. </summary>
+'''  <summary>   Populates the installed cards using the <see cref="Ieee488.Syntax.OptionsQueryCommand"/> reply. </summary>
 '''  <remarks>   2023-08-17. </remarks>
-Public Sub PopulateCards(ByVal a_cards As String)
+'''  <value>   [Integer] the number of installed cards. </value>
+Public Function PopulateCards(ByVal a_cards As String) As Integer
 
-        this.InstalledCards.Clear()
+    Dim p_cards As New Collection
+    Dim p_slotNumber As Integer: p_slotNumber = 0
+    Dim p_firstChannelNumber As Integer
+    p_firstChannelNumber = 1
+    While (a_cards <> VBA.vbNullString)
         
-        Dim slotNumber As Integer: slotNumber = 0
-        While (a_cards <> VBA.vbnullstring)
+        p_slotNumber = p_slotNumber + 1
+        Dim p_cardName As String
+        p_cardName = cc_isr_Core.StringExtensions.Pop(a_cards, ",")
+        Dim p_multiplexerCard As MultiplexerCard
         
-                slotNumber += 1
-                dim p_cardName as String = cc_isr_Core.StringExtensions.Pop( a_cards, "," )
-                If cc_isr_Core.CollectionExtensions.ContainsKey(This.InstrumentFamilyCards, p_cardName) Then
-                        Dim multiplexerCard As MultiplexerCard: multiplexerCard = this.InstrumentFamilyCards[p_cardName]
-                        multiplexerCard.slotNumber = slotNumber
-                        this.InstalledCards.Add( multiplexerCard.Clone(), slotNumber )
-                End If
+        On Error Resume Next
+        Set p_multiplexerCard = This.InstrumentFamilyCards.Item(p_cardName)
+        On Error GoTo 0
         
-        Wend
+        If Not p_multiplexerCard Is Nothing Then
+            p_multiplexerCard.SlotNumber = p_slotNumber
+            p_multiplexerCard.FirstChannelNumber = p_firstChannelNumber
+            p_cards.Add p_multiplexerCard.Clone(), CStr(p_slotNumber)
+            p_firstChannelNumber = p_firstChannelNumber + p_multiplexerCard.Capacity
+        End If
+    
+    Wend
+    
+    Set This.InstalledCards = p_cards
         
-End Sub
+    PopulateCards = This.InstalledCards.Count
+    
+End Function
 
 '''  <summary>   Sets and applies the full capacity scan lists for resistance measurements on all cards. </summary>
-Public Sub DefineResistanceScanLists()
+Public Sub DefineScanLists(ByVal a_scpiFunction As String)
 
-        Dim p_multiplexerCard As multiplexerCard
-        For Each p_multiplexerCard In This.InstalledCards
-        
-                _ = p_multiplexerCard.Value.BuildDefaultScanList( "RES" )
-                _ = this.Session.WriteLine( p_multiplexerCard.Value.ScanList )
-        Next
+    Dim p_multiplexerCard As MultiplexerCard
+    For Each p_multiplexerCard In This.InstalledCards
+        p_multiplexerCard.BuildDefaultScanList a_scpiFunction
+        This.ViSession.WriteLine p_multiplexerCard.ScanList
+    Next
 End Sub
+
+'''  <summary>   Returns the scan card for the specific channel. </summary>
+'''  <param name="channelNumber">   The channel number. </param>
+'''  <returns>  [<see cref="MultiplexerCard"/>]. </returns>
+Public Function SelectMultiplexerCard(ByVal a_channelNumber As Integer) As MultiplexerCard
+    Dim p_multiplexerCard As MultiplexerCard
+    For Each p_multiplexerCard In This.InstalledCards
+        If p_multiplexerCard.FirstChannelNumber <= a_channelNumber And _
+            p_multiplexerCard.LastChannelNumber >= a_channelNumber Then
+            Exit For
+        End If
+    Next
+    If p_multiplexerCard Is Nothing Then
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidArgumentError, _
+            ThisWorkbook.VBProject.Name & "." & VBA.Information.TypeName(Me) & ".SelectMultiplexerCard", _
+            "Argument: 'a_ChannelNumber' = " & CStr(a_channelNumber) & " is out of range for the installed multiplexer cards in this instrument."
+    End If
+    Set SelectMultiplexerCard = p_multiplexerCard
+End Function
 
 '''  <summary>   Returns the route command for measuring a specific channel. </summary>
 '''  <param name="channelNumber">   The channel number. </param>
 '''  <returns>  The channel list to close. </returns>
-Public Function BuildChannelList(ByVal a_channelNumber As Integer) As String
+Public Function BuildRouteCommand(ByVal a_channelNumber As Integer) As String
 
-        Dim p_routeCommand As String: p_routeCommand = VBA.vbnullstring
-
-        dim p_cumulativeCapacity as integer = 0
-        Dim p_multiplexerCard As multiplexerCard
-        For Each p_multiplexerCard In This.InstalledCards
-                p_cumulativeCapacity = p_cumulativeCapacity + p_multiplexerCard.Value.Capacity
-                If a_channelNumber <= p_cumulativeCapacity Then
-                        p_routeCommand = p_multiplexerCard.Value.RouteCommand
-        Next
-        BuildChannelList = p_routeCommand
+    Dim p_multiplexerCard As MultiplexerCard
+    Set p_multiplexerCard = Me.SelectMultiplexerCard(a_channelNumber)
+    BuildRouteCommand = p_multiplexerCard.RouteCommand
 
 End Function
 
@@ -133,23 +155,12 @@ End Function
 '''  <param name="channelNumber">   The channel number. </param>
 '''  <returns>  The scan list. </returns>
 Public Function BuildScanList(ByVal a_channelNumber As Integer) As String
-{
-        Dim scanCardChannel As String: scanCardChannel = VBA.vbnullstring
 
-        Dim p_previousCumulativeCapacity As Integer: p_previousCumulativeCapacity = 0
-        Dim p_cumulativeCapacity As Integer: p_cumulativeCapacity = 0
-        Dim p_multiplexerCard As multiplexerCard
-        For Each p_multiplexerCard In This.InstalledCards
-        {
-                p_cumulativeCapacity = p_cumulativeCapacity + p_multiplexerCard.Value.Capacity
-                if ( a_channelNumber <= p_cumulativeCapacity )
-                {
-                        dim p_scanChannel as string : p_scanChannel = "0" & cstr(channelNumber - previousCumulativeCapacity}
-                        p_scanCardChannel = CStr(p_multiplexerCard.Value.slotNumber) & " " & cc_isr_Core.StringExtensions.Right(scanChannel, 2)
-                }
-                previousCumulativeCapacity = cumulativeCapacity
-        }
-
-        BuildScanList = "(@" & scanCardChannel & ")"
-}
+    Dim p_multiplexerCard As MultiplexerCard
+    Set p_multiplexerCard = Me.SelectMultiplexerCard(a_channelNumber)
+    Dim p_scanCardChannel As String: p_scanCardChannel = VBA.vbNullString
+    p_scanCardChannel = p_multiplexerCard.BuildScanChannel(a_channelNumber)
+    BuildScanList = "(@" & p_scanCardChannel & ")"
+    
+End Function
 

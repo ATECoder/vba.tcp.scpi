@@ -35,10 +35,10 @@ End Sub
 ''' IP address and port defined in the parent sheet. </summary>
 Private Sub ReadIdentityButton_Click()
 
-    Dim p_host As String: p_host = Range(m_inputHostCell).value
-    Dim p_port As Integer: p_port = Range(m_inputPortCell).value
-    Dim p_repeatCount As Integer: p_repeatCount = Range(m_repeatCountCell).value
-    Dim p_timeout As Integer: p_timeout = Range(m_receiveTimeoutCell).value
+    Dim p_host As String: p_host = Range(m_inputHostCell).Value
+    Dim p_port As Integer: p_port = Range(m_inputPortCell).Value
+    Dim p_repeatCount As Integer: p_repeatCount = Range(m_repeatCountCell).Value
+    Dim p_timeout As Integer: p_timeout = Range(m_receiveTimeoutCell).Value
     
     ReadIdentity p_host, p_port, p_repeatCount
    
@@ -55,34 +55,34 @@ Private Sub ReadIdentity(ByVal a_host As String, ByVal a_port As Long, ByVal a_r
     On Error GoTo Finally
     
     Range(m_socketAddressCell) = vbNullString
-    Range(m_connectedSocketIdCell).value = vbNullString
-    Range(m_connectedCell).value = vbNullString
-    Range(m_sentMessageCell).value = vbNullString
-    Range(m_receivedMessageLengthCell).value = vbNullString
-    Range(m_receivedMessageCell).value = vbNullString
-    Range(m_elapsedTimeCell).value = vbNullString
-    Range(m_errorMessageCell).value = vbNullString
+    Range(m_connectedSocketIdCell).Value = vbNullString
+    Range(m_connectedCell).Value = vbNullString
+    Range(m_sentMessageCell).Value = vbNullString
+    Range(m_receivedMessageLengthCell).Value = vbNullString
+    Range(m_receivedMessageCell).Value = vbNullString
+    Range(m_elapsedTimeCell).Value = vbNullString
+    Range(m_errorMessageCell).Value = vbNullString
 
     Dim p_stopper As cc_isr_Core_IO.Stopwatch: Set p_stopper = cc_isr_Core_IO.Factory.NewStopwatch()
     Dim p_totalMilliseconds As Double
     
     Dim p_device As K2700
-    Set p_device = cc_isr_TCP_VI.Factory.NewK2700.Initialize(New ErrTracer)
+    Set p_device = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize(New ErrTracer)
     
     p_device.OpenConnection a_host, a_port
     
     ' report the socket number
-    Range(m_connectedSocketIdCell).value = p_device.Session.ViSession.SocketId
+    Range(m_connectedSocketIdCell).Value = p_device.VISession.SocketId
    
     ' report the connection state
-    Range(m_connectedCell).value = p_device.Connected
-    Range(m_socketAddressCell).value = p_device.Session.ViSession.SocketAddress
+    Range(m_connectedCell).Value = p_device.Connected
+    Range(m_socketAddressCell).Value = p_device.VISession.SocketAddress
     
     If a_repeatCount > 0 And p_device.Connected Then
     
         Dim p_command As String: p_command = "*IDN?"
         
-        Range(m_sentMessageCell).value = p_command
+        Range(m_sentMessageCell).Value = p_command
         
         Dim p_loopCount As Integer
         Do While p_loopCount < a_repeatCount
@@ -92,24 +92,24 @@ Private Sub ReadIdentity(ByVal a_host As String, ByVal a_port As Long, ByVal a_r
             p_loopCount = p_loopCount + 1
             p_stopper.Restart
             
-            p_device.Session.QueryIdentity
+            p_device.Device.QueryIdentity
             
             p_totalMilliseconds = p_totalMilliseconds + p_stopper.ElapsedMilliseconds
             
-            Range(m_receivedMessageLengthCell).value = Len(p_device.Session.Identity)
-            Range(m_receivedMessageCell).value = p_device.Session.Identity
+            Range(m_receivedMessageLengthCell).Value = Len(p_device.Device.Identity)
+            Range(m_receivedMessageCell).Value = p_device.Device.Identity
     
         Loop
   
-        Range(m_averageElapsedTimeCell).value = Format(p_totalMilliseconds / p_loopCount, m_elapsedTimeFormat) + " ms"
-        Range(m_elapsedTimeCell).value = Format(p_totalMilliseconds, m_elapsedTimeFormat) + " ms"
+        Range(m_averageElapsedTimeCell).Value = Format(p_totalMilliseconds / p_loopCount, m_elapsedTimeFormat) + " ms"
+        Range(m_elapsedTimeCell).Value = Format(p_totalMilliseconds, m_elapsedTimeFormat) + " ms"
     
     ElseIf a_repeatCount <= 0 Then
     
-        Range(m_receivedMessageCell).value = "testing connect and disconnect; disconnected."
+        Range(m_receivedMessageCell).Value = "testing connect and disconnect; disconnected."
     
     Else
-        Range(m_errorMessageCell).value = "connection failed without reporting an exception"
+        Range(m_errorMessageCell).Value = "connection failed without reporting an exception"
     End If
     
 Finally:
@@ -133,7 +133,7 @@ Finally:
     Set p_device = Nothing
     
     If Len(p_errorMessage) > 0 Then
-        Range(m_errorMessageCell).value = p_errorMessage
+        Range(m_errorMessageCell).Value = p_errorMessage
     End If
     
     On Error GoTo 0
