@@ -30,7 +30,7 @@ Private Sub ListTestsButton_Click()
     
     Dim p_moduleInfo As ModuleInfo
     testNamesCombo.Clear
-    For Each p_moduleInfo In WorkbookUtilities.EnumerateProjectModules(cc_isr_Ieee488.ThisWorkbook.VBProject)
+    For Each p_moduleInfo In WorkbookUtilities.EnumerateProjectModules(ThisWorkbook.VBProject)
         DoEvents
         testNamesCombo.AddItem p_moduleInfo.FullName
     Next p_moduleInfo

@@ -2,14 +2,8 @@
 
 ## Beta 202308
 
-* rename project to cc.isr.tcp.scpi.
+* 2700: use Route system to control the cards.
 * issue reset clear whenever switching model. 
-* Add MultiplexerCard class.
-* Add Route subsystem class.
-
-* Add ChannelReadingEventArgs
-* Add ?ChannelResistanceEventArgs
-* test: disable all buttons when monitoring the triggers.
 
 * flying:
 * on device initialized

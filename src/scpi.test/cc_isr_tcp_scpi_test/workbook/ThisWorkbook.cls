@@ -92,7 +92,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.Name
     
     ' display the error message
     MsgBox cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage(), vbExclamation
@@ -129,7 +129,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.Name
     
     ' display the error message
     MsgBox cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage(), vbExclamation
@@ -170,7 +170,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.Name
     
     ' display the error message
     MsgBox cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage(), vbExclamation
@@ -200,18 +200,18 @@ Private Sub Workbook_Open()
     Me.DisableSavingCode ThisWorkbook, Me.Deployed
     
     ' hide the referenced workbooks
-    Application.Windows(cc_isr_Core_IO.ThisWorkbook.name).Visible = False
-    Application.Windows(cc_isr_Test_Fx.ThisWorkbook.name).Visible = False
-    Application.Windows(cc_isr_Core.ThisWorkbook.name).Visible = False
-    Application.Windows(cc_isr_Winsock.ThisWorkbook.name).Visible = False
-    Application.Windows(cc_isr_Ieee488.ThisWorkbook.name).Visible = False
-    Application.Windows(cc_isr_Tcp_Scpi.ThisWorkbook.name).Visible = False
+    Application.Windows(cc_isr_Core_IO.ThisWorkbook.Name).Visible = False
+    Application.Windows(cc_isr_Test_Fx.ThisWorkbook.Name).Visible = False
+    Application.Windows(cc_isr_Core.ThisWorkbook.Name).Visible = False
+    Application.Windows(cc_isr_Winsock.ThisWorkbook.Name).Visible = False
+    Application.Windows(cc_isr_Ieee488.ThisWorkbook.Name).Visible = False
+    Application.Windows(cc_isr_Tcp_Scpi.ThisWorkbook.Name).Visible = False
     
     ' wait a bit for the workbooks to hide.
     cc_isr_Core_IO.CoreExtensions.Wait 0.25
     
     ' show work book
-    Application.Windows(ThisWorkbook.name).Visible = True
+    Application.Windows(ThisWorkbook.Name).Visible = True
     
     ' initialize the sheets to initial values.
     UnitTestSheet.Initialize
@@ -226,7 +226,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.Name
     
     ' display the error message
     MsgBox cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage(), vbExclamation

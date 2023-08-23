@@ -18,9 +18,8 @@ Private Type ThisData
     Capacity As Integer
     SlotNumber As Integer
     SlotCapacity As Integer
-    ScanList As String
-    FirstChannelNumber As Integer
-    LastChannelNumber As Integer
+    DeviceFirstChannel As Integer
+    DeviceLastChannel As Integer
 End Type
 
 Private This As ThisData
@@ -34,9 +33,8 @@ Public Function Initialize(ByVal a_name As String, ByVal a_capacity As Integer) 
     This.Name = a_name
     This.SlotNumber = 0
     This.SlotCapacity = 100
-    This.ScanList = VBA.vbNullString
-    This.FirstChannelNumber = 0
-    This.LastChannelNumber = 0
+    This.DeviceFirstChannel = 0
+    This.DeviceLastChannel = 0
     Set Initialize = Me
 End Function
 
@@ -47,9 +45,8 @@ Public Function Clone() As MultiplexerCard
     Dim p_clone As New MultiplexerCard
     p_clone.Initialize This.Name, This.Capacity
     p_clone.SlotNumber = This.SlotNumber
-    p_clone.ScanList = This.ScanList
-    p_clone.FirstChannelNumber = This.FirstChannelNumber
-    p_clone.LastChannelNumber = This.LastChannelNumber
+    p_clone.DeviceFirstChannel = This.DeviceFirstChannel
+    p_clone.DeviceLastChannel = This.DeviceLastChannel
     Set Clone = p_clone
 
 End Function
@@ -79,89 +76,81 @@ Public Property Get SlotNumber() As Integer
 End Property
 
 ''' <summary>   Sets the multiplexer card Slot Number. </summary>
-''' <param SlotNumber="a_value">   [Integer] The Slot Number of the card. </param>
+''' <param name="a_value">   [Integer] The Slot Number of the card. </param>
 Public Property Let SlotNumber(ByVal a_value As Integer)
     
     This.SlotNumber = a_value
 
 End Property
 
-''' <summary>   Gets the multiplexer card First Channel Number. </summary>
+''' <summary>   Gets the device channel number that corresponds to the
+'''             multiplexer card First Channel Number. </summary>
 ''' <value> [Integer]. </value>
-Public Property Get FirstChannelNumber() As Integer
+Public Property Get DeviceFirstChannel() As Integer
         
-    FirstChannelNumber = This.FirstChannelNumber
+    DeviceFirstChannel = This.DeviceFirstChannel
 
 End Property
 
-''' <summary>   Sets the multiplexer card First Channel Number. </summary>
-''' <param FirstChannelNumber="a_value">   [Integer] The First Channel Number of the card. </param>
-Public Property Let FirstChannelNumber(ByVal a_value As Integer)
+''' <summary>   Sets the device channel number that corresponds to the
+'''             multiplexer card first channel number. </summary>
+''' <param name="a_value">   [Integer] The device channel that corresponds to
+'''                          the first channel of this card. </param>
+Public Property Let DeviceFirstChannel(ByVal a_value As Integer)
     
-    This.FirstChannelNumber = a_value
-    Me.LastChannelNumber = a_value + Me.Capacity - 1
+    This.DeviceFirstChannel = a_value
+    This.DeviceLastChannel = a_value + Me.Capacity - 1
 
 End Property
 
-''' <summary>   Gets the multiplexer card Last Channel Number. </summary>
+''' <summary>   Gets the device channel number that corresponds to the
+'''             multiplexer card last channel number. </summary>
 ''' <value> [Integer]. </value>
-Public Property Get LastChannelNumber() As Integer
+Public Property Get DeviceLastChannel() As Integer
         
-    LastChannelNumber = This.LastChannelNumber
+    DeviceLastChannel = This.DeviceLastChannel
 
 End Property
 
-''' <summary>   Sets the multiplexer card Last Channel Number. </summary>
-''' <param LastChannelNumber="a_value">   [Integer] The Last Channel Number of the card. </param>
-Public Property Let LastChannelNumber(ByVal a_value As Integer)
+''' <summary>   Sets the device channel number that corresponds to the
+'''             multiplexer card last channel number. </summary>
+''' <param name="a_value">   [Integer] The device channel that corresponds to
+'''                          the last channel of this card. </param>
+Public Property Let DeviceLastChannel(ByVal a_value As Integer)
     
-    This.LastChannelNumber = a_value
+    This.DeviceLastChannel = a_value
 
 End Property
 
-''' <summary>   Gets the scan list. </summary>
-''' <value> [String]. </value>
-Public Property Get ScanList() As String
-        
-    ScanList = This.ScanList
-
-End Property
-
-''' <summary>   Sets the scan list. </summary>
-''' <param name="a_value">   [String] The scan list. </param>
-''' <value> [String]. </value>
-Public Property Let ScanList(ByVal a_value As String)
-    This.ScanList = a_value
-End Property
-
-''' <summary>   Builds default scan list. </summary>
+''' <summary>   Builds the function scan list, e.g., <c>:FUNC 'RES',(@101:120)</c>. </summary>
 ''' <remarks>   2023-08-17. </remarks>
 ''' <param name="a_measurement">   The measurement function, e.g., RES. </param>
-''' <returns>   A string. </returns>
-Public Function BuildDefaultScanList(ByVal a_measurement As String) As String
+''' <returns>   [String]. </returns>
+Public Function BuildFunctionScanList(ByVal a_measurement As String) As String
 
     Dim p_firstChannelNumber As Integer
     p_firstChannelNumber = This.SlotNumber * 100 + 1
     
-    Dim LastChannelNumber As Integer
-    LastChannelNumber = FirstChannelNumber + This.Capacity - 1
-    This.ScanList = ":FUNC '" & a_measurement & _
-            "',(@" & CStr(FirstChannelNumber) & _
-            ":" & CStr(LastChannelNumber) & ")"
+    Dim p_lastChannelNumber As Integer
+    p_lastChannelNumber = p_firstChannelNumber + This.Capacity - 1
+    
+    BuildFunctionScanList = ":FUNC '" & a_measurement & _
+            "',(@" & CStr(p_firstChannelNumber) & _
+            ":" & CStr(p_lastChannelNumber) & ")"
     
 End Function
 
-''' <summary>   Gets the 'route' command. </summary>
-''' <value> The 'route' command. </value>
-Public Property Get RouteCommand() As String
-    
-    RouteCommand = ":ROUT:MULT:CLOS (@" & _
+''' <summary>   Gets the 'route' command, e.g., <c>:ROUT:MULT:CLOS (@124,125)</c>. </summary>
+''' <value> [String]. </value>
+Public Property Get RouteMultipleCloseCommand() As String
+        
+    RouteMultipleCloseCommand = ":ROUT:MULT:CLOS (@" & _
             CStr(This.SlotNumber * This.SlotCapacity + This.Capacity + 4) & "," & _
             CStr(This.SlotNumber * This.SlotCapacity + This.Capacity + 5) & ")"
 
 End Property
 
-''' <summary>   Gets the scan list for a channel and a slot. </summary>
+''' <summary>   Gets the scan channel for a channel and a slot. </summary>
 ''' <param name="a_slotNumber">      [Integer] The slot number. </param>
 ''' <param name="a_slotCapacity">    [Integer] The slot capacity for this instrument familty. </param>
 ''' <param name="a_channelNumber">   [Integer] The channel number within the board.
@@ -169,33 +158,46 @@ End Property
 '''                                  the route command may exceed to card capacity
 '''                                  e.g., channels 24 and 25 for 20 channels board. </param>
 ''' <returns> [String]. </returns>
-Public Function BuildSlotScanChannel(ByVal a_slotNumber As Integer, ByVal a_slotCapacity As Integer, ByVal a_channelNumber As Integer) As String
+Public Function GetSlotScanChannel(ByVal a_slotNumber As Integer, ByVal a_slotCapacity As Integer, ByVal a_channelNumber As Integer) As String
 
     Dim p_channelNumber As Integer
     p_channelNumber = a_slotNumber * a_slotCapacity + a_channelNumber
-    BuildSlotScanChannel = CStr(p_channelNumber)
+    GetSlotScanChannel = CStr(p_channelNumber)
     
 End Function
 
-''' <summary>   Gets the scan list for this card and the specified channel. </summary>
-''' <param name="a_channelNumber">   [Integer] The channel number.
-'''                                  must be between ths first and last channels
-'''                                  of this board. </param>
+''' <summary>   Gets the scan channel, e.g., '113', for this card and the specified channel. </summary>
+''' <param name="a_deviceChannelNumber">   [Integer] The device channel number.
+'''                                        must be between ths first and last device channels
+'''                                        that correspond tothe first and last channels
+'''                                        of this board. </param>
 ''' <returns> [String]. </returns>
-Public Function BuildScanChannel(ByVal a_channelNumber As Integer) As String
+Public Function BuildScanChannel(ByVal a_deviceChannelNumber As Integer) As String
 
-    If a_channelNumber < This.FirstChannelNumber Or _
-        a_channelNumber > This.LastChannelNumber Then
+    If a_deviceChannelNumber < This.DeviceFirstChannel Or _
+        a_deviceChannelNumber > This.DeviceLastChannel Then
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidArgumentError, _
             ThisWorkbook.VBProject.Name & "." & VBA.Information.TypeName(Me) & ".BuildScanChannel", _
-            "Argument: 'a_ChannelNumber' = " & CStr(a_channelNumber) & _
+            "Argument: 'a_ChannelNumber' = " & CStr(a_deviceChannelNumber) & _
             " is out of range for this '" & This.Name & _
-            "' with channels in the range [" & CStr(This.FirstChannelNumber) & _
-            "," & CStr(This.LastChannelNumber) & "]."
+            "' with channels in the range [" & CStr(This.DeviceFirstChannel) & _
+            "," & CStr(This.DeviceLastChannel) & "]."
     End If
     Dim p_channelNumber As Integer
-    p_channelNumber = This.SlotNumber * This.SlotCapacity + a_channelNumber - This.FirstChannelNumber + 1
+    p_channelNumber = This.SlotNumber * This.SlotCapacity + a_deviceChannelNumber - This.DeviceFirstChannel + 1
     BuildScanChannel = CStr(p_channelNumber)
+    
+End Function
+
+''' <summary>   Gets the scan list, e.g., '@(113)', for this card and the specified channel. </summary>
+''' <param name="a_deviceChannelNumber">   [Integer] The device channel number.
+'''                                        must be between ths first and last device channels
+'''                                        that correspond tothe first and last channels
+'''                                        of this board. </param>
+''' <returns> [String]. </returns>
+Public Function BuildScanList(ByVal a_deviceChannelNumber As Integer) As String
+
+    BuildScanList = "(@" & Me.BuildScanChannel(a_deviceChannelNumber) & ")"
     
 End Function
 

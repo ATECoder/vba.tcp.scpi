@@ -98,7 +98,7 @@ Public Function PopulateCards(ByVal a_cards As String) As Integer
         
         If Not p_multiplexerCard Is Nothing Then
             p_multiplexerCard.SlotNumber = p_slotNumber
-            p_multiplexerCard.FirstChannelNumber = p_firstChannelNumber
+            p_multiplexerCard.DeviceFirstChannel = p_firstChannelNumber
             p_cards.Add p_multiplexerCard.Clone(), CStr(p_slotNumber)
             p_firstChannelNumber = p_firstChannelNumber + p_multiplexerCard.Capacity
         End If
@@ -116,8 +116,7 @@ Public Sub DefineScanLists(ByVal a_scpiFunction As String)
 
     Dim p_multiplexerCard As MultiplexerCard
     For Each p_multiplexerCard In This.InstalledCards
-        p_multiplexerCard.BuildDefaultScanList a_scpiFunction
-        This.ViSession.WriteLine p_multiplexerCard.ScanList
+        This.ViSession.WriteLine p_multiplexerCard.BuildFunctionScanList(a_scpiFunction)
     Next
 End Sub
 
@@ -127,8 +126,8 @@ End Sub
 Public Function SelectMultiplexerCard(ByVal a_channelNumber As Integer) As MultiplexerCard
     Dim p_multiplexerCard As MultiplexerCard
     For Each p_multiplexerCard In This.InstalledCards
-        If p_multiplexerCard.FirstChannelNumber <= a_channelNumber And _
-            p_multiplexerCard.LastChannelNumber >= a_channelNumber Then
+        If p_multiplexerCard.DeviceFirstChannel <= a_channelNumber And _
+            p_multiplexerCard.DeviceLastChannel >= a_channelNumber Then
             Exit For
         End If
     Next
@@ -140,14 +139,13 @@ Public Function SelectMultiplexerCard(ByVal a_channelNumber As Integer) As Multi
     Set SelectMultiplexerCard = p_multiplexerCard
 End Function
 
-'''  <summary>   Returns the route command for measuring a specific channel. </summary>
-'''  <param name="channelNumber">   The channel number. </param>
+'''  <summary>   Returns the route multiple close command for the multiplexer card
+'''              of the provided channel number. </summary>
+'''  <param name="a_channelNumber">   The channel number. </param>
 '''  <returns>  The channel list to close. </returns>
-Public Function BuildRouteCommand(ByVal a_channelNumber As Integer) As String
+Public Function GetRouteMultipleCloseCommand(ByVal a_channelNumber As Integer) As String
 
-    Dim p_multiplexerCard As MultiplexerCard
-    Set p_multiplexerCard = Me.SelectMultiplexerCard(a_channelNumber)
-    BuildRouteCommand = p_multiplexerCard.RouteCommand
+    GetRouteMultipleCloseCommand = Me.SelectMultiplexerCard(a_channelNumber).RouteMultipleCloseCommand
 
 End Function
 
@@ -156,11 +154,7 @@ End Function
 '''  <returns>  The scan list. </returns>
 Public Function BuildScanList(ByVal a_channelNumber As Integer) As String
 
-    Dim p_multiplexerCard As MultiplexerCard
-    Set p_multiplexerCard = Me.SelectMultiplexerCard(a_channelNumber)
-    Dim p_scanCardChannel As String: p_scanCardChannel = VBA.vbNullString
-    p_scanCardChannel = p_multiplexerCard.BuildScanChannel(a_channelNumber)
-    BuildScanList = "(@" & p_scanCardChannel & ")"
+    BuildScanList = Me.SelectMultiplexerCard(a_channelNumber).BuildScanList(a_channelNumber)
     
 End Function
 
