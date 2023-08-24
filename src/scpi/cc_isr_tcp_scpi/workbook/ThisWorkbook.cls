@@ -200,7 +200,7 @@ Private Sub Workbook_Open()
     Application.Windows(cc_isr_Ieee488.ThisWorkbook.Name).Visible = False
     
     ' wait a bit for the workbooks to hide.
-    cc_isr_Core_IO.CoreExtensions.Wait 0.25
+    cc_isr_Core_IO.CoreExtensions.Wait 0.5
     
     ' show work book
     Application.Windows(ThisWorkbook.Name).Visible = True

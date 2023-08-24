@@ -11,10 +11,6 @@ Option Explicit
 
 Implements cc_isr_Winsock.IConnectable
 
-Private Const MODULE_NAME As String = "K2700"
-Private Const Mux40Cards As String = "7702,7708"
-Private Const Mux20Cards As String = "7700,7710"
-
 ' reference to the VI session
 Private WithEvents m_viSession As cc_isr_Ieee488.ViSession
 Attribute m_viSession.VB_VarHelpID = -1
@@ -24,18 +20,7 @@ Private Type ThisData
     ViSession As cc_isr_Ieee488.ViSession
     RouteSystem As RouteSystem
     ScpiSystem As ScpiSystem
-
-    Options As String
-    HasMux40A As Boolean
-    HasMux40B As Boolean
-    HasMux20A As Boolean
-    HasMux20B As Boolean
-    Card1 As String
-    Card2 As String
-    Card1ScanList As String
-    Card2ScanList As String
-
-    ''' <summary> True if the DMM external trigger mode was initiated. </summary>
+    TriggerSystem As TriggerSystem
     ExtTrigInitiated As Boolean
 End Type
 
@@ -66,6 +51,8 @@ Private Sub Class_Initialize()
     Set This.RouteSystem = New RouteSystem
     This.RouteSystem.Initialize This.ViSession
 
+    Set This.TriggerSystem = New TriggerSystem
+    This.TriggerSystem.Initialize This.ViSession
 
 End Sub
 
@@ -169,7 +156,7 @@ Public Function TakeRearReading(ByVal a_channelNumber As Integer) As String
     ' get the channels to close
     Dim p_resistanceScanList As String
     On Error Resume Next
-    p_resistanceScanList = Me.BuildScanList(a_channelNumber)
+    p_resistanceScanList = This.RouteSystem.BuildScanList(a_channelNumber)
     On Error GoTo 0
     
     Dim p_reading As String
@@ -197,6 +184,8 @@ End Function
 '  Continuous and Immediate modes
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+
 
 ''' <summary>   Sets the instrument to continuous auto range resistance measurement. </summary>
 Public Function ContinuousResistanceAutoRange()
@@ -234,7 +223,7 @@ End Function
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
-'  External trigger mode
+'  External trigger source
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
@@ -292,7 +281,7 @@ Public Sub SetExternalTriggerResistanceMode()
 #End If
     
     ' clear the flag indicating that the external
-    ' trigger mode was not initiated
+    ' trigger source was not initiated
     This.ExtTrigInitiated = False
   
 End Sub
@@ -308,18 +297,19 @@ Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDo
     
     If This.ExtTrigInitiated Then
     
-        ' if awaiting the external trigger (external trigger mode
+        ' if awaiting the external trigger (external trigger source
         ' was initiated), check if service is requested
         ' check if we can use this instead:
         
-        If This.Device.QueryServiceRequestStatus <> 0 Then
+        If 0 <> This.Device.ReadStatusByte(True) Then
       
             ' clear the trigger initiation status to indicate
             ' that it needs to be primed on the next timer event
             This.ExtTrigInitiated = False
         
             ' clear the serial poll bit of this device
-            This.Device.QueryServiceRequestStatus
+            ' the Service request bit might already be cleared at this point
+            This.Device.ReadStatusByte True
             
             ' fetch the data
             This.ViSession.WriteLine ":FETCH?"
@@ -336,7 +326,7 @@ Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDo
 
         ' we need to initiate the next wait for an external trigger.
         
-        ' toggle external trigger mode.
+        ' toggle external trigger source.
         
         This.ViSession.WriteLine ":TRIG:SOUR IMM"
         This.ViSession.WriteLine ":TRIG:SOUR EXT"
@@ -345,7 +335,7 @@ Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDo
           
         ' clear the serial poll register
         
-        This.Device.QueryServiceRequestStatus
+        This.Device.ReadStatusByte True
         
         ' initiate awaiting for the external trigger
         
@@ -406,7 +396,6 @@ Public Property Get IsFrontInputs() As Boolean
 
 End Property
 
-
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 '  Route Subsystem
@@ -414,242 +403,95 @@ End Property
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Gets the options value. </summary>
-''' <value> [String]. </value>
+''' <value>   [String]. </value>
 Public Property Get Options() As String
         
-    Options = This.Options
+    If This.Device Is Nothing Then
+        Options = VBA.vbNullString
+    Else
+        Options = This.Device.Options
+    End If
 
 End Property
 
-''' <summary>   Gets the top card. </summary>
-''' <value> [String]. </value>
-Public Property Get Card1() As String
+''' <summary>   Gets the card name. </summary>
+''' <returns>   [String]. </returns>
+Public Function CardName(ByVal a_slotNumber As Integer) As String
+    
+    If This.RouteSystem.InstalledCards.Count >= a_slotNumber Then
+        CardName = This.RouteSystem.InstalledCard(a_slotNumber).Name
+    Else
+        CardName = VBA.vbNullString
+    End If
+
+End Function
+
+''' <summary>   Gets the card scan list. </summary>
+''' <returns>   [String]. </returns>
+Public Function FunctionScanList(ByVal a_slotNumber As Integer) As String
         
-    Card1 = This.Card1
+    If This.RouteSystem.InstalledCards.Count >= a_slotNumber Then
+        FunctionScanList = This.RouteSystem.InstalledCard(a_slotNumber).FunctionScanList
+    Else
+        FunctionScanList = VBA.vbNullString
+    End If
 
-End Property
-
-''' <summary>   Sets the top card. </summary>
-''' <param name="a_value">   [String] The name of the top card. </param>
-''' <value> [String]. </value>
-Public Property Let Card1(ByVal a_value As String)
-    This.Card1 = a_value
-    This.HasMux20A = 0 < InStr(1, Mux20Cards, a_value, vbTextCompare)
-    This.HasMux40A = 0 < InStr(1, Mux40Cards, a_value, vbTextCompare)
-End Property
-
-''' <summary>   Gets the top card scan list. </summary>
-''' <value> [String]. </value>
-Public Property Get Card1ScanList() As String
-        
-    Card1ScanList = This.Card1ScanList
-
-End Property
-
-''' <summary>   Gets the bottom card. </summary>
-''' <value> [String]. </value>
-Public Property Get Card2() As String
-        
-    Card2 = This.Card2
-
-End Property
-
-''' <summary>   Sets the bottom card. </summary>
-''' <param name="a_value">   [String] The name of the bottom card. </param>
-''' <value> [String]. </value>
-Public Property Let Card2(ByVal a_value As String)
-    This.Card2 = a_value
-    This.HasMux40B = 0 < InStr(1, Mux40Cards, a_value, vbTextCompare)
-    This.HasMux20B = 0 < InStr(1, Mux20Cards, a_value, vbTextCompare)
-End Property
-
-''' <summary>   Gets the bottom card scan list. </summary>
-''' <value> [String]. </value>
-Public Property Get Card2ScanList() As String
-        
-    Card2ScanList = This.Card2ScanList
-
-End Property
-
-''' <summary>   Returns true if the instrument as a 40 channel multiplexer
-''' such as the 7702 board in the first position. </summary>
-''' <value>   [Boolean]. </value>
-Public Property Get HasMux40A() As Boolean
-        
-    HasMux40A = This.HasMux40A
-
-End Property
-
-''' <summary>   Returns true if the instrument as a 40 channel multiplexer
-''' such as the 7702 board in the second position. </summary>
-''' <value>   [Boolean]. </value>
-Public Property Get HasMux40B() As Boolean
-
-    HasMux40B = This.HasMux40B
-
-End Property
-
-''' <summary>   Returns true if the instrument as a 20 channel multiplexer
-''' such as the 7700 or 7710 boards in the first position. </summary>
-''' <value>   [Boolean]. </value>
-Public Property Get HasMux20A() As Boolean
-
-    HasMux20A = This.HasMux20A
-
-End Property
-
-''' <summary>   Returns true if the instrument as a 20 channel multiplexer
-''' such as the 7700 or 7710 boards in the second position. </summary>
-''' <value>   [Boolean]. </value>
-Public Property Get HasMux20B() As Boolean
-
-    HasMux20B = This.HasMux20B
-
-End Property
-
-''' <summary>   Returns true if the instrument as any mux cards. </summary>
-''' <value>   [Boolean]. </value>
-Public Property Get HasMuxCards() As Boolean
-
-    HasMuxCards = Me.HasMux20A Or Me.HasMux20B Or Me.HasMux40A Or Me.HasMux40B
-
-End Property
+End Function
 
 ''' <summary>   Gets the options value and sets the cards. </summary>
-Public Function ReadCards()
+''' <returns>   [Integer] the number of installed cards. </returns>
+Public Function ReadCards() As Integer
 
-    This.Options = This.Device.QueryOptions
+    Dim p_7700CardCount As Integer
+    p_7700CardCount = This.RouteSystem.Populate7700Cards()
     
-    Me.Card1 = StringExtensions.Pop(This.Options, ",")
-    Me.Card2 = StringExtensions.Pop(This.Options, ",")
+    Dim p_installedCardsCount As Integer
+    If p_7700CardCount > 0 Then
+    
+        p_installedCardsCount = This.RouteSystem.PopulateCards(This.Device.QueryOptions)
+        
+    End If
+    ReadCards = p_installedCardsCount
     
 End Function
 
 ''' <summary>   Sets the complete scan lists for resistance measurements on all cards. </summary>
-Public Function DefineResistanceScanLists()
+Public Sub DefineResistanceScanLists()
 
-    If Me.HasMux40A Then
-        This.Card1ScanList = ":FUNC 'RES',(@101:140)"
-        This.ViSession.WriteLine This.Card1ScanList
-    End If
+    This.RouteSystem.BuildFunctionScanLists ("RES")
     
-    If Me.HasMux40B Then
-        This.Card2ScanList = ":FUNC 'RES',(@201:240)"
-        This.ViSession.WriteLine This.Card2ScanList
-    End If
-    
-    If Me.HasMux20A Then
-        This.Card1ScanList = ":FUNC 'RES',(@101:120)"
-        This.ViSession.WriteLine This.Card1ScanList
-    End If
-    
-    If Me.HasMux20B Then
-        This.Card2ScanList = ":FUNC 'RES',(@201:220)"
-        This.ViSession.WriteLine This.Card2ScanList
-    End If
+    Dim p_multiplexerCard As MultiplexerCard
+    For Each p_multiplexerCard In This.RouteSystem.InstalledCards
+        This.ViSession.WriteLine p_multiplexerCard.FunctionScanList
+    Next
 
-End Function
+End Sub
 
-''' <summary>   Returns the channel list. </summary>
-''' <param name="a_resistanceNumber">   [Integer] The channel number. </param>
-''' <returns>  The channel list to close. </returns>
-Public Function BuildChannelList(ByVal a_resistanceNumber As Integer) As String
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+'  Trigger Subsystem
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-    Dim p_routeCommand As String
+''' <summary>   Gets true if the instrument is configured for taking
+'''             immeidate measurments. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get CanTakeImmediateMeasurement() As Boolean
     
-    ' Check if we need to close the bottom or top channel.
-    If a_resistanceNumber <= 20 Then
-    
-        If Me.HasMux40A Then
-          
-            p_routeCommand = ":ROUT:MULT:CLOS (@144,145)"
-        
-        ElseIf Me.HasMux20A Then
-          
-            p_routeCommand = ":ROUT:MULT:CLOS (@124,125)"
-        
-        End If
-    
-    ElseIf a_resistanceNumber <= 40 Then
-      
-        If Me.HasMux40A Then
-        
-            ' Get channel string
-            p_routeCommand = ":ROUT:MULT:CLOS (@144,145)"
-        
-        ElseIf Me.HasMux20B Then
-          
-            ' Get channel string
-            p_routeCommand = ":ROUT:MULT:CLOS (@224,225)"
-        
-        End If
-      
-    ElseIf a_resistanceNumber > 40 Then
-    
-        If Me.HasMux40B Then
-            p_routeCommand = ":ROUT:MULT:CLOS (@244,245)"
-        End If
-    
-    End If
-        
-    ' set the return value
-    BuildChannelList = p_routeCommand
+    CanTakeImmediateMeasurement = Me.Connected And _
+        This.TriggerSystem.Source = cc_isr_Tcp_Scpi.TriggerSource.Immediate
+                                    
+End Property
 
-End Function
-
-''' <summary>   Returns the scan list for a specific resistance. </summary>
-''' <param name="a_resistanceNo">   [Integer] The channel number. </param>
-''' <returns>  The scan list. </returns>
-Public Function BuildScanList(ByVal a_resistanceNo As Integer) As String
-
-    Dim p_scanList As String
-    Dim p_resistaceChannel As String
+''' <summary>   Gets true if the instrument is configured for external
+'''             triggers. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get CanTakeExternalTriggers() As Boolean
     
-    ' Check if we need to close the bottom or top channel.
-    If a_resistanceNo <= 20 Then
-    
-        ' Get channel string
-        If Me.HasMux40A Or Me.HasMux20A Then
-        
-            p_resistaceChannel = "1" & Right$("0" & Format$(a_resistanceNo), 2)
-            p_scanList = "(@" & p_resistaceChannel & ")"
-        
-        End If
-      
-    ElseIf a_resistanceNo <= 40 Then
-      
-        If Me.HasMux40A Then
-        
-            ' Get channel string
-            p_resistaceChannel = "1" & Right$("0" & Format$(a_resistanceNo), 2)
-            p_scanList = "(@" & p_resistaceChannel & ")"
-        
-        ElseIf Me.HasMux20B Then
-          
-            ' Get channel string
-            p_resistaceChannel = "2" & Right$("0" & Format$(a_resistanceNo - 20), 2)
-            
-            p_scanList = "(@" & p_resistaceChannel & ")"
-        
-        End If
-      
-    ElseIf a_resistanceNo > 40 Then
-    
-        ' Get channel string
-        p_resistaceChannel = "2" & Right$("0" & Format$(a_resistanceNo - 40), 2)
-        
-        If Me.HasMux40B Then
-            p_scanList = "(@" & p_resistaceChannel & ")"
-        End If
-    
-    End If
-        
-    ' set the return value
-    BuildScanList = p_scanList
-
-End Function
-
-
+    CanTakeExternalTriggers = Me.Connected And _
+        This.TriggerSystem.Source = cc_isr_Tcp_Scpi.TriggerSource.External
+                                    
+End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
@@ -782,6 +624,15 @@ Private Function IConnectable_OpenConnection(ByVal a_host As String, ByVal a_por
     
         Connectable.OpenConnection a_host, a_port, a_timeoutMs
         
+        If This.ViSession.UsingGpibLan Then
+            If This.ViSession.GpibLan.ReadAfterWriteEnabledGetter Then
+                ' for the 2700 with needs this off
+                This.ViSession.GpibLan.ReadAfterWriteEnabledSetter False
+            End If
+        End If
+        Dim p_installedCardsCount As Integer
+        p_installedCardsCount = Me.ReadCards()
+        
         OnConnectionChanged Connectable.Connected
         
     End If
@@ -850,15 +701,15 @@ End Sub
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Handles the <see cref="cc_isr_Ieee488.Ieee488Session.ConnectionChanged"/> event. </summary>
+''' <summary>   Handles the <see cref="cc_isr_Ieee488.ViSession.ConnectionChanged"/> event. </summary>
 ''' <param name="a_eventArgs">   Reference to the <see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/> event arguments. </param>
-Private Sub m_ieee488Session_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
+Private Sub m_viSession_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
 
 End Sub
 
-''' <summary>   Handles the <see cref="cc_isr_Ieee488.Ieee488Session.ConnectionChanging"/> event. </summary>
+''' <summary>   Handles the <see cref="cc_isr_Ieee488.ViSession.ConnectionChanging"/> event. </summary>
 ''' <param name="a_eventArgs">   Reference to the <see cref="cc_isr_Winsock.ConnectionChangingEventArgs"/> event arguments. </param>
-Private Sub m_ieee488Session_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
+Private Sub m_viSession_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
 
 End Sub
 

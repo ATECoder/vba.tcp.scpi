@@ -43,16 +43,16 @@ Public Property Get Connected() As Boolean
 
 End Property
 
-'''  <summary>   Gets or sets the dictionary of cards that are available for this
+''' <summary>   Gets or sets the dictionary of cards that are available for this
 '''              instrument family as defined by the <see cref="Ieee488VI"/>
 '''              keyed by the card name. </summary>
-'''  <value> A dictionary of cards. </value>
+''' <value> A dictionary of cards. </value>
 Public Property Get InstrumentFamilyCards() As Collection
     Set InstrumentFamilyCards = This.InstrumentFamilyCards
 End Property
 
-'''  <summary>   Populates the 7700 cards family dictionary. </summary>
-'''  <remarks>   2023-08-17. </remarks>
+''' <summary>   Populates the 7700 cards family dictionary. </summary>
+''' <remarks>   2023-08-17. </remarks>
 ''' <returns>   [Integer] the number of items. </returns>
 Public Function Populate7700Cards() As Integer
 
@@ -69,16 +69,28 @@ Public Function Populate7700Cards() As Integer
 
 End Function
 
-'''  <summary>   Gets or sets the installed cards for this instrument instance
+''' <summary>   Gets an installed card. </summary>
+''' <value>   [<see cref=MultiplexerCard"/>]. </value>
+Public Function InstalledCard(ByVal a_slotNumber As Integer) As MultiplexerCard
+    
+    If This.InstalledCards.Count >= a_slotNumber Then
+        Set InstalledCard = This.InstalledCards(a_slotNumber)
+    Else
+        Set InstalledCard = Nothing
+    End If
+    
+End Function
+
+''' <summary>   Gets or sets the installed cards for this instrument instance
 '''              keyed by the card slot number. </summary>
-'''  <value>   [Collection] The installed cards. </value>
+''' <value>   [Collection] The installed cards. </value>
 Public Property Get InstalledCards() As Collection
     Set InstalledCards = This.InstalledCards
 End Property
 
-'''  <summary>   Populates the installed cards using the <see cref="Ieee488.Syntax.OptionsQueryCommand"/> reply. </summary>
-'''  <remarks>   2023-08-17. </remarks>
-'''  <value>   [Integer] the number of installed cards. </value>
+''' <summary>   Populates the installed cards using the <see cref="Ieee488.Syntax.OptionsQueryCommand"/> reply. </summary>
+''' <remarks>   2023-08-17. </remarks>
+''' <value>   [Integer] the number of installed cards. </value>
 Public Function PopulateCards(ByVal a_cards As String) As Integer
 
     Dim p_cards As New Collection
@@ -111,18 +123,18 @@ Public Function PopulateCards(ByVal a_cards As String) As Integer
     
 End Function
 
-'''  <summary>   Sets and applies the full capacity scan lists for resistance measurements on all cards. </summary>
-Public Sub DefineScanLists(ByVal a_scpiFunction As String)
+''' <summary>   Sets the full capacity function scan lists for on all cards. </summary>
+Public Sub BuildFunctionScanLists(ByVal a_scpiFunction As String)
 
     Dim p_multiplexerCard As MultiplexerCard
     For Each p_multiplexerCard In This.InstalledCards
-        This.ViSession.WriteLine p_multiplexerCard.BuildFunctionScanList(a_scpiFunction)
+        p_multiplexerCard.BuildFunctionScanList a_scpiFunction
     Next
 End Sub
 
-'''  <summary>   Returns the scan card for the specific channel. </summary>
-'''  <param name="channelNumber">   The channel number. </param>
-'''  <returns>  [<see cref="MultiplexerCard"/>]. </returns>
+''' <summary>   Returns the scan card for the specific channel. </summary>
+''' <param name="a_channelNumber">   The channel number. </param>
+''' <returns>  [<see cref="MultiplexerCard"/>]. </returns>
 Public Function SelectMultiplexerCard(ByVal a_channelNumber As Integer) As MultiplexerCard
     Dim p_multiplexerCard As MultiplexerCard
     For Each p_multiplexerCard In This.InstalledCards
@@ -139,19 +151,21 @@ Public Function SelectMultiplexerCard(ByVal a_channelNumber As Integer) As Multi
     Set SelectMultiplexerCard = p_multiplexerCard
 End Function
 
-'''  <summary>   Returns the route multiple close command for the multiplexer card
-'''              of the provided channel number. </summary>
-'''  <param name="a_channelNumber">   The channel number. </param>
-'''  <returns>  The channel list to close. </returns>
+''' <summary>   Returns the route multiple close command,
+'''              e.g., <c>:ROUT:MULT:CLOS (@124,125)</c>. for the multiplexer card
+'''              of the provided device channel number. </summary>
+''' <param name="a_channelNumber">   The channel number. </param>
+''' <returns>  The channel list to close. </returns>
 Public Function GetRouteMultipleCloseCommand(ByVal a_channelNumber As Integer) As String
 
     GetRouteMultipleCloseCommand = Me.SelectMultiplexerCard(a_channelNumber).RouteMultipleCloseCommand
 
 End Function
 
-'''  <summary>   Returns the scan list for a specific channel number. </summary>
-'''  <param name="channelNumber">   The channel number. </param>
-'''  <returns>  The scan list. </returns>
+''' <summary>   Returns the scan list, e.g., <c>(@113)</c> for a specific
+'''             device channel number. </summary>
+''' <param name="a_channelNumber">   The device channel number. </param>
+''' <returns>  The scan list. </returns>
 Public Function BuildScanList(ByVal a_channelNumber As Integer) As String
 
     BuildScanList = Me.SelectMultiplexerCard(a_channelNumber).BuildScanList(a_channelNumber)

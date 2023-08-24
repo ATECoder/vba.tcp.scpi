@@ -20,7 +20,8 @@ Private Const m_receivedMessageLengthCell As String = "J2"
 Private Const m_receivedMessageCell As String = "K2"
 Private Const m_elapsedTimeCell As String = "L2"
 Private Const m_elapsedTimeFormat As String = "0.0"
-Private Const m_lastErrorMessageCell As String = "B4"
+Private Const m_lastMessageCell As String = "B4"
+Private Const m_lastErrorMessageCell As String = "B33"
 
 Private Const m_serialPollCell As String = "E11"
 Private Const m_statusByteCell As String = "F11"
@@ -191,8 +192,6 @@ Friend Sub EnableControls(ByVal a_connected As Boolean)
     Me.ReadStandardEventStatusButton.Enabled = a_connected
     Me.WriteButton.Enabled = a_connected
     
-    Me.ReadCardsButton.Enabled = a_connected
-    Me.SetScansButton.Enabled = a_connected
     Me.QueryInputsButton.Enabled = a_connected
     
     Me.EnableReadResistanceButton
@@ -213,10 +212,7 @@ Friend Sub EnableReadResistanceButton()
     Dim p_enable As Boolean
     p_enable = Not This.K2700 Is Nothing
     If p_enable Then
-        p_enable = This.K2700.Connected
-    End If
-    If p_enable Then
-        p_enable = This.K2700.HasMuxCards
+        p_enable = This.K2700.CanTakeImmediateMeasurement
     End If
     
     Me.ImmediateTriggerOptionButton.Enabled = p_enable
@@ -231,10 +227,7 @@ Friend Sub EnableExtTrigToggleButton()
     Dim p_enable As Boolean
     p_enable = Not This.K2700 Is Nothing
     If p_enable Then
-        p_enable = This.K2700.Connected
-    End If
-    If p_enable Then
-        p_enable = This.K2700.HasMuxCards
+        p_enable = This.K2700.CanTakeExternalTriggers
     End If
     
     Me.ExternalTriggerOptionButton.Enabled = p_enable
@@ -454,7 +447,7 @@ Friend Sub ConnectToggleButton_Click()
     
     Me.RestartStopwatch
 
-    Dim p_host As String: p_host = Me.host
+    Dim p_host As String: p_host = Me.Host
     Dim p_port As Integer: p_port = Me.port
     Dim p_sessionReadTimeout As Integer: p_sessionReadTimeout = Me.SessionReadTimeout
       
@@ -501,11 +494,15 @@ Private Sub CLSButton_Click()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
+    Me.LastMessage = "Clearing execution state. "
+    
     Me.RestartStopwatch
     
     This.Device.ClearExecutionState
     
     Me.ReadStopwatch
+    
+    Me.LastMessage = "Done clearing execution state. "
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -590,57 +587,6 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Handles the Initialize External Trigger Button click event. </summary>
-''' <remarks>   Sets the instrument to turn on the RQS bit on external trigger. </remarks>
-Private Sub InitExtTrigButton_Click()
-
-    Const p_procedureName = "ReadStandardEventStatusButton"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-   
-    This.VISession.WriteLine ":TRIG:SOUR IMM"
-    
-    This.VISession.WriteLine ":TRIG:SOUR EXT"
-    
-    ' clear the serial poll register
-    
-    This.VISession.WriteLine "*ESE 0"
-    This.VISession.WriteLine "*SRE 63"
-    
-    ' clear the measurement event enable register
-    This.VISession.WriteLine "STAT:PRES"
-    
-    ' enable the reading available bit of the measurement event register.
-    This.VISession.WriteLine "STAT:MEAS:ENAB 32"
-    
-    This.Device.QueryServiceRequestStatus
-    
-    ' initiate awaiting for the external trigger
-    
-    This.VISession.WriteLine ":INIT; *CLS"
-   
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-    
-End Sub
-
 ''' <summary>   Configure immediate trigger mode and enables the read button. </summary>
 Private Sub ImmediateTriggerOptionButton_Click()
 
@@ -652,12 +598,11 @@ Private Sub ImmediateTriggerOptionButton_Click()
     ' configure measuring a single resistance on each read.
     This.K2700.ConfigureSingleResistanceReading
 
-    Me.ReadResistanceButton.Enabled = True
-    
-    Me.ExternalTriggerOptionButton.Enabled = False
-
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
+
+    Me.EnableReadResistanceButton
+    Me.EnableExtTrigToggleButton
 
     On Error GoTo 0
     Exit Sub
@@ -884,7 +829,7 @@ Private Sub ReadButton_Click()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Me.receivedMessage = vbNullString
+    Me.ReceivedMessage = vbNullString
     Dim p_messageReceived As String
     
     Me.RestartStopwatch
@@ -893,7 +838,7 @@ Private Sub ReadButton_Click()
     
     Me.ReadStopwatch
     
-    Me.receivedMessage = p_messageReceived
+    Me.ReceivedMessage = p_messageReceived
    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -924,7 +869,7 @@ Private Sub QueryButton_Click()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Me.receivedMessage = vbNullString
+    Me.ReceivedMessage = vbNullString
     Me.SentMessage = vbNullString
     Dim p_messageToSend As String: p_messageToSend = Me.CommandsComboBox.Value
     Dim p_messageReceived As String
@@ -935,7 +880,7 @@ Private Sub QueryButton_Click()
     
     Me.ReadStopwatch
     
-    Me.receivedMessage = p_messageReceived
+    Me.ReceivedMessage = p_messageReceived
     Me.SentMessage = p_messageToSend
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -966,8 +911,8 @@ End Sub
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Gets the host dotted IP Address. </summary>
-Friend Property Get host() As String
-    host = Range(m_inputHostCell).Value
+Friend Property Get Host() As String
+    Host = Range(m_inputHostCell).Value
 End Property
 
 ''' <summary>   Gets the port number. </summary>
@@ -981,12 +926,12 @@ Friend Property Get SessionReadTimeout() As Integer
 End Property
 
 ''' <summary>   Gets the received message. </summary>
-Friend Property Get receivedMessage() As String
-    receivedMessage = Range(m_receivedMessageCell).Value
+Friend Property Get ReceivedMessage() As String
+    ReceivedMessage = Range(m_receivedMessageCell).Value
 End Property
 
 ''' <summary>   Sets the received message. </summary>
-Friend Property Let receivedMessage(ByVal a_value As String)
+Friend Property Let ReceivedMessage(ByVal a_value As String)
     Range(m_receivedMessageCell).Value = a_value
     Range(m_receivedMessageLengthCell).Value = Len(a_value)
 End Property
@@ -1041,6 +986,16 @@ Friend Property Let LastErrorMessage(ByVal a_value As String)
     Range(m_lastErrorMessageCell).Value = a_value
 End Property
 
+''' <summary>   Gets the Last Message. </summary>
+Friend Property Get LastMessage() As String
+    LastMessage = Range(m_lastMessageCell).Value
+End Property
+
+''' <summary>   Sets the Last Message. </summary>
+Friend Property Let LastMessage(ByVal a_value As String)
+    Range(m_lastMessageCell).Value = a_value
+End Property
+
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' GPIB LAN
@@ -1061,9 +1016,6 @@ Friend Sub EnableGpibLanControls(ByVal a_usingGpibLanController As Boolean)
     Me.SetGpibAddressButton.Enabled = a_usingGpibLanController
     Me.ReadTimeoutGetButton.Enabled = a_usingGpibLanController
     Me.ReadTimeoutSetButton.Enabled = a_usingGpibLanController
-    Me.ReadGpibLanButton.Enabled = a_usingGpibLanController
-    Me.WriteGpibLanButton.Enabled = a_usingGpibLanController
-    Me.QueryGpibLanButton.Enabled = a_usingGpibLanController
 End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -1110,42 +1062,6 @@ err_Handler:
     
 End Function
 
-Private Sub QueryGpibLanButton_Click()
-
-    Const p_procedureName = "ReadGpibLanButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Dim p_messageToSend As String: p_messageToSend = Me.CommandsComboBox.Value
-    
-    Me.receivedMessage = vbNullString
-    Me.SentMessage = vbNullString
-    Me.receivedMessage = Me.QueryGpibLan(p_messageToSend)
-    Me.SentMessage = p_messageToSend
-   
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-
 ''' <summary>   Read from the device using the GPIB LAN. </summary>
 Friend Function ReadGpibLan() As String
 
@@ -1180,38 +1096,6 @@ err_Handler:
     GoTo exit_Handler
     
 End Function
-
-Private Sub ReadGpibLanButton_Click()
-
-    Const p_procedureName = "ReadGpibLanButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.receivedMessage = vbNullString
-    Me.receivedMessage = Me.ReadGpibLan()
-   
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
 
 ''' <summary>   Write a message to the device via the GPIB Lan. </summary>
 ''' <param name="a_message">   [String] to send to the instrument. </param>
@@ -1248,41 +1132,6 @@ err_Handler:
     GoTo exit_Handler
     
 End Function
-
-Private Sub WriteGpibLanButton_Click()
-
-    Const p_procedureName = "WriteGpibLanButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.SentMessage = vbNullString
-    Dim p_messageToSend As String: p_messageToSend = Me.CommandsComboBox.Value
-    Me.WriteGpibLan p_messageToSend
-    Me.SentMessage = p_messageToSend
-        
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-
-End Sub
-
 
 ''' <summary>   Handles the Go To Local button click event. </summary>
 Private Sub GoToLocalButton_Click()
@@ -1749,47 +1598,6 @@ err_Handler:
     
 End Sub
 
-''' <summary>   Handles the read cards button click event. </summary>
-Private Sub ReadCardsButton_Click()
-    
-    Const p_procedureName = "ReadCardsButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    This.K2700.ReadCards
-    
-    Me.ReadStopwatch
-    
-    Range(m_card1Cell).Value = This.K2700.Card1
-    Range(m_card2Cell).Value = This.K2700.Card2
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    Me.EnableReadResistanceButton
-    Me.EnableExtTrigToggleButton
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-    
-End Sub
-
 ''' <summary>   Handles the read resistance button click event. Reads a single or all
 ''' resistances from the front or read panel. </summary>
 Private Sub ReadResistanceButton_Click()
@@ -1860,45 +1668,6 @@ exit_Handler:
     Me.ReadResistanceButton.Enabled = True
     Me.ImmediateTriggerOptionButton.Enabled = True
     Me.ExternalTriggerOptionButton.Enabled = True
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-    
-End Sub
-
-''' <summary>   Handles the Set Scans button click event. Sets and displays the scan list
-''' for the cards. </summary>
-Private Sub SetScansButton_Click()
-
-    Const p_procedureName = "SetScansButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    This.K2700.DefineResistanceScanLists
-    
-    Me.ReadStopwatch
-    
-    Range(m_card1ScanListCell).Value = This.K2700.Card1ScanList
-    Range(m_card2ScanListCell).Value = This.K2700.Card2ScanList
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
     On Error GoTo 0
     Exit Sub
 
@@ -2050,13 +1819,16 @@ Private Sub ExtTrigToggleButton_Click()
     
         ' one external triggering is turned off, the timer
         ' is allowed to turn itself off
-        Me.ImmediateTriggerOptionButton.Enabled = False
-        Me.ExternalTriggerOptionButton.Enabled = False
+        Me.ImmediateTriggerOptionButton.Enabled = True
+        Me.ExternalTriggerOptionButton.Enabled = True
     
     End If
  
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
+
+    Me.EnableReadResistanceButton
+    Me.EnableExtTrigToggleButton
 
     On Error GoTo 0
     Exit Sub
@@ -2285,14 +2057,30 @@ Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Connec
         Range(m_socketAddressCell).Value = This.VISession.SocketAddress
         Range(m_socketIdCell).Value = This.VISession.SocketId
         
+        If This.VISession.UsingGpibLan Then
+            Me.ReadAfterWriteEnabled = This.VISession.GpibLan.ReadAfterWriteEnabledGetter
+            If Me.ReadAfterWriteEnabled Then
+                ' for the 2700 with needs this off
+                This.VISession.GpibLan.ReadAfterWriteEnabledSetter False
+                Me.ReadAfterWriteEnabled = This.VISession.GpibLan.ReadAfterWriteEnabledGetter
+            End If
+        End If
+        
         This.VISession.GpibLan.SelectiveDeviceClear
         This.Device.ResetKnownState
         This.Device.ClearExecutionState
         
-        If This.VISession.UsingGpibLan Then
-            Me.ReadAfterWriteEnabled = This.VISession.GpibLan.ReadAfterWriteEnabledGetter
-        End If
+        Range(m_card1Cell).Value = This.K2700.CardName(1)
+        Range(m_card2Cell).Value = This.K2700.CardName(2)
+        
+        This.K2700.DefineResistanceScanLists
+        
+        Range(m_card1ScanListCell).Value = This.K2700.FunctionScanList(1)
+        Range(m_card2ScanListCell).Value = This.K2700.FunctionScanList(2)
     
+        ' clear any errors
+        This.Device.ClearExecutionState
+
     Else
     
         Range(m_socketAddressCell).Value = vbNullString

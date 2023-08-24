@@ -20,6 +20,7 @@ Private Type ThisData
     SlotCapacity As Integer
     DeviceFirstChannel As Integer
     DeviceLastChannel As Integer
+    FunctionScanList As String
 End Type
 
 Private This As ThisData
@@ -35,6 +36,7 @@ Public Function Initialize(ByVal a_name As String, ByVal a_capacity As Integer) 
     This.SlotCapacity = 100
     This.DeviceFirstChannel = 0
     This.DeviceLastChannel = 0
+    This.FunctionScanList = VBA.vbNull
     Set Initialize = Me
 End Function
 
@@ -52,7 +54,7 @@ Public Function Clone() As MultiplexerCard
 End Function
 
 ''' <summary>   Gets the multiplexer card name. </summary>
-''' <value> [String]. </value>
+''' <value>   [String]. </value>
 Public Property Get Name() As String
         
     Name = This.Name
@@ -122,6 +124,14 @@ Public Property Let DeviceLastChannel(ByVal a_value As Integer)
 
 End Property
 
+''' <summary>   Gets the measurement function scan list, e.g., </summary>
+''' <value>   [String]. </value>
+Public Property Get FunctionScanList() As String
+        
+    FunctionScanList = This.FunctionScanList
+
+End Property
+
 ''' <summary>   Builds the function scan list, e.g., <c>:FUNC 'RES',(@101:120)</c>. </summary>
 ''' <remarks>   2023-08-17. </remarks>
 ''' <param name="a_measurement">   The measurement function, e.g., RES. </param>
@@ -134,14 +144,16 @@ Public Function BuildFunctionScanList(ByVal a_measurement As String) As String
     Dim p_lastChannelNumber As Integer
     p_lastChannelNumber = p_firstChannelNumber + This.Capacity - 1
     
-    BuildFunctionScanList = ":FUNC '" & a_measurement & _
+    This.FunctionScanList = ":FUNC '" & a_measurement & _
             "',(@" & CStr(p_firstChannelNumber) & _
             ":" & CStr(p_lastChannelNumber) & ")"
+            
+    BuildFunctionScanList = This.FunctionScanList
     
 End Function
 
 ''' <summary>   Gets the 'route' command, e.g., <c>:ROUT:MULT:CLOS (@124,125)</c>. </summary>
-''' <value> [String]. </value>
+''' <value>   [String]. </value>
 Public Property Get RouteMultipleCloseCommand() As String
         
     RouteMultipleCloseCommand = ":ROUT:MULT:CLOS (@" & _
@@ -157,7 +169,7 @@ End Property
 '''                                  capacity. Note that the channel number for
 '''                                  the route command may exceed to card capacity
 '''                                  e.g., channels 24 and 25 for 20 channels board. </param>
-''' <returns> [String]. </returns>
+''' <returns>   [String]. </returns>
 Public Function GetSlotScanChannel(ByVal a_slotNumber As Integer, ByVal a_slotCapacity As Integer, ByVal a_channelNumber As Integer) As String
 
     Dim p_channelNumber As Integer
@@ -171,7 +183,7 @@ End Function
 '''                                        must be between ths first and last device channels
 '''                                        that correspond tothe first and last channels
 '''                                        of this board. </param>
-''' <returns> [String]. </returns>
+''' <returns>   [String]. </returns>
 Public Function BuildScanChannel(ByVal a_deviceChannelNumber As Integer) As String
 
     If a_deviceChannelNumber < This.DeviceFirstChannel Or _
@@ -189,12 +201,12 @@ Public Function BuildScanChannel(ByVal a_deviceChannelNumber As Integer) As Stri
     
 End Function
 
-''' <summary>   Gets the scan list, e.g., '@(113)', for this card and the specified channel. </summary>
+''' <summary>   Gets the scan list, e.g., <c>(@113)</c>, for this card and the specified channel. </summary>
 ''' <param name="a_deviceChannelNumber">   [Integer] The device channel number.
 '''                                        must be between ths first and last device channels
 '''                                        that correspond tothe first and last channels
 '''                                        of this board. </param>
-''' <returns> [String]. </returns>
+''' <returns>   [String]. </returns>
 Public Function BuildScanList(ByVal a_deviceChannelNumber As Integer) As String
 
     BuildScanList = "(@" & Me.BuildScanChannel(a_deviceChannelNumber) & ")"

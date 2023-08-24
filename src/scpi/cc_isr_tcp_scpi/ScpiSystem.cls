@@ -22,7 +22,7 @@ Private This As ThisData
 ''' <summary>   Returns a reference to the <see cref="ScpiSystem"/>. </summary>
 ''' <param name="a_session">    [<see cref="<see cref="cc_isr_IEEE488.VISession"/>"/>] A connected session. </param>
 ''' <value>   [<see cref="ScpiSystem"/>]. </returns>
-Public Function Initialize(ByVal a_session As cc_isr_Ieee488.ViSession) As RouteSystem
+Public Function Initialize(ByVal a_session As cc_isr_Ieee488.ViSession) As ScpiSystem
     Set This.ViSession = a_session
     Set Initialize = Me
 End Function

@@ -1,9 +1,20 @@
 # TODO
 
+Add trigger system.
+2700: Use route and trigger systems. 
+Demo: Update to use the modified 2700 code.
+
 ## Beta 202308
 
-* 2700: use Route system to control the cards.
 * issue reset clear whenever switching model. 
+* Demo:
+	Use 2700 to implement all SCPI commands.
+	Use trigger system to toggle the trigger source.
+	? use trigger system to send the init SCPI message ':INIT ..."
+* questions:
+  * See if External Trigger Option Button commands can be moved to the 2700 instrument method such as
+    Configure External Trigger Monitoring.
+
 
 * flying:
 * on device initialized
