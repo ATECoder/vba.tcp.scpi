@@ -60,12 +60,12 @@ End Property
 ''' <param name="a_value">   [<see cref="TriggerSource"/>] the trigger source. </param>
 Public Sub SetTriggerSource(ByVal a_value As cc_isr_Tcp_Scpi.TriggerSource)
 
-    ' for some reason the old application had the trigger source toggled
-    ' if requesting an external trigger source
     If cc_isr_Tcp_Scpi.TriggerSource.Immediate = a_value Then
         This.ViSession.WriteLine ":TRIG:SOUR IMM"
     ElseIf cc_isr_Tcp_Scpi.TriggerSource.External = a_value Then
-        This.ViSession.WriteLine ":TRIG:SOUR IMM"
+        ' for some reason the old application had the trigger source toggled
+        ' if requesting an external trigger source
+        ' This.ViSession.WriteLine ":TRIG:SOUR IMM"
         This.ViSession.WriteLine ":TRIG:SOUR EXT"
     End If
     This.Source = a_value

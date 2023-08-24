@@ -152,7 +152,8 @@ Public Function BuildFunctionScanList(ByVal a_measurement As String) As String
     
 End Function
 
-''' <summary>   Gets the 'route' command, e.g., <c>:ROUT:MULT:CLOS (@124,125)</c>. </summary>
+''' <summary>   Gets the 'route' multiple close command,
+'''             e.g., <c>:ROUT:MULT:CLOS (@124,125)</c>. </summary>
 ''' <value>   [String]. </value>
 Public Property Get RouteMultipleCloseCommand() As String
         
@@ -204,13 +205,27 @@ End Function
 ''' <summary>   Gets the scan list, e.g., <c>(@113)</c>, for this card and the specified channel. </summary>
 ''' <param name="a_deviceChannelNumber">   [Integer] The device channel number.
 '''                                        must be between ths first and last device channels
-'''                                        that correspond tothe first and last channels
+'''                                        that correspond to the first and last channels
 '''                                        of this board. </param>
 ''' <returns>   [String]. </returns>
-Public Function BuildScanList(ByVal a_deviceChannelNumber As Integer) As String
+Public Function BuildChannelScanList(ByVal a_deviceChannelNumber As Integer) As String
 
-    BuildScanList = "(@" & Me.BuildScanChannel(a_deviceChannelNumber) & ")"
+    BuildChannelScanList = "(@" & Me.BuildScanChannel(a_deviceChannelNumber) & ")"
     
 End Function
+
+''' <summary>   Builds the channel 'route' close command,
+'''             e.g., <c>:ROUT:CLOS (@124)</c>. </summary>
+''' <param name="a_deviceChannelNumber">   [Integer] The device channel number.
+'''                                        must be between ths first and last device channels
+'''                                        that correspond to the first and last channels
+'''                                        of this board. </param>
+''' <value>   [String]. </value>
+Public Function BuildChannelRouteCloseCommand(ByVal a_deviceChannelNumber As Integer) As String
+        
+    BuildChannelRouteCloseCommand = ":ROUT:CLOS (@" & Me.BuildScanChannel(a_deviceChannelNumber) & ")"
+
+End Function
+
 
 

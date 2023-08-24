@@ -32,21 +32,23 @@ Private Const m_gpibAddressCell As String = "C12"
 Private Const m_readTimeoutCell As String = "C15"
 Private Const m_readAfterWriteEnabledCell As String = "C18"
 
+Private Const m_readingFormatCell As String = "C21"
 Private Const m_timerIntervalCell As String = "C22"
 Private Const m_card1Cell As String = "C23"
 Private Const m_card2Cell As String = "C24"
 Private Const m_card1ScanListCell As String = "C25"
 Private Const m_card2ScanListCell As String = "C26"
 Private Const m_inputsCell As String = "C27"
-Private Const m_resistanceNoCell As String = "C28"
-Private Const m_resistanceCell As String = "C29"
-Private Const m_resistanceCountCell As String = "C30"
+Private Const m_channelNumberCell As String = "C28"
+Private Const m_functionNameCell As String = "B29"
+Private Const m_functionValueCell As String = "C29"
+Private Const m_functionUnitCell As String = "D29"
+Private Const m_channelCountCell As String = "C30"
 Private Const m_externalTriggerStatusCell As String = "C31"
 
-Private Const m_resistanceNoTopRow As Integer = 2
-Private Const m_resistanceNoCol As String = "M"
-Private Const m_resistanceCol As String = "N"
-Private Const m_resistanceFormat As String = "0.00"
+Private Const m_measurementTopRow As Integer = 2
+Private Const m_measurementNoCol As String = "M"
+Private Const m_measurementValueCol As String = "N"
 
 ' defines the standard event timer.
 Private WithEvents m_eventTimer As cc_isr_Core.EventTimer
@@ -65,9 +67,7 @@ Private Type ThisData
     ' event handler overrun.
     HandlingTimerEvent As Boolean
     
-    ExtTrigInitiated  As Boolean
-    
-    CurrentResistanceNo As Integer
+    CurrentChannelNumber As Integer
     
     Stopwatch As Stopwatch
     
@@ -146,6 +146,9 @@ Public Sub Initialize()
     ' populate the combo box commands
     PopulateCommandsComboBox
     
+    ' populate the function box commands
+    PopulateFunctionComboBox
+    
     Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize(New ErrTracer)
     Set m_k2700 = This.K2700
     Set This.Device = This.K2700.Device
@@ -194,8 +197,8 @@ Friend Sub EnableControls(ByVal a_connected As Boolean)
     
     Me.QueryInputsButton.Enabled = a_connected
     
-    Me.EnableReadResistanceButton
-    Me.EnableExtTrigToggleButton
+    Me.EnableMeasureButton
+    Me.EnableMonitorExtTrigToggleButton
     
     If a_connected Then
         Me.EnableGpibLanControls This.VISession.UsingGpibLan
@@ -205,9 +208,9 @@ Friend Sub EnableControls(ByVal a_connected As Boolean)
 
 End Sub
 
-''' <summary>   Toggle the enable state of the Read Resistance Button based on the status
+''' <summary>   Toggle the enable state of the Measure Button based on the status
 ''' of the K2700 and the availability of MUX cards. </summary>
-Friend Sub EnableReadResistanceButton()
+Friend Sub EnableMeasureButton()
     
     Dim p_enable As Boolean
     p_enable = Not This.K2700 Is Nothing
@@ -216,13 +219,13 @@ Friend Sub EnableReadResistanceButton()
     End If
     
     Me.ImmediateTriggerOptionButton.Enabled = p_enable
-    Me.ReadResistanceButton.Enabled = False
+    Me.MeasureButton.Enabled = False
 
 End Sub
 
 ''' <summary>   Toggle the enable state of the External Trig Toggle Button based on the status
 ''' of the K2700 and the availability of MUX cards. </summary>
-Friend Sub EnableExtTrigToggleButton()
+Friend Sub EnableMonitorExtTrigToggleButton()
     
     Dim p_enable As Boolean
     p_enable = Not This.K2700 Is Nothing
@@ -231,9 +234,53 @@ Friend Sub EnableExtTrigToggleButton()
     End If
     
     Me.ExternalTriggerOptionButton.Enabled = p_enable
-    Me.ExtTrigToggleButton.Enabled = False
+    Me.MonitorExtTrigToggleButton.Enabled = False
 
 End Sub
+
+''' <summary>   Populates the Function combo box. </summary>
+Friend Sub PopulateFunctionComboBox()
+
+    Const p_procedureName = "PopulateFunctionComboBox"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Me.FunctionComboBox.Clear
+    Me.FunctionComboBox.AddItem "CONT"
+    Me.FunctionComboBox.AddItem "CURR:AC"
+    Me.FunctionComboBox.AddItem "CURR:DC"
+    Me.FunctionComboBox.AddItem "FREQ"
+    Me.FunctionComboBox.AddItem "FRES"
+    Me.FunctionComboBox.AddItem "PER"
+    Me.FunctionComboBox.AddItem "RES"
+    Me.FunctionComboBox.AddItem "TEMP"
+    Me.FunctionComboBox.AddItem "VOLT:AC"
+    Me.FunctionComboBox.AddItem "VOLT:DC"
+
+    Me.FunctionComboBox.ListIndex = 5
+   
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+    
+End Sub
+
 
 ''' <summary>   Populates the Commands combo box. </summary>
 Friend Sub PopulateCommandsComboBox()
@@ -525,6 +572,32 @@ err_Handler:
     
 End Sub
 
+''' <summary>   Returns true if the inputs are valid for front or rear settings. </summary>
+Friend Function ValidateInputs() As Boolean
+
+    ' check if front or rear
+    If Me.FrontReadRequired And Not This.K2700.IsFrontInputs Then
+    
+        ' display the proper message
+        Me.LastMessage = "Please release the front panel INPUTS button to its FRONT (F) position and try again."
+    
+        ValidateInputs = False
+        
+    ElseIf Not Me.FrontReadRequired And This.K2700.IsFrontInputs Then
+    
+        ' display the proper message
+        Me.LastMessage = "Please depress the front panel INPUTS button to its REAR (R) position and try again."
+        
+        ValidateInputs = False
+    
+    Else
+    
+        ValidateInputs = True
+    
+    End If
+
+End Function
+
 ''' <summary>   Turns on external trigger mode. </summary>
 Private Sub ExternalTriggerOptionButton_Click()
 
@@ -535,35 +608,45 @@ Private Sub ExternalTriggerOptionButton_Click()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
    
-    This.VISession.WriteLine ":TRIG:SOUR IMM"
+    ' exit if inputs are not in the correct settings
+    If Not Me.ValidateInputs() Then GoTo exit_Handler
+   
+    ' clear execution state when switching mode.
     
-    This.VISession.WriteLine ":TRIG:SOUR EXT"
+    This.K2700.Device.ClearExecutionState
+   
+    ' Configure external triggering reading requiring the front panel
+    
+    This.K2700.ConfigurateExternalTriggerReading Me.FunctionComboBox.Text, Me.FrontReadRequired
+    
+    ' this is done in the previous command.
+    ' This.VISession.WriteLine ":TRIG:SOUR IMM"
+    ' This.VISession.WriteLine ":TRIG:SOUR EXT"
     
     ' clear the serial poll register
-    
-    This.VISession.WriteLine "*ESE 0"
-    This.VISession.WriteLine "*SRE 63"
+    ' these are also part of the previus command.
+    ' This.VISession.WriteLine "*ESE 0"
+    ' This.VISession.WriteLine "*SRE 63"
     
     ' clear the measurement event enable register
-    This.VISession.WriteLine "STAT:PRES"
+    ' This.VISession.WriteLine "STAT:PRES"
     
     ' enable the reading available bit of the measurement event register.
-    This.VISession.WriteLine "STAT:MEAS:ENAB 32"
+    ' This.VISession.WriteLine "STAT:MEAS:ENAB 32"
     
-    This.Device.QueryServiceRequestStatus
+    ' This.Device.QueryServiceRequestStatus
     
+    ' move this to starting the monitoring.
     ' initiate awaiting for the external trigger
-    
-    This.VISession.WriteLine ":INIT; *CLS"
+    ' This.VISession.WriteLine ":INIT; *CLS"
    
     ' disable the immediate reading mode buttons
     
-    ReadResistanceButton.Enabled = False
+    MeasureButton.Enabled = False
     
-   
     ' enable toggling the external trigger monitoring.
     
-    Me.ExtTrigToggleButton.Enabled = True
+    Me.MonitorExtTrigToggleButton.Enabled = True
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -587,6 +670,72 @@ err_Handler:
 
 End Sub
 
+''' <summary>   Selects the measurement function. </summary>
+Private Sub FunctionComboBox_Change()
+
+    Dim p_measurement As String
+    p_measurement = Me.FunctionComboBox.Text
+    Select Case p_measurement
+    
+        Case "CONT"
+        
+            FunctionName = "Continuity"
+            FunctionUnit = "T/F"
+        
+        Case "CURR:AC"
+        
+            FunctionName = "Current AC"
+            FunctionUnit = "A"
+        
+        Case "CURR:DC"
+        
+            FunctionName = "Current DC"
+            FunctionUnit = "A"
+        
+        Case "FREQ"
+        
+            FunctionName = "Frequency"
+            FunctionUnit = "Hz"
+        
+        Case "FRES"
+        
+            FunctionName = "4-Wire Res."
+            FunctionUnit = VBA.Chr$(234)
+        
+        Case "PER"
+        
+            FunctionName = "Period"
+            FunctionUnit = "s"
+        
+        Case "RES"
+        
+            FunctionName = "2-Wire Res."
+            FunctionUnit = VBA.Chr$(234)
+        
+        Case "TEMP"
+        
+            FunctionName = "Temperature"
+            FunctionUnit = "K"
+        
+        Case "VOLT:AC"
+        
+            FunctionName = "Voltage AC"
+            FunctionUnit = "v"
+        
+        Case "VOLT:DC"
+        
+            FunctionName = "Voltage DC"
+            FunctionUnit = "v"
+        
+        Case Else
+        
+            FunctionName = "unknown"
+            FunctionUnit = "?"
+    
+    End Select
+    
+End Sub
+
 ''' <summary>   Configure immediate trigger mode and enables the read button. </summary>
 Private Sub ImmediateTriggerOptionButton_Click()
 
@@ -595,14 +744,21 @@ Private Sub ImmediateTriggerOptionButton_Click()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    ' configure measuring a single resistance on each read.
-    This.K2700.ConfigureSingleResistanceReading
+    ' exit if inputs are not in the correct settings
+    If Not Me.ValidateInputs() Then GoTo exit_Handler
+    
+    ' clear execution state when switching mode.
+    
+    This.K2700.Device.ClearExecutionState
+    
+    ' configure measuring a single value on each read.
+    This.K2700.ConfigureSingleFunctionReading Me.FunctionComboBox.Text
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
-    Me.EnableReadResistanceButton
-    Me.EnableExtTrigToggleButton
+    Me.EnableMeasureButton
+    Me.EnableMonitorExtTrigToggleButton
 
     On Error GoTo 0
     Exit Sub
@@ -1499,68 +1655,83 @@ Friend Property Get TimerInterval() As Integer
     TimerInterval = CInt(Range(m_timerIntervalCell).Value)
 End Property
 
-''' <summary> Get the resistance count. </summary>
-Friend Property Get ResistanceCount() As Integer
-    ResistanceCount = CInt(Range(m_resistanceCountCell).Value)
+''' <summary> Get the channel count. </summary>
+Friend Property Get ChannelCount() As Integer
+    ChannelCount = CInt(Range(m_channelCountCell).Value)
 End Property
 
 ''' <summary>   Indicates that front inputs are required for this mode. </summary>
 Friend Property Get FrontReadRequired() As Boolean
-    FrontReadRequired = Me.FrontRearToggleButton.Value
+    FrontReadRequired = Me.InputsCheckBox.Value
 End Property
 
-''' <summary>   Gets the external trigger status. </summary>
-Friend Property Get ExternalTrigEnabled() As Boolean
-    ExternalTrigEnabled = Me.ExtTrigToggleButton.Value
+''' <summary>   Gets the external trigger monitoring status. </summary>
+Friend Property Get ExternalTrigMonitoringEnabled() As Boolean
+    ExternalTrigMonitoringEnabled = Me.MonitorExtTrigToggleButton.Value
 End Property
 
 ''' <summary>   Enables or disables external triggering. </summary>
-Friend Property Let ExternalTrigEnabled(ByVal a_value As Boolean)
-    Me.ExtTrigToggleButton.Value = a_value
+Friend Property Let ExternalTrigMonitoringEnabled(ByVal a_value As Boolean)
+    Me.MonitorExtTrigToggleButton.Value = a_value
 End Property
 
-''' <summary>   Gets the auto increment resistance number status. </summary>
-Friend Property Get AutoIncrementResistanceNoEnabled() As Boolean
-    AutoIncrementResistanceNoEnabled = Me.AutoIncrementToggleButton.Value
+''' <summary>   Gets the auto increment channel number enable option. </summary>
+Friend Property Get AutoIncrementChannelNoEnabled() As Boolean
+    AutoIncrementChannelNoEnabled = Me.AutoIncrementCheckBox.Value
 End Property
 
 ''' <summary>   Gets the single read enabled. </summary>
 Friend Property Get SingeReadEnabled() As Boolean
-    SingeReadEnabled = Me.SingleAllToggleButton.Value
+    SingeReadEnabled = Me.SingleAllCheckBox.Value
 End Property
 
-''' <summary>   Gets the resistance number. </summary>
-Friend Property Get SelectedResistanceNumber() As Integer
-    SelectedResistanceNumber = CInt(Range(m_resistanceNoCell).Value)
+''' <summary>   Gets the selected channel number. </summary>
+Friend Property Get SelectedChannelNumber() As Integer
+    SelectedChannelNumber = CInt(Range(m_channelNumberCell).Value)
 End Property
 
-''' <summary>   Sets the resistance display. </summary>
-''' <param name="resistanceNo">      [single] the resistance number. </param>
-''' <param name="resistanceValue">   [double] the resistance. </param>
-Private Sub SetResistance(ByVal a_resistanceNo As Integer, ByVal a_resistance As Double)
+''' <summary>   Gets the function name from the function name cell. </summary>
+Friend Property Get FunctionName() As String
+    FunctionName = Range(m_functionNameCell).Value
+End Property
 
-    Range(m_resistanceNoCell).Value = a_resistanceNo
-    Range(m_resistanceCell).Value = a_resistance
+''' <summary>   Sets the function name. </summary>
+Friend Property Let FunctionName(ByVal a_value As String)
+    Range(m_functionNameCell).Value = a_value
+End Property
+
+''' <summary>   Gets the function Unit from the function Unit cell. </summary>
+Friend Property Get FunctionUnit() As String
+    FunctionUnit = Range(m_functionUnitCell).Value
+End Property
+
+''' <summary>   Sets the function Unit. </summary>
+Friend Property Let FunctionUnit(ByVal a_value As String)
+    Range(m_functionUnitCell).Value = a_value
+End Property
+
+''' <summary>   Gets the Reading Format from the Reading Format cell. </summary>
+Friend Property Get ReadingFormat() As String
+    ReadingFormat = Range(m_readingFormatCell).Value
+End Property
+
+''' <summary>   Sets the Reading Format. </summary>
+Friend Property Let ReadingFormat(ByVal a_value As String)
+    Range(m_readingFormatCell).Value = a_value
+End Property
+
+''' <summary>   Sets the measurement display. </summary>
+''' <param name="a_channelNo">   [single] the channel number. </param>
+''' <param name="a_value">       [double] the value. </param>
+Private Sub SetReading(ByVal a_channelNo As Integer, ByVal a_value As Double)
+
+    Range(m_channelNumberCell).Value = a_channelNo
+    Range(m_functionValueCell).Value = a_value
     
-    Dim p_rowNo As Integer: p_rowNo = m_resistanceNoTopRow + a_resistanceNo - 1
-    Range(m_resistanceNoCol & CStr(p_rowNo)).Value = "R" & CStr(a_resistanceNo)
-    Range(m_resistanceCol & CStr(p_rowNo)).Value = Format(a_resistance, m_resistanceFormat)
+    Dim p_rowNo As Integer: p_rowNo = m_measurementTopRow + a_channelNo - 1
+    Range(m_measurementNoCol & CStr(p_rowNo)).Value = CStr(a_channelNo)
+    Range(m_measurementValueCol & CStr(p_rowNo)).Value = Format(a_value, Me.ReadingFormat)
     
-End Sub
-
-''' <summary>   Handles the front/read toggle button click event. </summary>
-Private Sub FrontRearToggleButton_Click()
-    FrontRearToggleButton.Caption = IIf(FrontRearToggleButton.Value, "Front", "Rear")
-End Sub
-
-''' <summary>   Handles the auto-increment toggle button click event. </summary>
-Private Sub AutoIncrementToggleButton_Click()
-    AutoIncrementToggleButton.Caption = IIf(AutoIncrementToggleButton.Value, "Auto", "Manual")
-End Sub
-
-''' <summary>   Handles the single/all button click event. </summary>
-Private Sub SingleAllToggleButton_Click()
-    SingleAllToggleButton.Caption = IIf(SingleAllToggleButton.Value, "Single", "All")
 End Sub
 
 ''' <summary> Queries the Inputs status. </summary>
@@ -1598,74 +1769,83 @@ err_Handler:
     
 End Sub
 
-''' <summary>   Handles the read resistance button click event. Reads a single or all
-''' resistances from the front or read panel. </summary>
-Private Sub ReadResistanceButton_Click()
-    
-    Const p_procedureName = "ReadResistanceButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.ReadResistanceButton.Enabled = False
-    Me.ImmediateTriggerOptionButton.Enabled = False
-    Me.ExternalTriggerOptionButton.Enabled = False
-    
+''' <summary>   Takes a single or multiple readings from the front or rear panel. </summary>
+Friend Sub MeasureImmediately()
+
     ' reinitialize if device not defined
     If Not This.K2700.Connected Then
         ' This.K2700.InitializeLegacy Me.host, Me.port, Me.ReceiveTimeout
     End If
     
-    If Me.FrontReadRequired And Not This.K2700.IsFrontInputs Then
-        Me.LastErrorMessage = "Please release the front panel INPUTS button to its FRONT (F) position"
-        GoTo exit_Handler
-    ElseIf Not Me.FrontReadRequired And This.K2700.IsFrontInputs Then
-        Me.LastErrorMessage = "Please depress the front panel INPUTS button to its REAR (R) position"
-        GoTo exit_Handler
-    End If
+    Dim p_channelNumber As Integer
 
-    Dim p_resistanceNo As Integer
-
-    If Me.AutoIncrementResistanceNoEnabled Then
+    If Me.AutoIncrementChannelNoEnabled Then
         
         ' Clear all cells
-        Me.ClearReadings 0
+        Me.ClearReadings
 
-        ' scan all the resistance
-        For p_resistanceNo = 1 To Me.ResistanceCount
+        ' scan all channels
+        For p_channelNumber = 1 To Me.ChannelCount
         
             ' allow events to occur
-            DoEvents
+            VBA.DoEvents
             
-            ' set the current resistance
-            This.CurrentResistanceNo = p_resistanceNo
+            ' set the current channel number
+            This.CurrentChannelNumber = p_channelNumber
             
             Me.RestartStopwatch
             If Me.FrontReadRequired Then
-                This.K2700.TakeFrontReading p_resistanceNo
+                This.K2700.TakeFrontReading p_channelNumber
             Else
-                This.K2700.TakeRearReading p_resistanceNo
+                This.K2700.TakeRearReading p_channelNumber
             End If
             Me.ReadStopwatch
         
-        Next p_resistanceNo
+        Next p_channelNumber
 
     Else
-        p_resistanceNo = Me.SelectedResistanceNumber
+    
+        p_channelNumber = Me.SelectedChannelNumber
+        
         Me.RestartStopwatch
         If Me.FrontReadRequired Then
-            This.K2700.TakeFrontReading p_resistanceNo
+            This.K2700.TakeFrontReading p_channelNumber
         Else
-            This.K2700.TakeRearReading p_resistanceNo
+            This.K2700.TakeRearReading p_channelNumber
         End If
-        ' Range("C22").value = This.K2700.TakeRearReading(ResistanceNumber)
+        
         Me.ReadStopwatch
+        
     End If
+
+End Sub
+
+''' <summary>   Handles the measure button click event. Takes a single or multiple
+'''             readings from the front or rear panel. </summary>
+Private Sub MeasureButton_Click()
+  
+    Const p_procedureName = "MeasureButton_Click"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    ' exit if inputs are not in the correct settings
+    If Not Me.ValidateInputs() Then GoTo exit_Handler
+    
+    ' disable the relevant buttons.
+    
+    Me.MeasureButton.Enabled = False
+    Me.ImmediateTriggerOptionButton.Enabled = False
+    Me.ExternalTriggerOptionButton.Enabled = False
+    
+    ' make an immediate measure of one or all channels.
+    
+    Me.MeasureImmediately
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
-    Me.ReadResistanceButton.Enabled = True
+    Me.MeasureButton.Enabled = True
     Me.ImmediateTriggerOptionButton.Enabled = True
     Me.ExternalTriggerOptionButton.Enabled = True
     On Error GoTo 0
@@ -1686,134 +1866,67 @@ err_Handler:
     
 End Sub
 
-''' <summary>   clears the data acquisition readings. </summary>
-''' <param name="offsetResistance">    The offset resistance value to use for clearing the readings. </param>
-Public Sub ClearReadings(ByVal a_offsetResistance As Single)
+''' <summary>   Clears the readings. </summary>
+''' <param name="a_offsetValue">    [Optional, Double, 0]T he offset value to use for
+'''                                 clearing the readings. </param>
+Public Sub ClearReadings(Optional ByVal a_offsetValue As Double = 0#)
 
-    Dim p_resistanceNumber As Integer
-    For p_resistanceNumber = 1 To Me.ResistanceCount
+    Dim p_channelNumber As Integer
+    For p_channelNumber = 1 To Me.ChannelCount
         VBA.DoEvents
-        SetResistance p_resistanceNumber, a_offsetResistance
-    Next p_resistanceNumber
+        SetReading p_channelNumber, a_offsetValue
+    Next p_channelNumber
   
 End Sub
 
-''' <summary> Sets the instrument and program to get data using external trigger. </summary>
+''' <summary> Toggles monitoring the instrument for external triggered measurements. </summary>
 ''' <param name="timerInterval"> The polling timer interval. </param>
-Private Sub SetExternalTriggerMode(Optional ByVal a_timerInterval As Integer = 100)
+Friend Sub StartMonitoringExternalTriggers(Optional ByVal a_timerInterval As Integer = 100)
 
-    Const p_procedureName = "SetExternalTriggerMode"
+    If Me.AutoIncrementChannelNoEnabled Then
+        
+        ' Clear all readings
+        Me.ClearReadings
     
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    ' check if doing an external trigger reading with or without auto increment
-    If Me.ExternalTrigEnabled Then
-  
-        ' clear the triggered flag
-        This.ExtTrigInitiated = False
-        
-        ' make sure that the instrument is ready to accept
-        ' input from the front panel
-     
-        ' check if front or read
-        If Me.FrontReadRequired And Not This.K2700.IsFrontInputs Then
-        
-            ' if rear, toggle back the button
-            Me.ExternalTrigEnabled = False
-            
-            ' display the proper message
-            Me.LastErrorMessage = "Please release the front panel INPUTS button to its FRONT (F) position and try again."
-              
-            ' and get out
-            GoTo exit_Handler
-              
-        ElseIf Not Me.FrontReadRequired And This.K2700.IsFrontInputs Then
-        
-        
-            ' if rear, toggle back the button
-            Me.ExternalTrigEnabled = False
-            
-            ' display the proper message
-            Me.LastErrorMessage = "Please depress the front panel INPUTS button to its REAR (R) position and try again."
-              
-            ' and get out
-            GoTo exit_Handler
-      
-        End If
-  
-        Range(m_externalTriggerStatusCell) = "External Trigger On"
+    End If
 
-        ' set the instrument for externally triggered measurements
-        This.K2700.SetExternalTriggerResistanceMode
+    Range(m_externalTriggerStatusCell) = "External Trigger On"
     
-        If Me.AutoIncrementResistanceNoEnabled Then
+    If Me.AutoIncrementChannelNoEnabled Then
         
-            ' set the first resistance for manual scan
-            This.CurrentResistanceNo = 1
-        
-        Else
-        
-            ' set the single resistance for manual scan
-            This.CurrentResistanceNo = Me.SelectedResistanceNumber
-        
-        End If
-       
-        ' start the timer
-        Me.StartTimer a_timerInterval
+        ' set the first channel number for manual scan
+        This.CurrentChannelNumber = 1
         
     Else
-  
-        ' once external triggering is turned off, the timer is allowed to
-        ' to turn itself off
-  
+    
+        ' set the single reading channel number for manual scan
+        ' to the channel number entered by the operator.
+        This.CurrentChannelNumber = Me.SelectedChannelNumber
+        
     End If
-  
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+       
+    ' initiate awaiting for the external trigger
+    This.VISession.WriteLine ":INIT; *CLS"
     
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
+    ' start the timer
+    Me.StartTimer a_timerInterval
+        
 End Sub
 
 ''' <summary>   Handles the external trigger toggle button. </summary>
-Private Sub ExtTrigToggleButton_Click()
+Private Sub MonitorExtTrigToggleButton_Click()
 
-    Const p_procedureName = "ExtTrigToggleButton_Click"
+    Const p_procedureName = "MonitorExtTrigToggleButton_Click"
     
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    If Me.ExternalTrigEnabled Then
+    If Me.ExternalTrigMonitoringEnabled Then
     
         Me.ImmediateTriggerOptionButton.Enabled = False
         Me.ExternalTriggerOptionButton.Enabled = False
-        
-        If Me.AutoIncrementResistanceNoEnabled Then
-            
-            ' Clear all readings
-            Me.ClearReadings 0
-        
-        End If
     
-        Range(m_externalTriggerStatusCell) = "External Trigger On"
-        
-        ' set triggered mode
-        SetExternalTriggerMode Me.TimerInterval
+        Me.StartMonitoringExternalTriggers Me.TimerInterval
     
     Else
     
@@ -1827,8 +1940,8 @@ Private Sub ExtTrigToggleButton_Click()
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
-    Me.EnableReadResistanceButton
-    Me.EnableExtTrigToggleButton
+    Me.EnableMeasureButton
+    Me.EnableMonitorExtTrigToggleButton
 
     On Error GoTo 0
     Exit Sub
@@ -1862,7 +1975,7 @@ End Sub
 ''' <remarks>
 ''' Use this method to check if turn on or off manual triggering mode of the instrument. <para>
 ''' 10/16/00  David Hary  1.00.00 Add a beep </para>
-''' 2023-06-23 David Hary 1.0.8574 Use the device event handler to update the resistances.
+''' 2023-06-23 David Hary 1.0.8574 Use the device event handler to update the reading values.
 ''' </remarks>
 Private Sub HandleTimerEvent()
 
@@ -1876,30 +1989,30 @@ Private Sub HandleTimerEvent()
     ' prevent reentry
     This.HandlingTimerEvent = True
     
-    Dim p_resistanceNo As Integer
+    Dim p_channelNumber As Integer
     
     ' check if scan or single
-    If AutoIncrementResistanceNoEnabled Then
+    If Me.AutoIncrementChannelNoEnabled Then
       
-        ' select the current resistance
-        p_resistanceNo = This.CurrentResistanceNo
+        ' in auto increment mode, use the current channel number
+        p_channelNumber = This.CurrentChannelNumber
           
     Else
     
-        ' get the cell number
-        p_resistanceNo = Me.SelectedResistanceNumber
+        ' in non auto increment mode, use the current channel number
+        p_channelNumber = Me.SelectedChannelNumber
     
     End If
       
     ' allow other events to occur
-    DoEvents
+    VBA.DoEvents
     
-    Dim p_isDone As Boolean: p_isDone = Not Me.ExternalTrigEnabled
+    Dim p_isDone As Boolean: p_isDone = Not Me.ExternalTrigMonitoringEnabled
     
     ' stop the timer.
     If p_isDone Then Me.PauseTimer
     
-    This.K2700.MonitorExternalTrigger p_resistanceNo, p_isDone
+    This.K2700.MonitorExternalTrigger p_channelNumber, p_isDone
     
     ' if we ended manual mode, enable the rest of the buttons
     If p_isDone Then
@@ -1907,8 +2020,8 @@ Private Sub HandleTimerEvent()
         ' EnableButtons
         Range(m_externalTriggerStatusCell) = "External Trigger off"
         
-        Me.ExtTrigToggleButton.Enabled = True
-        Me.ReadResistanceButton.Enabled = True
+        Me.MonitorExtTrigToggleButton.Enabled = True
+        Me.MeasureButton.Enabled = True
         
     End If
     
@@ -1928,8 +2041,8 @@ err_Handler:
     Me.PauseTimer
     
     ' enable all buttons
-    Me.ExtTrigToggleButton.Enabled = True
-    Me.ReadResistanceButton.Enabled = True
+    Me.MonitorExtTrigToggleButton.Enabled = True
+    Me.MeasureButton.Enabled = True
     
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
@@ -2004,17 +2117,17 @@ Private Sub m_k2700_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Channel
     On Error GoTo err_Handler
     
     If VBA.vbNullString = a_eventArgs.Reading Then
-        SetResistance a_eventArgs.ChannelNumber, -1#
+        SetReading a_eventArgs.ChannelNumber, -1#
     Else
-        SetResistance a_eventArgs.ChannelNumber, CDbl(a_eventArgs.Reading)
+        SetReading a_eventArgs.ChannelNumber, CDbl(a_eventArgs.Reading)
     End If
     
-    If Me.AutoIncrementResistanceNoEnabled Then
+    If Me.AutoIncrementChannelNoEnabled Then
     
         ' increment the resistance for the next reading
-        This.CurrentResistanceNo = a_eventArgs.ChannelNumber + 1
-        If This.CurrentResistanceNo > Me.ResistanceCount Then
-            This.CurrentResistanceNo = 1
+        This.CurrentChannelNumber = a_eventArgs.ChannelNumber + 1
+        If This.CurrentChannelNumber > Me.ChannelCount Then
+            This.CurrentChannelNumber = 1
         End If
     
     End If
@@ -2073,7 +2186,7 @@ Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Connec
         Range(m_card1Cell).Value = This.K2700.CardName(1)
         Range(m_card2Cell).Value = This.K2700.CardName(2)
         
-        This.K2700.DefineResistanceScanLists
+        This.K2700.DefineFunctionScanLists Me.FunctionComboBox.Text
         
         Range(m_card1ScanListCell).Value = This.K2700.FunctionScanList(1)
         Range(m_card2ScanListCell).Value = This.K2700.FunctionScanList(2)

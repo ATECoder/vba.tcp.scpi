@@ -1,10 +1,13 @@
 # TODO
 
-Add trigger system.
-2700: Use route and trigger systems. 
-Demo: Update to use the modified 2700 code.
+SCPI:
+Add function mode to function setting commands.
+Update 2700 code to general function mode.
+
 
 ## Beta 202308
+
+* 2700 and sheet: Arrange functions.
 
 * issue reset clear whenever switching model. 
 * Demo:

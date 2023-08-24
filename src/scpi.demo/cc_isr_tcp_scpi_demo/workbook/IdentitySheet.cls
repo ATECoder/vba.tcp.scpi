@@ -87,7 +87,7 @@ Private Sub ReadIdentity(ByVal a_host As String, ByVal a_port As Long, ByVal a_r
         Dim p_loopCount As Integer
         Do While p_loopCount < a_repeatCount
             
-            DoEvents
+            VBA.DoEvents
            
             p_loopCount = p_loopCount + 1
             p_stopper.Restart

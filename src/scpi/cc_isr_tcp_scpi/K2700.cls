@@ -88,9 +88,11 @@ End Property
 ''' <summary>   Initializes the k2700 legacy mode. </summary>
 ''' <param name="a_host">        [String] An IPv4 dotted-decimal host address. </param>
 ''' <param name="a_port">        [Long] The port that the server is listening on. </param>
+''' <param name="a_function">    [Optional, 'FRES'] The measurement function. </param>
 ''' <param name="a_timeoutMs">   [Optional, 3000] The session read timeout in milliseconds. </param>
 ''' <returns>   True if the device was initialized. </returns>
 Public Function InitializeLegacy(ByVal a_host As String, ByVal a_port As Long, _
+        Optional ByVal a_function As String = "FRES", _
         Optional ByVal a_timeoutMs As Long = 3000) As Boolean
 
     Me.OpenConnection a_host, a_port
@@ -105,12 +107,12 @@ Public Function InitializeLegacy(ByVal a_host As String, ByVal a_port As Long, _
     
     Me.ReadCards
     
-    ' define scan list for resistance measurements on all cards.
+    ' define function scan list for measurements on all cards.
    
-    Me.DefineResistanceScanLists
+    Me.DefineFunctionScanLists a_function
    
-    ' turn on continuous resistance auto range
-    Me.ContinuousResistanceAutoRange
+    ' turn on continuous auto range
+    Me.ConfigureContinuousFunctionAutorRange a_function
     
     InitializeLegacy = True
     
@@ -124,21 +126,21 @@ End Function
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
-'  Make a resistance measurement
+'  Take measurements
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Performs a single read from the front panel. </summary>
-''' <param name="a_resistanceNo">   [Integer] The channel number. </param>
+''' <param name="a_channelNumber">   [Integer] The channel number. </param>
 ''' <returns>   [String] the reading. </returns>
-Public Function TakeFrontReading(Optional a_resistanceNo As Integer = 0) As String
+Public Function TakeFrontReading(Optional a_channelNumber As Integer = 0) As String
 
     This.ViSession.WriteLine ":INIT"
     This.ViSession.WriteLine ":READ?"
     
     Dim p_reading As String: p_reading = This.ViSession.Read
     
-    OnChannelMeasured a_resistanceNo, p_reading
+    OnChannelMeasured a_channelNumber, p_reading
 
     TakeFrontReading = p_reading
 
@@ -148,24 +150,24 @@ End Function
 ''' <remarks>
 ''' Use this method to get a single value from the instrument using the back panel switches
 ''' </remarks>
-''' <param name="a_channelNumber">   The channel number. </param>
+''' <param name="a_channelNumber">   The device channel number. </param>
 ''' <returns>    [String] the reading of empty if the channel number is out
 ''' of range for this device. </returns>
 Public Function TakeRearReading(ByVal a_channelNumber As Integer) As String
 
-    ' get the channels to close
-    Dim p_resistanceScanList As String
+    ' get the channel close command
+    Dim p_routeCloseCommand As String
     On Error Resume Next
-    p_resistanceScanList = This.RouteSystem.BuildScanList(a_channelNumber)
+    p_routeCloseCommand = This.RouteSystem.GetRouteCloseCommand(a_channelNumber)
     On Error GoTo 0
     
     Dim p_reading As String
     p_reading = VBA.vbNullString
     
-    If VBA.Len(p_resistanceScanList) > 0 Then
+    If VBA.Len(p_routeCloseCommand) > 0 Then
     
-        ' get the channel list
-        This.ViSession.WriteLine ":ROUT:CLOS " & p_resistanceScanList
+        ' close the rear channel
+        This.ViSession.WriteLine p_routeCloseCommand
         This.ViSession.WriteLine ":INIT"
         This.ViSession.WriteLine ":READ?"
         
@@ -185,41 +187,58 @@ End Function
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
+''' <summary>   Sets the instrument to continuous auto range reading. </summary>
+''' <param name="a_function">    [String] The measurement function. </param>
+Public Sub ConfigureContinuousFunctionAutorRange(ByVal a_function As String)
 
-
-''' <summary>   Sets the instrument to continuous auto range resistance measurement. </summary>
-Public Function ContinuousResistanceAutoRange()
-
-    ' set resistance defaults
-    This.ViSession.WriteLine ":RES:RANG:AUTO ON"
-    This.ViSession.WriteLine ":RES:NPLC 1"
+    ' set function defaults
+    ' This.ViSession.WriteLine ":RES:RANG:AUTO ON"
+    ' This.ViSession.WriteLine ":RES:NPLC 1"
     
     ' set reading format
     This.ViSession.WriteLine ":FORM:ELEM READ"
     
     ' turn on continuous mode
-    This.ViSession.WriteLine ":FUNC 'FRES'"
-    This.ViSession.WriteLine ":FRES:RANG:AUTO ON"
-    This.ViSession.WriteLine ":FRES:NPLC 1"
-    This.ViSession.WriteLine ":INIT:CONT On"
+    This.ViSession.WriteLine ":FUNC '" & a_function & "'"
+    This.ViSession.WriteLine ":" & a_function & ":RANG:AUTO ON"
+    This.ViSession.WriteLine ":" & a_function & ":NPLC 1"
+    This.ViSession.WriteLine ":INIT:CONT ON"
 
-End Function
+End Sub
 
-''' <summary>   Configures single resistance reading. </summary>
-Public Function ConfigureSingleResistanceReading()
+''' <summary>   Restore continuous reading. </summary>
+''' <remarks>   This is typically called to restore continuous mode without
+'''             chaning the function mode. </remarks>
+Public Sub RestoreContinuousReading()
 
-    ' set the device to measure 4 wire resistance
+    This.ViSession.WriteLine ":INIT:CONT OFF"
+    
+    ' set the trigger source to immediate.
+    This.TriggerSystem.SetTriggerSource TriggerSource.Immediate
+
+    This.ViSession.WriteLine ":INIT:CONT ON"
+
+End Sub
+
+''' <summary>   Configures single function reading. </summary>
+''' <param name="a_function">    [String] The measurement function. </param>
+Public Sub ConfigureSingleFunctionReading(ByVal a_function As String)
+
+    ' reset is not applied on each configuration because it takes too long to complete.
     ' This.ViSession.WriteLine "*RST"
-    This.ViSession.WriteLine ":TRIG:SOUR IMM"
+    
+    ' set the trigger source to immediate.
+    ' This.ViSession.WriteLine ":TRIG:SOUR IMM"
+    This.TriggerSystem.SetTriggerSource TriggerSource.Immediate
     This.ViSession.WriteLine ":INIT:CONT OFF"
     This.ViSession.WriteLine ":SAMP:COUN 1"
     This.ViSession.WriteLine ":TRIG:COUN 1"
-    This.ViSession.WriteLine ":FUNC 'RES'"
+    This.ViSession.WriteLine ":FUNC '" & a_function & "'"
     
     ' set reading format
     This.ViSession.WriteLine ":FORM:ELEM READ"
 
-End Function
+End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
@@ -227,35 +246,10 @@ End Function
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary> Sets the instrument to read front inputs resistance using external trigger. </summary>
-''' <remarks>   Typically, readings will be fetched when the instrument requests service. </remarks>
-Public Sub SetExternalTriggerResistanceMode()
+''' <summary>   Sets the instrument to detect the measurement available bit
+'''             of the status register upon receiving an external trigger. </summary>
+Public Sub EnableMeasurementAvailableMonitoring()
 
-    ' make sure that the instrument is ready to accept
-    ' input from the front panel
-    
-    If Not Me.IsFrontInputs Then
-        cc_isr_Core_IO.UserDefinedErrors.RaiseError UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".SetExternalTriggerResistanceMode", _
-            " The instrument Inputs must be set for Front inputs"
-    End If
-    
-    ' Clear the device
-    If This.ViSession.UsingGpibLan Then This.ViSession.GpibLan.SelectiveDeviceClear
-    This.Device.ClearExecutionState
-    
-    ' set reading format
-    This.ViSession.WriteLine ":FORM:ELEM READ"
-    
-    ' set external triggering
-    This.ViSession.WriteLine ":INIT:CONT OFF"
-    This.ViSession.WriteLine ":FUNC 'FRES'"
-    This.ViSession.WriteLine ":FRES:RANG:AUTO ON"
-    This.ViSession.WriteLine ":FRES:NPLC 1"
-    This.ViSession.WriteLine ":SAMP:COUN 1"
-    This.ViSession.WriteLine ":TRIG:COUN 1"
-    This.ViSession.WriteLine ":TRIG:SOUR EXT"
-    
     ' setup the status register so that we get a RQS
     ' on measurement available
     
@@ -279,10 +273,60 @@ Public Sub SetExternalTriggerResistanceMode()
     This.ViSession.WriteLine ":STAT:OPER:ENAB 1024"
     This.ViSession.WriteLine "*CLS; *SRE 128"
 #End If
+
+    ' clear the service registered bit
+    
+    This.Device.ReadStatusByte True
     
     ' clear the flag indicating that the external
     ' trigger source was not initiated
+    
     This.ExtTrigInitiated = False
+
+End Sub
+
+''' <summary> Sets the instrument to read using external trigger. </summary>
+''' <remarks>   Typically, readings will be fetched when the instrument requests service. </remarks>
+''' <param name="a_function">        [String] The measurement function. </param>
+''' <param name="a_frontInputs ">    [Boolean] True if front inputs are required;
+'''                                  otherwise, rear inputs are required. </param>
+Public Sub ConfigurateExternalTriggerReading(ByVal a_function As String, ByVal a_frontInputs As Boolean)
+
+    ' make sure that the instrument is ready to accept
+    ' input from the front panel
+    
+    If a_frontInputs And Not Me.IsFrontInputs Then
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".ConfigurateExternalTriggerFrontReading", _
+            " The instrument Inputs must be set for Front reading."
+    ElseIf Not a_frontInputs And Me.IsFrontInputs Then
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".ConfigurateExternalTriggerFrontReading", _
+            " The instrument Inputs must be set for rear reading."
+    End If
+    
+    ' Clear the device
+    If This.ViSession.UsingGpibLan Then This.ViSession.GpibLan.SelectiveDeviceClear
+    This.Device.ClearExecutionState
+    
+    ' set reading format
+    This.ViSession.WriteLine ":FORM:ELEM READ"
+    
+    ' set external triggering
+    This.ViSession.WriteLine ":INIT:CONT OFF"
+    This.ViSession.WriteLine ":FUNC '" & a_function & "'"
+    This.ViSession.WriteLine ":" & a_function & ":RANG:AUTO ON"
+    This.ViSession.WriteLine ":" & a_function & ":NPLC 1"
+    This.ViSession.WriteLine ":SAMP:COUN 1"
+    This.ViSession.WriteLine ":TRIG:COUN 1"
+    
+    ' set the trigger source to external
+    This.TriggerSystem.SetTriggerSource TriggerSource.External
+    ' This.ViSession.WriteLine ":TRIG:SOUR EXT"
+    
+    ' enable the detection of externally triggered measurement available.
+    
+    Me.EnableMeasurementAvailableMonitoring
   
 End Sub
 
@@ -293,7 +337,7 @@ End Sub
 Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDone As Boolean)
 
     ' allow other events to occur
-    DoEvents
+    VBA.DoEvents
     
     If This.ExtTrigInitiated Then
     
@@ -328,10 +372,10 @@ Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDo
         
         ' toggle external trigger source.
         
-        This.ViSession.WriteLine ":TRIG:SOUR IMM"
-        This.ViSession.WriteLine ":TRIG:SOUR EXT"
-        
-        This.ViSession.WriteLine ":FRES:NPLC 1"
+        ' These commands are already set when the instrument is confitured.
+        ' This.ViSession.WriteLine ":TRIG:SOUR IMM"
+        ' This.ViSession.WriteLine ":TRIG:SOUR EXT"
+        ' This.ViSession.WriteLine ":FRES:NPLC 1"
           
         ' clear the serial poll register
         
@@ -342,6 +386,7 @@ Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDo
         This.ViSession.WriteLine ":INIT; *CLS"
         
         ' and indicate that external triggering was initiated
+        
         This.ExtTrigInitiated = True
     
     End If
@@ -361,15 +406,14 @@ Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDo
         
         This.Device.ClearExecutionState
         
-        ' set the device to measure 4 wire resistance
+        Me.RestoreContinuousReading
         
-        This.ViSession.WriteLine ":INIT:CONT OFF"
-        This.ViSession.WriteLine ":FUNC 'FRES'"
-        This.ViSession.WriteLine ":TRIG:SOUR IMM"
-    
-        ' restore continuous reading
-        
-        This.ViSession.WriteLine ":INIT:CONT ON"
+        ' these were replaced with restoration of
+        ' continous reading method above.
+        ' This.ViSession.WriteLine ":INIT:CONT OFF"
+        ' This.ViSession.WriteLine ":FUNC 'FRES'"
+        ' This.ViSession.WriteLine ":TRIG:SOUR IMM"
+        ' This.ViSession.WriteLine ":INIT:CONT ON"
         
         ' clear execution state and wait for operation completion.
         
@@ -455,10 +499,11 @@ Public Function ReadCards() As Integer
     
 End Function
 
-''' <summary>   Sets the complete scan lists for resistance measurements on all cards. </summary>
-Public Sub DefineResistanceScanLists()
+''' <summary>   Sets the complete scan lists for measurements on all cards. </summary>
+''' <param name="a_function">    The measurement function. </param>
+Public Sub DefineFunctionScanLists(ByVal a_function As String)
 
-    This.RouteSystem.BuildFunctionScanLists ("RES")
+    This.RouteSystem.BuildFunctionScanLists a_function
     
     Dim p_multiplexerCard As MultiplexerCard
     For Each p_multiplexerCard In This.RouteSystem.InstalledCards

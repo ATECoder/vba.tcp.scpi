@@ -17,6 +17,7 @@ Private Type ThisData
     ViSession As cc_isr_Ieee488.ViSession
     InstrumentFamilyCards As Collection
     InstalledCards As Collection
+    ChannelCount As Integer
 End Type
 
 Private This As ThisData
@@ -97,6 +98,7 @@ Public Function PopulateCards(ByVal a_cards As String) As Integer
     Dim p_slotNumber As Integer: p_slotNumber = 0
     Dim p_firstChannelNumber As Integer
     p_firstChannelNumber = 1
+    This.ChannelCount = 0
     While (a_cards <> VBA.vbNullString)
         
         p_slotNumber = p_slotNumber + 1
@@ -113,6 +115,7 @@ Public Function PopulateCards(ByVal a_cards As String) As Integer
             p_multiplexerCard.DeviceFirstChannel = p_firstChannelNumber
             p_cards.Add p_multiplexerCard.Clone(), CStr(p_slotNumber)
             p_firstChannelNumber = p_firstChannelNumber + p_multiplexerCard.Capacity
+            This.ChannelCount = This.ChannelCount + p_multiplexerCard.Capacity
         End If
     
     Wend
@@ -122,6 +125,12 @@ Public Function PopulateCards(ByVal a_cards As String) As Integer
     PopulateCards = This.InstalledCards.Count
     
 End Function
+
+''' <summary>   Gets the total channel count for all cards. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get ChannelCount() As Integer
+    ChannelCount = This.ChannelCount
+End Property
 
 ''' <summary>   Sets the full capacity function scan lists for on all cards. </summary>
 Public Sub BuildFunctionScanLists(ByVal a_scpiFunction As String)
@@ -152,8 +161,8 @@ Public Function SelectMultiplexerCard(ByVal a_channelNumber As Integer) As Multi
 End Function
 
 ''' <summary>   Returns the route multiple close command,
-'''              e.g., <c>:ROUT:MULT:CLOS (@124,125)</c>. for the multiplexer card
-'''              of the provided device channel number. </summary>
+'''             e.g., <c>:ROUT:MULT:CLOS (@124,125)</c>. for the multiplexer card
+'''             of the provided device channel number. </summary>
 ''' <param name="a_channelNumber">   The channel number. </param>
 ''' <returns>  The channel list to close. </returns>
 Public Function GetRouteMultipleCloseCommand(ByVal a_channelNumber As Integer) As String
@@ -162,13 +171,26 @@ Public Function GetRouteMultipleCloseCommand(ByVal a_channelNumber As Integer) A
 
 End Function
 
-''' <summary>   Returns the scan list, e.g., <c>(@113)</c> for a specific
+''' <summary>   Returns the route close command,
+'''             e.g., <c>:ROUT:CLOS (@124)</c>. for the multiplexer card
+'''             of the provided device channel number. </summary>
+''' <param name="a_channelNumber">   The channel number. </param>
+''' <returns>  The channel list to close. </returns>
+Public Function GetRouteCloseCommand(ByVal a_channelNumber As Integer) As String
+
+    GetRouteCloseCommand = _
+        Me.SelectMultiplexerCard(a_channelNumber).BuildChannelRouteCloseCommand(a_channelNumber)
+
+End Function
+
+''' <summary>   Returns the channel scan list, e.g., <c>(@113)</c> for a specific
 '''             device channel number. </summary>
 ''' <param name="a_channelNumber">   The device channel number. </param>
 ''' <returns>  The scan list. </returns>
-Public Function BuildScanList(ByVal a_channelNumber As Integer) As String
+Public Function BuildChannelScanList(ByVal a_channelNumber As Integer) As String
 
-    BuildScanList = Me.SelectMultiplexerCard(a_channelNumber).BuildScanList(a_channelNumber)
+    BuildChannelScanList = _
+        Me.SelectMultiplexerCard(a_channelNumber).BuildChannelScanList(a_channelNumber)
     
 End Function
 
