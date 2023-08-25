@@ -1,13 +1,15 @@
 # TODO
 
-SCPI:
-Add function mode to function setting commands.
-Update 2700 code to general function mode.
-
+Core:
+Add support for property changed events.
 
 ## Beta 202308
 
+* copy 2700 sheet to a view model.
+* add property change event arguments. 
 * 2700 and sheet: Arrange functions.
+* move button code to functions and arrange those according to topics.
+
 
 * issue reset clear whenever switching model. 
 * Demo:
