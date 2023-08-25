@@ -113,6 +113,35 @@ Private Type ThisData
 	AutoStatusRead As Boolean
 	ReadingOffset As Double
 	
+	OpenConnectionExecutable As Boolean
+	CloseConnectionExecutable As Boolean
+	ToggleConnectionExecutable As Boolean
+    ResetKnownStateExecutable As Boolean
+    ClearExecutionStateExecutable As Boolean
+    QueryExecutable As Boolean
+    ReadExecutable As Boolean
+    ReadStatusByteExecutable As Boolean
+    ReadStandardEventStatusExecutable As Boolean
+    WriteExecutable As Boolean
+    QueryInputsExecutable As Boolean
+    MeasureExecutable As Boolean
+    MonitorExtTrigExecutable As Boolean
+    ImmediateTriggerOptionExecutable As Boolean
+    ExternalTriggerOptionExecutable As Boolean
+
+    SelectiveDeviceClearExecutable As Boolean
+    GoToLocalExecutable As Boolean
+    LocalLockoutExecutable As Boolean
+    ReadAfterWriteSetExecutable As Boolean
+    ReadAfterWriteGetExecutable As Boolean
+    SerialPollExecutable As Boolean
+    ServiceRequestedExecutable As Boolean
+    GpibAddressGetExecutable As Boolean
+    GpibAddressSetExecutable As Boolean
+    ReadTimeoutGetReadTimeoutGetExecutable As Boolean
+    ReadTimeoutSetExecutable As Boolean
+
+
 End Type
 
 Private This As ThisData
@@ -1128,6 +1157,461 @@ End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
+' View Model Commands Executable
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Gets the condition indicating that the Open Connection command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Open Connection command can be executed. </value>
+public property Get OpenConnectionExecutable As Boolean
+	OpenConnectionExecutable = This.OpenConnectionExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Open Connection command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Open Connection command can be executed. </param>
+public property Let OpenConnectionExecutable(ByVal a_value As Boolean)
+	If This.OpenConnectionExecutable <> a_value Then
+		This.OpenConnectionExecutable = a_value
+		This.OnPropertyChanged( "OpenConnectionExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Close Connection command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Close Connection command can be executed. </value>
+public property Get CloseConnectionExecutable As Boolean
+	CloseConnectionExecutable = This.CloseConnectionExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Close Connection command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Close Connection command can be executed. </param>
+public property Let CloseConnectionExecutable(ByVal a_value As Boolean)
+	If This.CloseConnectionExecutable <> a_value Then
+		This.CloseConnectionExecutable = a_value
+		This.OnPropertyChanged( "CloseConnectionExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Toggle Connection command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Toggle Connection command can be executed. </value>
+public property Get ToggleConnectionExecutable As Boolean
+	ToggleConnectionExecutable = This.ToggleConnectionExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Toggle Connection command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Toggle Connection command can be executed. </param>
+public property Let ToggleConnectionExecutable(ByVal a_value As Boolean)
+	If This.ToggleConnectionExecutable <> a_value Then
+		This.ToggleConnectionExecutable = a_value
+		This.OnPropertyChanged( "ToggleConnectionExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Reset Known State command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Reset Known State command can be executed. </value>
+public property Get ResetKnownStateExecutable As Boolean
+	ResetKnownStateExecutable = This.ResetKnownStateExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Reset Known State command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Reset Known State command can be executed. </param>
+public property Let ResetKnownStateExecutable(ByVal a_value As Boolean)
+	If This.ResetKnownStateExecutable <> a_value Then
+		This.ResetKnownStateExecutable = a_value
+		This.OnPropertyChanged( "ResetKnownStateExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Clear Execution State Command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Clear Execution State Command can be executed. </value>
+public property Get ClearExecutionStateExecutable As Boolean
+	ClearExecutionStateExecutable = This.ClearExecutionStateExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Clear Execution State Command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Clear Execution State Command can be executed. </param>
+public property Let ClearExecutionStateExecutable(ByVal a_value As Boolean)
+	If This.ClearExecutionStateExecutable <> a_value Then
+		This.ClearExecutionStateExecutable = a_value
+		This.OnPropertyChanged( "ClearExecutionStateExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Query command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Query command can be executed. </value>
+public property Get QueryExecutable As Boolean
+	QueryExecutable = This.QueryExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Query command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Query command can be executed. </param>
+public property Let QueryExecutable(ByVal a_value As Boolean)
+	If This.QueryExecutable <> a_value Then
+		This.QueryExecutable = a_value
+		This.OnPropertyChanged( "QueryExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Read command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Read command can be executed. </value>
+public property Get ReadExecutable As Boolean
+	ReadExecutable = This.ReadExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Read command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Read command can be executed. </param>
+public property Let ReadExecutable(ByVal a_value As Boolean)
+	If This.ReadExecutable <> a_value Then
+		This.ReadExecutable = a_value
+		This.OnPropertyChanged( "ReadExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Read Status Byte command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Read Status Byte command can be executed. </value>
+public property Get ReadStatusByteExecutable As Boolean
+	ReadStatusByteExecutable = This.ReadStatusByteExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Read Status Byte command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Read Status Byte command can be executed. </param>
+public property Let ReadStatusByteExecutable(ByVal a_value As Boolean)
+	If This.ReadStatusByteExecutable <> a_value Then
+		This.ReadStatusByteExecutable = a_value
+		This.OnPropertyChanged( "ReadStatusByteExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Read Standard Event Status command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Read Standard Event Status command can be executed. </value>
+public property Get ReadStandardEventStatusExecutable As Boolean
+	ReadStandardEventStatusExecutable = This.ReadStandardEventStatusExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Read Standard Event Status command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Read Standard Event Status command can be executed. </param>
+public property Let ReadStandardEventStatusExecutable(ByVal a_value As Boolean)
+	If This.ReadStandardEventStatusExecutable <> a_value Then
+		This.ReadStandardEventStatusExecutable = a_value
+		This.OnPropertyChanged( "ReadStandardEventStatusExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Write command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Write command can be executed. </value>
+public property Get WriteExecutable As Boolean
+	WriteExecutable = This.WriteExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Write command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Write command can be executed. </param>
+public property Let WriteExecutable(ByVal a_value As Boolean)
+	If This.WriteExecutable <> a_value Then
+		This.WriteExecutable = a_value
+		This.OnPropertyChanged( "WriteExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Query Inputs command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Query Inputs command can be executed. </value>
+public property Get QueryInputsExecutable As Boolean
+	QueryInputsExecutable = This.QueryInputsExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Query Inputs command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Query Inputs command can be executed. </param>
+public property Let QueryInputsExecutable(ByVal a_value As Boolean)
+	If This.QueryInputsExecutable <> a_value Then
+		This.QueryInputsExecutable = a_value
+		This.OnPropertyChanged( "QueryInputsExecutable")
+	End If
+End Property
+
+
+''' <summary>   Gets the condition indicating that the Measure command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Measure command can be executed. </value>
+public property Get MeasureExecutable As Boolean
+	MeasureExecutable = This.MeasureExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Measure command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Measure command can be executed. </param>
+public property Let MeasureExecutable(ByVal a_value As Boolean)
+	If This.MeasureExecutable <> a_value Then
+		This.MeasureExecutable = a_value
+		This.OnPropertyChanged( "MeasureExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Monitor External Trigger command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Monitor External Trigger command can be executed. </value>
+public property Get MonitorExtTrigExecutable As Boolean
+	MonitorExtTrigExecutable = This.MonitorExtTrigExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Monitor External Trigger command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Monitor External Trigger command can be executed. </param>
+public property Let MonitorExtTrigExecutable(ByVal a_value As Boolean)
+	If This.MonitorExtTrigExecutable <> a_value Then
+		This.MonitorExtTrigExecutable = a_value
+		This.OnPropertyChanged( "MonitorExtTrigExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Immediate Trigger Option command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Immediate Trigger Option command  can be executed. </value>
+public property Get ImmediateTriggerOptionExecutable As Boolean
+	ImmediateTriggerOptionExecutable = This.ImmediateTriggerOptionExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Immediate Trigger Option command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Immediate Trigger Option command can be executed. </param>
+public property Let ImmediateTriggerOptionExecutable(ByVal a_value As Boolean)
+	If This.ImmediateTriggerOptionExecutable <> a_value Then
+		This.ImmediateTriggerOptionExecutable = a_value
+		This.OnPropertyChanged( "ImmediateTriggerOptionExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the External Trigger Option command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the External Trigger Option command  can be executed. </value>
+public property Get ExternalTriggerOptionExecutable As Boolean
+	ExternalTriggerOptionExecutable = This.ExternalTriggerOptionExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the External Trigger Option command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the External Trigger Option command can be executed. </param>
+public property Let ExternalTriggerOptionExecutable(ByVal a_value As Boolean)
+	If This.ExternalTriggerOptionExecutable <> a_value Then
+		This.ExternalTriggerOptionExecutable = a_value
+		This.OnPropertyChanged( "ExternalTriggerOptionExecutable")
+	End If
+End Property
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' View Model GPIB-Lan Commands Executable
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Gets the condition indicating that the Selective Device Clear command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Selective Device Clear command can be executed. </value>
+public property Get SelectiveDeviceClearExecutable As Boolean
+	SelectiveDeviceClearExecutable = This.SelectiveDeviceClearExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Selective Device Clear command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Selective Device Clear command can be executed. </param>
+public property Let SelectiveDeviceClearExecutable(ByVal a_value As Boolean)
+	If This.SelectiveDeviceClearExecutable <> a_value Then
+		This.SelectiveDeviceClearExecutable = a_value
+		This.OnPropertyChanged( "SelectiveDeviceClearExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Go To Local command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Go To Local command can be executed. </value>
+public property Get GoToLocalExecutable As Boolean
+	GoToLocalExecutable = This.GoToLocalExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Go To Local command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Go To Local command can be executed. </param>
+public property Let GoToLocalExecutable(ByVal a_value As Boolean)
+	If This.GoToLocalExecutable <> a_value Then
+		This.GoToLocalExecutable = a_value
+		This.OnPropertyChanged( "GoToLocalExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Local Lockout command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Local Lockout command can be executed. </value>
+public property Get LocalLockoutExecutable As Boolean
+	LocalLockoutExecutable = This.LocalLockoutExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Local Lockout command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Local Lockout command can be executed. </param>
+public property Let LocalLockoutExecutable(ByVal a_value As Boolean)
+	If This.LocalLockoutExecutable <> a_value Then
+		This.LocalLockoutExecutable = a_value
+		This.OnPropertyChanged( "LocalLockoutExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Read After Write Get command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Read After Write Get command can be executed. </value>
+public property Get ReadAfterWriteGetExecutable As Boolean
+	ReadAfterWriteGetExecutable = This.ReadAfterWriteGetExecutable
+End Property
+
+''' <summary>   Gets the condition indicating that the Read After Write Get command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Read After Write Get command can be executed. </param>
+public property Let ReadAfterWriteGetExecutable(ByVal a_value As Boolean)
+	If This.ReadAfterWriteGetExecutable <> a_value Then
+		This.ReadAfterWriteGetExecutable = a_value
+		This.OnPropertyChanged( "ReadAfterWriteGetExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Read After Write Set command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Read After Write Set command can be executed. </value>
+public property Get ReadAfterWriteSetExecutable As Boolean
+	ReadAfterWriteSetExecutable = This.ReadAfterWriteSetExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Read After Write Set command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Read After Write Set command can be executed. </param>
+public property Let ReadAfterWriteSetExecutable(ByVal a_value As Boolean)
+	If This.ReadAfterWriteSetExecutable <> a_value Then
+		This.ReadAfterWriteSetExecutable = a_value
+		This.OnPropertyChanged( "ReadAfterWriteSetExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Serial Poll command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Serial Poll command can be executed. </value>
+public property Get SerialPollExecutable As Boolean
+	SerialPollExecutable = This.SerialPollExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Serial Poll command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Serial Poll command can be executed. </param>
+public property Let SerialPollExecutable(ByVal a_value As Boolean)
+	If This.SerialPollExecutable <> a_value Then
+		This.SerialPollExecutable = a_value
+		This.OnPropertyChanged( "SerialPollExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Service Requested command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Service Requested command can be executed. </value>
+public property Get ServiceRequestedExecutable As Boolean
+	ServiceRequestedExecutable = This.ServiceRequestedExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Service Requested command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Service Requested command can be executed. </param>
+public property Let ServiceRequestedExecutable(ByVal a_value As Boolean)
+	If This.ServiceRequestedExecutable <> a_value Then
+		This.ServiceRequestedExecutable = a_value
+		This.OnPropertyChanged( "ServiceRequestedExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Gpib Address Get Command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Gpib Address Get Command can be executed. </value>
+public property Get GpibAddressGetExecutable As Boolean
+	GpibAddressGetExecutable = This.GpibAddressGetExecutable
+End Property
+
+''' <summary>   Gets the condition indicating that the Gpib Address Get Command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Gpib Address Get Command can be executed. </param>
+public property Let GpibAddressGetExecutable(ByVal a_value As Boolean)
+	If This.GpibAddressGetExecutable <> a_value Then
+		This.GpibAddressGetExecutable = a_value
+		This.OnPropertyChanged( "GpibAddressGetExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Gpib Address Set Command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Gpib Address Set Command can be executed. </value>
+public property Get GpibAddressSetExecutable As Boolean
+	GpibAddressSetExecutable = This.GpibAddressSetExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Gpib Address Set Command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Gpib Address Set Command can be executed. </param>
+public property Let GpibAddressSetExecutable(ByVal a_value As Boolean)
+	If This.GpibAddressSetExecutable <> a_value Then
+		This.GpibAddressSetExecutable = a_value
+		This.OnPropertyChanged( "GpibAddressSetExecutable")
+	End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Read Timeout Get command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Read Timeout Get command can be executed. </value>
+public property Get Executable As Boolean
+	Executable = This.Executable
+End Property
+
+''' <summary>   Sets the condition indicating that the Read Timeout Get command 
+'''				can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Read Timeout Get command can be executed. </param>
+public property Let Executable(ByVal a_value As Boolean)
+	If This.Executable <> a_value Then
+		This.Executable = a_value
+		This.OnPropertyChanged( "Executable")
+	End If
+End Property
+
+
+''' <summary>   Gets the condition indicating that the Read Timeout Set command 
+'''				can be executed. </summary>
+''' <value>   [Boolean] True if the Monitor External Trigger command can be executed. </value>
+public property Get ReadTimeoutSetExecutable As Boolean
+	ReadTimeoutSetExecutable = This.ReadTimeoutSetExecutable
+End Property
+
+''' <summary>   Sets the Read Timeout Set command condition. </summary>
+''' <param name="a_value">   [Boolean] True if the Monitor External Trigger command can be executed. </param>
+public property Let ReadTimeoutSetExecutable(ByVal a_value As Boolean)
+	If This.ReadTimeoutSetExecutable <> a_value Then
+		This.ReadTimeoutSetExecutable = a_value
+		This.OnPropertyChanged( "ReadTimeoutSetExecutable")
+	End If
+End Property
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
 ' View Model Commands
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -1473,6 +1957,9 @@ Public Sub ConfigureImmediateTriggerReadingsCommand()
     
 		' configure measuring a single value on each read.
 		This.K2700.ConfigureSingleFunctionReading Me.SenseFunctionName
+		
+		Me.MeasureExecutable = True
+		Me.MonitorExtTrigExecutable = False
 	
 	End If
 	
@@ -2492,8 +2979,8 @@ Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Connec
     If a_eventArgs.Connected Then
     
         ' report the socket number
-        Range(m_socketAddressCell).Value = This.VISession.SocketAddress
-        Range(m_socketIdCell).Value = This.VISession.SocketId
+        Me.SocketAddress = This.VISession.SocketAddress
+        Me.SocketId = This.VISession.SocketId
         
         If This.VISession.UsingGpibLan Then
             Me.ReadAfterWriteEnabled = This.VISession.GpibLan.ReadAfterWriteEnabledGetter
@@ -2508,23 +2995,54 @@ Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Connec
         This.Device.ResetKnownState
         This.Device.ClearExecutionState
         
-        Range(m_card1Cell).Value = This.K2700.CardName(1)
-        Range(m_card2Cell).Value = This.K2700.CardName(2)
+        Me.TopCard = This.K2700.CardName(1)
+        Me.BottomCard= This.K2700.CardName(2)
         
         This.K2700.DefineFunctionScanLists Me.FunctionComboBox.Text
         
-        Range(m_card1ScanListCell).Value = This.K2700.FunctionScanList(1)
-        Range(m_card2ScanListCell).Value = This.K2700.FunctionScanList(2)
+        Me.TopCardFunctionScanList = This.K2700.FunctionScanList(1)
+        Me.BottomCardFunctionScanList = This.K2700.FunctionScanList(2)
     
         ' clear any errors
         This.Device.ClearExecutionState
 
     Else
     
-        Range(m_socketAddressCell).Value = vbNullString
-        Range(m_socketIdCell).Value = vbNullString
+        Me.SocketAddress = vbNullString
+        Me.SocketId = 0
         
     End If
+	
+	Me.ResetKnownStateExecutable = Me.Connected
+	Me.ClearExecutionStateExecutable = Me.Connected
+	Me.QueryExecutable = Me.Connected
+	Me.ReadExecutable = Me.Connected
+	Me.WriteExecutable = Me.Connected
+	Me.ReadStatusByteExecutable = Me.Connected
+	Me.ReadStandardEventStatusExecutable = Me.Connected
+	Me.QueryInputsExecutable = Me.Connected
+	Me.ImmediateTriggerOptionExecutable = Me.Connected
+	Me.ExternalTriggerOptionExecutable = Me.Connected
+	
+	Me.MeasureExecutable = This.ImmediateTriggerModeEnabled
+	Me.MonitorExtTrigExecutable = This.ExternalTriggerModeEnabled
+	
+	Dim p_GpibLanConnected As Boolean
+	p_GpibLanConnected = me.Connected and This.VISession.UsingGpibLan
+		
+
+    Me.SelectiveDeviceClearExecutable = p_GpibLanConnected
+    Me.GoToLocalExecutable = p_GpibLanConnected
+    Me.LocalLockoutExecutable = p_GpibLanConnected
+    Me.ReadAfterWriteSetExecutable = p_GpibLanConnected
+    Me.ReadAfterWriteGetExecutable = p_GpibLanConnected
+    Me.SerialPollExecutable = p_GpibLanConnected
+    Me.ServiceRequestedExecutable = p_GpibLanConnected
+    Me.GetGpibAddressExecutable = p_GpibLanConnected
+    Me.SetGpibAddressExecutable = p_GpibLanConnected
+    Me.ReadTimeoutGetExecutable = p_GpibLanConnected
+    Me.ReadTimeoutSetExecutable = p_GpibLanConnected
+
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -3126,7 +3644,7 @@ Private Sub MeasureButton_Click()
     On Error GoTo err_Handler
     
 	' TO-DO: See how this can be simplified.  
-	' Can we toggle to enable status when the command is active.
+	' Can we toggle to enable status when the Monitor External Trigger command is active.
 	
     ' exit if inputs are not in the correct settings
     If Not Me.ValidateInputs() Then GoTo exit_Handler
