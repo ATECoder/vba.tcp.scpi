@@ -11,10 +11,6 @@ Option Explicit
 
 Private Const m_lastErrorMessageCell As String = "C4"
 
-''' <summary>   Initialize this worksheet. </summary>
-Public Sub Initialize()
-End Sub
-
 ''' <summary>   Gets the Last Error Message. </summary>
 Friend Property Get LastErrorMessage() As String
     LastErrorMessage = Range(m_lastErrorMessageCell).value

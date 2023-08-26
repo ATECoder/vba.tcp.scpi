@@ -256,7 +256,7 @@ Public Function Test7700CardsShouldBuildScanLists() As Assert
     p_expectedScanList = "(@120)"
     Dim p_actualScanList As String
     If p_outcome.AssertSuccessful Then
-        p_actualScanList = p_card.BuildScanList(p_channelNumber)
+        p_actualScanList = p_card.BuildChannelScanList(p_channelNumber)
         Set p_outcome = Assert.AreEqual(p_expectedScanList, p_actualScanList, _
             "The expected scan list should be returned for card '" & p_cardName & "' and channel " & CStr(p_channelNumber) & ".")
     End If
@@ -306,7 +306,7 @@ Public Function Test7700CardsShouldBuildScanLists() As Assert
     
     p_expectedScanList = "(@240)"
     If p_outcome.AssertSuccessful Then
-        p_actualScanList = p_card.BuildScanList(p_channelNumber)
+        p_actualScanList = p_card.BuildChannelScanList(p_channelNumber)
         Set p_outcome = Assert.AreEqual(p_expectedScanList, p_actualScanList, _
             "The expected scan list should be returned for card '" & p_cardName & "' and channel " & CStr(p_channelNumber) & ".")
     End If

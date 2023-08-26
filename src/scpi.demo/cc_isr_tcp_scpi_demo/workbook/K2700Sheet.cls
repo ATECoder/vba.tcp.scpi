@@ -58,6 +58,8 @@ Private WithEvents m_k2700 As K2700
 Attribute m_k2700.VB_VarHelpID = -1
 
 Private Type ThisData
+    
+    Initialized As Boolean
 
     ' true if a pause is requested so that the timer event is not handled
     ' and the timer is paused on the next event.
@@ -120,7 +122,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -129,53 +131,6 @@ err_Handler:
     On Error Resume Next
     GoTo exit_Handler
     
-End Sub
-
-''' <summary>   Initialize this worksheet. </summary>
-Public Sub Initialize()
-
-    Const p_procedureName = "Initialize"
-
-    ' Error are trapped to prevent crashes because this method gets started when
-    ' the main workbook is activated.
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.EnableControls False
-    
-    ' populate the combo box commands
-    PopulateCommandsComboBox
-    
-    ' populate the function box commands
-    PopulateFunctionComboBox
-    
-    Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize(New ErrTracer)
-    Set m_k2700 = This.K2700
-    Set This.Device = This.K2700.Device
-    Set This.VISession = This.Device.VISession
-    
-    Set This.Stopwatch = cc_isr_Core_IO.Factory.NewStopwatch()
-  
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
 End Sub
 
 ''' <summary>   Toggle the enable state of the controls. </summary>
@@ -270,7 +225,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -345,7 +300,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -402,7 +357,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -438,7 +393,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -473,7 +428,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -522,7 +477,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -561,7 +516,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -658,7 +613,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -767,7 +722,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -802,7 +757,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -837,7 +792,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -872,7 +827,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -917,7 +872,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -966,7 +921,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1006,7 +961,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1049,7 +1004,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1207,7 +1162,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1242,7 +1197,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1278,7 +1233,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1313,7 +1268,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1348,7 +1303,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1385,7 +1340,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1422,7 +1377,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1457,7 +1412,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1492,7 +1447,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1527,7 +1482,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1562,7 +1517,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1598,7 +1553,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1633,7 +1588,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1758,7 +1713,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1855,7 +1810,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1953,7 +1908,7 @@ err_Handler:
     Me.PauseTimer
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -2045,7 +2000,7 @@ err_Handler:
     Me.MeasureButton.Enabled = True
     
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -2142,7 +2097,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -2211,7 +2166,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.SetErrSource p_procedureName, Me.name
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -2226,4 +2181,61 @@ End Sub
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangingEventArgs"/>] event arguments. </param>
 Private Sub m_k2700_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
 End Sub
+
+' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+' Worksheet events
+' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+''' <summary>   Initialize this worksheet if not initialized. </summary>
+Private Sub Worksheet_Activate()
+
+    Const p_procedureName = "Initialize"
+
+    ' Error are trapped to prevent crashes because this method gets started when
+    ' the main workbook is activated.
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    If Not This.Initialized Then
+    
+        Me.EnableControls False
+        
+        ' populate the combo box commands
+        PopulateCommandsComboBox
+        
+        ' populate the function box commands
+        PopulateFunctionComboBox
+        
+        Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize(New ErrTracer)
+        Set m_k2700 = This.K2700
+        Set This.Device = This.K2700.Device
+        Set This.VISession = This.Device.VISession
+        
+        Set This.Stopwatch = cc_isr_Core_IO.Factory.NewStopwatch()
+    
+    End If
+    
+    This.Initialized = True
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
 

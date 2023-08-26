@@ -1,11 +1,16 @@
 # TODO
 
+Streamline this workbook code.
+
+
 Core:
 Add support for property changed events.
 
 ## Beta 202308
 
-* 2700 View Model: Add Can Execute for all buttons using property change to efectuate,.
+* 2700 View Model: Add Executable conditions to match the old code and updated the old code for moving to the sheet.
+* Move the code to move to the actual sheet to a new temporary file.
+* include the view model in the project and fix code errors.
 * figure out how to detect Sheet cell change.
 Private Sub Worksheet_Change(ByVal Target As Range)
     If Not Intersect(Target, Me.Range("H5")) Is Nothing Then Macro

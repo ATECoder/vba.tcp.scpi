@@ -27,10 +27,6 @@ Private Const m_elapsedTimeCell As String = "H4"
 Private Const m_elapsedTimeFormat As String = "0.0"
 Private Const m_identityCell As String = "H2"
 
-''' <summary>   Initialize this worksheet. </summary>
-Public Sub Initialize()
-End Sub
-
 ''' <summary>   Reads the identity form the instrument with the
 ''' IP address and port defined in the parent sheet. </summary>
 Private Sub ReadIdentityButton_Click()
