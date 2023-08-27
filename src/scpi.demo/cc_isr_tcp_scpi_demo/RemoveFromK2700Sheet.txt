@@ -1,0 +1,79 @@
+''' <summary>   Toggle the enable state of the controls. </summary>
+''' <param name="a_connected">   [Boolean] True if connected; otherwise, false. </param>
+Public Sub EnableControls(ByVal a_connected As Boolean)
+
+    Me.ConnectToggleButton.Value = a_connected
+    
+    ' report the connection state
+    Range(m_connectedCell).Value = a_connected
+        
+    Me.RSTButton.Enabled = a_connected
+    Me.CLSButton.Enabled = a_connected
+    Me.QueryButton.Enabled = a_connected
+    Me.ReadButton.Enabled = a_connected
+    Me.ReadStatusByteButton.Enabled = a_connected
+    Me.ReadStandardEventStatusButton.Enabled = a_connected
+    Me.WriteButton.Enabled = a_connected
+    
+    Me.QueryInputsButton.Enabled = a_connected
+    
+    Me.EnableMeasureButton
+    Me.EnableMonitorExtTrigToggleButton
+    
+    If a_connected Then
+        Me.EnableGpibLanControls This.VISession.UsingGpibLan
+    Else
+        Me.EnableGpibLanControls False
+    End If
+
+End Sub
+
+
+''' <summary>   Toggle the enable state of the Measure Button based on the status
+''' of the K2700 and the availability of MUX cards. </summary>
+Public Sub EnableMeasureButton()
+    
+    Dim p_enable As Boolean
+    p_enable = Not This.K2700 Is Nothing
+    If p_enable Then
+        p_enable = This.K2700.CanTakeImmediateMeasurement
+    End If
+    p_enable = This.K2700ViewModel.ImmediateTriggerModeEnabled
+    
+    Me.ImmediateTriggerOptionButton.Enabled = p_enable
+    Me.MeasureButton.Enabled = False
+
+End Sub
+
+''' <summary>   Toggle the enable state of the External Trig Toggle Button based on the status
+''' of the K2700 and the availability of MUX cards. </summary>
+Public Sub EnableMonitorExtTrigToggleButton()
+    
+    Dim p_enable As Boolean
+    p_enable = Not This.K2700 Is Nothing
+    If p_enable Then
+        p_enable = This.K2700.CanTakeExternalTriggers
+    End If
+    p_enable = This.K2700ViewModel.ExternalTriggerModeEnabled
+    
+    Me.ExternalTriggerOptionButton.Enabled = p_enable
+    Me.MonitorExtTrigToggleButton.Enabled = False
+
+End Sub
+
+''' <summary>   Toggle the enabled state of the GPIB Lan controls. </summary>
+''' <param name="a_usingGpibLanController">   [Boolean] True if using the GPIB-Lan controller. </param>
+Public Sub EnableGpibLanControls(ByVal a_usingGpibLanController As Boolean)
+    Me.SDCButton.Enabled = a_usingGpibLanController
+    Me.GoToLocalButton.Enabled = a_usingGpibLanController
+    Me.LocalLockoutButton.Enabled = a_usingGpibLanController
+    Me.ReadAfterWriteSetButton.Enabled = a_usingGpibLanController
+    Me.ReadAfterWriteGetButton.Enabled = a_usingGpibLanController
+    Me.SerialPollButton.Enabled = a_usingGpibLanController
+    Me.SRQButton.Enabled = a_usingGpibLanController
+    Me.GetGpibAddressButton.Enabled = a_usingGpibLanController
+    Me.SetGpibAddressButton.Enabled = a_usingGpibLanController
+    Me.ReadTimeoutGetButton.Enabled = a_usingGpibLanController
+    Me.ReadTimeoutSetButton.Enabled = a_usingGpibLanController
+End Sub
+

@@ -77,7 +77,7 @@ Private Type ThisData
     
     Device As cc_isr_Ieee488.Device
     
-    VISession As cc_isr_Ieee488.VISession
+    ViSession As cc_isr_Ieee488.ViSession
     
 End Type
 
@@ -105,7 +105,7 @@ Public Sub Dispose()
     End If
     
     This.Device = Nothing
-    This.VISession = Nothing
+    This.ViSession = Nothing
     
     If Not m_k2700 Is Nothing Then m_k2700.Dispose
     Set m_k2700 = Nothing
@@ -122,7 +122,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -156,7 +156,7 @@ Friend Sub EnableControls(ByVal a_connected As Boolean)
     Me.EnableMonitorExtTrigToggleButton
     
     If a_connected Then
-        Me.EnableGpibLanControls This.VISession.UsingGpibLan
+        Me.EnableGpibLanControls This.ViSession.UsingGpibLan
     Else
         Me.EnableGpibLanControls False
     End If
@@ -225,7 +225,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -300,7 +300,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -343,7 +343,7 @@ Friend Sub WriteLine(ByVal a_message As String)
     
     Me.RestartStopwatch
     
-    This.VISession.WriteLine a_message
+    This.ViSession.WriteLine a_message
     
     Me.ReadStopwatch
     
@@ -357,7 +357,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -379,7 +379,7 @@ Friend Function QueryLine(ByVal a_message As String) As String
     
     Me.RestartStopwatch
     
-    QueryLine = This.VISession.QueryLine(a_message)
+    QueryLine = This.ViSession.QueryLine(a_message)
     
     Me.ReadStopwatch
 
@@ -393,7 +393,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -414,7 +414,7 @@ Friend Function Read() As String
     
     Me.RestartStopwatch
     
-    Read = This.VISession.Read()
+    Read = This.ViSession.Read()
     
     Me.ReadStopwatch
 
@@ -428,7 +428,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -450,7 +450,7 @@ Friend Sub ConnectToggleButton_Click()
     Me.RestartStopwatch
 
     Dim p_host As String: p_host = Me.Host
-    Dim p_port As Integer: p_port = Me.port
+    Dim p_port As Integer: p_port = Me.Port
     Dim p_sessionReadTimeout As Integer: p_sessionReadTimeout = Me.SessionReadTimeout
       
     If Not ConnectToggleButton.Value And This.K2700.Connected Then
@@ -461,7 +461,7 @@ Friend Sub ConnectToggleButton_Click()
     
         This.K2700.OpenConnection p_host, p_port
         
-        This.VISession.SessionReadTimeout = p_sessionReadTimeout
+        This.ViSession.SessionReadTimeout = p_sessionReadTimeout
         
     End If
     
@@ -477,7 +477,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -516,7 +516,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -613,7 +613,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -722,7 +722,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -757,7 +757,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -792,7 +792,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -813,7 +813,7 @@ Private Sub SDCButton_Click()
     
     Me.RestartStopwatch
     
-    This.VISession.GpibLan.SelectiveDeviceClear
+    This.ViSession.GpibLan.SelectiveDeviceClear
     
     Me.ReadStopwatch
     
@@ -827,7 +827,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -846,11 +846,11 @@ Friend Sub ReadStatusByteButton_Click()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    If This.VISession.UsingGpibLan Then
+    If This.ViSession.UsingGpibLan Then
     
         Me.RestartStopwatch
         
-        Range(m_serialPollCell).Value = This.VISession.GpibLan.SerialPoll
+        Range(m_serialPollCell).Value = This.ViSession.GpibLan.SerialPoll
         
         Me.ReadStopwatch
         
@@ -872,7 +872,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -901,8 +901,8 @@ Private Sub WriteButton_Click()
     Me.ReadStopwatch
     
     Me.SentMessage = p_messageToSend
-    If This.VISession.UsingGpibLan And Me.AutoStatusReadCheckBox.Value Then
-        Range(m_serialPollCell).Value = This.VISession.GpibLan.SerialPoll
+    If This.ViSession.UsingGpibLan And Me.AutoStatusReadCheckBox.Value Then
+        Range(m_serialPollCell).Value = This.ViSession.GpibLan.SerialPoll
     End If
     
     Dim p_isQuery As Boolean: p_isQuery = cc_isr_Core.StringExtensions.EndsWith(p_messageToSend, "?")
@@ -921,7 +921,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -961,7 +961,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1004,7 +1004,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1027,8 +1027,8 @@ Friend Property Get Host() As String
 End Property
 
 ''' <summary>   Gets the port number. </summary>
-Friend Property Get port() As Integer
-    port = CInt(Range(m_inputPortCell).Value)
+Friend Property Get Port() As Integer
+    Port = CInt(Range(m_inputPortCell).Value)
 End Property
 
 ''' <summary>   Get the receive timeout. </summary>
@@ -1146,8 +1146,8 @@ Friend Function QueryGpibLan(ByVal a_message As String) As String
     
     Me.RestartStopwatch
     
-    If 0 < This.VISession.GpibLan.SendToController(a_message) Then
-        QueryGpibLan = This.VISession.GpibLan.ReceiveFromDevice()
+    If 0 < This.ViSession.GpibLan.SendToController(a_message) Then
+        QueryGpibLan = This.ViSession.GpibLan.ReceiveFromDevice()
     End If
     
     Me.ReadStopwatch
@@ -1162,7 +1162,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1183,7 +1183,7 @@ Friend Function ReadGpibLan() As String
     
     Me.RestartStopwatch
     
-    ReadGpibLan = This.VISession.GpibLan.ReceiveFromDevice()
+    ReadGpibLan = This.ViSession.GpibLan.ReceiveFromDevice()
     
     Me.ReadStopwatch
 
@@ -1197,7 +1197,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1219,7 +1219,7 @@ Friend Function WriteGpibLan(ByVal a_message As String) As Long
     
     Me.RestartStopwatch
     
-    WriteGpibLan = This.VISession.GpibLan.SendToController(a_message)
+    WriteGpibLan = This.ViSession.GpibLan.SendToController(a_message)
     
     Me.ReadStopwatch
     
@@ -1233,7 +1233,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1254,7 +1254,7 @@ Private Sub GoToLocalButton_Click()
     
     Me.RestartStopwatch
     
-    This.VISession.GpibLan.GoToLocal
+    This.ViSession.GpibLan.GoToLocal
     
     Me.ReadStopwatch
     
@@ -1268,7 +1268,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1289,7 +1289,7 @@ Private Sub LocalLockoutButton_Click()
     
     Me.RestartStopwatch
     
-    This.VISession.GpibLan.LocalLockout
+    This.ViSession.GpibLan.LocalLockout
     
     Me.ReadStopwatch
     
@@ -1303,7 +1303,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1324,11 +1324,11 @@ Private Sub ReadAfterWriteSetButton_Click()
     
     Me.RestartStopwatch
     
-    This.VISession.GpibLan.ReadAfterWriteEnabledSetter Me.ReadAfterWriteEnabled
+    This.ViSession.GpibLan.ReadAfterWriteEnabledSetter Me.ReadAfterWriteEnabled
     
     Me.ReadStopwatch
     
-    This.VISession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
+    This.ViSession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1340,7 +1340,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1361,11 +1361,11 @@ Private Sub ReadAfterWriteGetButton_Click()
     
     Me.RestartStopwatch
     
-    Me.ReadAfterWriteEnabled = This.VISession.GpibLan.ReadAfterWriteEnabledGetter
+    Me.ReadAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
     
     Me.ReadStopwatch
     
-    This.VISession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
+    This.ViSession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1377,7 +1377,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1398,7 +1398,7 @@ Private Sub SerialPollButton_Click()
     
     Me.RestartStopwatch
     
-    Range(m_serialPollCell).Value = This.VISession.GpibLan.SerialPoll
+    Range(m_serialPollCell).Value = This.ViSession.GpibLan.SerialPoll
     
     Me.ReadStopwatch
     
@@ -1412,7 +1412,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1433,7 +1433,7 @@ Private Sub SRQButton_Click()
     
     Me.RestartStopwatch
     
-    Range(m_srqCell).Value = This.VISession.GpibLan.ServiceRequested
+    Range(m_srqCell).Value = This.ViSession.GpibLan.ServiceRequested
     
     Me.ReadStopwatch
     
@@ -1447,7 +1447,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1468,7 +1468,7 @@ Private Sub GetGpibAddressButton_Click()
     
     Me.RestartStopwatch
     
-    Range(m_gpibAddressCell).Value = This.VISession.GpibLan.GpibAddressGetter
+    Range(m_gpibAddressCell).Value = This.ViSession.GpibLan.GpibAddressGetter
 
     Me.ReadStopwatch
     
@@ -1482,7 +1482,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1503,7 +1503,7 @@ Private Sub SetGpibAddressButton_Click()
     
     Me.RestartStopwatch
     
-    This.VISession.GpibLan.GpibAddressSetter CInt(Range(m_gpibAddressCell).Value)
+    This.ViSession.GpibLan.GpibAddressSetter CInt(Range(m_gpibAddressCell).Value)
 
     Me.ReadStopwatch
     
@@ -1517,7 +1517,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1539,7 +1539,7 @@ Private Sub ReadTimeoutGetButton_Click()
     
     Me.RestartStopwatch
     
-    Range(m_readTimeoutCell).Value = This.VISession.GpibLan.ReadTimeoutGetter
+    Range(m_readTimeoutCell).Value = This.ViSession.GpibLan.ReadTimeoutGetter
 
     Me.ReadStopwatch
     
@@ -1553,7 +1553,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1574,7 +1574,7 @@ Private Sub ReadTimeoutSetButton_Click()
     
     Me.RestartStopwatch
     
-    This.VISession.GpibLan.ReadTimeoutSetter (CInt(Range(m_readTimeoutCell).Value))
+    This.ViSession.GpibLan.ReadTimeoutSetter (CInt(Range(m_readTimeoutCell).Value))
     
     Me.ReadStopwatch
     
@@ -1588,7 +1588,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1713,7 +1713,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1810,7 +1810,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1861,7 +1861,7 @@ Friend Sub StartMonitoringExternalTriggers(Optional ByVal a_timerInterval As Int
     End If
        
     ' initiate awaiting for the external trigger
-    This.VISession.WriteLine ":INIT; *CLS"
+    This.ViSession.WriteLine ":INIT; *CLS"
     
     ' start the timer
     Me.StartTimer a_timerInterval
@@ -1908,7 +1908,7 @@ err_Handler:
     Me.PauseTimer
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -2000,7 +2000,7 @@ err_Handler:
     Me.MeasureButton.Enabled = True
     
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -2097,7 +2097,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -2122,19 +2122,19 @@ Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Connec
     If a_eventArgs.Connected Then
     
         ' report the socket number
-        Range(m_socketAddressCell).Value = This.VISession.SocketAddress
-        Range(m_socketIdCell).Value = This.VISession.SocketId
+        Range(m_socketAddressCell).Value = This.ViSession.SocketAddress
+        Range(m_socketIdCell).Value = This.ViSession.SocketId
         
-        If This.VISession.UsingGpibLan Then
-            Me.ReadAfterWriteEnabled = This.VISession.GpibLan.ReadAfterWriteEnabledGetter
+        If This.ViSession.UsingGpibLan Then
+            Me.ReadAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
             If Me.ReadAfterWriteEnabled Then
                 ' for the 2700 with needs this off
-                This.VISession.GpibLan.ReadAfterWriteEnabledSetter False
-                Me.ReadAfterWriteEnabled = This.VISession.GpibLan.ReadAfterWriteEnabledGetter
+                This.ViSession.GpibLan.ReadAfterWriteEnabledSetter False
+                Me.ReadAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
             End If
         End If
         
-        This.VISession.GpibLan.SelectiveDeviceClear
+        This.ViSession.GpibLan.SelectiveDeviceClear
         This.Device.ResetKnownState
         This.Device.ClearExecutionState
         
@@ -2166,7 +2166,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -2209,7 +2209,7 @@ Private Sub Worksheet_Activate()
         Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize(New ErrTracer)
         Set m_k2700 = This.K2700
         Set This.Device = This.K2700.Device
-        Set This.VISession = This.Device.VISession
+        Set This.ViSession = This.Device.ViSession
         
         Set This.Stopwatch = cc_isr_Core_IO.Factory.NewStopwatch()
     
@@ -2227,7 +2227,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()

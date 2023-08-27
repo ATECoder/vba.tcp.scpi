@@ -208,7 +208,7 @@ End Sub
 
 ''' <summary>   Restore continuous reading. </summary>
 ''' <remarks>   This is typically called to restore continuous mode without
-'''             chaning the function mode. </remarks>
+'''             changing the function mode. </remarks>
 Public Sub RestoreContinuousReading()
 
     This.ViSession.WriteLine ":INIT:CONT OFF"

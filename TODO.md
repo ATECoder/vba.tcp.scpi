@@ -12,33 +12,8 @@ Add support for property changed events.
 * Move the code to move to the actual sheet to a new temporary file.
 * include the view model in the project and fix code errors.
 * figure out how to detect Sheet cell change.
-Private Sub Worksheet_Change(ByVal Target As Range)
-    If Not Intersect(Target, Me.Range("H5")) Is Nothing Then Macro
-End Sub
-Private Sub Worksheet_Change(ByVal Target As Range)
-	' this uses fewer resources than Intersect, which will be helpful if your worksheet changes a lot.
-    IF Target.Address = "$D$2" Then
-        MsgBox("Cell D2 Has Changed.")
-    End If
-End Sub
 
 https://stackoverflow.com/questions/18124853/excel-vba-checkbox-click-and-change-events-the-same
-
- the change event also causes a click event. Use this to issue the click event and do not
- implement the click event
-Private Sub CheckBox1_Change()
-On Error Goto Err:
-If ActiveControl.Name = CheckBox1.Name Then 
-    On Error Goto 0        
-    'Commands for click
-    Exit Sub
-Else
-    On Error Goto 0 
-    'Commands for change from within the Userform
-    Exit Sub
-Err:On Error Goto 0 
-    'Commands for change from outside the Userform
-End Sub    
 
 * figure out if check box changed occurs before checkbox click.
 
