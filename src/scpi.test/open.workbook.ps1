@@ -88,7 +88,7 @@ LogInfo ( "Opened " + $excel.ActiveWorkbook.Name )
 
 $excel.EnableEvents = $true;
 
-$src = "C:\my\lib\vba\iot\tcp.scpi\src\scpi.demo\cc.isr.tcp.scpi.demo.xlsm"
+$src = "C:\my\lib\vba\iot\tcp.scpi\src\scpi.test\cc.isr.tcp.scpi.test.xlsm"
 LogInfo( "opening " + $src)
 $book = $excel.Workbooks.Open($src, $missing, $false, $missing, $missing, $missing, $true)
 LogInfo ( "Opened " + $excel.ActiveWorkbook.Name )

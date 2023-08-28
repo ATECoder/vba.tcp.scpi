@@ -208,7 +208,7 @@ End Sub
 
 ''' <summary>   Restore continuous reading. </summary>
 ''' <remarks>   This is typically called to restore continuous mode without
-'''             changing the function mode. </remarks>
+'''             chaning the function mode. </remarks>
 Public Sub RestoreContinuousReading()
 
     This.ViSession.WriteLine ":INIT:CONT OFF"
@@ -290,7 +290,7 @@ End Sub
 ''' <param name="a_function">        [String] The measurement function. </param>
 ''' <param name="a_frontInputs ">    [Boolean] True if front inputs are required;
 '''                                  otherwise, rear inputs are required. </param>
-Public Sub ConfigurateExternalTriggerReading(ByVal a_function As String, ByVal a_frontInputs As Boolean)
+Public Sub ConfigureExternalTriggerReading(ByVal a_function As String, ByVal a_frontInputs As Boolean)
 
     ' make sure that the instrument is ready to accept
     ' input from the front panel

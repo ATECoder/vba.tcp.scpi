@@ -55,7 +55,14 @@ Private Type this_
 
     ViSession As cc_isr_Ieee488.ViSession
 
-    ' Winsock connection information
+    ' view model properties
+    ElapsedTime As Integer
+    ElapsedTimeFormat As String
+    ElapsedTimeCaption As String
+    LastErrorMessage As String
+    LastMessage As String
+
+    ' Winsock properties
     Host As String
     Port As Integer
     SocketAddress As String
@@ -68,20 +75,17 @@ Private Type this_
     SentMessage As String
     ReceivedMessage As String
     ReceivedMessageLength As Integer
-    ElapsedTime As Integer
-    ElapsedTimeFormat As String
-    ElapsedTimeCaption As String
-    LastErrorMessage As String
-    LastMessage As String
     StatusByte As Integer
     StandardByte As Integer
     ReadStatusAfterWriteEnabled As Boolean
+    ScpiCommands As Collection
     
     ' GPIB-Lan properties.
     ServiceRequested As Boolean
     SerialPollByte As Integer
     GpibAddress As Integer
     ReadAfterWriteEnabled As Boolean
+    ReadTimeout As Integer
     
     ' 2700 properties
     TopCard As String
@@ -102,7 +106,6 @@ Private Type this_
     MeasuredValueFormat As String
     MeasuredValue As Double
     SenseFunctions As Collection
-    ScpiCommands As Collection
     ReadingOffset As Double
     
     ' service request monitoring timer control
@@ -113,21 +116,19 @@ Private Type this_
     ' event with the instrument.
     HandlingTimerEvent As Boolean
 
-   
     ' Service request monitoring properties
+    ' this must be enable before stating monitoring.
     ExternalTrigMonitoringEnabled As Boolean
     MonitoringState As String
     AutoIncrementChannelNoEnabled As Boolean
     SingleReadEnabled As Boolean
-    ImmediateTriggerModeEnabled As Boolean
-    ExternalTriggerModeEnabled As Boolean
 
-    ' Winsock connection commands
+    ' Winsock connection executables
     OpenConnectionExecutable As Boolean
     CloseConnectionExecutable As Boolean
     ToggleConnectionExecutable As Boolean
     
-    ' IEEE488 commands
+    ' IEEE488 executables
     ClearExecutionStateExecutable As Boolean
     MessageToSendExecutable As Boolean
     QueryExecutable As Boolean
@@ -138,17 +139,18 @@ Private Type this_
     ServiceRequestedExecutable As Boolean
     WriteExecutable As Boolean
     
-    ' 2700 commands
+    ' 2700 executables
+    ClearReadingsExecutable As Boolean
     FunctionNameExecutable As Boolean
-    QueryInputsExecutable As Boolean
-    MeasureExecutable As Boolean
     ImmediateTriggerOptionExecutable As Boolean
+    MeasureExecutable As Boolean
+    QueryInputsExecutable As Boolean
     
     ' Service request monitoring properties
     MonitorExtTrigExecutable As Boolean
     ExternalTriggerOptionExecutable As Boolean
 
-    ' GPIB-Lan commands
+    ' GPIB-Lan executables
     SelectiveDeviceClearExecutable As Boolean
     GoToLocalExecutable As Boolean
     LocalLockoutExecutable As Boolean
@@ -214,27 +216,9 @@ End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
-' SETTINGS
+' Winsock properties
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
-''' <summary>   Returns a reference to the <see cref="cc_isr_Tcp_Scpi.K2700"/>. </summary>
-''' <value>   An <see cref="cc_isr_Tcp_Scpi.K2700"/>. </value>
-Public Property Get K2700() As cc_isr_Tcp_Scpi.K2700
-    Set K2700 = This.K2700
-End Property
-
-''' <summary>   Returns a reference to the <see cref="cc_isr_Ieee488.ViSession"/>. </summary>
-''' <value>   An <see cref="cc_isr_Ieee488.ViSession"/>. </value>
-Public Property Get ViSession() As cc_isr_Ieee488.ViSession
-    Set ViSession = This.ViSession
-End Property
-
-''' <summary>   Returns a reference to the <see cref="cc_isr_Ieee488.Device"/>. </summary>
-''' <value>   An <see cref="cc_isr_Ieee488.Device"/>. </value>
-Public Property Get Device() As cc_isr_Ieee488.Device
-    Set Device = This.Device
-End Property
 
 ''' <summary>   Gets the host dotted IP Address. </summary>
 ''' <value>   [String]. </value>
@@ -264,7 +248,7 @@ Public Property Let Port(ByVal a_value As Integer)
     If This.Port <> a_value Then
         This.Port = a_value
         This.Port = a_value
-        Me.OnPropertyChanged "Port "
+        Me.OnPropertyChanged "Port"
         Me.ToggleConnectionExecutableSetter
     End If
 End Property
@@ -296,7 +280,7 @@ Public Property Let SocketId(ByVal a_value As Integer)
     If This.SocketId <> a_value Then
         This.SocketId = a_value
         This.SocketId = a_value
-        Me.OnPropertyChanged "SocketId "
+        Me.OnPropertyChanged "SocketId"
     End If
 End Property
 
@@ -316,6 +300,142 @@ Public Property Let ReceiveTimeout(ByVal a_value As Integer)
     End If
 End Property
 
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' Winsock Executables
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Gets the condition indicating that the Open Connection command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Open Connection command can be executed. </value>
+Public Property Get OpenConnectionExecutable() As Boolean
+    OpenConnectionExecutable = This.OpenConnectionExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Open Connection command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Open Connection command can be executed. </param>
+Public Property Let OpenConnectionExecutable(ByVal a_value As Boolean)
+    If This.OpenConnectionExecutable <> a_value Then
+        This.OpenConnectionExecutable = a_value
+        Me.OnPropertyChanged "OpenConnectionExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Close Connection command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Close Connection command can be executed. </value>
+Public Property Get CloseConnectionExecutable() As Boolean
+    CloseConnectionExecutable = This.CloseConnectionExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Close Connection command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Close Connection command can be executed. </param>
+Public Property Let CloseConnectionExecutable(ByVal a_value As Boolean)
+    If This.CloseConnectionExecutable <> a_value Then
+        This.CloseConnectionExecutable = a_value
+        Me.OnPropertyChanged "CloseConnectionExecutable"
+    End If
+End Property
+
+''' <summary>   Sets the condition indicating that the Toggle Connection command
+'''             can be executed. </summary>
+Friend Sub ToggleConnectionExecutableSetter()
+    Me.ToggleConnectionExecutable = VBA.vbNullString <> Me.Host _
+        And (5025 = Me.Port Or 1234 = Me.Port) _
+        And 0 < Me.ReceiveTimeout
+End Sub
+
+''' <summary>   Gets the condition indicating that the Toggle Connection command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Toggle Connection command can be executed. </value>
+Public Property Get ToggleConnectionExecutable() As Boolean
+    ToggleConnectionExecutable = This.ToggleConnectionExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Toggle Connection command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Toggle Connection command can be executed. </param>
+Public Property Let ToggleConnectionExecutable(ByVal a_value As Boolean)
+    If This.ToggleConnectionExecutable <> a_value Then
+        This.ToggleConnectionExecutable = a_value
+        Me.OnPropertyChanged "ToggleConnectionExecutable"
+    End If
+End Property
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' Winsock Commands
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Handles the Toggle connection button click event. </summary>
+''' <param name=a_connect>   [Boolean] true to connect; otherwise, disconnect. </param>
+Public Sub ToggleConnectionCommand(ByVal a_connect As Boolean)
+
+    Const p_procedureName = "ToggleConnectionCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    If Not a_connect And Me.Connected Then
+    
+        This.K2700.CloseConnection
+    
+    ElseIf a_connect And Not Me.Connected Then
+
+        This.K2700.OpenConnection This.Host, This.Port, This.ReceiveTimeout
+    
+        This.ViSession.SessionReadTimeout = This.SessionReadTimeout
+    
+    End If
+
+    Me.ReadStopwatchCommand
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+
+End Sub
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' IEEE 488 properties
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Returns a reference to the <see cref="cc_isr_Ieee488.Device"/>. </summary>
+''' <value>   An <see cref="cc_isr_Ieee488.Device"/>. </value>
+Public Property Get Device() As cc_isr_Ieee488.Device
+    Set Device = This.Device
+End Property
+
+''' <summary>   Returns a reference to the <see cref="cc_isr_Ieee488.ViSession"/>. </summary>
+''' <value>   An <see cref="cc_isr_Ieee488.ViSession"/>. </value>
+Public Property Get ViSession() As cc_isr_Ieee488.ViSession
+    Set ViSession = This.ViSession
+End Property
+
 ''' <summary>   Gets the session read timeout in milliseconds. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get SessionReadTimeout() As Integer
@@ -328,38 +448,6 @@ Public Property Let SessionReadTimeout(ByVal a_value As Integer)
     If This.SessionReadTimeout <> a_value Then
         This.SessionReadTimeout = a_value
         Me.OnPropertyChanged "SessionReadTimeout"
-    End If
-End Property
-
-''' <summary>   Gets the Pause Requested condition. </summary>
-''' <remarks>   When true, a pause request is sent to the timer so that the timer
-'''             event is not handled and the timer is paused on the next event. </remarks>
-''' <value>   [Boolean]. </value>
-Public Property Get PauseRequested() As Boolean
-    PauseRequested = This.PauseRequested
-End Property
-
-''' <summary>   Sets the Pause Requested condition. </summary>
-''' <param name="a_value">   [Boolean] the Pause Requested value. </value>
-Public Property Let PauseRequested(ByVal a_value As Boolean)
-    If This.PauseRequested <> a_value Then
-        This.PauseRequested = a_value
-        Me.OnPropertyChanged "PauseRequested"
-    End If
-End Property
-
-''' <summary>   Gets the Timer Interval in milliseconds. </summary>
-''' <value>   [Integer]. </value>
-Public Property Get TimerInterval() As Integer
-    TimerInterval = This.TimerInterval
-End Property
-
-''' <summary>   Sets the Timer Interval in milliseconds. </summary>
-''' <param name="a_value">   [Integer] the Timer Interval in milliseconds value. </value>
-Public Property Let TimerInterval(ByVal a_value As Integer)
-    If This.TimerInterval <> a_value Then
-        This.TimerInterval = a_value
-        Me.OnPropertyChanged "TimerInterval"
     End If
 End Property
 
@@ -424,81 +512,541 @@ Public Property Let ReceivedMessageLength(ByVal a_value As Integer)
     End If
 End Property
 
-''' <summary>   Gets the Elapsed Time in milliseconds. </summary>
+''' <summary>   Gets the Status Byte. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get ElapsedTime() As Integer
-    ElapsedTime = This.ElapsedTime
+Public Property Get StatusByte() As Integer
+    StatusByte = This.StatusByte
 End Property
 
-''' <summary>   Sets the Elapsed Time in milliseconds. </summary>
-''' <param name="a_value">   [Integer] the Elapsed Time in milliseconds. </value>
-Public Property Let ElapsedTime(ByVal a_value As Integer)
-    If This.ElapsedTime <> a_value Then
-        This.ElapsedTime = a_value
-        Me.OnPropertyChanged "ElapsedTime"
-        Me.ElapsedTimeCaption = Format(a_value, This.ElapsedTimeFormat)
+''' <summary>   Sets the Status Byte. </summary>
+''' <param name="a_value">   [Integer] the Status Byte value. </value>
+Public Property Let StatusByte(ByVal a_value As Integer)
+    If This.StatusByte <> a_value Then
+        This.StatusByte = a_value
+        Me.OnPropertyChanged "StatusByte"
+        Me.ServiceRequested = cc_isr_Ieee488.ServiceRequests.RequestingService = _
+                a_value And cc_isr_Ieee488.ServiceRequests.RequestingService
     End If
 End Property
 
-''' <summary>   Gets the Elapsed Time Format. </summary>
-''' <value>   [String]. </value>
-Public Property Get ElapsedTimeFormat() As String
-    ElapsedTimeFormat = This.ElapsedTimeFormat
+''' <summary>   Gets the Standard Byte. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get StandardByte() As Integer
+    StandardByte = This.StandardByte
 End Property
 
-''' <summary>   Sets the Elapsed Time Format. </summary>
-''' <param name="a_value">   [String] the elapsed time format. </value>
-Public Property Let ElapsedTimeFormat(ByVal a_value As String)
-    If This.ElapsedTimeFormat <> a_value Then
-        This.ElapsedTimeFormat = a_value
-        Me.OnPropertyChanged "ElapsedTimeFormat"
+''' <summary>   Sets the Standard Byte. </summary>
+''' <param name="a_value">   [Integer] the Standard Byte value. </value>
+Public Property Let StandardByte(ByVal a_value As Integer)
+    If This.StandardByte <> a_value Then
+        This.StandardByte = a_value
+        Me.OnPropertyChanged "StandardByte"
     End If
 End Property
 
-''' <summary>   Gets the Elapsed Time Caption. </summary>
-''' <value>   [String]. </value>
-Public Property Get ElapsedTimeCaption() As String
-    ElapsedTimeCaption = This.ElapsedTimeCaption
+''' <summary>   Gets the Auto Status Read Enabled. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get ReadStatusAfterWriteEnabled() As Boolean
+    ReadStatusAfterWriteEnabled = This.ReadStatusAfterWriteEnabled
 End Property
 
-''' <summary>   Sets the Elapsed Time Caption. </summary>
-''' <param name="a_value">   [String] the elapsed time Caption. </value>
-Public Property Let ElapsedTimeCaption(ByVal a_value As String)
-    If This.ElapsedTimeCaption <> a_value Then
-        This.ElapsedTimeCaption = a_value
-        Me.OnPropertyChanged "ElapsedTimeCaption"
+''' <summary>   Sets the Auto Status Read Enabled. </summary>
+''' <param name="a_value">   [Boolean] the Auto Status Read Enabled value. </value>
+Public Property Let ReadStatusAfterWriteEnabled(ByVal a_value As Boolean)
+    If This.ReadStatusAfterWriteEnabled <> a_value Then
+        This.ReadStatusAfterWriteEnabled = a_value
+        Me.OnPropertyChanged "ReadStatusAfterWriteEnabled"
     End If
 End Property
 
-''' <summary>   Gets the Last Error Message. </summary>
-''' <value>   [String]. </value>
-Public Property Get LastErrorMessage() As String
-    LastErrorMessage = This.LastErrorMessage
+''' <summary>   Gets the Scpi Commands. </summary>
+''' <value>   [Collection]. </value>
+Public Property Get ScpiCommands() As Collection
+    Set ScpiCommands = This.ScpiCommands
 End Property
 
-''' <summary>   Sets the Last Error Message. </summary>
-''' <param name="a_value">   [String] the last error message value. </value>
-Public Property Let LastErrorMessage(ByVal a_value As String)
-    If This.LastErrorMessage <> a_value Then
-        This.LastErrorMessage = a_value
-        Me.OnPropertyChanged "LastErrorMessage"
+''' <summary>   Sets the Scpi Commands. </summary>
+''' <param name="a_value">   [Collection] the Scpi Commands value. </value>
+Public Property Let ScpiCommands(ByVal a_value As Collection)
+    If Not cc_isr_Core.CollectionExtensions.AreEqual(This.ScpiCommands, a_value) Then
+        Set This.ScpiCommands = a_value
+        Me.OnPropertyChanged "ScpiCommands"
     End If
 End Property
 
-''' <summary>   Gets the Last Message. </summary>
-''' <value>   [String]. </value>
-Public Property Get LastMessage() As String
-    LastMessage = This.LastMessage
+''' <summary>   Populates the Commands collection. </summary>
+Public Sub PopulateScpiCommands()
+
+    Dim p_scpiCommands As New Collection
+    p_scpiCommands.Add cc_isr_Ieee488.ClearExecutionStateCommand
+    p_scpiCommands.Add cc_isr_Ieee488.ClearExecutionStateCommand & ";" & _
+                                cc_isr_Ieee488.OperationCompletedQueryCommand
+    p_scpiCommands.Add cc_isr_Ieee488.IdentityQueryCommand
+    p_scpiCommands.Add cc_isr_Ieee488.OperationCompleteCommand
+    p_scpiCommands.Add cc_isr_Ieee488.OperationCompletedQueryCommand
+    p_scpiCommands.Add cc_isr_Ieee488.OptionsQueryCommand
+    p_scpiCommands.Add cc_isr_Ieee488.ResetKnownStateCommand
+    p_scpiCommands.Add cc_isr_Ieee488.ResetKnownStateCommand & ";" & _
+                                cc_isr_Ieee488.OperationCompletedQueryCommand
+    p_scpiCommands.Add cc_isr_Core.StringExtensions.StringFormat( _
+                                cc_isr_Ieee488.StandardEventEnableCommand, &H7F) & ";" & _
+                                cc_isr_Ieee488.OperationCompletedQueryCommand
+    p_scpiCommands.Add cc_isr_Ieee488.StandardEventEnableQueryCommand
+    p_scpiCommands.Add cc_isr_Ieee488.StandardEventStatusQueryCommand
+    p_scpiCommands.Add cc_isr_Core.StringExtensions.StringFormat( _
+                                cc_isr_Ieee488.ServiceRequestEnableCommand, &H7F) & ";" & _
+                                cc_isr_Ieee488.OperationCompletedQueryCommand
+    p_scpiCommands.Add cc_isr_Core.StringExtensions.StringFormat( _
+                                cc_isr_Ieee488.StandardServiceEnableCommand, &H7F, &H7F) & ";" & _
+                                cc_isr_Ieee488.OperationCompletedQueryCommand
+    p_scpiCommands.Add cc_isr_Core.StringExtensions.StringFormat( _
+                                cc_isr_Ieee488.StandardServiceEnableCommand, &H7F, &H7F) & ";" & _
+                                cc_isr_Ieee488.OperationCompletedQueryCommand
+    p_scpiCommands.Add cc_isr_Ieee488.ServiceRequestEnableQueryCommand
+    p_scpiCommands.Add cc_isr_Ieee488.ServiceRequestQueryCommand
+    p_scpiCommands.Add cc_isr_Ieee488.WaitCommand
+    p_scpiCommands.Add cc_isr_Ieee488.WaitCommand & ";" & _
+                                cc_isr_Ieee488.OperationCompletedQueryCommand
+   
+    p_scpiCommands.Add "SYST:BEEP OFF"
+    p_scpiCommands.Add "SYST:CLE"
+    p_scpiCommands.Add "SYST:ERR?"
+    p_scpiCommands.Add "SYST:FRSW?"
+    p_scpiCommands.Add "FUNC 'RES',(@101:120)"
+    p_scpiCommands.Add "FUNC 'RES',(@201:220)"
+    p_scpiCommands.Add "FORM:ELEM READ"
+    p_scpiCommands.Add "STAT:PRES"
+    p_scpiCommands.Add "STAT:MEAS:ENAB 32"
+    p_scpiCommands.Add "FETCH?"
+    p_scpiCommands.Add "READ?"
+
+    Me.ScpiCommands = p_scpiCommands
+
+End Sub
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' IEEE 488 Executables
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Gets the condition indicating that the Reset Known State command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Reset Known State command can be executed. </value>
+Public Property Get ResetKnownStateExecutable() As Boolean
+    ResetKnownStateExecutable = This.ResetKnownStateExecutable
 End Property
 
-''' <summary>   Sets the Last Message. </summary>
-''' <param name="a_value">   [String] the last message value. </value>
-Public Property Let LastMessage(ByVal a_value As String)
-    If This.LastMessage <> a_value Then
-        This.LastMessage = a_value
-        Me.OnPropertyChanged "LastMessage"
+''' <summary>   Sets the condition indicating that the Reset Known State command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Reset Known State command can be executed. </param>
+Public Property Let ResetKnownStateExecutable(ByVal a_value As Boolean)
+    If This.ResetKnownStateExecutable <> a_value Then
+        This.ResetKnownStateExecutable = a_value
+        Me.OnPropertyChanged "ResetKnownStateExecutable"
     End If
 End Property
+
+''' <summary>   Gets the condition indicating that the Clear Execution State Command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Clear Execution State Command can be executed. </value>
+Public Property Get ClearExecutionStateExecutable() As Boolean
+    ClearExecutionStateExecutable = This.ClearExecutionStateExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Clear Execution State Command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Clear Execution State Command can be executed. </param>
+Public Property Let ClearExecutionStateExecutable(ByVal a_value As Boolean)
+    If This.ClearExecutionStateExecutable <> a_value Then
+        This.ClearExecutionStateExecutable = a_value
+        Me.OnPropertyChanged "ClearExecutionStateExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Query command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Query command can be executed. </value>
+Public Property Get QueryExecutable() As Boolean
+    QueryExecutable = This.QueryExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Query command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Query command can be executed. </param>
+Public Property Let QueryExecutable(ByVal a_value As Boolean)
+    If This.QueryExecutable <> a_value Then
+        This.QueryExecutable = a_value
+        Me.OnPropertyChanged "QueryExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Read command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Read command can be executed. </value>
+Public Property Get ReadExecutable() As Boolean
+    ReadExecutable = This.ReadExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Read command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Read command can be executed. </param>
+Public Property Let ReadExecutable(ByVal a_value As Boolean)
+    If This.ReadExecutable <> a_value Then
+        This.ReadExecutable = a_value
+        Me.OnPropertyChanged "ReadExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Read Status Byte command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Read Status Byte command can be executed. </value>
+Public Property Get ReadStatusByteExecutable() As Boolean
+    ReadStatusByteExecutable = This.ReadStatusByteExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Read Status Byte command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Read Status Byte command can be executed. </param>
+Public Property Let ReadStatusByteExecutable(ByVal a_value As Boolean)
+    If This.ReadStatusByteExecutable <> a_value Then
+        This.ReadStatusByteExecutable = a_value
+        Me.OnPropertyChanged "ReadStatusByteExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Read Standard Event Status command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Read Standard Event Status command can be executed. </value>
+Public Property Get ReadStandardEventStatusExecutable() As Boolean
+    ReadStandardEventStatusExecutable = This.ReadStandardEventStatusExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Read Standard Event Status command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Read Standard Event Status command can be executed. </param>
+Public Property Let ReadStandardEventStatusExecutable(ByVal a_value As Boolean)
+    If This.ReadStandardEventStatusExecutable <> a_value Then
+        This.ReadStandardEventStatusExecutable = a_value
+        Me.OnPropertyChanged "ReadStandardEventStatusExecutable"
+    End If
+End Property
+''' <summary>   Gets the condition indicating that the Write command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Write command can be executed. </value>
+Public Property Get WriteExecutable() As Boolean
+    WriteExecutable = This.WriteExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Write command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Write command can be executed. </param>
+Public Property Let WriteExecutable(ByVal a_value As Boolean)
+    If This.WriteExecutable <> a_value Then
+        This.WriteExecutable = a_value
+        Me.OnPropertyChanged "WriteExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that Message To Send command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Message to Send command can be executed. </value>
+Public Property Get MessageToSendExecutable() As Boolean
+    MessageToSendExecutable = This.MessageToSendExecutable
+End Property
+
+''' <summary>   Sets the Message to send command condition. </summary>
+''' <param name="a_value">   [Boolean] True if the Message to send command can be executed. </param>
+Public Property Let MessageToSendExecutable(ByVal a_value As Boolean)
+    If This.MessageToSendExecutable <> a_value Then
+        This.MessageToSendExecutable = a_value
+        Me.OnPropertyChanged "MessageToSendExecutable"
+    End If
+End Property
+
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' IEEE 488 Commands
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Handles the Clear Known State button click event. </summary>
+Public Sub ClearExecutionStateCommand()
+
+    Const p_procedureName = "ClearExecutionStateCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.LastMessage = "Clearing execution state."
+
+    Me.RestartStopwatchCommand
+
+    This.Device.ClearExecutionState
+
+    Me.ReadStopwatchCommand
+
+    Me.LastMessage = "Done clearing execution state."
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+
+End Sub
+
+''' <summary>   Writes the <see cref="MessageToSend"/> and update elapsed times. </summary>
+Public Sub WriteCommand()
+
+    Const p_procedureName = "WriteCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    This.ViSession.WriteLine This.MessageToSend
+
+    Me.ReadStopwatchCommand
+
+    Me.SentMessage = This.MessageToSend
+
+    If Me.ReadStatusAfterWriteEnabled Then
+
+        If This.ViSession.UsingGpibLan Then _
+            Me.SerialPollByte = This.ViSession.GpibLan.SerialPoll
+
+        Dim p_isQuery As Boolean
+        p_isQuery = cc_isr_Core.StringExtensions.EndsWith(This.MessageToSend, "?")
+        If Not p_isQuery Then
+            Me.StatusByte = This.Device.QueryServiceRequestStatus
+            Me.StandardByte = This.Device.QueryStandardEventsStatus
+        End If
+
+    End If
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Query the instrument using the message to send and update then elapsed tiMe. </summary>
+''' <param name="a_message">   [String] to send to the instrument. </param>
+Public Sub QueryCommand()
+
+    Const p_procedureName = "QueryCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    Me.ReceivedMessage = This.ViSession.QueryLine(Me.MessageToSend)
+
+    Me.ReadStopwatchCommand
+
+    Me.SentMessage = Me.MessageToSend
+   
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+
+End Sub
+
+''' <summary>   Read from the instrument updating the elap[es times. </summary>
+Public Sub ReadCommand()
+
+    Const p_procedureName = "ReadCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    Me.ReceivedMessage = This.ViSession.Read()
+
+    Me.ReadStopwatchCommand
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Handles the Read Status Byte button click event. </summary>
+Public Sub ReadStandardEventStatusCommand()
+
+    Const p_procedureName = "ReadStandardEventStatusCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    Me.StandardByte = This.Device.QueryStandardEventsStatus
+
+    Me.ReadStopwatchCommand
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+
+End Sub
+
+''' <summary>   Handles the Reset Known State button click event. </summary>
+Public Sub ResetKnownStateCommand()
+
+    Const p_procedureName = "ResetKnownStateCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    This.Device.ResetKnownState
+
+    Me.ReadStopwatchCommand
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Handles the Query Status Byte button click event. </summary>
+Public Sub QueryStatusByteCommand()
+
+    Const p_procedureName = "QueryStatusByteCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    Me.StatusByte = This.Device.QueryServiceRequestStatus()
+
+    Me.ReadStopwatchCommand
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' GPIB-Lan properties
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Gets the Serial Poll Byte. </summary>
 ''' <value>   [Integer]. </value>
@@ -532,38 +1080,6 @@ Public Property Let ServiceRequested(ByVal a_value As Integer)
     End If
 End Property
 
-''' <summary>   Gets the Status Byte. </summary>
-''' <value>   [Integer]. </value>
-Public Property Get StatusByte() As Integer
-    StatusByte = This.StatusByte
-End Property
-
-''' <summary>   Sets the Status Byte. </summary>
-''' <param name="a_value">   [Integer] the Status Byte value. </value>
-Public Property Let StatusByte(ByVal a_value As Integer)
-    If This.StatusByte <> a_value Then
-        This.StatusByte = a_value
-        Me.OnPropertyChanged "StatusByte"
-        Me.ServiceRequested = cc_isr_Ieee488.ServiceRequests.RequestingService = _
-                a_value And cc_isr_Ieee488.ServiceRequests.RequestingService
-    End If
-End Property
-
-''' <summary>   Gets the Standard Byte. </summary>
-''' <value>   [Integer]. </value>
-Public Property Get StandardByte() As Integer
-    StandardByte = This.StandardByte
-End Property
-
-''' <summary>   Sets the Standard Byte. </summary>
-''' <param name="a_value">   [Integer] the Standard Byte value. </value>
-Public Property Let StandardByte(ByVal a_value As Integer)
-    If This.StandardByte <> a_value Then
-        This.StandardByte = a_value
-        Me.OnPropertyChanged "StandardByte"
-    End If
-End Property
-
 ''' <summary>   Gets the Gpib Address. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get GpibAddress() As Integer
@@ -592,6 +1108,719 @@ Public Property Let ReadAfterWriteEnabled(ByVal a_value As Boolean)
         This.ReadAfterWriteEnabled = a_value
         Me.OnPropertyChanged "ReadAfterWriteEnabled"
     End If
+End Property
+
+''' <summary>   Gets the GPIB-Lan Device timeout in milliseconds for reading from the
+'''             instrument to the Gpib-Lan device using the <c>++read</c> command. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get ReadTimeout() As Integer
+    ReadTimeout = This.ReadTimeout
+End Property
+
+''' <summary>   Sets the GPIB-Lan Device timeout in milliseconds for reading from the
+'''             instrument to the Gpib-Lan device using the <c>++read</c> command. </summary>
+''' <param name="a_value">   [Integer] the timeout value in milliseconds. </value>
+Public Property Let ReadTimeout(ByVal a_value As Integer)
+    If This.ReadTimeout <> a_value Then
+        This.ReadTimeout = a_value
+        Me.OnPropertyChanged "ReadTimeout"
+        Me.ToggleConnectionExecutableSetter
+    End If
+End Property
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' GPIB-Lan Executables
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Gets the condition indicating that the Selective Device Clear command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Selective Device Clear command can be executed. </value>
+Public Property Get SelectiveDeviceClearExecutable() As Boolean
+    SelectiveDeviceClearExecutable = This.SelectiveDeviceClearExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Selective Device Clear command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Selective Device Clear command can be executed. </param>
+Public Property Let SelectiveDeviceClearExecutable(ByVal a_value As Boolean)
+    If This.SelectiveDeviceClearExecutable <> a_value Then
+        This.SelectiveDeviceClearExecutable = a_value
+        Me.OnPropertyChanged "SelectiveDeviceClearExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Go To Local command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Go To Local command can be executed. </value>
+Public Property Get GoToLocalExecutable() As Boolean
+    GoToLocalExecutable = This.GoToLocalExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Go To Local command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Go To Local command can be executed. </param>
+Public Property Let GoToLocalExecutable(ByVal a_value As Boolean)
+    If This.GoToLocalExecutable <> a_value Then
+        This.GoToLocalExecutable = a_value
+        Me.OnPropertyChanged "GoToLocalExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Local Lockout command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Local Lockout command can be executed. </value>
+Public Property Get LocalLockoutExecutable() As Boolean
+    LocalLockoutExecutable = This.LocalLockoutExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Local Lockout command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Local Lockout command can be executed. </param>
+Public Property Let LocalLockoutExecutable(ByVal a_value As Boolean)
+    If This.LocalLockoutExecutable <> a_value Then
+        This.LocalLockoutExecutable = a_value
+        Me.OnPropertyChanged "LocalLockoutExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Read After Write Get command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Read After Write Get command can be executed. </value>
+Public Property Get ReadAfterWriteGetExecutable() As Boolean
+    ReadAfterWriteGetExecutable = This.ReadAfterWriteGetExecutable
+End Property
+
+''' <summary>   Gets the condition indicating that the Read After Write Get command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Read After Write Get command can be executed. </param>
+Public Property Let ReadAfterWriteGetExecutable(ByVal a_value As Boolean)
+    If This.ReadAfterWriteGetExecutable <> a_value Then
+        This.ReadAfterWriteGetExecutable = a_value
+        Me.OnPropertyChanged "ReadAfterWriteGetExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Read After Write Set command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Read After Write Set command can be executed. </value>
+Public Property Get ReadAfterWriteSetExecutable() As Boolean
+    ReadAfterWriteSetExecutable = This.ReadAfterWriteSetExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Read After Write Set command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Read After Write Set command can be executed. </param>
+Public Property Let ReadAfterWriteSetExecutable(ByVal a_value As Boolean)
+    If This.ReadAfterWriteSetExecutable <> a_value Then
+        This.ReadAfterWriteSetExecutable = a_value
+        Me.OnPropertyChanged "ReadAfterWriteSetExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Serial Poll command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Serial Poll command can be executed. </value>
+Public Property Get SerialPollExecutable() As Boolean
+    SerialPollExecutable = This.SerialPollExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Serial Poll command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Serial Poll command can be executed. </param>
+Public Property Let SerialPollExecutable(ByVal a_value As Boolean)
+    If This.SerialPollExecutable <> a_value Then
+        This.SerialPollExecutable = a_value
+        Me.OnPropertyChanged "SerialPollExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Service Requested command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Service Requested command can be executed. </value>
+Public Property Get ServiceRequestedExecutable() As Boolean
+    ServiceRequestedExecutable = This.ServiceRequestedExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Service Requested command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Service Requested command can be executed. </param>
+Public Property Let ServiceRequestedExecutable(ByVal a_value As Boolean)
+    If This.ServiceRequestedExecutable <> a_value Then
+        This.ServiceRequestedExecutable = a_value
+        Me.OnPropertyChanged "ServiceRequestedExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Gpib Address Get Command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Gpib Address Get Command can be executed. </value>
+Public Property Get GpibAddressGetExecutable() As Boolean
+    GpibAddressGetExecutable = This.GpibAddressGetExecutable
+End Property
+
+''' <summary>   Gets the condition indicating that the Gpib Address Get Command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Gpib Address Get Command can be executed. </param>
+Public Property Let GpibAddressGetExecutable(ByVal a_value As Boolean)
+    If This.GpibAddressGetExecutable <> a_value Then
+        This.GpibAddressGetExecutable = a_value
+        Me.OnPropertyChanged "GpibAddressGetExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Gpib Address Set Command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Gpib Address Set Command can be executed. </value>
+Public Property Get GpibAddressSetExecutable() As Boolean
+    GpibAddressSetExecutable = This.GpibAddressSetExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Gpib Address Set Command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Gpib Address Set Command can be executed. </param>
+Public Property Let GpibAddressSetExecutable(ByVal a_value As Boolean)
+    If This.GpibAddressSetExecutable <> a_value Then
+        This.GpibAddressSetExecutable = a_value
+        Me.OnPropertyChanged "GpibAddressSetExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Read Timeout Get command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Read Timeout Get command can be executed. </value>
+Public Property Get ReadTimeoutGetExecutable() As Boolean
+    ReadTimeoutGetExecutable = This.ReadTimeoutGetExecutable
+End Property
+
+''' <summary>   Gets the Read Timeout Get command condition. </summary>
+''' <param name="a_value">   [Boolean] True if the Read Timeout Get command can be executed. </param>
+Public Property Let ReadTimeoutGetExecutable(ByVal a_value As Boolean)
+    If This.ReadTimeoutGetExecutable <> a_value Then
+        This.ReadTimeoutGetExecutable = a_value
+        Me.OnPropertyChanged "ReadTimeoutGetExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Read Timeout Set command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Read Timeout Set command can be executed. </value>
+Public Property Get ReadTimeoutSetExecutable() As Boolean
+    ReadTimeoutSetExecutable = This.ReadTimeoutSetExecutable
+End Property
+
+''' <summary>   Sets the Read Timeout Set command condition. </summary>
+''' <param name="a_value">   [Boolean] True if the Read Timeout Set command can be executed. </param>
+Public Property Let ReadTimeoutSetExecutable(ByVal a_value As Boolean)
+    If This.ReadTimeoutSetExecutable <> a_value Then
+        This.ReadTimeoutSetExecutable = a_value
+        Me.OnPropertyChanged "ReadTimeoutSetExecutable"
+    End If
+End Property
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' GPIB-Lan Commands
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Handles the Selective Device Clear button click event. </summary>
+Public Sub SelectiveDeviceClearCommand()
+
+    Const p_procedureName = "SelectiveDeviceClearCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    This.ViSession.GpibLan.SelectiveDeviceClear
+
+    Me.ReadStopwatchCommand
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Handles the Serial Poll button click event. </summary>
+Public Sub SerialPollCommand()
+
+    Const p_procedureName = "SerialPollCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    Me.StatusByte = This.Device.ReadStatusByte(True)
+
+    Me.ReadStopwatchCommand
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+
+''' <summary>   Write a message to the device via the GPIB Lan. </summary>
+Public Sub QueryGpibLanCommand()
+
+    Const p_procedureName = "QueryGpibLanCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    If 0 < This.ViSession.GpibLan.SendToController(Me.MessageToSend) Then
+        Me.ReceivedMessage = This.ViSession.GpibLan.ReceiveFromDevice()
+    End If
+
+    Me.ReadStopwatchCommand
+
+    Me.SentMessage = Me.MessageToSend
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Read from the device using the GPIB LAN. </summary>
+Public Sub ReadGpibLanCommand()
+
+    Const p_procedureName = "ReadGpibLanCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    Me.ReceivedMessage = This.ViSession.GpibLan.ReceiveFromDevice()
+
+    Me.ReadStopwatchCommand
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Write a message to the device via the GPIB Lan. </summary>
+Public Sub WriteGpibLanCommand()
+
+    Const p_procedureName = "WriteGpibLanCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    This.ViSession.GpibLan.SendToController (Me.MessageToSend)
+
+    Me.ReadStopwatchCommand
+
+    Me.SentMessage = Me.MessageToSend
+
+    If Me.ReadStatusAfterWriteEnabled Then
+
+        If This.ViSession.UsingGpibLan Then _
+            Me.SerialPollByte = This.ViSession.GpibLan.SerialPoll
+
+    End If
+
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Handles the Go To Local button click event. </summary>
+Public Sub GoToLocalCommand()
+
+    Const p_procedureName = "GoToLocalCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    This.ViSession.GpibLan.GoToLocal
+
+    Me.ReadStopwatchCommand
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Handles the local lockout button click event. </summary>
+Public Sub LocalLockoutCommand()
+
+    Const p_procedureName = "LocalLockoutCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    This.ViSession.GpibLan.LocalLockout
+
+    Me.ReadStopwatchCommand
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Handles the read after write set button click event. </summary>
+Public Sub ReadAfterWriteSetCommand()
+
+    Const p_procedureName = "ReadAfterWriteSetCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    This.ViSession.GpibLan.ReadAfterWriteEnabledSetter Me.ReadAfterWriteEnabled
+
+    Me.ReadStopwatchCommand
+
+    This.ViSession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Handles the read after write get button click event. </summary>
+Public Sub ReadAfterWriteGetCommand()
+
+    Const p_procedureName = "ReadAfterWriteGetCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    Me.ReadAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
+
+    Me.ReadStopwatchCommand
+
+    This.ViSession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Handles the SRQ button click event. </summary>
+Public Sub ServiceRequestedQueryCommand()
+
+    ' this does nothing
+    ' Me.ServiceRequested = This.VISession.GpibLan.ServiceRequested
+
+    ' do this instead.
+    Me.SerialPollCommand
+
+End Sub
+
+''' <summary>   Handles the GPIB Address Get button click event. </summary>
+Public Sub GpibAddressGetCommand()
+
+    Const p_procedureName = "GpibAddressGetCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    Me.GpibAddress = This.ViSession.GpibLan.GpibAddressGetter
+
+    Me.ReadStopwatchCommand
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Handles the GPIB Address set button click event. </summary>
+Public Sub GpibAddressSetCommand()
+
+    Const p_procedureName = "GpibAddressSetCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    This.ViSession.GpibLan.GpibAddressSetter Me.GpibAddress
+
+    Me.ReadStopwatchCommand
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Handles the Read Timeout get button click event. </summary>
+Public Sub ReadTimeoutGetCommand()
+
+    Const p_procedureName = "ReadTimeoutGetCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    Me.ReadTimeout = This.ViSession.GpibLan.ReadTimeoutGetter
+
+    Me.ReadStopwatchCommand
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Handles the Read Timeout set button click event. </summary>
+Public Sub ReadTimeoutSetCommand()
+
+    Const p_procedureName = "ReadTimeoutSetCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatchCommand
+
+    This.ViSession.GpibLan.ReadTimeoutSetter Me.ReadTimeout
+
+    Me.ReadStopwatchCommand
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' K2700 Settings
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Returns a reference to the <see cref="cc_isr_Tcp_Scpi.K2700"/>. </summary>
+''' <value>   An <see cref="cc_isr_Tcp_Scpi.K2700"/>. </value>
+Public Property Get K2700() As cc_isr_Tcp_Scpi.K2700
+    Set K2700 = This.K2700
 End Property
 
 ''' <summary>   Gets the Top Card name. </summary>
@@ -842,7 +2071,6 @@ Public Sub OnSenseFunctionChanged()
 
 End Sub
 
-
 ''' <summary>   Gets the  Sense Function Caption. </summary>
 ''' <value>   [String]. </value>
 Public Property Get SenseFunctionCaption() As String
@@ -885,6 +2113,7 @@ Public Property Let MeasuredReading(ByVal a_value As String)
     If This.MeasuredReading <> a_value Then
         This.MeasuredReading = a_value
         Me.OnPropertyChanged "MeasuredReading"
+        Me.MeasuredValue = CDbl(a_value)
     End If
 End Property
 
@@ -918,21 +2147,6 @@ Public Property Let MeasuredValue(ByVal a_value As Double)
     End If
 End Property
 
-''' <summary>   Gets the Monitoring State. </summary>
-''' <value>   [String]. </value>
-Public Property Get MonitoringState() As String
-    MonitoringState = This.MonitoringState
-End Property
-
-''' <summary>   Sets the Monitoring State. </summary>
-''' <param name="a_value">   [String] the Monitoring State value. </value>
-Public Property Let MonitoringState(ByVal a_value As String)
-    If This.MonitoringState <> a_value Then
-        This.MonitoringState = a_value
-        Me.OnPropertyChanged "MonitoringState"
-    End If
-End Property
-
 ''' <summary>   Gets the Sense Functions. </summary>
 ''' <value>   [Collection]. </value>
 Public Property Get SenseFunctions() As Collection
@@ -948,18 +2162,33 @@ Public Property Let SenseFunctions(ByVal a_value As Collection)
     End If
 End Property
 
-''' <summary>   Gets the Scpi Commands. </summary>
-''' <value>   [Collection]. </value>
-Public Property Get ScpiCommands() As Collection
-    Set ScpiCommands = This.ScpiCommands
+''' <summary>   Gets the Reading Offset. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get ReadingOffset() As Double
+    ReadingOffset = This.ReadingOffset
 End Property
 
-''' <summary>   Sets the Scpi Commands. </summary>
-''' <param name="a_value">   [Collection] the Scpi Commands value. </value>
-Public Property Let ScpiCommands(ByVal a_value As Collection)
-    If Not cc_isr_Core.CollectionExtensions.AreEqual(This.ScpiCommands, a_value) Then
-        Set This.ScpiCommands = a_value
-        Me.OnPropertyChanged "ScpiCommands"
+''' <summary>   Sets the Reading Offset. </summary>
+''' <param name="a_value">   [Double] the Reading Offset value. </value>
+Public Property Let ReadingOffset(ByVal a_value As Double)
+    If This.ReadingOffset <> a_value Then
+        This.ReadingOffset = a_value
+        Me.OnPropertyChanged "ReadingOffset"
+    End If
+End Property
+
+''' <summary>   Gets the Monitoring State. </summary>
+''' <value>   [String]. </value>
+Public Property Get MonitoringState() As String
+    MonitoringState = This.MonitoringState
+End Property
+
+''' <summary>   Sets the Monitoring State. </summary>
+''' <param name="a_value">   [String] the Monitoring State value. </value>
+Public Property Let MonitoringState(ByVal a_value As String)
+    If This.MonitoringState <> a_value Then
+        This.MonitoringState = a_value
+        Me.OnPropertyChanged "MonitoringState"
     End If
 End Property
 
@@ -1011,66 +2240,6 @@ Public Property Let SingleReadEnabled(ByVal a_value As Boolean)
     End If
 End Property
 
-''' <summary>   Gets the Immediate trigger mode Enabled. </summary>
-''' <value>   [Boolean]. </value>
-Public Property Get ImmediateTriggerModeEnabled() As Boolean
-    ImmediateTriggerModeEnabled = This.ImmediateTriggerModeEnabled
-End Property
-
-''' <summary>   Sets the Immediate trigger mode Enabled. </summary>
-''' <param name="a_value">   [Boolean] the Immediate trigger mode Enabled value. </value>
-Public Property Let ImmediateTriggerModeEnabled(ByVal a_value As Boolean)
-    If This.ImmediateTriggerModeEnabled <> a_value Then
-        This.ImmediateTriggerModeEnabled = a_value
-        Me.OnPropertyChanged "ImmediateTriggerModeEnabled"
-    End If
-End Property
-
-''' <summary>   Gets the External trigger mode Enabled. </summary>
-''' <value>   [Boolean]. </value>
-Public Property Get ExternalTriggerModeEnabled() As Boolean
-    ExternalTriggerModeEnabled = This.ExternalTriggerModeEnabled
-End Property
-
-''' <summary>   Sets the External trigger mode Enabled. </summary>
-''' <param name="a_value">   [Boolean] the External trigger mode Enabled value. </value>
-Public Property Let ExternalTriggerModeEnabled(ByVal a_value As Boolean)
-    If This.ExternalTriggerModeEnabled <> a_value Then
-        This.ExternalTriggerModeEnabled = a_value
-        Me.OnPropertyChanged "ExternalTriggerModeEnabled"
-    End If
-End Property
-
-''' <summary>   Gets the Auto Status Read Enabled. </summary>
-''' <value>   [Boolean]. </value>
-Public Property Get ReadStatusAfterWriteEnabled() As Boolean
-    ReadStatusAfterWriteEnabled = This.ReadStatusAfterWriteEnabled
-End Property
-
-''' <summary>   Sets the Auto Status Read Enabled. </summary>
-''' <param name="a_value">   [Boolean] the Auto Status Read Enabled value. </value>
-Public Property Let ReadStatusAfterWriteEnabled(ByVal a_value As Boolean)
-    If This.ReadStatusAfterWriteEnabled <> a_value Then
-        This.ReadStatusAfterWriteEnabled = a_value
-        Me.OnPropertyChanged "ReadStatusAfterWriteEnabled"
-    End If
-End Property
-
-''' <summary>   Gets the Reading Offset. </summary>
-''' <value>   [Boolean]. </value>
-Public Property Get ReadingOffset() As Double
-    ReadingOffset = This.ReadingOffset
-End Property
-
-''' <summary>   Sets the Reading Offset. </summary>
-''' <param name="a_value">   [Double] the Reading Offset value. </value>
-Public Property Let ReadingOffset(ByVal a_value As Double)
-    If This.ReadingOffset <> a_value Then
-        This.ReadingOffset = a_value
-        Me.OnPropertyChanged "ReadingOffset"
-    End If
-End Property
-
 ''' <summary>   Populates the collection of sense functions. </summary>
 Public Sub PopulateSenseFunctions()
 
@@ -1090,266 +2259,38 @@ Public Sub PopulateSenseFunctions()
 
 End Sub
 
-''' <summary>   Populates the Commands collection. </summary>
-Public Sub PopulateScpiCommands()
-
-    Dim p_scpiCommands As New Collection
-    p_scpiCommands.Add cc_isr_Ieee488.ClearExecutionStateCommand
-    p_scpiCommands.Add cc_isr_Ieee488.ClearExecutionStateCommand & ";" & _
-                                cc_isr_Ieee488.OperationCompletedQueryCommand
-    p_scpiCommands.Add cc_isr_Ieee488.IdentityQueryCommand
-    p_scpiCommands.Add cc_isr_Ieee488.OperationCompleteCommand
-    p_scpiCommands.Add cc_isr_Ieee488.OperationCompletedQueryCommand
-    p_scpiCommands.Add cc_isr_Ieee488.OptionsQueryCommand
-    p_scpiCommands.Add cc_isr_Ieee488.ResetKnownStateCommand
-    p_scpiCommands.Add cc_isr_Ieee488.ResetKnownStateCommand & ";" & _
-                                cc_isr_Ieee488.OperationCompletedQueryCommand
-    p_scpiCommands.Add cc_isr_Core.StringExtensions.StringFormat( _
-                                cc_isr_Ieee488.StandardEventEnableCommand, &H7F) & ";" & _
-                                cc_isr_Ieee488.OperationCompletedQueryCommand
-    p_scpiCommands.Add cc_isr_Ieee488.StandardEventEnableQueryCommand
-    p_scpiCommands.Add cc_isr_Ieee488.StandardEventStatusQueryCommand
-    p_scpiCommands.Add cc_isr_Core.StringExtensions.StringFormat( _
-                                cc_isr_Ieee488.ServiceRequestEnableCommand, &H7F) & ";" & _
-                                cc_isr_Ieee488.OperationCompletedQueryCommand
-    p_scpiCommands.Add cc_isr_Core.StringExtensions.StringFormat( _
-                                cc_isr_Ieee488.StandardServiceEnableCommand, &H7F, &H7F) & ";" & _
-                                cc_isr_Ieee488.OperationCompletedQueryCommand
-    p_scpiCommands.Add cc_isr_Core.StringExtensions.StringFormat( _
-                                cc_isr_Ieee488.StandardServiceEnableCommand, &H7F, &H7F) & ";" & _
-                                cc_isr_Ieee488.OperationCompletedQueryCommand
-    p_scpiCommands.Add cc_isr_Ieee488.ServiceRequestEnableQueryCommand
-    p_scpiCommands.Add cc_isr_Ieee488.ServiceRequestQueryCommand
-    p_scpiCommands.Add cc_isr_Ieee488.WaitCommand
-    p_scpiCommands.Add cc_isr_Ieee488.WaitCommand & ";" & _
-                                cc_isr_Ieee488.OperationCompletedQueryCommand
-   
-    p_scpiCommands.Add "SYST:BEEP OFF"
-    p_scpiCommands.Add "SYST:CLE"
-    p_scpiCommands.Add "SYST:ERR?"
-    p_scpiCommands.Add "SYST:FRSW?"
-    p_scpiCommands.Add "FUNC 'RES',(@101:120)"
-    p_scpiCommands.Add "FUNC 'RES',(@201:220)"
-    p_scpiCommands.Add "FORM:ELEM READ"
-    p_scpiCommands.Add "STAT:PRES"
-    p_scpiCommands.Add "STAT:MEAS:ENAB 32"
-    p_scpiCommands.Add "FETCH?"
-    p_scpiCommands.Add "READ?"
-
-    Me.ScpiCommands = p_scpiCommands
-
-End Sub
-
-''' <summary>   Restarts the stop watch and clears the elapsed time cell. </summary>
-Public Sub RestartStopwatch()
-
-    Me.ElapsedTimeCaption = vbNullString
-    This.Stopwatch.Restart
-
-End Sub
-
-''' <summary>   Reads the stop watch and updates the elapsed time cell. </summary>
-Public Sub ReadStopwatch()
-
-    Me.ElapsedTime = This.Stopwatch.ElapsedMilliseconds
-
-End Sub
-
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
-' View Model Commands Executable
+' K2700 Executables
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Gets the condition indicating that the Open Connection command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Open Connection command can be executed. </value>
-Public Property Get OpenConnectionExecutable() As Boolean
-    OpenConnectionExecutable = This.OpenConnectionExecutable
+''' <summary>   Gets the condition indicating that the Clear Readings command
+'''              can be executed. </summary>
+''' <value>   [Boolean] True if the Clear Readings command can be executed. </value>
+Public Property Get ClearReadingsExecutable() As Boolean
+    ClearReadingsExecutable = This.ClearReadingsExecutable
 End Property
 
-''' <summary>   Sets the condition indicating that the Open Connection command
-'''                can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Open Connection command can be executed. </param>
-Public Property Let OpenConnectionExecutable(ByVal a_value As Boolean)
-    If This.OpenConnectionExecutable <> a_value Then
-        This.OpenConnectionExecutable = a_value
-        Me.OnPropertyChanged "OpenConnectionExecutable"
-    End If
-End Property
-
-''' <summary>   Gets the condition indicating that the Close Connection command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Close Connection command can be executed. </value>
-Public Property Get CloseConnectionExecutable() As Boolean
-    CloseConnectionExecutable = This.CloseConnectionExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Close Connection command
-'''                can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Close Connection command can be executed. </param>
-Public Property Let CloseConnectionExecutable(ByVal a_value As Boolean)
-    If This.CloseConnectionExecutable <> a_value Then
-        This.CloseConnectionExecutable = a_value
-        Me.OnPropertyChanged "CloseConnectionExecutable"
-    End If
-End Property
-
-''' <summary>   Sets the condition indicating that the Toggle Connection command
+''' <summary>   Sets the condition indicating that the Clear Readings command
 '''             can be executed. </summary>
-Friend Sub ToggleConnectionExecutableSetter()
-    Me.ToggleConnectionExecutable = VBA.vbNullString <> Me.Host _
-        And (5025 = Me.Port Or 1234 = Me.Port) _
-        And 0 < Me.ReceiveTimeout
-End Sub
-
-
-
-''' <summary>   Gets the condition indicating that the Toggle Connection command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Toggle Connection command can be executed. </value>
-Public Property Get ToggleConnectionExecutable() As Boolean
-    ToggleConnectionExecutable = This.ToggleConnectionExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Toggle Connection command
-'''                can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Toggle Connection command can be executed. </param>
-Public Property Let ToggleConnectionExecutable(ByVal a_value As Boolean)
-    If This.ToggleConnectionExecutable <> a_value Then
-        This.ToggleConnectionExecutable = a_value
-        Me.OnPropertyChanged "ToggleConnectionExecutable"
-    End If
-End Property
-
-''' <summary>   Gets the condition indicating that the Reset Known State command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Reset Known State command can be executed. </value>
-Public Property Get ResetKnownStateExecutable() As Boolean
-    ResetKnownStateExecutable = This.ResetKnownStateExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Reset Known State command
-'''                can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Reset Known State command can be executed. </param>
-Public Property Let ResetKnownStateExecutable(ByVal a_value As Boolean)
-    If This.ResetKnownStateExecutable <> a_value Then
-        This.ResetKnownStateExecutable = a_value
-        Me.OnPropertyChanged "ResetKnownStateExecutable"
-    End If
-End Property
-
-''' <summary>   Gets the condition indicating that the Clear Execution State Command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Clear Execution State Command can be executed. </value>
-Public Property Get ClearExecutionStateExecutable() As Boolean
-    ClearExecutionStateExecutable = This.ClearExecutionStateExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Clear Execution State Command
-'''                can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Clear Execution State Command can be executed. </param>
-Public Property Let ClearExecutionStateExecutable(ByVal a_value As Boolean)
-    If This.ClearExecutionStateExecutable <> a_value Then
-        This.ClearExecutionStateExecutable = a_value
-        Me.OnPropertyChanged "ClearExecutionStateExecutable"
-    End If
-End Property
-
-''' <summary>   Gets the condition indicating that the Query command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Query command can be executed. </value>
-Public Property Get QueryExecutable() As Boolean
-    QueryExecutable = This.QueryExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Query command
-'''                can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Query command can be executed. </param>
-Public Property Let QueryExecutable(ByVal a_value As Boolean)
-    If This.QueryExecutable <> a_value Then
-        This.QueryExecutable = a_value
-        Me.OnPropertyChanged "QueryExecutable"
-    End If
-End Property
-
-''' <summary>   Gets the condition indicating that the Read command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Read command can be executed. </value>
-Public Property Get ReadExecutable() As Boolean
-    ReadExecutable = This.ReadExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Read command
-'''                can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Read command can be executed. </param>
-Public Property Let ReadExecutable(ByVal a_value As Boolean)
-    If This.ReadExecutable <> a_value Then
-        This.ReadExecutable = a_value
-        Me.OnPropertyChanged "ReadExecutable"
-    End If
-End Property
-
-''' <summary>   Gets the condition indicating that the Read Status Byte command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Read Status Byte command can be executed. </value>
-Public Property Get ReadStatusByteExecutable() As Boolean
-    ReadStatusByteExecutable = This.ReadStatusByteExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Read Status Byte command
-'''                can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Read Status Byte command can be executed. </param>
-Public Property Let ReadStatusByteExecutable(ByVal a_value As Boolean)
-    If This.ReadStatusByteExecutable <> a_value Then
-        This.ReadStatusByteExecutable = a_value
-        Me.OnPropertyChanged "ReadStatusByteExecutable"
-    End If
-End Property
-
-''' <summary>   Gets the condition indicating that the Read Standard Event Status command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Read Standard Event Status command can be executed. </value>
-Public Property Get ReadStandardEventStatusExecutable() As Boolean
-    ReadStandardEventStatusExecutable = This.ReadStandardEventStatusExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Read Standard Event Status command
-'''                can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Read Standard Event Status command can be executed. </param>
-Public Property Let ReadStandardEventStatusExecutable(ByVal a_value As Boolean)
-    If This.ReadStandardEventStatusExecutable <> a_value Then
-        This.ReadStandardEventStatusExecutable = a_value
-        Me.OnPropertyChanged "ReadStandardEventStatusExecutable"
-    End If
-End Property
-
-''' <summary>   Gets the condition indicating that the Write command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Write command can be executed. </value>
-Public Property Get WriteExecutable() As Boolean
-    WriteExecutable = This.WriteExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Write command
-'''                can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Write command can be executed. </param>
-Public Property Let WriteExecutable(ByVal a_value As Boolean)
-    If This.WriteExecutable <> a_value Then
-        This.WriteExecutable = a_value
-        Me.OnPropertyChanged "WriteExecutable"
+''' <param name="a_value">   [Boolean] True if the Clear Readings command can be executed. </param>
+Public Property Let ClearReadingsExecutable(ByVal a_value As Boolean)
+    If This.ClearReadingsExecutable <> a_value Then
+        This.ClearReadingsExecutable = a_value
+        Me.OnPropertyChanged "ClearReadingsExecutable"
     End If
 End Property
 
 ''' <summary>   Gets the condition indicating that the Query Inputs command
-'''                can be executed. </summary>
+'''             can be executed. </summary>
 ''' <value>   [Boolean] True if the Query Inputs command can be executed. </value>
 Public Property Get QueryInputsExecutable() As Boolean
     QueryInputsExecutable = This.QueryInputsExecutable
 End Property
 
 ''' <summary>   Sets the condition indicating that the Query Inputs command
-'''                can be executed. </summary>
+'''             can be executed. </summary>
 ''' <param name="a_value">   [Boolean] True if the Query Inputs command can be executed. </param>
 Public Property Let QueryInputsExecutable(ByVal a_value As Boolean)
     If This.QueryInputsExecutable <> a_value Then
@@ -1358,16 +2299,15 @@ Public Property Let QueryInputsExecutable(ByVal a_value As Boolean)
     End If
 End Property
 
-
 ''' <summary>   Gets the condition indicating that the Measure command
-'''                can be executed. </summary>
+'''             can be executed. </summary>
 ''' <value>   [Boolean] True if the Measure command can be executed. </value>
 Public Property Get MeasureExecutable() As Boolean
     MeasureExecutable = This.MeasureExecutable
 End Property
 
 ''' <summary>   Sets the condition indicating that the Measure command
-'''                can be executed. </summary>
+'''             can be executed. </summary>
 ''' <param name="a_value">   [Boolean] True if the Measure command can be executed. </param>
 Public Property Let MeasureExecutable(ByVal a_value As Boolean)
     If This.MeasureExecutable <> a_value Then
@@ -1377,14 +2317,14 @@ Public Property Let MeasureExecutable(ByVal a_value As Boolean)
 End Property
 
 ''' <summary>   Gets the condition indicating that the Monitor External Trigger command
-'''                can be executed. </summary>
+'''             can be executed. </summary>
 ''' <value>   [Boolean] True if the Monitor External Trigger command can be executed. </value>
 Public Property Get MonitorExtTrigExecutable() As Boolean
     MonitorExtTrigExecutable = This.MonitorExtTrigExecutable
 End Property
 
 ''' <summary>   Sets the condition indicating that the Monitor External Trigger command
-'''                can be executed. </summary>
+'''             can be executed. </summary>
 ''' <param name="a_value">   [Boolean] True if the Monitor External Trigger command can be executed. </param>
 Public Property Let MonitorExtTrigExecutable(ByVal a_value As Boolean)
     If This.MonitorExtTrigExecutable <> a_value Then
@@ -1394,14 +2334,14 @@ Public Property Let MonitorExtTrigExecutable(ByVal a_value As Boolean)
 End Property
 
 ''' <summary>   Gets the condition indicating that the Immediate Trigger Option command
-'''                can be executed. </summary>
+'''             can be executed. </summary>
 ''' <value>   [Boolean] True if the Immediate Trigger Option command  can be executed. </value>
 Public Property Get ImmediateTriggerOptionExecutable() As Boolean
     ImmediateTriggerOptionExecutable = This.ImmediateTriggerOptionExecutable
 End Property
 
 ''' <summary>   Sets the condition indicating that the Immediate Trigger Option command
-'''                can be executed. </summary>
+'''             can be executed. </summary>
 ''' <param name="a_value">   [Boolean] True if the Immediate Trigger Option command can be executed. </param>
 Public Property Let ImmediateTriggerOptionExecutable(ByVal a_value As Boolean)
     If This.ImmediateTriggerOptionExecutable <> a_value Then
@@ -1411,14 +2351,14 @@ Public Property Let ImmediateTriggerOptionExecutable(ByVal a_value As Boolean)
 End Property
 
 ''' <summary>   Gets the condition indicating that the External Trigger Option command
-'''                can be executed. </summary>
+'''             can be executed. </summary>
 ''' <value>   [Boolean] True if the External Trigger Option command  can be executed. </value>
 Public Property Get ExternalTriggerOptionExecutable() As Boolean
     ExternalTriggerOptionExecutable = This.ExternalTriggerOptionExecutable
 End Property
 
 ''' <summary>   Sets the condition indicating that the External Trigger Option command
-'''                can be executed. </summary>
+'''             can be executed. </summary>
 ''' <param name="a_value">   [Boolean] True if the External Trigger Option command can be executed. </param>
 Public Property Let ExternalTriggerOptionExecutable(ByVal a_value As Boolean)
     If This.ExternalTriggerOptionExecutable <> a_value Then
@@ -1427,199 +2367,8 @@ Public Property Let ExternalTriggerOptionExecutable(ByVal a_value As Boolean)
     End If
 End Property
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
-' View Model GPIB-Lan Commands Executable
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
-''' <summary>   Gets the condition indicating that the Selective Device Clear command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Selective Device Clear command can be executed. </value>
-Public Property Get SelectiveDeviceClearExecutable() As Boolean
-    SelectiveDeviceClearExecutable = This.SelectiveDeviceClearExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Selective Device Clear command
-'''                can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Selective Device Clear command can be executed. </param>
-Public Property Let SelectiveDeviceClearExecutable(ByVal a_value As Boolean)
-    If This.SelectiveDeviceClearExecutable <> a_value Then
-        This.SelectiveDeviceClearExecutable = a_value
-        Me.OnPropertyChanged "SelectiveDeviceClearExecutable"
-    End If
-End Property
-
-''' <summary>   Gets the condition indicating that the Go To Local command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Go To Local command can be executed. </value>
-Public Property Get GoToLocalExecutable() As Boolean
-    GoToLocalExecutable = This.GoToLocalExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Go To Local command
-'''                can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Go To Local command can be executed. </param>
-Public Property Let GoToLocalExecutable(ByVal a_value As Boolean)
-    If This.GoToLocalExecutable <> a_value Then
-        This.GoToLocalExecutable = a_value
-        Me.OnPropertyChanged "GoToLocalExecutable"
-    End If
-End Property
-
-''' <summary>   Gets the condition indicating that the Local Lockout command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Local Lockout command can be executed. </value>
-Public Property Get LocalLockoutExecutable() As Boolean
-    LocalLockoutExecutable = This.LocalLockoutExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Local Lockout command
-'''                can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Local Lockout command can be executed. </param>
-Public Property Let LocalLockoutExecutable(ByVal a_value As Boolean)
-    If This.LocalLockoutExecutable <> a_value Then
-        This.LocalLockoutExecutable = a_value
-        Me.OnPropertyChanged "LocalLockoutExecutable"
-    End If
-End Property
-
-''' <summary>   Gets the condition indicating that the Read After Write Get command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Read After Write Get command can be executed. </value>
-Public Property Get ReadAfterWriteGetExecutable() As Boolean
-    ReadAfterWriteGetExecutable = This.ReadAfterWriteGetExecutable
-End Property
-
-''' <summary>   Gets the condition indicating that the Read After Write Get command
-'''                can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Read After Write Get command can be executed. </param>
-Public Property Let ReadAfterWriteGetExecutable(ByVal a_value As Boolean)
-    If This.ReadAfterWriteGetExecutable <> a_value Then
-        This.ReadAfterWriteGetExecutable = a_value
-        Me.OnPropertyChanged "ReadAfterWriteGetExecutable"
-    End If
-End Property
-
-''' <summary>   Gets the condition indicating that the Read After Write Set command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Read After Write Set command can be executed. </value>
-Public Property Get ReadAfterWriteSetExecutable() As Boolean
-    ReadAfterWriteSetExecutable = This.ReadAfterWriteSetExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Read After Write Set command
-'''                can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Read After Write Set command can be executed. </param>
-Public Property Let ReadAfterWriteSetExecutable(ByVal a_value As Boolean)
-    If This.ReadAfterWriteSetExecutable <> a_value Then
-        This.ReadAfterWriteSetExecutable = a_value
-        Me.OnPropertyChanged "ReadAfterWriteSetExecutable"
-    End If
-End Property
-
-''' <summary>   Gets the condition indicating that the Serial Poll command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Serial Poll command can be executed. </value>
-Public Property Get SerialPollExecutable() As Boolean
-    SerialPollExecutable = This.SerialPollExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Serial Poll command
-'''                can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Serial Poll command can be executed. </param>
-Public Property Let SerialPollExecutable(ByVal a_value As Boolean)
-    If This.SerialPollExecutable <> a_value Then
-        This.SerialPollExecutable = a_value
-        Me.OnPropertyChanged "SerialPollExecutable"
-    End If
-End Property
-
-''' <summary>   Gets the condition indicating that the Service Requested command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Service Requested command can be executed. </value>
-Public Property Get ServiceRequestedExecutable() As Boolean
-    ServiceRequestedExecutable = This.ServiceRequestedExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Service Requested command
-'''                can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Service Requested command can be executed. </param>
-Public Property Let ServiceRequestedExecutable(ByVal a_value As Boolean)
-    If This.ServiceRequestedExecutable <> a_value Then
-        This.ServiceRequestedExecutable = a_value
-        Me.OnPropertyChanged "ServiceRequestedExecutable"
-    End If
-End Property
-
-''' <summary>   Gets the condition indicating that the Gpib Address Get Command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Gpib Address Get Command can be executed. </value>
-Public Property Get GpibAddressGetExecutable() As Boolean
-    GpibAddressGetExecutable = This.GpibAddressGetExecutable
-End Property
-
-''' <summary>   Gets the condition indicating that the Gpib Address Get Command
-'''                can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Gpib Address Get Command can be executed. </param>
-Public Property Let GpibAddressGetExecutable(ByVal a_value As Boolean)
-    If This.GpibAddressGetExecutable <> a_value Then
-        This.GpibAddressGetExecutable = a_value
-        Me.OnPropertyChanged "GpibAddressGetExecutable"
-    End If
-End Property
-
-''' <summary>   Gets the condition indicating that the Gpib Address Set Command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Gpib Address Set Command can be executed. </value>
-Public Property Get GpibAddressSetExecutable() As Boolean
-    GpibAddressSetExecutable = This.GpibAddressSetExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Gpib Address Set Command
-'''                can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Gpib Address Set Command can be executed. </param>
-Public Property Let GpibAddressSetExecutable(ByVal a_value As Boolean)
-    If This.GpibAddressSetExecutable <> a_value Then
-        This.GpibAddressSetExecutable = a_value
-        Me.OnPropertyChanged "GpibAddressSetExecutable"
-    End If
-End Property
-
-''' <summary>   Gets the condition indicating that the Read Timeout Set command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Read Timeout Set command can be executed. </value>
-Public Property Get ReadTimeoutSetExecutable() As Boolean
-    ReadTimeoutSetExecutable = This.ReadTimeoutSetExecutable
-End Property
-
-''' <summary>   Sets the Read Timeout Set command condition. </summary>
-''' <param name="a_value">   [Boolean] True if the Read Timeout Set command can be executed. </param>
-Public Property Let ReadTimeoutSetExecutable(ByVal a_value As Boolean)
-    If This.ReadTimeoutSetExecutable <> a_value Then
-        This.ReadTimeoutSetExecutable = a_value
-        Me.OnPropertyChanged "ReadTimeoutSetExecutable"
-    End If
-End Property
-
-''' <summary>   Gets the condition indicating that Message To Send command
-'''                can be executed. </summary>
-''' <value>   [Boolean] True if the Message to Send command can be executed. </value>
-Public Property Get MessageToSendExecutable() As Boolean
-    MessageToSendExecutable = This.MessageToSendExecutable
-End Property
-
-''' <summary>   Sets the Message to send command condition. </summary>
-''' <param name="a_value">   [Boolean] True if the Message to send command can be executed. </param>
-Public Property Let MessageToSendExecutable(ByVal a_value As Boolean)
-    If This.MessageToSendExecutable <> a_value Then
-        This.MessageToSendExecutable = a_value
-        Me.OnPropertyChanged "MessageToSendExecutable"
-    End If
-End Property
-
 ''' <summary>   Gets the condition indicating that the function name command
-'''                can be executed. </summary>
+'''             can be executed. </summary>
 ''' <value>   [Boolean] True if the function name command can be executed. </value>
 Public Property Get FunctionNameExecutable() As Boolean
     FunctionNameExecutable = This.FunctionNameExecutable
@@ -1636,239 +2385,25 @@ End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
-' View Model Commands
+' K2700 Commands
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
-''' <summary>   Writes the <see cref="MessageToSend"/> and update elapsed times. </summary>
-Public Sub WriteCommand()
-
-    Const p_procedureName = "WriteCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    This.ViSession.WriteLine Me.MessageToSend
-
-    Me.ReadStopwatch
-
-    Me.SentMessage = Me.MessageToSend
-
-    If Me.ReadStatusAfterWriteEnabled Then
-
-        If This.ViSession.UsingGpibLan Then _
-            Me.SerialPollByte = This.ViSession.GpibLan.SerialPoll
-
-        Dim p_isQuery As Boolean
-        p_isQuery = cc_isr_Core.StringExtensions.EndsWith(p_messageToSend, "?")
-        If Not p_isQuery Then
-            Me.StatusByte = This.Device.QueryServiceRequestStatus
-            Me.StandardByte = This.Device.QueryStandardEventsStatus
-        End If
-
-    End If
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-''' <summary>   Query the instrument using the message to send and update then elapsed tiMe. </summary>
-''' <param name="a_message">   [String] to send to the instrument. </param>
-Public Sub QueryCommand()
-
-    Const p_procedureName = "QueryCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    Me.ReceivedMessage = This.ViSession.QueryLine(Me.MessageToSend)
-
-    Me.ReadStopwatch
-
-    Me.SentMessage = Me.MessageToSend
-   
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-
-End Function
-
-''' <summary>   Read from the instrument updating the elap[es times. </summary>
-Public Sub ReadCommand()
-
-    Const p_procedureName = "ReadCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    Me.ReceivedMessage = This.ViSession.Read()
-
-    Me.ReadStopwatch
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-
-End Function
-
-''' <summary>   Handles the Toggle connection button click event. </summary>
-''' <param name=a_connect>   [Boolean] true to connect; otherwise, disconnect. </param>
-Public Sub ToggleConnectionCommand(ByVal a_connect As Boolean)
-
-    Const p_procedureName = "ToggleConnectionCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    Dim p_host As String: p_host = Me.Host
-    Dim p_port As Integer: p_port = Me.Port
-    Dim p_sessionReadTimeout As Integer: p_sessionReadTimeout = Me.SessionReadTimeout
-  
-    If Not a_connect And This.Connected Then
-    
-        This.K2700.CloseConnection
-    
-    ElseIf a_connect And Not This.Connected Then
-
-        This.K2700.OpenConnection p_host, p_port
-    
-        This.ViSession.SessionReadTimeout = p_sessionReadTimeout
-    
-    End If
-
-    Me.ReadStopwatch
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-
-End Sub
-
-''' <summary>   Handles the Clear Known State button click event. </summary>
-Public Sub ClearExecutionStateCommand()
-
-    Const p_procedureName = "ClearExecutionStateCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.LastMessage = "Clearing execution state. "
-
-    Me.RestartStopwatch
-
-    This.Device.ClearExecutionState
-
-    Me.ReadStopwatch
-
-    Me.LastMessage = "Done clearing execution state. "
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-
-End Sub
 
 ''' <summary>   Returns true if the inputs are valid for front or rear settings. </summary>
 Public Function ValidateInputs() As Boolean
 
+    ' gets the front input condition: True is Front.
+    This.FrontInputsValue = This.K2700.IsFrontInputs
+    
     ' check if front or rear
-    If Me.FrontReadValue And Not This.K2700.IsFrontInputs Then
+    If This.FrontInputsRequired And Not This.FrontInputsValue Then
 
         ' display the proper message
         Me.LastMessage = "Please release the front panel INPUTS button to its FRONT (F) position and try again."
 
         ValidateInputs = False
     
-    ElseIf Not Me.FrontReadValue And This.K2700.IsFrontInputs Then
+    ElseIf Not This.FrontInputsRequired And This.FrontInputsValue Then
 
         ' display the proper message
         Me.LastMessage = "Please depress the front panel INPUTS button to its REAR (R) position and try again."
@@ -1891,13 +2426,9 @@ Public Sub ConfigureExternalTriggerReadingCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Dim p_success As Boolean
-
     ' exit if inputs are not in the correct settings
 
-    p_success = Me.ValidateInputs()
-
-    If p_success Then
+    If Me.ValidateInputs() Then
    
         ' clear execution state when switching mode.
 
@@ -1905,8 +2436,8 @@ Public Sub ConfigureExternalTriggerReadingCommand()
    
         ' Configure external triggering reading requiring the front panel
 
-        This.K2700.ConfigureExternalTriggerReading Me.FunctionComboBox.Text, _
-                Me.FrontReadValue
+        This.K2700.ConfigureExternalTriggerReading This.SenseFunctionName, _
+                This.FrontInputsValue
 
         ' this is done in the previous command.
         ' This.VISession.WriteLine ":TRIG:SOUR IMM"
@@ -1930,10 +2461,10 @@ Public Sub ConfigureExternalTriggerReadingCommand()
         ' This.VISession.WriteLine ":INIT; *CLS"
    
         ' disable the immediate reading mode buttons
-        ImmediateTriggerModeEnabled = False
-    
+        Me.MeasureExecutable = False
+
         ' enable toggling the external trigger monitoring.
-        Me.ExternalTriggerModeEnabled = True
+        Me.MonitorExtTrigExecutable = True
 
     End If
 
@@ -1967,13 +2498,9 @@ Public Sub ConfigureImmediateTriggerReadingsCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Dim p_success As Boolean
-
     ' exit if inputs are not in the correct settings
 
-    p_success = Me.ValidateInputs()
-
-    If p_success Then
+    If Me.ValidateInputs() Then
 
         ' clear execution state when switching mode.
 
@@ -1982,7 +2509,7 @@ Public Sub ConfigureImmediateTriggerReadingsCommand()
         ' configure measuring a single value on each read.
         This.K2700.ConfigureSingleFunctionReading Me.SenseFunctionName
     
-        ' Enable making measurements.
+        ' Enable making immediate measurements.
         Me.MeasureExecutable = True
     
         ' disable monitoring the external trigger.
@@ -2009,613 +2536,7 @@ err_Handler:
     On Error Resume Next
     GoTo exit_Handler
 
-End Function
-
-''' <summary>   Handles the Read Status Byte button click event. </summary>
-Public Sub ReadStandardEventStatusCommand()
-
-    Const p_procedureName = "ReadStandardEventStatusCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    Me.StandardByte = This.Device.QueryStandardEventsStatus
-
-    Me.ReadStopwatch
-
-    ReadStandardEventStatus = Me.StandardByte
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-
 End Sub
-
-''' <summary>   Handles the Reset Known State button click event. </summary>
-Public Sub ResetKnownStateCommand()
-
-    Const p_procedureName = "ResetKnownStateCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    This.Device.ResetKnownState
-
-    Me.ReadStopwatch
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-
-End Sub
-
-''' <summary>   Handles the Selective Device Clear button click event. </summary>
-Public Sub SelectiveDeviceClearCommand()
-
-    Const p_procedureName = "SelectiveDeviceClearCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    This.ViSession.GpibLan.SelectiveDeviceClear
-
-    Me.ReadStopwatch
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-
-End Sub
-
-''' <summary>   Handles the Query Status Byte button click event. </summary>
-Public Sub QueryStatusByteCommand()
-
-    Const p_procedureName = "QueryStatusByteCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    Me.StatusByte = This.Device.QueryServiceRequestStatus()
-
-    Me.ReadStopwatch
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-''' <summary>   Handles the Serial Poll button click event. </summary>
-Public Sub SerialPollCommand()
-
-    Const p_procedureName = "SerialPollCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    Me.StatusByte = This.Device.ReadStatusByte(True)
-
-    Me.ReadStopwatch
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
-' GPIB LAN Control
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
-''' <summary>   Write a message to the device via the GPIB Lan. </summary>
-Public Sub QueryGpibLanCommand()
-
-    Const p_procedureName = "QueryGpibLanCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    If 0 < This.ViSession.GpibLan.SendToController(Me.MessageToSend) Then
-        Me.ReceivedMessage = This.ViSession.GpibLan.ReceiveFromDevice()
-    End If
-
-    Me.ReadStopwatch
-
-    Me.SentMessage = Me.MessageToSend
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Function
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-''' <summary>   Read from the device using the GPIB LAN. </summary>
-Public Sub ReadGpibLanCommand()
-
-    Const p_procedureName = "ReadGpibLanCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    Me.MessageReceived = This.ViSession.GpibLan.ReceiveFromDevice()
-
-    Me.ReadStopwatch
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Function
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Function
-
-''' <summary>   Write a message to the device via the GPIB Lan. </summary>
-Public Sub WriteGpibLanCommand()
-
-    Const p_procedureName = "WriteGpibLanCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    This.ViSession.GpibLan.SendToController (Me.MessageToSend)
-
-    Me.ReadStopwatch
-
-    Me.SentMessage = Me.MessageToSend
-
-    If Me.ReadStatusAfterWriteEnabled Then
-
-        If This.ViSession.UsingGpibLan Then _
-            Me.SerialPollByte = This.ViSession.GpibLan.SerialPoll
-
-    End If
-
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Function
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Function
-
-''' <summary>   Handles the Go To Local button click event. </summary>
-Public Sub GoToLocalCommand()
-
-    Const p_procedureName = "GoToLocalCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    This.ViSession.GpibLan.GoToLocal
-
-    Me.ReadStopwatch
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-''' <summary>   Handles the local lockout button click event. </summary>
-Private Sub LocalLockoutCommand()
-
-    Const p_procedureName = "LocalLockoutCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    This.ViSession.GpibLan.LocalLockout
-
-    Me.ReadStopwatch
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-''' <summary>   Handles the read after write set button click event. </summary>
-Private Sub ReadAfterWriteSetCommand()
-
-    Const p_procedureName = "ReadAfterWriteSetCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    This.ViSession.GpibLan.ReadAfterWriteEnabledSetter Me.ReadAfterWriteEnabled
-
-    Me.ReadStopwatch
-
-    This.ViSession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-''' <summary>   Handles the read after write get button click event. </summary>
-Private Sub ReadAfterWriteGetCommand()
-
-    Const p_procedureName = "ReadAfterWriteGetCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    Me.ReadAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
-
-    Me.ReadStopwatch
-
-    This.ViSession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-''' <summary>   Handles the SRQ button click event. </summary>
-Private Sub SRQQueryCommand()
-
-    ' this does nothing
-    ' Me.ServiceRequested = This.VISession.GpibLan.ServiceRequested
-
-    ' do this instead.
-    Me.SerialPollCommand
-
-End Sub
-
-''' <summary>   Handles the GPIB Address Get button click event. </summary>
-Public Sub GpibAddressGetCommand()
-
-    Const p_procedureName = "GpibAddressGetCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    Me.GpibAddress = This.ViSession.GpibLan.GpibAddressGetter
-
-    Me.ReadStopwatch
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-''' <summary>   Handles the GPIB Address set button click event. </summary>
-Public Sub GpibAddressSetCommand()
-
-    Const p_procedureName = "GpibAddressSetCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    This.ViSession.GpibLan.GpibAddressSetter Me.GpibAddress
-
-    Me.ReadStopwatch
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-''' <summary>   Handles the Read Timeout get button click event. </summary>
-Public Sub ReadTimeoutGetCommand()
-
-    Const p_procedureName = "ReadTimeoutGetCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    Me.ReadTimeout = This.ViSession.GpibLan.ReadTimeoutGetter
-
-    Me.ReadStopwatch
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-''' <summary>   Handles the Read Timeout set button click event. </summary>
-Public Sub ReadTimeoutSetCommand()
-
-    Const p_procedureName = "ReadTimeoutSetCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Me.RestartStopwatch
-
-    This.ViSession.GpibLan.ReadTimeoutSetter Me.ReadTimeout
-
-    Me.ReadStopwatch
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
-' 2700 Measurements Control
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary> Queries the Inputs status. </summary>
 Private Sub QueryInputsCommand()
@@ -2625,11 +2546,11 @@ Private Sub QueryInputsCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatch
+    Me.RestartStopwatchCommand
 
     Me.FrontInputsValue = This.K2700.IsFrontInputs
 
-    Me.ReadStopwatch
+    Me.ReadStopwatchCommand
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -2679,7 +2600,7 @@ Public Sub MeasureImmediatelyCommand()
     If Me.AutoIncrementChannelNoEnabled Then
     
         ' Clear all cells
-        Me.ClearReadings
+        Me.ClearReadingsCommand
 
         ' scan all channels
         For p_channelNumber = 1 To Me.ChannelCount
@@ -2690,13 +2611,13 @@ Public Sub MeasureImmediatelyCommand()
             ' set the current channel number
             Me.CurrentChannelNumber = p_channelNumber
         
-            Me.RestartStopwatch
-            If Me.FrontReadValue Then
+            Me.RestartStopwatchCommand
+            If Me.FrontInputsValue Then
                 This.K2700.TakeFrontReading p_channelNumber
             Else
                 This.K2700.TakeRearReading p_channelNumber
             End If
-            Me.ReadStopwatch
+            Me.ReadStopwatchCommand
     
         Next p_channelNumber
 
@@ -2704,14 +2625,14 @@ Public Sub MeasureImmediatelyCommand()
 
         p_channelNumber = Me.SelectedChannelNumber
     
-        Me.RestartStopwatch
-        If Me.FrontReadValue Then
+        Me.RestartStopwatchCommand
+        If Me.FrontInputsValue Then
             This.K2700.TakeFrontReading p_channelNumber
         Else
             This.K2700.TakeRearReading p_channelNumber
         End If
     
-        Me.ReadStopwatch
+        Me.ReadStopwatchCommand
     
     End If
 
@@ -2763,7 +2684,7 @@ Public Sub StartMonitoringExternalTriggersCommand()
     If Me.AutoIncrementChannelNoEnabled Then
     
         ' Clear all readings
-        Me.ClearReadings
+        Me.ClearReadingsCommand
 
     End If
 
@@ -2835,13 +2756,14 @@ Public Sub MonitorExtTrigToggleCommand()
         Me.ImmediateTriggerOptionExecutable = True
         Me.ExternalTriggerOptionExecutable = True
 
+        ' this is set to require initialization all over again
+        Me.MeasureExecutable = False
+        Me.MonitorExtTrigExecutable = False
+
     End If
  
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
-
-    Me.MeasureExecutable = False
-    Me.MonitorExtTrigExecutable = True
 
     On Error GoTo 0
     Exit Sub
@@ -2861,144 +2783,6 @@ err_Handler:
     ' exit this procedure (not an active handler)
     On Error Resume Next
     GoTo exit_Handler
-
-End Sub
-
-
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
-' TIMER CONTROL
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
-''' <summary>   Handles the external trigger monitoring timer event using the
-''' device to handle the timing events. </summary>
-''' <remarks>
-''' Use this method to check if turn on or off manual triggering mode of the instrument. <para>
-''' 10/16/00  David Hary  1.00.00 Add a beep </para>
-''' 2023-06-23 David Hary 1.0.8574 Use the device event handler to update the reading values.
-''' </remarks>
-Private Sub HandleTimerEvent()
-
-    Const p_procedureName = "HandleTimerEvent"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    If This.PauseRequested Or This.HandlingTimerEvent Then Exit Sub
-   
-    ' prevent reentry
-    This.HandlingTimerEvent = True
-
-    Dim p_channelNumber As Integer
-
-    ' check if scan or single
-    If Me.AutoIncrementChannelNoEnabled Then
-  
-        ' in auto increment mode, use the current channel number
-        p_channelNumber = This.CurrentChannelNumber
-      
-    Else
-
-        ' in non auto increment mode, use the current channel number
-        p_channelNumber = Me.SelectedChannelNumber
-
-    End If
-  
-    ' allow other events to occur
-    VBA.DoEvents
-
-    Dim p_isDone As Boolean: p_isDone = Not Me.ExternalTrigMonitoringEnabled
-
-    ' stop the timer.
-    If p_isDone Then Me.PauseTimer
-
-    This.K2700.MonitorExternalTrigger p_channelNumber, p_isDone
-
-    ' if we ended manual mode, enable the rest of the buttons
-    If p_isDone Then
-
-        ' EnableButtons
-        Range(m_externalTriggerStatusCell) = "External Trigger off"
-    
-        Me.MonitorExtTrigToggleButton.Enabled = True
-        Me.MeasureButton.Enabled = True
-    
-    End If
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    ' release reentry prevention
-    This.HandlingTimerEvent = False
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' stop the timer.
-    Me.PauseTimer
-
-    ' enable all buttons
-    Me.MonitorExtTrigToggleButton.Enabled = True
-    Me.MeasureButton.Enabled = True
-
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-''' <summary>   Starts the event timer. </summary>
-''' <param name="a_interval">   [Long] Specifies the timer interval in milliseconds. </param>
-Public Sub StartTimer(Optional ByVal a_interval As Long = 100)
-
-    This.HandlingTimerEvent = False
-    This.PauseRequested = False
-    If m_eventTimer Is Nothing Then
-        Set m_eventTimer = cc_isr_Core.Factory.NewEventTimer.Initialize(a_interval)
-        m_eventTimer.StartTimer
-    Else
-        m_eventTimer.ResumeTimer
-    End If
-
-End Sub
-
-''' <summary>   Requests pausing the timer. </summary>
-Public Sub PauseTimer()
-
-    This.PauseRequested = True
-
-End Sub
-
-''' <summary>   Aborts the timer. </summary>
-Public Sub AbortTimer()
-
-    If Not m_eventTimer Is Nothing Then
-      m_eventTimer.StopTimer
-      Set m_eventTimer = Nothing
-    End If
-
-End Sub
-
-''' <summary>   Handles a timer tick event. </summary>
-Private Sub m_eventTimer_Tick()
-
-    On Error Resume Next
-    If This.PauseRequested Then
-        If Not m_eventTimer Is Nothing Then m_eventTimer.PauseTimer
-    Else
-        HandleTimerEvent
-    End If
-    On Error GoTo 0
 
 End Sub
 
@@ -3086,10 +2870,15 @@ Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Connec
         Me.TopCard = This.K2700.CardName(1)
         Me.BottomCard = This.K2700.CardName(2)
     
-        This.K2700.DefineFunctionScanLists Me.FunctionComboBox.Text
-    
-        Me.TopCardFunctionScanList = This.K2700.FunctionScanList(1)
-        Me.BottomCardFunctionScanList = This.K2700.FunctionScanList(2)
+        If VBA.vbNullString <> This.SenseFunctionName Then
+        
+            ' set the instrument function scan list
+            This.K2700.DefineFunctionScanLists This.SenseFunctionName
+        
+            ' show the results.
+            Me.TopCardFunctionScanList = This.K2700.FunctionScanList(1)
+            Me.BottomCardFunctionScanList = This.K2700.FunctionScanList(2)
+        End If
 
         ' clear any errors
         This.Device.ClearExecutionState
@@ -3100,6 +2889,8 @@ Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Connec
         Me.SocketId = 0
     
     End If
+
+    Me.ClearReadingsExecutable = True
 
     Me.ResetKnownStateExecutable = Me.Connected
     Me.ClearExecutionStateExecutable = Me.Connected
@@ -3112,8 +2903,11 @@ Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Connec
     Me.ImmediateTriggerOptionExecutable = Me.Connected
     Me.ExternalTriggerOptionExecutable = Me.Connected
 
-    Me.MeasureExecutable = This.ImmediateTriggerModeEnabled
-    Me.MonitorExtTrigExecutable = This.ExternalTriggerModeEnabled
+    ' this gets enabled when entering the immediate mode
+    Me.MeasureExecutable = False
+    
+    ' this gets enabled when entering the external trigger mode
+    Me.MonitorExtTrigExecutable = False
 
     Dim p_GpibLanConnected As Boolean
     p_GpibLanConnected = Me.Connected And This.ViSession.UsingGpibLan
@@ -3126,8 +2920,8 @@ Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Connec
     Me.ReadAfterWriteGetExecutable = p_GpibLanConnected
     Me.SerialPollExecutable = p_GpibLanConnected
     Me.ServiceRequestedExecutable = p_GpibLanConnected
-    Me.GetGpibAddressExecutable = p_GpibLanConnected
-    Me.SetGpibAddressExecutable = p_GpibLanConnected
+    Me.GpibAddressGetExecutable = p_GpibLanConnected
+    Me.GpibAddressSetExecutable = p_GpibLanConnected
     Me.ReadTimeoutGetExecutable = p_GpibLanConnected
     Me.ReadTimeoutSetExecutable = p_GpibLanConnected
 
@@ -3157,26 +2951,164 @@ End Sub
 Private Sub m_k2700_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
 End Sub
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
-' channel Measured
+' View Model Settings
 '
-' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Gets the Pause Requested condition. </summary>
+''' <remarks>   When true, a pause request is sent to the timer so that the timer
+'''             event is not handled and the timer is paused on the next event. </remarks>
+''' <value>   [Boolean]. </value>
+Public Property Get PauseRequested() As Boolean
+    PauseRequested = This.PauseRequested
+End Property
+
+''' <summary>   Sets the Pause Requested condition. </summary>
+''' <param name="a_value">   [Boolean] the Pause Requested value. </value>
+Public Property Let PauseRequested(ByVal a_value As Boolean)
+    If This.PauseRequested <> a_value Then
+        This.PauseRequested = a_value
+        Me.OnPropertyChanged "PauseRequested"
+    End If
+End Property
+
+''' <summary>   Gets the Timer Interval in milliseconds. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get TimerInterval() As Integer
+    TimerInterval = This.TimerInterval
+End Property
+
+''' <summary>   Sets the Timer Interval in milliseconds. </summary>
+''' <param name="a_value">   [Integer] the Timer Interval in milliseconds value. </value>
+Public Property Let TimerInterval(ByVal a_value As Integer)
+    If This.TimerInterval <> a_value Then
+        This.TimerInterval = a_value
+        Me.OnPropertyChanged "TimerInterval"
+    End If
+End Property
+
+''' <summary>   Gets the Elapsed Time in milliseconds. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get ElapsedTime() As Integer
+    ElapsedTime = This.ElapsedTime
+End Property
+
+''' <summary>   Sets the Elapsed Time in milliseconds. </summary>
+''' <param name="a_value">   [Integer] the Elapsed Time in milliseconds. </value>
+Public Property Let ElapsedTime(ByVal a_value As Integer)
+    If This.ElapsedTime <> a_value Then
+        This.ElapsedTime = a_value
+        Me.OnPropertyChanged "ElapsedTime"
+        Me.ElapsedTimeCaption = Format(a_value, This.ElapsedTimeFormat)
+    End If
+End Property
+
+''' <summary>   Gets the Elapsed Time Format. </summary>
+''' <value>   [String]. </value>
+Public Property Get ElapsedTimeFormat() As String
+    ElapsedTimeFormat = This.ElapsedTimeFormat
+End Property
+
+''' <summary>   Sets the Elapsed Time Format. </summary>
+''' <param name="a_value">   [String] the elapsed time format. </value>
+Public Property Let ElapsedTimeFormat(ByVal a_value As String)
+    If This.ElapsedTimeFormat <> a_value Then
+        This.ElapsedTimeFormat = a_value
+        Me.OnPropertyChanged "ElapsedTimeFormat"
+    End If
+End Property
+
+''' <summary>   Gets the Elapsed Time Caption. </summary>
+''' <value>   [String]. </value>
+Public Property Get ElapsedTimeCaption() As String
+    ElapsedTimeCaption = This.ElapsedTimeCaption
+End Property
+
+''' <summary>   Sets the Elapsed Time Caption. </summary>
+''' <param name="a_value">   [String] the elapsed time Caption. </value>
+Public Property Let ElapsedTimeCaption(ByVal a_value As String)
+    If This.ElapsedTimeCaption <> a_value Then
+        This.ElapsedTimeCaption = a_value
+        Me.OnPropertyChanged "ElapsedTimeCaption"
+    End If
+End Property
+
+''' <summary>   Gets the Last Error Message. </summary>
+''' <value>   [String]. </value>
+Public Property Get LastErrorMessage() As String
+    LastErrorMessage = This.LastErrorMessage
+End Property
+
+''' <summary>   Sets the Last Error Message. </summary>
+''' <param name="a_value">   [String] the last error message value. </value>
+Public Property Let LastErrorMessage(ByVal a_value As String)
+    If This.LastErrorMessage <> a_value Then
+        This.LastErrorMessage = a_value
+        Me.OnPropertyChanged "LastErrorMessage"
+    End If
+End Property
+
+''' <summary>   Gets the Last Message. </summary>
+''' <value>   [String]. </value>
+Public Property Get LastMessage() As String
+    LastMessage = This.LastMessage
+End Property
+
+''' <summary>   Sets the Last Message. </summary>
+''' <param name="a_value">   [String] the last message value. </value>
+Public Property Let LastMessage(ByVal a_value As String)
+    If This.LastMessage <> a_value Then
+        This.LastMessage = a_value
+        Me.OnPropertyChanged "LastMessage"
+    End If
+End Property
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' View Model Executables
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' View Model Commands
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Restarts the stop watch and clears the elapsed time cell. </summary>
+Public Sub RestartStopwatchCommand()
+
+    Me.ElapsedTimeCaption = vbNullString
+    This.Stopwatch.Restart
+
+End Sub
+
+''' <summary>   Reads the stop watch and updates the elapsed time cell. </summary>
+Public Sub ReadStopwatchCommand()
+
+    Me.ElapsedTime = This.Stopwatch.ElapsedMilliseconds
+
+End Sub
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' View Model Events
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Raises the <see cref="ChannelMeasured"/> event. </summary>
 ''' <para name="a_channelNumber">   [integer] The channel number. </param>
 ''' <para name="a_reading">         [double] The reading. </param>
 Private Sub OnChannelMeasured(ByVal a_channelNumber As Integer, ByVal a_reading As String)
     RaiseEvent ChannelMeasured( _
-            Factory.NewChannelReadingEventArgs.Initialize(a_channelNumber, _
-                                                          a_reading))
+            cc_isr_Tcp_Scpi.Factory.NewChannelReadingEventArgs.Initialize(a_channelNumber, _
+                                                                          a_reading))
 End Sub
-
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
-' Notify property changed
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Notifies all observers of a property change. </summary>
 ''' <param name="a_propertyName">   [String] the property naMe. </param>
@@ -3184,6 +3116,161 @@ Public Sub OnPropertyChanged(ByVal a_propertyName As String)
 
     RaiseEvent PropertyChanged( _
             cc_isr_Core.Factory.CreatePropertyChangedEventArgs(a_propertyName))
+
+End Sub
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' TIMER CONTROL
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Handles the termination of external trigger monitoring in one place. </summary>
+''' <param name="a_infoMessage">   [String] info about the completion state. </param>
+Friend Sub OnMonitoringDone(ByVal a_infoMessage As String)
+
+    ' update the monitoring state
+    Me.MonitoringState = a_infoMessage
+
+    ' disable the action buttons so as to require
+    ' to initialize monitoring over again
+    Me.MonitorExtTrigExecutable = False
+    Me.MeasureExecutable = False
+    
+    ' make sure the enable the option buttons to allow initialization
+    ' of the two modes.
+    Me.ImmediateTriggerOptionExecutable = True
+    Me.ExternalTriggerOptionExecutable = True
+
+    ' finally, toggle off the trigger monitoring. This
+    ' should be superfluous
+    Me.ExternalTrigMonitoringEnabled = False
+
+End Sub
+
+''' <summary>   Handles the external trigger monitoring timer event using the
+''' device to handle the timing events. </summary>
+''' <remarks>
+''' Use this method to check if turn on or off manual triggering mode of the instrument. <para>
+''' 10/16/00  David Hary  1.00.00 Add a beep </para>
+''' 2023-06-23 David Hary 1.0.8574 Use the device event handler to update the reading values.
+''' </remarks>
+Private Sub HandleTimerEvent()
+
+    Const p_procedureName = "HandleTimerEvent"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    If This.PauseRequested Or This.HandlingTimerEvent Then Exit Sub
+   
+    ' prevent reentry
+    This.HandlingTimerEvent = True
+
+    Dim p_channelNumber As Integer
+
+    ' check if scan or single
+    If Me.AutoIncrementChannelNoEnabled Then
+  
+        ' in auto increment mode, use the current channel number
+        p_channelNumber = This.CurrentChannelNumber
+      
+    Else
+
+        ' in non auto increment mode, use the current channel number
+        p_channelNumber = Me.SelectedChannelNumber
+
+    End If
+  
+    ' allow other events to occur
+    VBA.DoEvents
+
+    Dim p_isDone As Boolean: p_isDone = Not Me.ExternalTrigMonitoringEnabled
+
+    ' stop the timer.
+    If p_isDone Then Me.PauseTimer
+
+    This.K2700.MonitorExternalTrigger p_channelNumber, p_isDone
+
+    ' if we ended manual mode, enable the rest of the buttons
+    If p_isDone Then
+
+        Me.OnMonitoringDone "Trigger monitoring done"
+        
+    End If
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    ' release reentry prevention
+    This.HandlingTimerEvent = False
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' stop the timer.
+    Me.PauseTimer
+
+    ' handle the termination of monitoring
+    Me.OnMonitoringDone "Error handling the timer event"
+
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Starts the event timer. </summary>
+''' <param name="a_interval">   [Long] Specifies the timer interval in milliseconds. </param>
+Public Sub StartTimer(Optional ByVal a_interval As Long = 100)
+
+    This.HandlingTimerEvent = False
+    This.PauseRequested = False
+    If m_eventTimer Is Nothing Then
+        Set m_eventTimer = cc_isr_Core.Factory.NewEventTimer.Initialize(a_interval)
+        m_eventTimer.StartTimer
+    Else
+        m_eventTimer.ResumeTimer
+    End If
+
+End Sub
+
+''' <summary>   Requests pausing the timer. </summary>
+Public Sub PauseTimer()
+
+    This.PauseRequested = True
+
+End Sub
+
+''' <summary>   Aborts the timer. </summary>
+Public Sub AbortTimer()
+
+    If Not m_eventTimer Is Nothing Then
+      m_eventTimer.StopTimer
+      Set m_eventTimer = Nothing
+    End If
+
+End Sub
+
+''' <summary>   Handles a timer tick event. </summary>
+Private Sub m_eventTimer_Tick()
+
+    On Error Resume Next
+    If This.PauseRequested Then
+        If Not m_eventTimer Is Nothing Then m_eventTimer.PauseTimer
+    Else
+        HandleTimerEvent
+    End If
+    On Error GoTo 0
 
 End Sub
 
@@ -3197,7 +3284,7 @@ End Sub
 ''' <see cref="cc_isr_Ieee488.Ieee488Session"/> object . </summary>
 ''' <value>   [<see cref="cc_isr_Winsock.IConnectable"/>]. </value>
 Public Property Get Connectable() As cc_isr_Winsock.IConnectable
-    Set Connectable = This.Device.ViSession
+    Set Connectable = This.ViSession
 End Property
 
 ''' <summary>   Returns the connection state of the client. </summary>
@@ -3284,7 +3371,6 @@ Private Sub IConnectable_Dispose()
 
     Set This.Device = Nothing
     Set This.ViSession = Nothing
-    Set m_viSession = Nothing
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -3306,8 +3392,6 @@ err_Handler:
     GoTo exit_Handler
 
 End Sub
-
-
 
 ''' <summary>   Opens a VI Session connection to the specified host at the specified port
 ''' as sets the connection timeout. </summary>
@@ -3348,9 +3432,6 @@ Private Function IConnectable_OpenConnection(ByVal a_host As String, ByVal a_por
                 End If
             End If
         
-            Dim p_installedCardsCount As Integer
-            p_installedCardsCount = Me.ReadCards()
-
         End If
     
         OnConnectionChanged Connectable.Connected

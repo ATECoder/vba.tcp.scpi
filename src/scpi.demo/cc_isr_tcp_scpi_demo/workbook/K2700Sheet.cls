@@ -576,7 +576,7 @@ Private Sub ExternalTriggerOptionButton_Click()
    
     ' Configure external triggering reading requiring the front panel
     
-    This.K2700.ConfigurateExternalTriggerReading Me.FunctionComboBox.Text, Me.FrontReadRequired
+    This.K2700.ConfigureExternalTriggerReading Me.FunctionComboBox.Text, Me.FrontReadRequired
     
     ' this is done in the previous command.
     ' This.VISession.WriteLine ":TRIG:SOUR IMM"
@@ -951,15 +951,15 @@ Private Sub ReadButton_Click()
     On Error GoTo err_Handler
     
     Me.ReceivedMessage = vbNullString
-    Dim p_messageReceived As String
+    Dim p_receivedMessage As String
     
     Me.RestartStopwatch
     
-    p_messageReceived = Me.Read
+    p_receivedMessage = Me.Read
     
     Me.ReadStopwatch
     
-    Me.ReceivedMessage = p_messageReceived
+    Me.ReceivedMessage = p_receivedMessage
    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -993,15 +993,15 @@ Private Sub QueryButton_Click()
     Me.ReceivedMessage = vbNullString
     Me.SentMessage = vbNullString
     Dim p_messageToSend As String: p_messageToSend = Me.CommandsComboBox.Value
-    Dim p_messageReceived As String
+    Dim p_receivedMessage As String
     
     Me.RestartStopwatch
     
-    p_messageReceived = Me.QueryLine(p_messageToSend)
+    p_receivedMessage = Me.QueryLine(p_messageToSend)
     
     Me.ReadStopwatch
     
-    Me.ReceivedMessage = p_messageReceived
+    Me.ReceivedMessage = p_receivedMessage
     Me.SentMessage = p_messageToSend
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
