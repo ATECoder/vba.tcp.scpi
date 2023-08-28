@@ -56,6 +56,8 @@ Attribute m_eventTimer.VB_VarHelpID = -1
 
 Private WithEvents m_k2700 As K2700
 Attribute m_k2700.VB_VarHelpID = -1
+Private WithEvents m_k2700ViewModel As K2700ViewModel
+Attribute m_k2700ViewModel.VB_VarHelpID = -1
 
 Private Type ThisData
     
@@ -72,6 +74,8 @@ Private Type ThisData
     CurrentChannelNumber As Integer
     
     Stopwatch As Stopwatch
+    
+    K2700ViewModel As K2700ViewModel
     
     K2700 As K2700
     
@@ -768,6 +772,12 @@ err_Handler:
     
 End Sub
 
+Private Sub ReadStatusAfterWriteCheckBox_Click()
+
+    This.K2700ViewModel.ReadAfterWriteEnabled = ReadStatusAfterWriteCheckBox.Value
+    
+End Sub
+
 ''' <summary>   Handles the Reset Known State button click event. </summary>
 Private Sub RSTButton_Click()
     
@@ -901,12 +911,12 @@ Private Sub WriteButton_Click()
     Me.ReadStopwatch
     
     Me.SentMessage = p_messageToSend
-    If This.ViSession.UsingGpibLan And Me.AutoStatusReadCheckBox.Value Then
+    If This.ViSession.UsingGpibLan And Me.ReadStatusAfterWriteCheckBox.Value Then
         Range(m_serialPollCell).Value = This.ViSession.GpibLan.SerialPoll
     End If
     
     Dim p_isQuery As Boolean: p_isQuery = cc_isr_Core.StringExtensions.EndsWith(p_messageToSend, "?")
-    If Not p_isQuery And Me.AutoStatusReadCheckBox.Value Then
+    If Not p_isQuery And Me.ReadStatusAfterWriteCheckBox.Value Then
         Me.StatusByte = This.Device.QueryServiceRequestStatus
         Me.StandardByte = This.Device.QueryStandardEventsStatus
     End If

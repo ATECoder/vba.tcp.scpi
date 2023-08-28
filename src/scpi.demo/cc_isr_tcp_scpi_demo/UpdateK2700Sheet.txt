@@ -211,7 +211,7 @@ End Sub
 ''' <summary>   Handles the SRQ button click event. </summary>
 Private Sub SRQButton_Click()
 
-    This.K2700ViewModel.SRQQueryCommand
+    This.K2700ViewModel.ServiceRequestedQueryCommand
 
 End Sub
 
@@ -470,6 +470,8 @@ Private Sub m_K2700ViewModel_PropertyChanged(ByVal a_eventArgs As cc_isr_Core_IO
             WriteButton.Enabled =  This.K2700ViewModel.WriteExecutable
         Case "QueryInputsExecutable"
             QueryInputsButton.Enabled =  This.K2700ViewModel.QueryInputsExecutable
+        Case "ClearReadingsExecutable"
+            ClearReadingButton.Enabled =  This.K2700ViewModel.ClearReadingsExecutable
         Case "MeasureExecutable"
             MeasureButton.Enabled =  This.K2700ViewModel.MeasureExecutable
         Case "MonitorExtTrigExecutable"

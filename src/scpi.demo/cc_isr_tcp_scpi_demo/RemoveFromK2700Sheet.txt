@@ -77,3 +77,41 @@ Public Sub EnableGpibLanControls(ByVal a_usingGpibLanController As Boolean)
     Me.ReadTimeoutSetButton.Enabled = a_usingGpibLanController
 End Sub
 
+
+Type this_
+    ImmediateTriggerModeEnabled As Boolean
+    ExternalTriggerModeEnabled As Boolean
+End Type
+
+''' <summary>   Gets the Immediate trigger mode Enabled. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get ImmediateTriggerModeEnabled() As Boolean
+    ImmediateTriggerModeEnabled = This.ImmediateTriggerModeEnabled
+End Property
+
+''' <summary>   Sets the Immediate trigger mode Enabled. </summary>
+''' <param name="a_value">   [Boolean] the Immediate trigger mode Enabled value. </value>
+Public Property Let ImmediateTriggerModeEnabled(ByVal a_value As Boolean)
+    If This.ImmediateTriggerModeEnabled <> a_value Then
+        This.ImmediateTriggerModeEnabled = a_value
+        Me.OnPropertyChanged "ImmediateTriggerModeEnabled"
+    End If
+End Property
+
+''' <summary>   Gets the External trigger mode Enabled. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get ExternalTriggerModeEnabled() As Boolean
+    ExternalTriggerModeEnabled = This.ExternalTriggerModeEnabled
+End Property
+
+''' <summary>   Sets the External trigger mode Enabled. </summary>
+''' <param name="a_value">   [Boolean] the External trigger mode Enabled value. </value>
+Public Property Let ExternalTriggerModeEnabled(ByVal a_value As Boolean)
+    If This.ExternalTriggerModeEnabled <> a_value Then
+        This.ExternalTriggerModeEnabled = a_value
+        Me.OnPropertyChanged "ExternalTriggerModeEnabled"
+    End If
+End Property
+
+
+

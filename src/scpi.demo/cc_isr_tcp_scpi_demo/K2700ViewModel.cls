@@ -9,11 +9,12 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ''' <summary>   A public creatable singleton View Model for the
-'''                2700 instrument demo. </summary>
+'''             2700 instrument control. </summary>
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Option Explicit
 
-''' <summary>   Represents an observer pattern subject that can notify observers when a property value changes. </summary>
+''' <summary>   Represents an observer pattern subject that can notify observers
+'''             when a property value changes. </summary>
 Implements cc_isr_Core.INotifyPropertyChanged
 
 ''' <summary>   Notifies all registered handlers of a property value change. </summary>
@@ -35,16 +36,16 @@ Public Event ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionCh
 Private WithEvents m_eventTimer As cc_isr_Core.EventTimer
 Attribute m_eventTimer.VB_VarHelpID = -1
 
+''' <summary>   Represents an observer pattern subject that can notify observers
+'''             when a connection is changing and was changed. </summary>
 Implements cc_isr_Winsock.IConnectable
 
+''' <summary>   Represents an observer pattern subject that can notify observers
+'''             when a measurements are completed. </summary>
 Private WithEvents m_k2700 As K2700
 Attribute m_k2700.VB_VarHelpID = -1
 
 Private Type this_
-
-    ' true when handling the timer event to prevent timer
-    ' event handler overrun.
-    HandlingTimerEvent As Boolean
 
     Stopwatch As Stopwatch
 
@@ -54,18 +55,15 @@ Private Type this_
 
     ViSession As cc_isr_Ieee488.ViSession
 
+    ' Winsock connection information
     Host As String
     Port As Integer
     SocketAddress As String
     SocketId As Integer
     ReceiveTimeout As Integer
-    SessionReadTimeout As Integer
 
-    ' true if a pause is requested so that the timer event is not handled
-    ' and the timer is paused on the next event.
-    PauseRequested As Boolean
-    TimerInterval As Integer
-   
+    ' ieee488 control properties
+    SessionReadTimeout As Integer
     MessageToSend As String
     SentMessage As String
     ReceivedMessage As String
@@ -75,12 +73,17 @@ Private Type this_
     ElapsedTimeCaption As String
     LastErrorMessage As String
     LastMessage As String
-    SerialPollByte As Integer
     StatusByte As Integer
     StandardByte As Integer
+    ReadStatusAfterWriteEnabled As Boolean
+    
+    ' GPIB-Lan properties.
     ServiceRequested As Boolean
+    SerialPollByte As Integer
     GpibAddress As Integer
     ReadAfterWriteEnabled As Boolean
+    
+    ' 2700 properties
     TopCard As String
     BottomCard As String
     TopCardFunctionScanList As String
@@ -98,47 +101,65 @@ Private Type this_
     MeasuredReading As String
     MeasuredValueFormat As String
     MeasuredValue As Double
+    SenseFunctions As Collection
+    ScpiCommands As Collection
+    ReadingOffset As Double
+    
+    ' service request monitoring timer control
+    PauseRequested As Boolean
+    TimerInterval As Integer
+    ' true when handling the timer event to prevent timer
+    ' event handler overrun. This effectively synchronizes the timer
+    ' event with the instrument.
+    HandlingTimerEvent As Boolean
+
+   
+    ' Service request monitoring properties
     ExternalTrigMonitoringEnabled As Boolean
     MonitoringState As String
     AutoIncrementChannelNoEnabled As Boolean
     SingleReadEnabled As Boolean
-    SenseFunctions As Collection
-    ScpiCommands As Collection
     ImmediateTriggerModeEnabled As Boolean
     ExternalTriggerModeEnabled As Boolean
-    AutoStatusRead As Boolean
-    ReadingOffset As Double
 
+    ' Winsock connection commands
     OpenConnectionExecutable As Boolean
     CloseConnectionExecutable As Boolean
     ToggleConnectionExecutable As Boolean
-    ResetKnownStateExecutable As Boolean
+    
+    ' IEEE488 commands
     ClearExecutionStateExecutable As Boolean
+    MessageToSendExecutable As Boolean
     QueryExecutable As Boolean
     ReadExecutable As Boolean
     ReadStatusByteExecutable As Boolean
     ReadStandardEventStatusExecutable As Boolean
+    ResetKnownStateExecutable As Boolean
+    ServiceRequestedExecutable As Boolean
     WriteExecutable As Boolean
+    
+    ' 2700 commands
+    FunctionNameExecutable As Boolean
     QueryInputsExecutable As Boolean
     MeasureExecutable As Boolean
-    MonitorExtTrigExecutable As Boolean
     ImmediateTriggerOptionExecutable As Boolean
+    
+    ' Service request monitoring properties
+    MonitorExtTrigExecutable As Boolean
     ExternalTriggerOptionExecutable As Boolean
 
+    ' GPIB-Lan commands
     SelectiveDeviceClearExecutable As Boolean
     GoToLocalExecutable As Boolean
     LocalLockoutExecutable As Boolean
     ReadAfterWriteSetExecutable As Boolean
     ReadAfterWriteGetExecutable As Boolean
     SerialPollExecutable As Boolean
-    ServiceRequestedExecutable As Boolean
     GpibAddressGetExecutable As Boolean
     GpibAddressSetExecutable As Boolean
     ReadTimeoutGetExecutable As Boolean
     ReadTimeoutSetExecutable As Boolean
 
-    MessageToSendExecutable As Boolean
-    FunctionNameExecutable As Boolean
 
 End Type
 
@@ -311,6 +332,8 @@ Public Property Let SessionReadTimeout(ByVal a_value As Integer)
 End Property
 
 ''' <summary>   Gets the Pause Requested condition. </summary>
+''' <remarks>   When true, a pause request is sent to the timer so that the timer
+'''             event is not handled and the timer is paused on the next event. </remarks>
 ''' <value>   [Boolean]. </value>
 Public Property Get PauseRequested() As Boolean
     PauseRequested = This.PauseRequested
@@ -1020,16 +1043,16 @@ End Property
 
 ''' <summary>   Gets the Auto Status Read Enabled. </summary>
 ''' <value>   [Boolean]. </value>
-Public Property Get AutoStatusReadEnabled() As Boolean
-    AutoStatusReadEnabled = This.AutoStatusReadEnabled
+Public Property Get ReadStatusAfterWriteEnabled() As Boolean
+    ReadStatusAfterWriteEnabled = This.ReadStatusAfterWriteEnabled
 End Property
 
 ''' <summary>   Sets the Auto Status Read Enabled. </summary>
 ''' <param name="a_value">   [Boolean] the Auto Status Read Enabled value. </value>
-Public Property Let AutoStatusReadEnabled(ByVal a_value As Boolean)
-    If This.AutoStatusReadEnabled <> a_value Then
-        This.AutoStatusReadEnabled = a_value
-        Me.OnPropertyChanged "AutoStatusReadEnabled"
+Public Property Let ReadStatusAfterWriteEnabled(ByVal a_value As Boolean)
+    If This.ReadStatusAfterWriteEnabled <> a_value Then
+        This.ReadStatusAfterWriteEnabled = a_value
+        Me.OnPropertyChanged "ReadStatusAfterWriteEnabled"
     End If
 End Property
 
@@ -1151,7 +1174,7 @@ End Property
 Public Property Let OpenConnectionExecutable(ByVal a_value As Boolean)
     If This.OpenConnectionExecutable <> a_value Then
         This.OpenConnectionExecutable = a_value
-        This.OnPropertyChanged ("OpenConnectionExecutable")
+        Me.OnPropertyChanged "OpenConnectionExecutable"
     End If
 End Property
 
@@ -1168,7 +1191,7 @@ End Property
 Public Property Let CloseConnectionExecutable(ByVal a_value As Boolean)
     If This.CloseConnectionExecutable <> a_value Then
         This.CloseConnectionExecutable = a_value
-        This.OnPropertyChanged ("CloseConnectionExecutable")
+        Me.OnPropertyChanged "CloseConnectionExecutable"
     End If
 End Property
 
@@ -1195,7 +1218,7 @@ End Property
 Public Property Let ToggleConnectionExecutable(ByVal a_value As Boolean)
     If This.ToggleConnectionExecutable <> a_value Then
         This.ToggleConnectionExecutable = a_value
-        This.OnPropertyChanged ("ToggleConnectionExecutable")
+        Me.OnPropertyChanged "ToggleConnectionExecutable"
     End If
 End Property
 
@@ -1212,7 +1235,7 @@ End Property
 Public Property Let ResetKnownStateExecutable(ByVal a_value As Boolean)
     If This.ResetKnownStateExecutable <> a_value Then
         This.ResetKnownStateExecutable = a_value
-        This.OnPropertyChanged ("ResetKnownStateExecutable")
+        Me.OnPropertyChanged "ResetKnownStateExecutable"
     End If
 End Property
 
@@ -1229,7 +1252,7 @@ End Property
 Public Property Let ClearExecutionStateExecutable(ByVal a_value As Boolean)
     If This.ClearExecutionStateExecutable <> a_value Then
         This.ClearExecutionStateExecutable = a_value
-        This.OnPropertyChanged ("ClearExecutionStateExecutable")
+        Me.OnPropertyChanged "ClearExecutionStateExecutable"
     End If
 End Property
 
@@ -1246,7 +1269,7 @@ End Property
 Public Property Let QueryExecutable(ByVal a_value As Boolean)
     If This.QueryExecutable <> a_value Then
         This.QueryExecutable = a_value
-        This.OnPropertyChanged ("QueryExecutable")
+        Me.OnPropertyChanged "QueryExecutable"
     End If
 End Property
 
@@ -1263,7 +1286,7 @@ End Property
 Public Property Let ReadExecutable(ByVal a_value As Boolean)
     If This.ReadExecutable <> a_value Then
         This.ReadExecutable = a_value
-        This.OnPropertyChanged ("ReadExecutable")
+        Me.OnPropertyChanged "ReadExecutable"
     End If
 End Property
 
@@ -1280,7 +1303,7 @@ End Property
 Public Property Let ReadStatusByteExecutable(ByVal a_value As Boolean)
     If This.ReadStatusByteExecutable <> a_value Then
         This.ReadStatusByteExecutable = a_value
-        This.OnPropertyChanged ("ReadStatusByteExecutable")
+        Me.OnPropertyChanged "ReadStatusByteExecutable"
     End If
 End Property
 
@@ -1297,7 +1320,7 @@ End Property
 Public Property Let ReadStandardEventStatusExecutable(ByVal a_value As Boolean)
     If This.ReadStandardEventStatusExecutable <> a_value Then
         This.ReadStandardEventStatusExecutable = a_value
-        This.OnPropertyChanged ("ReadStandardEventStatusExecutable")
+        Me.OnPropertyChanged "ReadStandardEventStatusExecutable"
     End If
 End Property
 
@@ -1314,7 +1337,7 @@ End Property
 Public Property Let WriteExecutable(ByVal a_value As Boolean)
     If This.WriteExecutable <> a_value Then
         This.WriteExecutable = a_value
-        This.OnPropertyChanged ("WriteExecutable")
+        Me.OnPropertyChanged "WriteExecutable"
     End If
 End Property
 
@@ -1331,7 +1354,7 @@ End Property
 Public Property Let QueryInputsExecutable(ByVal a_value As Boolean)
     If This.QueryInputsExecutable <> a_value Then
         This.QueryInputsExecutable = a_value
-        This.OnPropertyChanged ("QueryInputsExecutable")
+        Me.OnPropertyChanged "QueryInputsExecutable"
     End If
 End Property
 
@@ -1349,7 +1372,7 @@ End Property
 Public Property Let MeasureExecutable(ByVal a_value As Boolean)
     If This.MeasureExecutable <> a_value Then
         This.MeasureExecutable = a_value
-        This.OnPropertyChanged ("MeasureExecutable")
+        Me.OnPropertyChanged "MeasureExecutable"
     End If
 End Property
 
@@ -1366,7 +1389,7 @@ End Property
 Public Property Let MonitorExtTrigExecutable(ByVal a_value As Boolean)
     If This.MonitorExtTrigExecutable <> a_value Then
         This.MonitorExtTrigExecutable = a_value
-        This.OnPropertyChanged ("MonitorExtTrigExecutable")
+        Me.OnPropertyChanged "MonitorExtTrigExecutable"
     End If
 End Property
 
@@ -1383,7 +1406,7 @@ End Property
 Public Property Let ImmediateTriggerOptionExecutable(ByVal a_value As Boolean)
     If This.ImmediateTriggerOptionExecutable <> a_value Then
         This.ImmediateTriggerOptionExecutable = a_value
-        This.OnPropertyChanged ("ImmediateTriggerOptionExecutable")
+        Me.OnPropertyChanged "ImmediateTriggerOptionExecutable"
     End If
 End Property
 
@@ -1400,7 +1423,7 @@ End Property
 Public Property Let ExternalTriggerOptionExecutable(ByVal a_value As Boolean)
     If This.ExternalTriggerOptionExecutable <> a_value Then
         This.ExternalTriggerOptionExecutable = a_value
-        This.OnPropertyChanged ("ExternalTriggerOptionExecutable")
+        Me.OnPropertyChanged "ExternalTriggerOptionExecutable"
     End If
 End Property
 
@@ -1423,7 +1446,7 @@ End Property
 Public Property Let SelectiveDeviceClearExecutable(ByVal a_value As Boolean)
     If This.SelectiveDeviceClearExecutable <> a_value Then
         This.SelectiveDeviceClearExecutable = a_value
-        This.OnPropertyChanged ("SelectiveDeviceClearExecutable")
+        Me.OnPropertyChanged "SelectiveDeviceClearExecutable"
     End If
 End Property
 
@@ -1440,7 +1463,7 @@ End Property
 Public Property Let GoToLocalExecutable(ByVal a_value As Boolean)
     If This.GoToLocalExecutable <> a_value Then
         This.GoToLocalExecutable = a_value
-        This.OnPropertyChanged ("GoToLocalExecutable")
+        Me.OnPropertyChanged "GoToLocalExecutable"
     End If
 End Property
 
@@ -1457,7 +1480,7 @@ End Property
 Public Property Let LocalLockoutExecutable(ByVal a_value As Boolean)
     If This.LocalLockoutExecutable <> a_value Then
         This.LocalLockoutExecutable = a_value
-        This.OnPropertyChanged ("LocalLockoutExecutable")
+        Me.OnPropertyChanged "LocalLockoutExecutable"
     End If
 End Property
 
@@ -1474,7 +1497,7 @@ End Property
 Public Property Let ReadAfterWriteGetExecutable(ByVal a_value As Boolean)
     If This.ReadAfterWriteGetExecutable <> a_value Then
         This.ReadAfterWriteGetExecutable = a_value
-        This.OnPropertyChanged ("ReadAfterWriteGetExecutable")
+        Me.OnPropertyChanged "ReadAfterWriteGetExecutable"
     End If
 End Property
 
@@ -1491,7 +1514,7 @@ End Property
 Public Property Let ReadAfterWriteSetExecutable(ByVal a_value As Boolean)
     If This.ReadAfterWriteSetExecutable <> a_value Then
         This.ReadAfterWriteSetExecutable = a_value
-        This.OnPropertyChanged ("ReadAfterWriteSetExecutable")
+        Me.OnPropertyChanged "ReadAfterWriteSetExecutable"
     End If
 End Property
 
@@ -1508,7 +1531,7 @@ End Property
 Public Property Let SerialPollExecutable(ByVal a_value As Boolean)
     If This.SerialPollExecutable <> a_value Then
         This.SerialPollExecutable = a_value
-        This.OnPropertyChanged ("SerialPollExecutable")
+        Me.OnPropertyChanged "SerialPollExecutable"
     End If
 End Property
 
@@ -1525,7 +1548,7 @@ End Property
 Public Property Let ServiceRequestedExecutable(ByVal a_value As Boolean)
     If This.ServiceRequestedExecutable <> a_value Then
         This.ServiceRequestedExecutable = a_value
-        This.OnPropertyChanged ("ServiceRequestedExecutable")
+        Me.OnPropertyChanged "ServiceRequestedExecutable"
     End If
 End Property
 
@@ -1542,7 +1565,7 @@ End Property
 Public Property Let GpibAddressGetExecutable(ByVal a_value As Boolean)
     If This.GpibAddressGetExecutable <> a_value Then
         This.GpibAddressGetExecutable = a_value
-        This.OnPropertyChanged ("GpibAddressGetExecutable")
+        Me.OnPropertyChanged "GpibAddressGetExecutable"
     End If
 End Property
 
@@ -1559,7 +1582,7 @@ End Property
 Public Property Let GpibAddressSetExecutable(ByVal a_value As Boolean)
     If This.GpibAddressSetExecutable <> a_value Then
         This.GpibAddressSetExecutable = a_value
-        This.OnPropertyChanged ("GpibAddressSetExecutable")
+        Me.OnPropertyChanged "GpibAddressSetExecutable"
     End If
 End Property
 
@@ -1575,7 +1598,7 @@ End Property
 Public Property Let ReadTimeoutSetExecutable(ByVal a_value As Boolean)
     If This.ReadTimeoutSetExecutable <> a_value Then
         This.ReadTimeoutSetExecutable = a_value
-        This.OnPropertyChanged ("ReadTimeoutSetExecutable")
+        Me.OnPropertyChanged "ReadTimeoutSetExecutable"
     End If
 End Property
 
@@ -1591,7 +1614,7 @@ End Property
 Public Property Let MessageToSendExecutable(ByVal a_value As Boolean)
     If This.MessageToSendExecutable <> a_value Then
         This.MessageToSendExecutable = a_value
-        This.OnPropertyChanged ("MessageToSendExecutable")
+        Me.OnPropertyChanged "MessageToSendExecutable"
     End If
 End Property
 
@@ -1607,7 +1630,7 @@ End Property
 Public Property Let FunctionNameExecutable(ByVal a_value As Boolean)
     If This.FunctionNameExecutable <> a_value Then
         This.FunctionNameExecutable = a_value
-        This.OnPropertyChanged ("FunctionNameExecutable")
+        Me.OnPropertyChanged "FunctionNameExecutable"
     End If
 End Property
 
@@ -1633,7 +1656,7 @@ Public Sub WriteCommand()
 
     Me.SentMessage = Me.MessageToSend
 
-    If Me.AutoStatusReadEnabled Then
+    If Me.ReadStatusAfterWriteEnabled Then
 
         If This.ViSession.UsingGpibLan Then _
             Me.SerialPollByte = This.ViSession.GpibLan.SerialPoll
@@ -2264,7 +2287,7 @@ Public Sub WriteGpibLanCommand()
 
     Me.SentMessage = Me.MessageToSend
 
-    If Me.AutoStatusReadEnabled Then
+    If Me.ReadStatusAfterWriteEnabled Then
 
         If This.ViSession.UsingGpibLan Then _
             Me.SerialPollByte = This.ViSession.GpibLan.SerialPoll
