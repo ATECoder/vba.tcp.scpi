@@ -183,7 +183,10 @@ Public Sub Initialize()
     ' populate the function box commands
     PopulateSenseFunctions
 
-    Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize(New ErrTracer)
+    Dim p_errTracer As ErrTracer
+    Set p_errTracer = New ErrTracer
+    p_errTracer.Initialize Me
+    Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize(p_errTracer)
     Set m_k2700 = This.K2700
     Set This.Device = This.K2700.Device
     Set This.ViSession = This.Device.ViSession
@@ -344,8 +347,8 @@ End Property
 '''             can be executed. </summary>
 Friend Sub ToggleConnectionExecutableSetter()
     Me.ToggleConnectionExecutable = VBA.vbNullString <> Me.Host _
-        And (5025 = Me.Port Or 1234 = Me.Port) _
-        And 0 < Me.ReceiveTimeout
+        And (5025 = This.Port Or 1234 = This.Port) _
+        And 0 < This.ReceiveTimeout
 End Sub
 
 ''' <summary>   Gets the condition indicating that the Toggle Connection command
@@ -877,7 +880,7 @@ Public Sub QueryCommand()
 
     Me.ReadStopwatchCommand
 
-    Me.SentMessage = Me.MessageToSend
+    Me.SentMessage = This.MessageToSend
    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1412,7 +1415,7 @@ Public Sub QueryGpibLanCommand()
 
     Me.ReadStopwatchCommand
 
-    Me.SentMessage = Me.MessageToSend
+    Me.SentMessage = This.MessageToSend
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1484,7 +1487,7 @@ Public Sub WriteGpibLanCommand()
 
     Me.ReadStopwatchCommand
 
-    Me.SentMessage = Me.MessageToSend
+    Me.SentMessage = This.MessageToSend
 
     If Me.ReadStatusAfterWriteEnabled Then
 
@@ -1599,7 +1602,7 @@ Public Sub ReadAfterWriteSetCommand()
 
     Me.ReadStopwatchCommand
 
-    This.ViSession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
+    This.ViSession.GpibLan.DisableReadAfterWriteOnWrite = This.ReadAfterWriteEnabled
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1636,7 +1639,7 @@ Public Sub ReadAfterWriteGetCommand()
 
     Me.ReadStopwatchCommand
 
-    This.ViSession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
+    This.ViSession.GpibLan.DisableReadAfterWriteOnWrite = This.ReadAfterWriteEnabled
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -2623,7 +2626,7 @@ Public Sub MeasureImmediatelyCommand()
 
     Else
 
-        p_channelNumber = Me.SelectedChannelNumber
+        p_channelNumber = This.SelectedChannelNumber
     
         Me.RestartStopwatchCommand
         If Me.FrontInputsValue Then
@@ -2699,7 +2702,7 @@ Public Sub StartMonitoringExternalTriggersCommand()
 
         ' set the single reading channel number for manual scan
         ' to the channel number entered by the operator.
-        This.CurrentChannelNumber = Me.SelectedChannelNumber
+        This.CurrentChannelNumber = This.SelectedChannelNumber
     
     End If
    
@@ -3178,7 +3181,7 @@ Private Sub HandleTimerEvent()
     Else
 
         ' in non auto increment mode, use the current channel number
-        p_channelNumber = Me.SelectedChannelNumber
+        p_channelNumber = This.SelectedChannelNumber
 
     End If
   
@@ -3349,7 +3352,7 @@ Private Sub IConnectable_Dispose()
         m_eventTimer.StopTimer
   
         ' allow the timer to stop.
-        cc_isr_Core_IO.CoreExtensions.Wait 0.0015 * Me.TimerInterval
+        cc_isr_Core_IO.CoreExtensions.Wait 0.0015 * This.TimerInterval
     
         Set m_eventTimer = Nothing
     

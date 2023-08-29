@@ -9,9 +9,19 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
+Private Type this_
+    ViewModel As K2700ViewModel
+End Type
+
+Private This As this_
+
 Implements cc_isr_Core.IErrTracer
 
+Public Function Initialize(ByVal a_viewModel As K2700ViewModel)
+    This.ViewModel = a_viewModel
+End Function
+
 Private Sub IErrTracer_TraceError()
-    K2700Sheet.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage
+    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage
 End Sub
 

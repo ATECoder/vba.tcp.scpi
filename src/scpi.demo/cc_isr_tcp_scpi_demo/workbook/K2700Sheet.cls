@@ -50,175 +50,81 @@ Private Const m_measurementTopRow As Integer = 2
 Private Const m_measurementNoCol As String = "M"
 Private Const m_measurementValueCol As String = "N"
 
-' defines the standard event timer.
-Private WithEvents m_eventTimer As cc_isr_Core.EventTimer
-Attribute m_eventTimer.VB_VarHelpID = -1
+Private WithEvents m_viewModel As K2700ViewModel
+Attribute m_viewModel.VB_VarHelpID = -1
 
-Private WithEvents m_k2700 As K2700
-Attribute m_k2700.VB_VarHelpID = -1
-Private WithEvents m_k2700ViewModel As K2700ViewModel
-Attribute m_k2700ViewModel.VB_VarHelpID = -1
-
-Private Type ThisData
-    
+Private Type this_
     Initialized As Boolean
-
-    ' true if a pause is requested so that the timer event is not handled
-    ' and the timer is paused on the next event.
-    PauseRequested As Boolean
-    
-    ' true when handling the timer event to prevent timer
-    ' event handler overrun.
-    HandlingTimerEvent As Boolean
-    
-    CurrentChannelNumber As Integer
-    
-    Stopwatch As Stopwatch
-    
-    K2700ViewModel As K2700ViewModel
-    
-    K2700 As K2700
-    
-    Device As cc_isr_Ieee488.Device
-    
-    ViSession As cc_isr_Ieee488.ViSession
-    
+    ViewModel As K2700ViewModel
+    FocusedControlName As String
 End Type
 
-Private This As ThisData
+Private This As this_
 
-''' <summary>   Dispose of the worksheet objects. </summary>
-Public Sub Dispose()
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' Winsock Control
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-    Const p_procedureName As String = "Dispose"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Set This.Stopwatch = Nothing
-    
-    If Not m_eventTimer Is Nothing Then
-    
-        m_eventTimer.StopTimer
-      
-        ' allow the timer to stop.
-        cc_isr_Core_IO.CoreExtensions.Wait 0.0015 * Me.TimerInterval
-        
-        Set m_eventTimer = Nothing
-        
-    End If
-    
-    This.Device = Nothing
-    This.ViSession = Nothing
-    
-    If Not m_k2700 Is Nothing Then m_k2700.Dispose
-    Set m_k2700 = Nothing
-    Set This.K2700 = Nothing
-    
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
+''' <summary>   Handles the Toggle connection button click event. </summary>
+Friend Sub ConnectToggleButton_Click()
 
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
+    This.ViewModel.ToggleConnectionCommand ConnectToggleButton.Value
     
 End Sub
 
-''' <summary>   Toggle the enable state of the controls. </summary>
-''' <param name="a_connected">   [Boolean] True if connected; otherwise, false. </param>
-Friend Sub EnableControls(ByVal a_connected As Boolean)
+Private Sub ConnectToggleButton_GotFocus()
+    This.FocusedControlName = Me.ConnectToggleButton.Name
+End Sub
 
-    Me.ConnectToggleButton.Value = a_connected
+Private Sub ConnectToggleButton_LostFocus()
+    This.FocusedControlName = VBA.vbNullString
+End Sub
+
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' IEEE488 Control
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+Private Sub CLSButton_Click()
     
-    ' report the connection state
-    Range(m_connectedCell).Value = a_connected
+    This.ViewModel.ClearExecutionStateCommand
+    
+End Sub
+
+Private Sub CommandsComboBox_GotFocus()
+    This.FocusedControlName = Me.CommandsComboBox.Name
+    DoEvents
+End Sub
+
+Private Sub CommandsComboBox_LostFocus()
+    This.FocusedControlName = VBA.vbNullString
+    DoEvents
+End Sub
+
+''' <summary>   Handles the Commands Combo Box change event. </summary>
+Private Sub CommandsComboBox_Change()
+    On Error GoTo err_Handler:
+
+    If This.FocusedControlName = Me.CommandsComboBox.Name Then
+
+        On Error GoTo 0
+
+        ' Commands for click
+        This.ViewModel.MessageToSend = Me.CommandsComboBox.Text
         
-    Me.RSTButton.Enabled = a_connected
-    Me.CLSButton.Enabled = a_connected
-    Me.QueryButton.Enabled = a_connected
-    Me.ReadButton.Enabled = a_connected
-    Me.ReadStatusByteButton.Enabled = a_connected
-    Me.ReadStandardEventStatusButton.Enabled = a_connected
-    Me.WriteButton.Enabled = a_connected
-    
-    Me.QueryInputsButton.Enabled = a_connected
-    
-    Me.EnableMeasureButton
-    Me.EnableMonitorExtTrigToggleButton
-    
-    If a_connected Then
-        Me.EnableGpibLanControls This.ViSession.UsingGpibLan
     Else
-        Me.EnableGpibLanControls False
-    End If
 
-End Sub
+        On Error GoTo 0
 
-''' <summary>   Toggle the enable state of the Measure Button based on the status
-''' of the K2700 and the availability of MUX cards. </summary>
-Friend Sub EnableMeasureButton()
-    
-    Dim p_enable As Boolean
-    p_enable = Not This.K2700 Is Nothing
-    If p_enable Then
-        p_enable = This.K2700.CanTakeImmediateMeasurement
+        ' Commands for change from within the sheet
+        This.ViewModel.MessageToSend = Me.CommandsComboBox.Text
+
     End If
     
-    Me.ImmediateTriggerOptionButton.Enabled = p_enable
-    Me.MeasureButton.Enabled = False
-
-End Sub
-
-''' <summary>   Toggle the enable state of the External Trig Toggle Button based on the status
-''' of the K2700 and the availability of MUX cards. </summary>
-Friend Sub EnableMonitorExtTrigToggleButton()
-    
-    Dim p_enable As Boolean
-    p_enable = Not This.K2700 Is Nothing
-    If p_enable Then
-        p_enable = This.K2700.CanTakeExternalTriggers
-    End If
-    
-    Me.ExternalTriggerOptionButton.Enabled = p_enable
-    Me.MonitorExtTrigToggleButton.Enabled = False
-
-End Sub
-
-''' <summary>   Populates the Function combo box. </summary>
-Friend Sub PopulateFunctionComboBox()
-
-    Const p_procedureName = "PopulateFunctionComboBox"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.FunctionComboBox.Clear
-    Me.FunctionComboBox.AddItem "CONT"
-    Me.FunctionComboBox.AddItem "CURR:AC"
-    Me.FunctionComboBox.AddItem "CURR:DC"
-    Me.FunctionComboBox.AddItem "FREQ"
-    Me.FunctionComboBox.AddItem "FRES"
-    Me.FunctionComboBox.AddItem "PER"
-    Me.FunctionComboBox.AddItem "RES"
-    Me.FunctionComboBox.AddItem "TEMP"
-    Me.FunctionComboBox.AddItem "VOLT:AC"
-    Me.FunctionComboBox.AddItem "VOLT:DC"
-
-    Me.FunctionComboBox.ListIndex = 5
-   
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
@@ -228,21 +134,15 @@ exit_Handler:
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 err_Handler:
   
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
+    On Error GoTo 0
     
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-    
-End Sub
+    ' Commands for change from outside the sheet
+    This.ViewModel.MessageToSend = Me.CommandsComboBox.Text
 
+End Sub
 
 ''' <summary>   Populates the Commands combo box. </summary>
-Friend Sub PopulateCommandsComboBox()
+Public Sub PopulateCommandsComboBox()
 
     Const p_procedureName = "PopulateCommandsComboBox"
     
@@ -250,47 +150,12 @@ Friend Sub PopulateCommandsComboBox()
     On Error GoTo err_Handler
     
     Me.CommandsComboBox.Clear
-    Me.CommandsComboBox.AddItem cc_isr_Ieee488.ClearExecutionStateCommand
-    Me.CommandsComboBox.AddItem cc_isr_Ieee488.ClearExecutionStateCommand & ";" & _
-                                cc_isr_Ieee488.OperationCompletedQueryCommand
-    Me.CommandsComboBox.AddItem cc_isr_Ieee488.IdentityQueryCommand
-    Me.CommandsComboBox.AddItem cc_isr_Ieee488.OperationCompleteCommand
-    Me.CommandsComboBox.AddItem cc_isr_Ieee488.OperationCompletedQueryCommand
-    Me.CommandsComboBox.AddItem cc_isr_Ieee488.OptionsQueryCommand
-    Me.CommandsComboBox.AddItem cc_isr_Ieee488.ResetKnownStateCommand
-    Me.CommandsComboBox.AddItem cc_isr_Ieee488.ResetKnownStateCommand & ";" & _
-                                cc_isr_Ieee488.OperationCompletedQueryCommand
-    Me.CommandsComboBox.AddItem cc_isr_Core.StringExtensions.StringFormat( _
-                                cc_isr_Ieee488.StandardEventEnableCommand, &H7F) & ";" & _
-                                cc_isr_Ieee488.OperationCompletedQueryCommand
-    Me.CommandsComboBox.AddItem cc_isr_Ieee488.StandardEventEnableQueryCommand
-    Me.CommandsComboBox.AddItem cc_isr_Ieee488.StandardEventStatusQueryCommand
-    Me.CommandsComboBox.AddItem cc_isr_Core.StringExtensions.StringFormat( _
-                                cc_isr_Ieee488.ServiceRequestEnableCommand, &H7F) & ";" & _
-                                cc_isr_Ieee488.OperationCompletedQueryCommand
-    Me.CommandsComboBox.AddItem cc_isr_Core.StringExtensions.StringFormat( _
-                                cc_isr_Ieee488.StandardServiceEnableCommand, &H7F, &H7F) & ";" & _
-                                cc_isr_Ieee488.OperationCompletedQueryCommand
-    Me.CommandsComboBox.AddItem cc_isr_Core.StringExtensions.StringFormat( _
-                                cc_isr_Ieee488.StandardServiceEnableCommand, &H7F, &H7F) & ";" & _
-                                cc_isr_Ieee488.OperationCompletedQueryCommand
-    Me.CommandsComboBox.AddItem cc_isr_Ieee488.ServiceRequestEnableQueryCommand
-    Me.CommandsComboBox.AddItem cc_isr_Ieee488.ServiceRequestQueryCommand
-    Me.CommandsComboBox.AddItem cc_isr_Ieee488.WaitCommand
-    Me.CommandsComboBox.AddItem cc_isr_Ieee488.WaitCommand & ";" & _
-                                cc_isr_Ieee488.OperationCompletedQueryCommand
-   
-    Me.CommandsComboBox.AddItem "SYST:BEEP OFF"
-    Me.CommandsComboBox.AddItem "SYST:CLE"
-    Me.CommandsComboBox.AddItem "SYST:ERR?"
-    Me.CommandsComboBox.AddItem "SYST:FRSW?"
-    Me.CommandsComboBox.AddItem "FUNC 'RES',(@101:120)"
-    Me.CommandsComboBox.AddItem "FUNC 'RES',(@201:220)"
-    Me.CommandsComboBox.AddItem "FORM:ELEM READ"
-    Me.CommandsComboBox.AddItem "STAT:PRES"
-    Me.CommandsComboBox.AddItem "STAT:MEAS:ENAB 32"
-    Me.CommandsComboBox.AddItem "FETCH?"
-    Me.CommandsComboBox.AddItem "READ?"
+    Dim p_item As Variant
+    Dim p_scpiCommand As String
+    For Each p_item In This.ViewModel.ScpiCommands
+        p_scpiCommand = VBA.CStr(p_item)
+        Me.CommandsComboBox.AddItem p_scpiCommand
+    Next
     
     Me.CommandsComboBox.ListIndex = 1
    
@@ -304,10 +169,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -315,1278 +180,215 @@ err_Handler:
     
 End Sub
 
-''' <summary>   Restarts the stop watch and clears the elapsed time cell. </summary>
-Friend Sub RestartStopwatch()
+''' <summary>   Handles the Query button click event. </summary>
+Private Sub QueryButton_Click()
     
-    Range(m_elapsedTimeCell).Value = vbNullString
-    This.Stopwatch.Restart
-
-End Sub
-
-''' <summary>   Reads the stop watch and updates the elapsed time cell. </summary>
-Friend Sub ReadStopwatch()
-    
-    Range(m_elapsedTimeCell).Value = Format(This.Stopwatch.ElapsedMilliseconds, m_elapsedTimeFormat)
-
-End Sub
-
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
-' IEEE 488 Control
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
-''' <summary>   Write line handling an error messages. </summary>
-''' <param name="a_message">   [String] to send to the instrument. </param>
-Friend Sub WriteLine(ByVal a_message As String)
-
-    Const p_procedureName = "WriteLine"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    This.ViSession.WriteLine a_message
-    
-    Me.ReadStopwatch
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-    
-End Sub
-
-''' <summary>   Query a message from the instrument handling any errors. </summary>
-''' <param name="a_message">   [String] to send to the instrument. </param>
-Friend Function QueryLine(ByVal a_message As String) As String
-
-    Const p_procedureName = "QueryLine"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    QueryLine = This.ViSession.QueryLine(a_message)
-    
-    Me.ReadStopwatch
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Function
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-    
-End Function
-
-''' <summary>   Read from the instrument handling any errors. </summary>
-Friend Function Read() As String
-
-    Const p_procedureName = "Read"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    Read = This.ViSession.Read()
-    
-    Me.ReadStopwatch
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Function
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-    
-End Function
-
-''' <summary>   Handles the Toggle connection button click event. </summary>
-Friend Sub ConnectToggleButton_Click()
-
-    Const p_procedureName = "ConnectToggleButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-
-    Dim p_host As String: p_host = Me.Host
-    Dim p_port As Integer: p_port = Me.Port
-    Dim p_sessionReadTimeout As Integer: p_sessionReadTimeout = Me.SessionReadTimeout
-      
-    If Not ConnectToggleButton.Value And This.K2700.Connected Then
-        
-        This.K2700.CloseConnection
-        
-    ElseIf ConnectToggleButton.Value And Not This.K2700.Connected Then
-    
-        This.K2700.OpenConnection p_host, p_port
-        
-        This.ViSession.SessionReadTimeout = p_sessionReadTimeout
-        
-    End If
-    
-    Me.ReadStopwatch
-   
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-    
-End Sub
-
-''' <summary>   Handles the Clear Know State button click event. </summary>
-Private Sub CLSButton_Click()
-    
-    Const p_procedureName = "CLSButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.LastMessage = "Clearing execution state. "
-    
-    Me.RestartStopwatch
-    
-    This.Device.ClearExecutionState
-    
-    Me.ReadStopwatch
-    
-    Me.LastMessage = "Done clearing execution state. "
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-    
-End Sub
-
-''' <summary>   Returns true if the inputs are valid for front or rear settings. </summary>
-Friend Function ValidateInputs() As Boolean
-
-    ' check if front or rear
-    If Me.FrontReadRequired And Not This.K2700.IsFrontInputs Then
-    
-        ' display the proper message
-        Me.LastMessage = "Please release the front panel INPUTS button to its FRONT (F) position and try again."
-    
-        ValidateInputs = False
-        
-    ElseIf Not Me.FrontReadRequired And This.K2700.IsFrontInputs Then
-    
-        ' display the proper message
-        Me.LastMessage = "Please depress the front panel INPUTS button to its REAR (R) position and try again."
-        
-        ValidateInputs = False
-    
-    Else
-    
-        ValidateInputs = True
-    
-    End If
-
-End Function
-
-''' <summary>   Turns on external trigger mode. </summary>
-Private Sub ExternalTriggerOptionButton_Click()
-
-    Const p_procedureName = "ExternalTriggerOptionButton_Click"
-    
-    If Not ExternalTriggerOptionButton.Value Then Exit Sub
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-   
-    ' exit if inputs are not in the correct settings
-    If Not Me.ValidateInputs() Then GoTo exit_Handler
-   
-    ' clear execution state when switching mode.
-    
-    This.K2700.Device.ClearExecutionState
-   
-    ' Configure external triggering reading requiring the front panel
-    
-    This.K2700.ConfigureExternalTriggerReading Me.FunctionComboBox.Text, Me.FrontReadRequired
-    
-    ' this is done in the previous command.
-    ' This.VISession.WriteLine ":TRIG:SOUR IMM"
-    ' This.VISession.WriteLine ":TRIG:SOUR EXT"
-    
-    ' clear the serial poll register
-    ' these are also part of the previus command.
-    ' This.VISession.WriteLine "*ESE 0"
-    ' This.VISession.WriteLine "*SRE 63"
-    
-    ' clear the measurement event enable register
-    ' This.VISession.WriteLine "STAT:PRES"
-    
-    ' enable the reading available bit of the measurement event register.
-    ' This.VISession.WriteLine "STAT:MEAS:ENAB 32"
-    
-    ' This.Device.QueryServiceRequestStatus
-    
-    ' move this to starting the monitoring.
-    ' initiate awaiting for the external trigger
-    ' This.VISession.WriteLine ":INIT; *CLS"
-   
-    ' disable the immediate reading mode buttons
-    
-    MeasureButton.Enabled = False
-    
-    ' enable toggling the external trigger monitoring.
-    
-    Me.MonitorExtTrigToggleButton.Enabled = True
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-    
-
-End Sub
-
-''' <summary>   Selects the measurement function. </summary>
-Private Sub FunctionComboBox_Change()
-
-    Dim p_measurement As String
-    p_measurement = Me.FunctionComboBox.Text
-    Select Case p_measurement
-    
-        Case "CONT"
-        
-            FunctionName = "Continuity"
-            FunctionUnit = "T/F"
-        
-        Case "CURR:AC"
-        
-            FunctionName = "Current AC"
-            FunctionUnit = "A"
-        
-        Case "CURR:DC"
-        
-            FunctionName = "Current DC"
-            FunctionUnit = "A"
-        
-        Case "FREQ"
-        
-            FunctionName = "Frequency"
-            FunctionUnit = "Hz"
-        
-        Case "FRES"
-        
-            FunctionName = "4-Wire Res."
-            FunctionUnit = VBA.Chr$(234)
-        
-        Case "PER"
-        
-            FunctionName = "Period"
-            FunctionUnit = "s"
-        
-        Case "RES"
-        
-            FunctionName = "2-Wire Res."
-            FunctionUnit = VBA.Chr$(234)
-        
-        Case "TEMP"
-        
-            FunctionName = "Temperature"
-            FunctionUnit = "K"
-        
-        Case "VOLT:AC"
-        
-            FunctionName = "Voltage AC"
-            FunctionUnit = "v"
-        
-        Case "VOLT:DC"
-        
-            FunctionName = "Voltage DC"
-            FunctionUnit = "v"
-        
-        Case Else
-        
-            FunctionName = "unknown"
-            FunctionUnit = "?"
-    
-    End Select
-    
-End Sub
-
-''' <summary>   Configure immediate trigger mode and enables the read button. </summary>
-Private Sub ImmediateTriggerOptionButton_Click()
-
-    Const p_procedureName = "ImmediateTriggerOptionButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    ' exit if inputs are not in the correct settings
-    If Not Me.ValidateInputs() Then GoTo exit_Handler
-    
-    ' clear execution state when switching mode.
-    
-    This.K2700.Device.ClearExecutionState
-    
-    ' configure measuring a single value on each read.
-    This.K2700.ConfigureSingleFunctionReading Me.FunctionComboBox.Text
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    Me.EnableMeasureButton
-    Me.EnableMonitorExtTrigToggleButton
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-''' <summary>   Handles the Read Status Byte button click event. </summary>
-Private Sub ReadStandardEventStatusButton_Click()
-
-    Const p_procedureName = "ReadStandardEventStatusButton"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    Me.StandardByte = This.Device.QueryStandardEventsStatus
-    
-    Me.ReadStopwatch
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-    
-End Sub
-
-Private Sub ReadStatusAfterWriteCheckBox_Click()
-
-    This.K2700ViewModel.ReadAfterWriteEnabled = ReadStatusAfterWriteCheckBox.Value
-    
-End Sub
-
-''' <summary>   Handles the Reset Known State button click event. </summary>
-Private Sub RSTButton_Click()
-    
-    Const p_procedureName = "RSTButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    This.Device.ResetKnownState
-    
-    Me.ReadStopwatch
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-    
-End Sub
-
-''' <summary>   Handles the Selective device clear button click event. </summary>
-Private Sub SDCButton_Click()
-    
-    Const p_procedureName = "SDCButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    This.ViSession.GpibLan.SelectiveDeviceClear
-    
-    Me.ReadStopwatch
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-''' <summary>   Handles the Read Status Byte button click event. </summary>
-Friend Sub ReadStatusByteButton_Click()
-    
-    Const p_procedureName = "ReadStatusByteButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    If This.ViSession.UsingGpibLan Then
-    
-        Me.RestartStopwatch
-        
-        Range(m_serialPollCell).Value = This.ViSession.GpibLan.SerialPoll
-        
-        Me.ReadStopwatch
-        
-    End If
-    
-    Me.RestartStopwatch
-    
-    Me.StatusByte = This.Device.QueryServiceRequestStatus
-    
-    Me.ReadStopwatch
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-    
-End Sub
-
-''' <summary>   Handles the Write button click event. </summary>
-Private Sub WriteButton_Click()
-
-    Const p_procedureName = "WriteButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.SentMessage = vbNullString
-    Dim p_messageToSend As String: p_messageToSend = Me.CommandsComboBox.Value
-    
-    Me.RestartStopwatch
-    
-    Me.WriteLine p_messageToSend
-    
-    Me.ReadStopwatch
-    
-    Me.SentMessage = p_messageToSend
-    If This.ViSession.UsingGpibLan And Me.ReadStatusAfterWriteCheckBox.Value Then
-        Range(m_serialPollCell).Value = This.ViSession.GpibLan.SerialPoll
-    End If
-    
-    Dim p_isQuery As Boolean: p_isQuery = cc_isr_Core.StringExtensions.EndsWith(p_messageToSend, "?")
-    If Not p_isQuery And Me.ReadStatusAfterWriteCheckBox.Value Then
-        Me.StatusByte = This.Device.QueryServiceRequestStatus
-        Me.StandardByte = This.Device.QueryStandardEventsStatus
-    End If
-        
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
+    This.ViewModel.QueryCommand
 
 End Sub
 
 ''' <summary>   Handles the Read button click event. </summary>
 Private Sub ReadButton_Click()
 
-    Const p_procedureName = "ReadButton_Click"
+    This.ViewModel.ReadCommand
     
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.ReceivedMessage = vbNullString
-    Dim p_receivedMessage As String
-    
-    Me.RestartStopwatch
-    
-    p_receivedMessage = Me.Read
-    
-    Me.ReadStopwatch
-    
-    Me.ReceivedMessage = p_receivedMessage
-   
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
 End Sub
 
-''' <summary>   Handles the Query button click event. </summary>
-Private Sub QueryButton_Click()
-    
-    Const p_procedureName = "QueryButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.ReceivedMessage = vbNullString
-    Me.SentMessage = vbNullString
-    Dim p_messageToSend As String: p_messageToSend = Me.CommandsComboBox.Value
-    Dim p_receivedMessage As String
-    
-    Me.RestartStopwatch
-    
-    p_receivedMessage = Me.QueryLine(p_messageToSend)
-    
-    Me.ReadStopwatch
-    
-    Me.ReceivedMessage = p_receivedMessage
-    Me.SentMessage = p_messageToSend
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
+Private Sub ReadStatusAfterWriteCheckBox_GotFocus()
+    This.FocusedControlName = Me.ReadStatusAfterWriteCheckBox.Name
+    DoEvents
 End Sub
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
-' SETTINGS
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
-''' <summary>   Gets the host dotted IP Address. </summary>
-Friend Property Get Host() As String
-    Host = Range(m_inputHostCell).Value
-End Property
-
-''' <summary>   Gets the port number. </summary>
-Friend Property Get Port() As Integer
-    Port = CInt(Range(m_inputPortCell).Value)
-End Property
-
-''' <summary>   Get the receive timeout. </summary>
-Friend Property Get SessionReadTimeout() As Integer
-    SessionReadTimeout = CInt(Range(m_sessionReadTimeoutCell).Value)
-End Property
-
-''' <summary>   Gets the received message. </summary>
-Friend Property Get ReceivedMessage() As String
-    ReceivedMessage = Range(m_receivedMessageCell).Value
-End Property
-
-''' <summary>   Sets the received message. </summary>
-Friend Property Let ReceivedMessage(ByVal a_value As String)
-    Range(m_receivedMessageCell).Value = a_value
-    Range(m_receivedMessageLengthCell).Value = Len(a_value)
-End Property
-
-''' <summary>   Gets the Read After Write Enabled. </summary>
-Friend Property Get ReadAfterWriteEnabled() As Boolean
-    ReadAfterWriteEnabled = Range(m_readAfterWriteEnabledCell).Value
-End Property
-
-''' <summary>   Sets the Read After Write Enabled. </summary>
-Friend Property Let ReadAfterWriteEnabled(ByVal a_value As Boolean)
-    Range(m_readAfterWriteEnabledCell).Value = a_value
-End Property
-
-''' <summary>   Gets the sent message. </summary>
-Friend Property Get SentMessage() As String
-    SentMessage = Range(m_sentMessageCell).Value
-End Property
-
-''' <summary>   Sets the sent message. </summary>
-Friend Property Let SentMessage(ByVal a_value As String)
-    Range(m_sentMessageCell).Value = a_value
-End Property
-
-''' <summary>   Gets the status byte. </summary>
-Friend Property Get StatusByte() As Integer
-    StatusByte = Range(m_statusByteCell).Value
-End Property
-
-''' <summary>   Sets the status byte. </summary>
-Friend Property Let StatusByte(ByVal a_value As Integer)
-    Range(m_statusByteCell).Value = a_value
-End Property
-
-''' <summary>   Gets the Standard byte. </summary>
-Friend Property Get StandardByte() As Integer
-    StandardByte = Range(m_standardByteCell).Value
-End Property
-
-''' <summary>   Sets the Standard byte. </summary>
-Friend Property Let StandardByte(ByVal a_value As Integer)
-    Range(m_standardByteCell).Value = a_value
-End Property
-
-''' <summary>   Gets the Last Error Message. </summary>
-Friend Property Get LastErrorMessage() As String
-    LastErrorMessage = Range(m_lastErrorMessageCell).Value
-End Property
-
-''' <summary>   Sets the Last Error Message. </summary>
-Friend Property Let LastErrorMessage(ByVal a_value As String)
-    Range(m_lastErrorMessageCell).Value = a_value
-End Property
-
-''' <summary>   Gets the Last Message. </summary>
-Friend Property Get LastMessage() As String
-    LastMessage = Range(m_lastMessageCell).Value
-End Property
-
-''' <summary>   Sets the Last Message. </summary>
-Friend Property Let LastMessage(ByVal a_value As String)
-    Range(m_lastMessageCell).Value = a_value
-End Property
-
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
-' GPIB LAN
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
-''' <summary>   Toggle the enabled state of the GPIB Lan controls. </summary>
-''' <param name="a_usingGpibLanController">   [Boolean] True if using the GPIB-Lan controller. </param>
-Friend Sub EnableGpibLanControls(ByVal a_usingGpibLanController As Boolean)
-    Me.SDCButton.Enabled = a_usingGpibLanController
-    Me.GoToLocalButton.Enabled = a_usingGpibLanController
-    Me.LocalLockoutButton.Enabled = a_usingGpibLanController
-    Me.ReadAfterWriteSetButton.Enabled = a_usingGpibLanController
-    Me.ReadAfterWriteGetButton.Enabled = a_usingGpibLanController
-    Me.SerialPollButton.Enabled = a_usingGpibLanController
-    Me.SRQButton.Enabled = a_usingGpibLanController
-    Me.GetGpibAddressButton.Enabled = a_usingGpibLanController
-    Me.SetGpibAddressButton.Enabled = a_usingGpibLanController
-    Me.ReadTimeoutGetButton.Enabled = a_usingGpibLanController
-    Me.ReadTimeoutSetButton.Enabled = a_usingGpibLanController
+Private Sub ReadStatusAfterWriteCheckBox_LostFocus()
+    This.FocusedControlName = VBA.vbNullString
+    DoEvents
 End Sub
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
-' GPIB LAN Control
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+''' <summary>   Handles the reading status after write changed event. </summary>
+Private Sub ReadStatusAfterWriteCheckBox_Change()
 
-''' <summary>   Write a message to the device via the GPIB Lan. </summary>
-''' <param name="a_message">   [String] to send to the instrument. </param>
-Friend Function QueryGpibLan(ByVal a_message As String) As String
+    On Error GoTo err_Handler:
 
-    Const p_procedureName = "QueryGpibLan"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    If 0 < This.ViSession.GpibLan.SendToController(a_message) Then
-        QueryGpibLan = This.ViSession.GpibLan.ReceiveFromDevice()
+    If This.FocusedControlName = Me.ReadStatusAfterWriteCheckBox.Name Then
+
+        On Error GoTo 0
+
+        ' Commands for click
+        This.ViewModel.ReadStatusAfterWriteEnabled = Me.ReadStatusAfterWriteCheckBox.Value
+        
+    Else
+
+        On Error GoTo 0
+
+        ' Commands for change from within the sheet
+        This.ViewModel.ReadStatusAfterWriteEnabled = Me.ReadStatusAfterWriteCheckBox.Value
+
     End If
     
-    Me.ReadStopwatch
-    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
     On Error GoTo 0
-    Exit Function
+    Exit Sub
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 err_Handler:
   
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-    
-End Function
-
-''' <summary>   Read from the device using the GPIB LAN. </summary>
-Friend Function ReadGpibLan() As String
-
-    Const p_procedureName = "ReadGpibLan"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    ReadGpibLan = This.ViSession.GpibLan.ReceiveFromDevice()
-    
-    Me.ReadStopwatch
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
     On Error GoTo 0
-    Exit Function
+    
+    ' Commands for change from outside the sheet
+    This.ViewModel.ReadStatusAfterWriteEnabled = Me.ReadStatusAfterWriteCheckBox.Value
+    
+End Sub
 
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
+''' <summary>   Handles the Read Status Byte button click event. </summary>
+Public Sub ReadStatusByteButton_Click()
     
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    This.ViewModel.QueryStatusByteCommand
     
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-    
-End Function
+End Sub
 
-''' <summary>   Write a message to the device via the GPIB Lan. </summary>
-''' <param name="a_message">   [String] to send to the instrument. </param>
-Friend Function WriteGpibLan(ByVal a_message As String) As Long
 
-    Const p_procedureName = "WriteLine"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    WriteGpibLan = This.ViSession.GpibLan.SendToController(a_message)
-    
-    Me.ReadStopwatch
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
+''' <summary>   Handles the Read Standard Event Status Byte button click event. </summary>
+Private Sub ReadStandardEventStatusButton_Click()
 
-    On Error GoTo 0
-    Exit Function
+    This.ViewModel.ReadStandardEventStatusCommand
+    
+End Sub
 
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
+''' <summary>   Handles the Reset Known State button click event. </summary>
+Private Sub RSTButton_Click()
+
+    This.ViewModel.ResetKnownStateCommand
     
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+End Sub
+
+''' <summary>   Handles the Write button click event. </summary>
+Private Sub WriteButton_Click()
+
+    This.ViewModel.WriteCommand
     
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-    
-End Function
+End Sub
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' GPIB-Lan Control
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Handles the Go To Local button click event. </summary>
 Private Sub GoToLocalButton_Click()
 
-    Const p_procedureName = "GoToLocalButton_Click"
+    This.ViewModel.GoToLocalCommand
     
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    This.ViSession.GpibLan.GoToLocal
-    
-    Me.ReadStopwatch
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
+End Sub
 
-    On Error GoTo 0
-    Exit Sub
+''' <summary>   Handles the GPIB Address Get button click event. </summary>
+Private Sub GpibAddressGetButton_Click()
 
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
+    This.ViewModel.GpibAddressGetCommand
+
+End Sub
+
+''' <summary>   Handles the GPIB Address set button click event. </summary>
+Private Sub GpibAddressSetButton_Click()
+
+    This.ViewModel.GpibAddressSetCommand
 
 End Sub
 
 ''' <summary>   Handles the local lockout button click event. </summary>
 Private Sub LocalLockoutButton_Click()
 
-    Const p_procedureName = "LocalLockoutButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    This.ViSession.GpibLan.LocalLockout
-    
-    Me.ReadStopwatch
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
+    This.ViewModel.LocalLockoutCommand
 
 End Sub
 
 ''' <summary>   Handles the read after write set button click event. </summary>
 Private Sub ReadAfterWriteSetButton_Click()
 
-    Const p_procedureName = "ReadAfterWriteSetButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    This.ViSession.GpibLan.ReadAfterWriteEnabledSetter Me.ReadAfterWriteEnabled
-    
-    Me.ReadStopwatch
-    
-    This.ViSession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
+    This.ViewModel.ReadAfterWriteSetCommand
 
 End Sub
 
 ''' <summary>   Handles the read after write get button click event. </summary>
 Private Sub ReadAfterWriteGetButton_Click()
 
-    Const p_procedureName = "ReadAfterWriteGetButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    Me.ReadAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
-    
-    Me.ReadStopwatch
-    
-    This.ViSession.GpibLan.DisableReadAfterWriteOnWrite = Me.ReadAfterWriteEnabled
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
+    This.ViewModel.ReadAfterWriteGetCommand
 
 End Sub
-
-''' <summary>   Handles the serial poll button click event. </summary>
-Private Sub SerialPollButton_Click()
-
-    Const p_procedureName = "SerialPollButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    Range(m_serialPollCell).Value = This.ViSession.GpibLan.SerialPoll
-    
-    Me.ReadStopwatch
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-''' <summary>   Handles the SRQ button click event. </summary>
-Private Sub SRQButton_Click()
-
-    Const p_procedureName = "SRQButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    Range(m_srqCell).Value = This.ViSession.GpibLan.ServiceRequested
-    
-    Me.ReadStopwatch
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-''' <summary>   Handles the GPIB Address Get button click event. </summary>
-Private Sub GetGpibAddressButton_Click()
-
-    Const p_procedureName = "GetGpibAddressButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    Range(m_gpibAddressCell).Value = This.ViSession.GpibLan.GpibAddressGetter
-
-    Me.ReadStopwatch
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-''' <summary>   Handles the GPIB Address set button click event. </summary>
-Private Sub SetGpibAddressButton_Click()
-
-    Const p_procedureName = "SetGpibAddressButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    This.ViSession.GpibLan.GpibAddressSetter CInt(Range(m_gpibAddressCell).Value)
-
-    Me.ReadStopwatch
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
 
 ''' <summary>   Handles the Read Timeout get button click event. </summary>
 Private Sub ReadTimeoutGetButton_Click()
 
-    Const p_procedureName = "ReadTimeoutGetButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    Range(m_readTimeoutCell).Value = This.ViSession.GpibLan.ReadTimeoutGetter
-
-    Me.ReadStopwatch
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
+    This.ViewModel.ReadTimeoutGetCommand
 
 End Sub
 
 ''' <summary>   Handles the Read Timeout set button click event. </summary>
 Private Sub ReadTimeoutSetButton_Click()
 
-    Const p_procedureName = "ReadTimeoutSetButton_Click"
+    This.ViewModel.ReadTimeoutSetCommand
+
+End Sub
+
+''' <summary>   Handles the Selective device clear button click event. </summary>
+Private Sub SDCButton_Click()
     
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
+    This.ViewModel.SelectiveDeviceClearCommand
     
-    Me.RestartStopwatch
-    
-    This.ViSession.GpibLan.ReadTimeoutSetter (CInt(Range(m_readTimeoutCell).Value))
-    
-    Me.ReadStopwatch
+End Sub
+
+''' <summary>   Handles the serial poll button click event. </summary>
+Private Sub SerialPollButton_Click()
+
+    This.ViewModel.SerialPollCommand
+
+End Sub
+
+''' <summary>   Handles the SRQ button click event. </summary>
+Private Sub SRQButton_Click()
+
+    This.ViewModel.ServiceRequestedQueryCommand
+
+End Sub
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' K2700 Control
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+Private Sub AutoIncrementCheckBox_GotFocus()
+    This.FocusedControlName = Me.AutoIncrementCheckBox.Name
+    DoEvents
+End Sub
+
+Private Sub AutoIncrementCheckBox_LostFocus()
+    This.FocusedControlName = VBA.vbNullString
+    DoEvents
+End Sub
+
+''' <summary>   Handles the auto increment check box change and click events. </summary>
+Private Sub AutoIncrementCheckBox_Change()
+
+    On Error GoTo err_Handler:
+
+    If This.FocusedControlName = Me.AutoIncrementCheckBox.Name Then
+
+        On Error GoTo 0
+
+        ' Commands for click
+        This.ViewModel.AutoIncrementChannelNoEnabled = Me.AutoIncrementCheckBox.Value
+        
+    Else
+
+        On Error GoTo 0
+
+        ' Commands for change from within the sheet
+        This.ViewModel.AutoIncrementChannelNoEnabled = Me.AutoIncrementCheckBox.Value
+
+    End If
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1597,404 +399,347 @@ exit_Handler:
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 err_Handler:
   
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
+    On Error GoTo 0
     
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    ' Commands for change from outside the sheet
+    This.ViewModel.AutoIncrementChannelNoEnabled = Me.AutoIncrementCheckBox.Value
     
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
+End Sub
+
+Private Sub ClearReadingsButton_Click()
+    This.ViewModel.ClearReadingsCommand
+End Sub
+
+Private Sub ExternalTriggerOptionButton_GotFocus()
+    This.FocusedControlName = Me.ExternalTriggerOptionButton.Name
+    DoEvents
+End Sub
+
+Private Sub ExternalTriggerOptionButton_LostFocus()
+    This.FocusedControlName = VBA.vbNullString
+    DoEvents
+End Sub
+
+''' <summary>   Handles the external trigger option button change and click events. </summary>
+Private Sub ExternalTriggerOptionButton_Change()
+
+    On Error GoTo err_Handler:
+
+    If This.FocusedControlName = Me.ExternalTriggerOptionButton.Name Then
+
+        On Error GoTo 0
+
+        ' Commands for click
+        If Me.ExternalTriggerOptionButton.Value Then _
+            This.ViewModel.ConfigureExternalTriggerReadingCommand
+        
+    Else
+
+        On Error GoTo 0
+
+        ' Commands for change from within the sheet
+
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    On Error GoTo 0
+    
+    ' Commands for change from outside the sheet
+    
+End Sub
+
+Private Sub FunctionComboBox_GotFocus()
+    This.FocusedControlName = Me.FunctionComboBox.Name
+    DoEvents
+End Sub
+
+Private Sub FunctionComboBox_LostFocus()
+    This.FocusedControlName = VBA.vbNullString
+    DoEvents
+End Sub
+
+''' <summary>   Selects the measurement function. </summary>
+Private Sub FunctionComboBox_Change()
+    
+    On Error GoTo err_Handler:
+
+    If This.FocusedControlName = Me.FunctionComboBox.Name Then
+
+        On Error GoTo 0
+
+        ' Commands for click
+        This.ViewModel.SenseFunctionName = Me.FunctionComboBox.Text
+        
+    Else
+
+        On Error GoTo 0
+
+        ' Commands for change from within the sheet
+        This.ViewModel.SenseFunctionName = Me.FunctionComboBox.Text
+
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    On Error GoTo 0
+    
+    ' Commands for change from outside the sheet
+    This.ViewModel.SenseFunctionName = Me.FunctionComboBox.Text
+    
 
 End Sub
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
-' 2700 Measurements Control
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+Private Sub ImmediateTriggerOptionButton_GotFocus()
+    This.FocusedControlName = Me.ImmediateTriggerOptionButton.Name
+    DoEvents
+End Sub
 
-''' <summary> Get the timer interval. </summary>
-Friend Property Get TimerInterval() As Integer
-    TimerInterval = CInt(Range(m_timerIntervalCell).Value)
-End Property
+Private Sub ImmediateTriggerOptionButton_LostFocus()
+    This.FocusedControlName = VBA.vbNullString
+    DoEvents
+End Sub
 
-''' <summary> Get the channel count. </summary>
-Friend Property Get ChannelCount() As Integer
-    ChannelCount = CInt(Range(m_channelCountCell).Value)
-End Property
+''' <summary>   Configure immediate trigger mode and enables the read button. </summary>
+''' <remarks>   The check box change event also causes a click event.
+'''             This method issues the click event on actual click.
+'''             Note: Make sure to not implement the click event,
+Private Sub ImmediateTriggerOptionButton_Change()
 
-''' <summary>   Indicates that front inputs are required for this mode. </summary>
-Friend Property Get FrontReadRequired() As Boolean
-    FrontReadRequired = Me.InputsCheckBox.Value
-End Property
+    On Error GoTo err_Handler:
 
-''' <summary>   Gets the external trigger monitoring status. </summary>
-Friend Property Get ExternalTrigMonitoringEnabled() As Boolean
-    ExternalTrigMonitoringEnabled = Me.MonitorExtTrigToggleButton.Value
-End Property
+    If This.FocusedControlName = Me.ImmediateTriggerOptionButton.Name Then
 
-''' <summary>   Enables or disables external triggering. </summary>
-Friend Property Let ExternalTrigMonitoringEnabled(ByVal a_value As Boolean)
-    Me.MonitorExtTrigToggleButton.Value = a_value
-End Property
+        On Error GoTo 0
 
-''' <summary>   Gets the auto increment channel number enable option. </summary>
-Friend Property Get AutoIncrementChannelNoEnabled() As Boolean
-    AutoIncrementChannelNoEnabled = Me.AutoIncrementCheckBox.Value
-End Property
+        ' Commands for click
+        If ImmediateTriggerOptionButton.Value Then _
+            This.ViewModel.ConfigureImmediateTriggerReadingsCommand
+        
+    Else
 
-''' <summary>   Gets the single read enabled. </summary>
-Friend Property Get SingeReadEnabled() As Boolean
-    SingeReadEnabled = Me.SingleAllCheckBox.Value
-End Property
+        On Error GoTo 0
 
-''' <summary>   Gets the selected channel number. </summary>
-Friend Property Get SelectedChannelNumber() As Integer
-    SelectedChannelNumber = CInt(Range(m_channelNumberCell).Value)
-End Property
+        ' Commands for change from within the sheet
 
-''' <summary>   Gets the function name from the function name cell. </summary>
-Friend Property Get FunctionName() As String
-    FunctionName = Range(m_functionNameCell).Value
-End Property
-
-''' <summary>   Sets the function name. </summary>
-Friend Property Let FunctionName(ByVal a_value As String)
-    Range(m_functionNameCell).Value = a_value
-End Property
-
-''' <summary>   Gets the function Unit from the function Unit cell. </summary>
-Friend Property Get FunctionUnit() As String
-    FunctionUnit = Range(m_functionUnitCell).Value
-End Property
-
-''' <summary>   Sets the function Unit. </summary>
-Friend Property Let FunctionUnit(ByVal a_value As String)
-    Range(m_functionUnitCell).Value = a_value
-End Property
-
-''' <summary>   Gets the Reading Format from the Reading Format cell. </summary>
-Friend Property Get ReadingFormat() As String
-    ReadingFormat = Range(m_readingFormatCell).Value
-End Property
-
-''' <summary>   Sets the Reading Format. </summary>
-Friend Property Let ReadingFormat(ByVal a_value As String)
-    Range(m_readingFormatCell).Value = a_value
-End Property
-
-''' <summary>   Sets the measurement display. </summary>
-''' <param name="a_channelNo">   [single] the channel number. </param>
-''' <param name="a_value">       [double] the value. </param>
-Private Sub SetReading(ByVal a_channelNo As Integer, ByVal a_value As Double)
-
-    Range(m_channelNumberCell).Value = a_channelNo
-    Range(m_functionValueCell).Value = a_value
+    End If
     
-    Dim p_rowNo As Integer: p_rowNo = m_measurementTopRow + a_channelNo - 1
-    Range(m_measurementNoCol & CStr(p_rowNo)).Value = CStr(a_channelNo)
-    Range(m_measurementValueCol & CStr(p_rowNo)).Value = Format(a_value, Me.ReadingFormat)
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    On Error GoTo 0
+    
+    ' Commands for change from outside the sheet
+    
+End Sub
+
+Private Sub InputsCheckBox_GotFocus()
+    This.FocusedControlName = Me.InputsCheckBox.Name
+    DoEvents
+End Sub
+
+Private Sub InputsCheckBox_LostFocus()
+    This.FocusedControlName = VBA.vbNullString
+    DoEvents
+End Sub
+
+
+''' <summary>   Handles the Inputs check box change event. </summary>
+Private Sub InputsCheckBox_Change()
+
+    On Error GoTo err_Handler:
+
+    If This.FocusedControlName = Me.InputsCheckBox.Name Then
+
+        On Error GoTo 0
+
+        ' Commands for click
+        This.ViewModel.FrontInputsRequired = Me.InputsCheckBox.Value
+        
+    Else
+
+        On Error GoTo 0
+
+        ' Commands for change from within the sheet
+        This.ViewModel.FrontInputsRequired = Me.InputsCheckBox.Value
+
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    On Error GoTo 0
+    
+    ' Commands for change from outside the sheet
+    This.ViewModel.FrontInputsRequired = Me.InputsCheckBox.Value
+    
+End Sub
+
+''' <summary>   Handles the measure button click event. Takes a single or multiple
+'''             readings from the front or rear panel. </summary>
+Private Sub MeasureButton_Click()
+
+    ' make an immediate measure of one or all channels.
+    This.ViewModel.MeasureImmediatelyCommand
+  
+End Sub
+
+Private Sub MonitorExtTrigToggleButton_GotFocus()
+    This.FocusedControlName = Me.MonitorExtTrigToggleButton.Name
+    DoEvents
+End Sub
+
+Private Sub MonitorExtTrigToggleButton_LostFocus()
+    This.FocusedControlName = VBA.vbNullString
+    DoEvents
+End Sub
+
+''' <summary>   Handles the external trigger toggle button. </summary>
+Private Sub MonitorExtTrigToggleButton_Change()
+
+    On Error GoTo err_Handler:
+
+    If This.FocusedControlName = Me.MonitorExtTrigToggleButton.Name Then
+
+        On Error GoTo 0
+
+        ' Commands for click
+        This.ViewModel.ExternalTriggerModeEnabled = MonitorExtTrigToggleButton.Value
+        cc_isr_Core_IO.Factory.NewStopwatch.Wait 100
+        This.ViewModel.MonitorExtTrigToggleCommand
+        
+    Else
+
+        On Error GoTo 0
+
+        ' Commands for change from within the sheet
+        This.ViewModel.ExternalTriggerModeEnabled = MonitorExtTrigToggleButton.Value
+        cc_isr_Core_IO.Factory.NewStopwatch.Wait 100
+        This.ViewModel.MonitorExtTrigToggleCommand
+
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    On Error GoTo 0
+    
+    ' Commands for change from outside the sheet
+    This.ViewModel.ExternalTriggerModeEnabled = MonitorExtTrigToggleButton.Value
+    cc_isr_Core_IO.Factory.NewStopwatch.Wait 100
+    This.ViewModel.MonitorExtTrigToggleCommand
     
 End Sub
 
 ''' <summary> Queries the Inputs status. </summary>
 Private Sub QueryInputsButton_Click()
 
-    Const p_procedureName = "QueryInputsButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.RestartStopwatch
-    
-    Range(m_inputsCell).Value = IIf(This.K2700.IsFrontInputs, "Front", "Rear")
-    
-    Me.ReadStopwatch
+    This.ViewModel.QueryInputsCommand
 
+End Sub
+
+Private Sub SingleMultipleCheckBox_GotFocus()
+    This.FocusedControlName = Me.SingleMultipleCheckBox.Name
+    DoEvents
+End Sub
+
+Private Sub SingleMultipleCheckBox_LostFocus()
+    This.FocusedControlName = VBA.vbNullString
+    DoEvents
+End Sub
+
+Private Sub SingleMultipleCheckBox_Change()
+
+    On Error GoTo err_Handler:
+
+    If This.FocusedControlName = Me.SingleMultipleCheckBox.Name Then
+
+        On Error GoTo 0
+
+        ' Commands for click
+        This.ViewModel.SingleReadEnabled = Me.SingleMultipleCheckBox.Value
+        
+    Else
+
+        On Error GoTo 0
+
+        ' Commands for change from within the sheet
+        This.ViewModel.SingleReadEnabled = Me.SingleMultipleCheckBox.Value
+
+    End If
+    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
     On Error GoTo 0
     Exit Sub
-    
+
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 err_Handler:
   
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
+    On Error GoTo 0
     
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
+    ' Commands for change from outside the sheet
+    This.ViewModel.SingleReadEnabled = Me.SingleMultipleCheckBox.Value
     
 End Sub
 
-''' <summary>   Takes a single or multiple readings from the front or rear panel. </summary>
-Friend Sub MeasureImmediately()
+''' <summary>   Populates the Function combo box. </summary>
+Public Sub PopulateFunctionComboBox()
 
-    ' reinitialize if device not defined
-    If Not This.K2700.Connected Then
-        ' This.K2700.InitializeLegacy Me.host, Me.port, Me.ReceiveTimeout
-    End If
+    Const p_procedureName = "PopulateFunctionComboBox"
     
-    Dim p_channelNumber As Integer
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
 
-    If Me.AutoIncrementChannelNoEnabled Then
-        
-        ' Clear all cells
-        Me.ClearReadings
-
-        ' scan all channels
-        For p_channelNumber = 1 To Me.ChannelCount
-        
-            ' allow events to occur
-            VBA.DoEvents
-            
-            ' set the current channel number
-            This.CurrentChannelNumber = p_channelNumber
-            
-            Me.RestartStopwatch
-            If Me.FrontReadRequired Then
-                This.K2700.TakeFrontReading p_channelNumber
-            Else
-                This.K2700.TakeRearReading p_channelNumber
-            End If
-            Me.ReadStopwatch
-        
-        Next p_channelNumber
-
-    Else
-    
-        p_channelNumber = Me.SelectedChannelNumber
-        
-        Me.RestartStopwatch
-        If Me.FrontReadRequired Then
-            This.K2700.TakeFrontReading p_channelNumber
-        Else
-            This.K2700.TakeRearReading p_channelNumber
+    Dim p_fourWireResistanceIndex As Integer
+    Me.FunctionComboBox.Clear
+    Dim p_item As Variant
+    Dim p_senseFunction As String
+    For Each p_item In This.ViewModel.SenseFunctions
+        p_senseFunction = VBA.sctr(p_item)
+        Me.FunctionComboBox.AddItem p_senseFunction
+        If "FRES" = p_senseFunction Then
+            p_fourWireResistanceIndex = Me.FunctionComboBox.Count
         End If
-        
-        Me.ReadStopwatch
-        
-    End If
+    Next
 
-End Sub
-
-''' <summary>   Handles the measure button click event. Takes a single or multiple
-'''             readings from the front or rear panel. </summary>
-Private Sub MeasureButton_Click()
-  
-    Const p_procedureName = "MeasureButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    ' exit if inputs are not in the correct settings
-    If Not Me.ValidateInputs() Then GoTo exit_Handler
-    
-    ' disable the relevant buttons.
-    
-    Me.MeasureButton.Enabled = False
-    Me.ImmediateTriggerOptionButton.Enabled = False
-    Me.ExternalTriggerOptionButton.Enabled = False
-    
-    ' make an immediate measure of one or all channels.
-    
-    Me.MeasureImmediately
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    Me.MeasureButton.Enabled = True
-    Me.ImmediateTriggerOptionButton.Enabled = True
-    Me.ExternalTriggerOptionButton.Enabled = True
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-    
-End Sub
-
-''' <summary>   Clears the readings. </summary>
-''' <param name="a_offsetValue">    [Optional, Double, 0]T he offset value to use for
-'''                                 clearing the readings. </param>
-Public Sub ClearReadings(Optional ByVal a_offsetValue As Double = 0#)
-
-    Dim p_channelNumber As Integer
-    For p_channelNumber = 1 To Me.ChannelCount
-        VBA.DoEvents
-        SetReading p_channelNumber, a_offsetValue
-    Next p_channelNumber
-  
-End Sub
-
-''' <summary> Toggles monitoring the instrument for external triggered measurements. </summary>
-''' <param name="timerInterval"> The polling timer interval. </param>
-Friend Sub StartMonitoringExternalTriggers(Optional ByVal a_timerInterval As Integer = 100)
-
-    If Me.AutoIncrementChannelNoEnabled Then
-        
-        ' Clear all readings
-        Me.ClearReadings
-    
-    End If
-
-    Range(m_externalTriggerStatusCell) = "External Trigger On"
-    
-    If Me.AutoIncrementChannelNoEnabled Then
-        
-        ' set the first channel number for manual scan
-        This.CurrentChannelNumber = 1
-        
-    Else
-    
-        ' set the single reading channel number for manual scan
-        ' to the channel number entered by the operator.
-        This.CurrentChannelNumber = Me.SelectedChannelNumber
-        
-    End If
-       
-    ' initiate awaiting for the external trigger
-    This.ViSession.WriteLine ":INIT; *CLS"
-    
-    ' start the timer
-    Me.StartTimer a_timerInterval
-        
-End Sub
-
-''' <summary>   Handles the external trigger toggle button. </summary>
-Private Sub MonitorExtTrigToggleButton_Click()
-
-    Const p_procedureName = "MonitorExtTrigToggleButton_Click"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    If Me.ExternalTrigMonitoringEnabled Then
-    
-        Me.ImmediateTriggerOptionButton.Enabled = False
-        Me.ExternalTriggerOptionButton.Enabled = False
-    
-        Me.StartMonitoringExternalTriggers Me.TimerInterval
-    
-    Else
-    
-        ' one external triggering is turned off, the timer
-        ' is allowed to turn itself off
-        Me.ImmediateTriggerOptionButton.Enabled = True
-        Me.ExternalTriggerOptionButton.Enabled = True
-    
-    End If
- 
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    Me.EnableMeasureButton
-    Me.EnableMonitorExtTrigToggleButton
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-
-    ' stop the timer if the timer started.
-    Me.PauseTimer
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
-' TIMER CONTROL
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
-''' <summary>   Handles the external trigger monitoring timer event using the
-''' device to handle the timing events. </summary>
-''' <remarks>
-''' Use this method to check if turn on or off manual triggering mode of the instrument. <para>
-''' 10/16/00  David Hary  1.00.00 Add a beep </para>
-''' 2023-06-23 David Hary 1.0.8574 Use the device event handler to update the reading values.
-''' </remarks>
-Private Sub HandleTimerEvent()
-
-    Const p_procedureName = "HandleTimerEvent"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    If This.PauseRequested Or This.HandlingTimerEvent Then Exit Sub
+    Me.FunctionComboBox.ListIndex = p_fourWireResistanceIndex
    
-    ' prevent reentry
-    This.HandlingTimerEvent = True
-    
-    Dim p_channelNumber As Integer
-    
-    ' check if scan or single
-    If Me.AutoIncrementChannelNoEnabled Then
-      
-        ' in auto increment mode, use the current channel number
-        p_channelNumber = This.CurrentChannelNumber
-          
-    Else
-    
-        ' in non auto increment mode, use the current channel number
-        p_channelNumber = Me.SelectedChannelNumber
-    
-    End If
-      
-    ' allow other events to occur
-    VBA.DoEvents
-    
-    Dim p_isDone As Boolean: p_isDone = Not Me.ExternalTrigMonitoringEnabled
-    
-    ' stop the timer.
-    If p_isDone Then Me.PauseTimer
-    
-    This.K2700.MonitorExternalTrigger p_channelNumber, p_isDone
-    
-    ' if we ended manual mode, enable the rest of the buttons
-    If p_isDone Then
-    
-        ' EnableButtons
-        Range(m_externalTriggerStatusCell) = "External Trigger off"
-        
-        Me.MonitorExtTrigToggleButton.Enabled = True
-        Me.MeasureButton.Enabled = True
-        
-    End If
-    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
-
-    ' release reentry prevention
-    This.HandlingTimerEvent = False
 
     On Error GoTo 0
     Exit Sub
@@ -2002,81 +747,40 @@ exit_Handler:
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 err_Handler:
   
-    ' stop the timer.
-    Me.PauseTimer
-    
-    ' enable all buttons
-    Me.MonitorExtTrigToggleButton.Enabled = True
-    Me.MeasureButton.Enabled = True
-    
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
     GoTo exit_Handler
-
-End Sub
-
-''' <summary>   Starts the event timer. </summary>
-''' <param name="a_interval">   [Long] Specifies the timer interval in milliseconds. </param>
-Friend Sub StartTimer(Optional ByVal a_interval As Long = 100)
     
-    This.HandlingTimerEvent = False
-    This.PauseRequested = False
-    If m_eventTimer Is Nothing Then
-        Set m_eventTimer = cc_isr_Core.Factory.NewEventTimer.Initialize(a_interval)
-        m_eventTimer.StartTimer
-    Else
-        m_eventTimer.ResumeTimer
-    End If
-
-End Sub
-
-''' <summary>   Requests pausing the timer. </summary>
-Friend Sub PauseTimer()
-    
-    This.PauseRequested = True
-
-End Sub
-
-''' <summary>   Aborts the timer. </summary>
-Friend Sub AbortTimer()
-
-    If Not m_eventTimer Is Nothing Then
-      m_eventTimer.StopTimer
-      Set m_eventTimer = Nothing
-    End If
-
-End Sub
-
-''' <summary>   Handles a timer tick event. </summary>
-Private Sub m_eventTimer_Tick()
-    
-    On Error Resume Next
-    If This.PauseRequested Then
-        If Not m_eventTimer Is Nothing Then m_eventTimer.PauseTimer
-    Else
-        HandleTimerEvent
-    End If
-    On Error GoTo 0
-
 End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
-' K2700 Events
+' View Model Events
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Sets the measurement display. </summary>
+''' <param name="a_channelNo">   [single] the channel number. </param>
+''' <param name="a_value">       [double] the value. </param>
+Private Sub SetReading(ByVal a_channelNo As Integer, ByVal a_value As Double)
+
+    Dim p_rowNo As Integer: p_rowNo = m_measurementTopRow + a_channelNo - 1
+    Range(m_measurementNoCol & VBA.CStr(p_rowNo)).Value = CStr(a_channelNo)
+    Range(m_measurementValueCol & VBA.CStr(p_rowNo)).Value = Format(a_value, Me.ReadingFormat)
+    
+End Sub
 
 ''' <summary>   Handles the K2700 <see cref="cc_isr_Tcp_Scpi.ChannelMeasured"/> event. </summary>
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Tcp_Scpi.ChannelReadingEventArgs"/>] event arguments. </param>
-Private Sub m_k2700_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.ChannelReadingEventArgs)
+Private Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.ChannelReadingEventArgs)
 
-    Const p_procedureName = "m_session_ConnectionChanged"
+    Const p_procedureName = "m_viewModel_ChannelMeasured"
     
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -2107,10 +811,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -2118,11 +822,11 @@ err_Handler:
     
 End Sub
 
-''' <summary>   Handles the K2700 <see cref="cc_isr_Tcp_Scpi.K2700.ConnectionChanged"/> event. </summary>
+''' <summary>   Handles the <see cref="cc_isr_Tcp_Scpi.Demo.K2700ViewModel.ConnectionChanged"/> event. </summary>
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/>] event arguments. </param>
-Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
+Private Sub m_viewModel_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
 
-    Const p_procedureName = "m_session_ConnectionChanged"
+    Const p_procedureName = "m_viewModel_ConnectionChanged"
     
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -2176,10 +880,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -2187,10 +891,224 @@ err_Handler:
     
 End Sub
 
-''' <summary>   Handles the <see cref="cc_isr_Tcp_Scpi.K2700.ConnectionChanging"/> event. </summary>
+''' <summary>   Handles the <see cref="cc_isr_Tcp_Scpi.Demo.K2700ViewModel.ConnectionChanging"/> event. </summary>
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangingEventArgs"/>] event arguments. </param>
-Private Sub m_k2700_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
+Private Sub m_ViewModel_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
 End Sub
+
+''' <summary>   Handles the property change event of the viwe model. </summary>
+''' <param name="a_propertyName">   [String] the property name. </param>
+Private Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
+
+    Const p_procedureName = "m_K2700ViewModel_PropertyChanged"
+
+    Select Case a_propertyName
+
+        Case "Host"
+            Range(m_inputHostCell).Value = This.ViewModel.Host
+        Case "Port"
+            Range(m_inputPortCell).Value = This.ViewModel.Port
+        Case "SocketAddress"
+            Range(m_socketAddressCell).Value = This.ViewModel.SocketAddress
+        Case "SocketId"
+            Range(m_socketIdCell).Value = This.ViewModel.SocketId
+        Case "ReceiveTimeout"
+            Range(m_socketReceiveTimeoutCell).Value = This.ViewModel.SocketReceiveTimeout
+        
+        Case "SessionReadTimeout"
+            Range(m_sessionReadTimeoutCell).Value = This.ViewModel.SessionReadTimeout
+
+        Case "PauseRequested"
+        Case "TimerInterval"
+            Range(m_timerIntervalCell).Value = This.ViewModel.TimerInterval
+       
+        Case "Connected"
+            Range(m_connectedCell).Value = This.ViewModel.Connected
+    
+        Case "MessageToSend"
+        Case "SentMessage"
+            Range(m_sentMessageCell).Value = This.ViewModel.SentMessage
+        Case "ReceivedMessage"
+            Range(m_receivedMessageCell).Value = This.ViewModel.ReceivedMessage
+        Case "ReceivedMessageLength"
+            Range(m_receivedMessageLengthCell).Value = This.ViewModel.ReceivedMessageLength
+        Case "ElapsedTime"
+            ' Range(m_elapsedTimeCell).Value = This.ViewModel.ElapsedTime
+        Case "ElapsedTimeFormat"
+            Range(m_elapsedTimeFormatCell).Value = This.ViewModel.ElapsedTimeFormat
+        Case "ElapsedTimeCaption"
+            Range(m_elapsedTimeCell).Value = This.ViewModel.ElapsedTimeCaption
+        Case "LastErrorMessage"
+            Range(m_lastErrorMessageCell).Value = This.ViewModel.LastErrorMessage
+        Case "LastMessage"
+            Range(m_lastMessageCell).Value = This.ViewModel.LastMessage
+        Case "SerialPollByte"
+            Range(m_serialPollCell).Value = This.ViewModel.SerialPollByte
+        Case "StatusByte"
+            Range(m_statusByteCell).Value = This.ViewModel.StatusByte
+        Case "StandardByte"
+            Range(m_standardByteCell).Value = This.ViewModel.StandardByte
+        Case "ServiceRequested"
+            Range(m_srqCell).Value = This.ViewModel.ServiceRequested
+        Case "GpibAddress"
+            Range(m_gpibAddressCell).Value = This.ViewModel.GpibAddress
+        Case "ReadAfterWriteEnabled"
+            Range(m_readAfterWriteEnabledCell).Value = This.ViewModel.ReadAfterWriteEnabled
+        Case "GpibLanReadTimeout"
+            Range(m_readAfterWriteEnabledCell).Value = This.ViewModel.ReadAfterWriteEnabled
+            
+        Case "TopCard"
+            Range(m_card1Cell).Value = This.ViewModel.TopCard
+        Case "BottomCard"
+            Range(m_card2Cell).Value = This.ViewModel.BottomCard
+        Case "TopCardFunctionScanList"
+            Range(m_card1ScanListCell).Value = This.ViewModel.TopCardFunctionScanList
+        Case "BottomCardFunctionScanList"
+            Range(m_card2ScanListCell).Value = This.ViewModel.BottomCardFunctionScanList
+        Case "FrontInputsRequired"
+            Me.FrontBackCheckBox.Value = This.ViewModel.FrontInputsRequired
+        Case "FrontInputsValue"
+        Case "FrontInputsCaption"
+            Range(m_inputsCell).Value = This.ViewModel.FrontInputsCaption
+        Case "SelectedChannelNumber"
+            Range(m_channelNumberCell).Value = This.ViewModel.SelectedChannelNumber
+        Case "ChannelCount"
+            Range(m_channelCountCell).Value = This.ViewModel.ChannelCount
+        Case "CurrentChannelNumber"
+        Case "MeasuredChannelNumber"
+        Case "SenseFunctionName"
+        Case "SenseFunctionCaption"
+            Range(m_functionNameCell).Value = This.ViewModel.SenseFunctionCaption
+        Case "SenseFunctionUnit"
+            Range(m_functionUnitCell).Value = This.ViewModel.SenseFunctionUnit
+        Case "MeasuredReading"
+            Range(m_functionValueCell).Value = This.ViewModel.MeasuredReading
+        Case "MeasuredValueFormat"
+            Range(m_readingFormatCell).Value = This.ViewModel.MeasuredValueFormat
+        
+        Case "MeasuredValue"
+        Case "ExternalTrigMonitoringEnabled"
+            Me.MonitorExtTrigToggleButton.Value = This.ViewModel.ExternalTrigMonitoringEnabled
+        Case "m_externalTriggerStatusCell"
+            Range(m_readingFormatCell).Value = This.ViewModel.MonitoringState
+        Case "AutoIncrementChannelNoEnabled"
+            Me.AutoManualCheckBox.Value = This.ViewModel.AutoIncrementChannelNoEnabled
+        Case "SingleReadEnabled"
+            Me.SingleMultipleCheckBox.Value = This.ViewModel.SingleReadEnabled
+        Case "SenseFunctions"
+            Me.PopulateFunctionComboBox
+        Case "ScpiCommands"
+            Me.PopulateCommandsComboBox
+        Case "ImmediateTriggerModeEnabled"
+            Me.ConfigureImmediateTriggerCheckBox.Value = This.ViewModel.ExternalTrigMonitoringEnabled
+        Case "ExternalTriggerModeEnabled"
+            Me.ConfigureImmediateTriggerCheckBox.Value = Not This.ViewModel.ExternalTrigMonitoringEnabled
+        Case "ReadStatusAfterWrite"
+            Me.ReadStatusAfterWriteCheckBox.Value = This.ViewModel.ReadStatusAfterWrite
+        Case "ReadingOffset"
+            Range(m_readingOffsetCell).Value = This.ViewModel.ReadingOffset
+        Case "MonitoringStatus"
+            Range(m_externalTriggerStatusCell).Value = This.ViewModel.MonitoringStatus
+        
+        Case "OpenConnectionExecutable"
+        Case "CloseConnectionExecutable"
+        Case "ToggleConnectionExecutable"
+            ConnectToggleButton.Enabled = This.ViewModel.ToggleConnectionExecutable
+        Case "ResetKnownStateExecutable"
+            RSTButton.Enabled = This.ViewModel.ResetKnownStateExecutable
+        Case "ClearExecutionStateExecutable"
+            CLSButton.Enabled = This.ViewModel.ClearExecutionStateExecutable
+        Case "QueryExecutable"
+            QueryButton.Enabled = This.ViewModel.QueryExecutable
+        Case "ReadExecutable"
+            ReadButton.Enabled = This.ViewModel.ReadExecutable
+        Case "ReadStatusByteExecutable"
+            ReadStatusByteButton.Enabled = This.ViewModel.ReadStatusByteExecutable
+        Case "ReadStandardEventStatusExecutable"
+            ReadStandardEventStatusButton.Enabled = This.ViewModel.ReadStandardEventStatusExecutable
+        Case "ReadStatusAfterWriteExecutable"
+            ReadStatusAfterWriteCheckBox.Enabled = This.ViewModel.ReadStatusAfterWriteExecutable
+        Case "WriteExecutable"
+            WriteButton.Enabled = This.ViewModel.WriteExecutable
+        Case "QueryInputsExecutable"
+            QueryInputsButton.Enabled = This.ViewModel.QueryInputsExecutable
+        Case "ClearReadingsExecutable"
+            ClearReadingsButton.Enabled = This.ViewModel.ClearReadingsExecutable
+        Case "MeasureExecutable"
+            MeasureButton.Enabled = This.ViewModel.MeasureExecutable
+        Case "MonitorExtTrigExecutable"
+            MonitorExtTrigButton.Enabled = This.ViewModel.MonitorExtTrigExecutable
+        Case "ImmediateTriggerOptionExecutable"
+            ImmediateTriggerOptionButton.Enabled = This.ViewModel.ImmediateTriggerOptionExecutable
+        Case "ExternalTriggerOptionExecutable"
+            ExternalTriggerOptionButton.Enabled = This.ViewModel.ExternalTriggerOptionExecutable
+
+        Case "SelectiveDeviceClearExecutable"
+            SDCButton.Enabled = This.ViewModel.SelectiveDeviceClearExecutable
+        Case "GoToLocalExecutable"
+            Button.Enabled = This.ViewModel.GoToLocalExecutable
+        Case "LocalLockoutExecutable"
+            LocalLockoutButton.Enabled = This.ViewModel.LocalLockoutExecutable
+        Case "ReadAfterWriteSetExecutable"
+            ReadAfterWriteSetButton.Enabled = This.ViewModel.ReadAfterWriteSetExecutable
+        Case "ReadAfterWriteGetExecutable"
+            ReadAfterWriteGetButton.Enabled = This.ViewModel.ReadAfterWriteGetExecutable
+        Case "SerialPollExecutable"
+            SerialPollButton.Enabled = This.ViewModel.SerialPollExecutable
+        Case "ServiceRequestedExecutable"
+            SRQButton.Enabled = This.ViewModel.ServiceRequestedExecutable
+        Case "GpibAddressGetExecutable"
+            GpibAddressGetButton.Enabled = This.ViewModel.GpibAddressGetExecutable
+        Case "GpibAddressSetExecutable"
+            GpibAddressSetButton.Enabled = This.ViewModel.GpibAddressSetExecutable
+        Case "ReadTimeoutGetExecutable"
+            ReadTimeoutGetButton.Enabled = This.ViewModel.ReadTimeoutGetExecutable
+        Case "ReadTimeoutSetExecutable"
+            ReadTimeoutSetButton.Enabled = This.ViewModel.ReadTimeoutSetExecutable
+        
+        
+        Case "MessageToSendExecutable"
+            CommandsComboBox.Enabled = This.ViewModel.MessageToSendExecutable
+        Case "FunctionNameExecutable"
+            FunctionComboBox.Enabled = This.ViewModel.FunctionNameExecutable
+
+    End Select
+    
+End Sub
+
+''' <summary>   Handles the property change event of the viwe model. </summary>
+''' <param name="a_eventArgs">   [<see cref="cc_isr_Core.PropertyChangedEventArgs"/>] event arguments. </param>
+Private Sub m_viewModel_PropertyChanged(ByVal a_eventArgs As cc_isr_Core.PropertyChangedEventArgs)
+
+    Const p_procedureName = "m_K2700ViewModel_PropertyChanged"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    HandleViewModelPropertyChanged a_eventArgs.PropertyName
+
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    
+    ' display the error message
+    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+    
+End Sub
+
 
 ' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ' Worksheet events
@@ -2208,16 +1126,11 @@ Private Sub Worksheet_Activate()
     
     If Not This.Initialized Then
     
-        Me.EnableControls False
+        Set This.ViewModel = K2700ViewModel
+        This.ViewModel.Initialize
         
-        ' populate the combo box commands
-        PopulateCommandsComboBox
-        
-        ' populate the function box commands
-        PopulateFunctionComboBox
-        
-        Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize(New ErrTracer)
-        Set m_k2700 = This.K2700
+        m_viewModel_ConnectionChanged cc_isr_Winsock.Factory.NewConnectionChangedEventArgs.Initialize()
+
         Set This.Device = This.K2700.Device
         Set This.ViSession = This.Device.ViSession
         
@@ -2237,10 +1150,10 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -2248,4 +1161,145 @@ err_Handler:
 
 End Sub
 
+Private Sub Worksheet_Deactivate()
+
+    Me.Dispose
+    
+End Sub
+
+''' <summary>   Dispose of the worksheet objects. </summary>
+Public Sub Dispose()
+
+    Const p_procedureName As String = "Dispose"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Set m_viewModel = Nothing
+    
+    If Not This.ViewModel Is Nothing Then This.ViewModel.Dispose
+    Set This.ViewModel = Nothing
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    
+    ' display the error message
+    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+    
+End Sub
+
+''' <summary>   Handles work sheet change events. </summary>
+''' <remarks> The check box change event also causes a click event.
+'''           This method issues the click event on actual click.
+'''              Note: Make sure to not implement the click event,
+Private Sub OneWorksheetChange(ByVal a_range As Range)
+
+    ' If Not Intersect(a_range, Me.Range("H5")) Is Nothing Then
+    ' this uses fewer resources than Intersect,
+    ' which will be helpful if your worksheet changes a lot.
+    Select Case a_range.Address
+
+        Case m_sessionReadTimeoutCell
+            This.ViewModel.SessionReadTimeout = Range(m_sessionReadTimeoutCell).Value
+        Case m_inputHostCell
+            This.ViewModel.Host = Range(m_inputHostCell).Value
+        Case m_inputPortCell
+            This.ViewModel.Port = Range(m_inputPortCell).Value
+        Case m_socketAddressCell
+            This.ViewModel.SocketAddress = Range(m_socketAddressCell).Value
+        Case m_socketIdCell
+            This.ViewModel.SocketId = Range(m_socketIdCell).Value
+        Case m_socketReceiveTimeoutCell
+            This.ViewModel.SocketReceiveTimeout = Range(m_socketReceiveTimeoutCell).Value
+            
+        Case m_connectedCell
+            ' connected is read only
+            ' This.ViewModel.Connected = Range(m_connectedCell).Value
+        Case m_sentMessageCell
+            This.ViewModel.SentMessage = Range(m_sentMessageCell).Value
+        Case m_receivedMessageLengthCell
+            This.ViewModel.ReceivedMessageLength = Range(m_receivedMessageLengthCell).Value
+        Case m_receivedMessageCell
+            This.ViewModel.ReceivedMessage = Range(m_receivedMessageCell).Value
+        Case m_elapsedTimeCell
+            This.ViewModel.ElapsedTimeCaption = Range(m_elapsedTimeCell).Value
+        Case m_elapsedTimeFormatCell
+            This.ViewModel.ElapsedTimeFormat = Range(m_elapsedTimeFormatCell).Value
+        Case m_lastMessageCell
+            This.ViewModel.LastMessage = Range(m_lastMessageCell).Value
+        Case m_lastErrorMessageCell
+            This.ViewModel.LastErrorMessage = Range(m_lastErrorMessageCell).Value
+        Case m_serialPollCell
+            This.ViewModel.SerialPollByte = Range(m_serialPollCell).Value
+        Case m_statusByteCell
+            This.ViewModel.StatusByte = Range(m_statusByteCell).Value
+        Case m_standardByteCell
+            This.ViewModel.StandardByte = Range(m_standardByteCell).Value
+
+        Case m_srqCell
+            This.ViewModel.ServiceRequested = Range(m_srqCell).Value
+        Case m_gpibAddressCell
+            This.ViewModel.GpibAddress = Range(m_gpibAddressCell).Value
+        Case m_readTimeoutCell
+            This.ViewModel.GpibLanReadTimeout = Range(m_readTimeoutCell).Value
+        Case m_readAfterWriteEnabledCell
+            This.ViewModel.ReadAfterWriteEnabled = Range(m_readAfterWriteEnabledCell).Value
+
+        Case m_timerIntervalCell
+            This.ViewModel.TimerInterval = Range(m_timerIntervalCell).Value
+
+        Case m_readingFormatCell
+            This.ViewModel.MeasuredValueFormat = Range(m_readingFormatCell).Value
+        Case m_card1Cell
+            This.ViewModel.TopCard = Range(m_card1Cell).Value
+        Case m_card2Cell
+            This.ViewModel.TopCard = Range(m_card2Cell).Value
+        Case m_card1ScanListCell
+            This.ViewModel.TopCardFunctionScanList = Range(m_card1ScanListCell).Value
+        Case m_card2ScanListCell
+            This.ViewModel.BottomCardFunctionScanList = Range(m_card2ScanListCell).Value
+        Case m_inputsCell
+            This.ViewModel.FrontInputsCaption = Range(m_inputsCell).Value
+        Case m_channelNumberCell
+            This.ViewModel.SelectedChannelNumber = Range(m_channelNumberCell).Value
+        Case m_channelCountCell
+            This.ViewModel.ChannelCount = Range(m_channelCountCell).Value
+        Case m_functionNameCell
+            This.ViewModel.SenseFunctionCaption = Range(m_functionNameCell).Value
+        Case m_functionValueCell
+            This.ViewModel.MeasuredReading = Range(m_functionValueCell).Value
+        Case m_functionUnitCell
+            This.ViewModel.SenseFunctionUnit = Range(m_functionUnitCell).Value
+        Case m_externalTriggerStatusCell
+            This.ViewModel.MonitoringStatus = Range(m_externalTriggerStatusCell).Value
+        Case m_readingOffsetCell
+            This.ViewModel.ReadingOffset = Range(m_readingOffsetCell).Value
+
+    End Select
+
+End Sub
+
+
+''' <summary>   Handles work sheet change events. </summary>
+''' <remarks> The check box change event also causes a click event.
+'''           This method issues the click event on actual click.
+'''              Note: Make sure to not implement the click event,
+Private Sub Worksheet_Change(ByVal a_range As Range)
+
+    OnWorksheetChange a_range
+
+End Sub
 
