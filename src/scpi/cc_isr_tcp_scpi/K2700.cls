@@ -15,16 +15,17 @@ Implements cc_isr_Winsock.IConnectable
 Private WithEvents m_viSession As cc_isr_Ieee488.ViSession
 Attribute m_viSession.VB_VarHelpID = -1
 
-Private Type ThisData
+Private Type this_
     Device As cc_isr_Ieee488.Device
     ViSession As cc_isr_Ieee488.ViSession
     RouteSystem As RouteSystem
     ScpiSystem As ScpiSystem
+    SenseSystem As SenseSystem
     TriggerSystem As TriggerSystem
     ExtTrigInitiated As Boolean
 End Type
 
-Private This As ThisData
+Private This As this_
 
 ''' <summary>   The event that is raised upon completion of a channel measurement. </summary>
 ''' <param name="a_eventArgs">   An <see cref="ChannelReadingEventArgs"/> event args. </param>
@@ -47,6 +48,9 @@ Private Sub Class_Initialize()
     
     Set This.ScpiSystem = New ScpiSystem
     This.ScpiSystem.Initialize This.ViSession
+    
+    Set This.SenseSystem = New SenseSystem
+    This.SenseSystem.Initialize This.ViSession
     
     Set This.RouteSystem = New RouteSystem
     This.RouteSystem.Initialize This.ViSession
@@ -83,6 +87,12 @@ End Property
 ''' <value>   An <see cref="ScpiSystem"/>. </returns>
 Public Property Get ScpiSystem() As ScpiSystem
     Set ScpiSystem = This.ScpiSystem
+End Property
+
+''' <summary>   Returns a reference to the <see cref="SenseSystem"/> subsystem. </summary>
+''' <value>   An <see cref="SenseSystem"/>. </returns>
+Public Property Get SenseSystem() As SenseSystem
+    Set SenseSystem = This.SenseSystem
 End Property
 
 ''' <summary>   Initializes the k2700 legacy mode. </summary>
@@ -214,7 +224,7 @@ Public Sub RestoreContinuousReading()
     This.ViSession.WriteLine ":INIT:CONT OFF"
     
     ' set the trigger source to immediate.
-    This.TriggerSystem.SetTriggerSource TriggerSource.Immediate
+    This.TriggerSystem.SourceSetter TriggerSource.Immediate
 
     This.ViSession.WriteLine ":INIT:CONT ON"
 
@@ -229,7 +239,7 @@ Public Sub ConfigureSingleFunctionReading(ByVal a_function As String)
     
     ' set the trigger source to immediate.
     ' This.ViSession.WriteLine ":TRIG:SOUR IMM"
-    This.TriggerSystem.SetTriggerSource TriggerSource.Immediate
+    This.TriggerSystem.SourceSetter TriggerSource.Immediate
     This.ViSession.WriteLine ":INIT:CONT OFF"
     This.ViSession.WriteLine ":SAMP:COUN 1"
     This.ViSession.WriteLine ":TRIG:COUN 1"
@@ -321,7 +331,7 @@ Public Sub ConfigureExternalTriggerReading(ByVal a_function As String, ByVal a_f
     This.ViSession.WriteLine ":TRIG:COUN 1"
     
     ' set the trigger source to external
-    This.TriggerSystem.SetTriggerSource TriggerSource.External
+    This.TriggerSystem.SourceSetter TriggerSource.External
     ' This.ViSession.WriteLine ":TRIG:SOUR EXT"
     
     ' enable the detection of externally triggered measurement available.

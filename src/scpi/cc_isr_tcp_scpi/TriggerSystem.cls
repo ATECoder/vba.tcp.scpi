@@ -13,20 +13,20 @@ Attribute VB_Exposed = False
 
 Option Explicit
 
-Private Type ThisData
+Private Type this_
     ViSession As cc_isr_Ieee488.ViSession
     Source As cc_isr_Tcp_Scpi.TriggerSource
 End Type
 
-Private This As ThisData
+Private This As this_
 
 ''' <summary>   Values that represent trigger sources. </summary>
 Public Enum TriggerSource
-    ''' <summary>   An enum constant representing the none option. </summary>
+    ''' <summary>   An enum constant representing the none trigger source. </summary>
     None = 0
-    ''' <summary>   An enum constant representing the immediate option. </summary>
+    ''' <summary>   An enum constant representing the immediate trigger source. </summary>
     Immediate = 1
-    ''' <summary>   An enum constant representing the external trigger option. </summary>
+    ''' <summary>   An enum constant representing the external trigger source. </summary>
     External = 2
 End Enum
 
@@ -58,7 +58,7 @@ End Property
 
 ''' <summary>   Sets the <see cref="TriggerSource"/>. </summary>
 ''' <param name="a_value">   [<see cref="TriggerSource"/>] the trigger source. </param>
-Public Sub SetTriggerSource(ByVal a_value As cc_isr_Tcp_Scpi.TriggerSource)
+Public Sub SourceSetter(ByVal a_value As cc_isr_Tcp_Scpi.TriggerSource)
 
     If cc_isr_Tcp_Scpi.TriggerSource.Immediate = a_value Then
         This.ViSession.WriteLine ":TRIG:SOUR IMM"
@@ -71,3 +71,22 @@ Public Sub SetTriggerSource(ByVal a_value As cc_isr_Tcp_Scpi.TriggerSource)
     This.Source = a_value
     
 End Sub
+
+''' <summary>   Gets the <see cref="TriggerSource"/>. </summary>
+''' <param name="a_value">   [<see cref="TriggerSource"/>] the trigger source. </param>
+Public Function SourceGetter() As cc_isr_Tcp_Scpi.TriggerSource
+
+    Dim p_source As String
+    p_source = This.ViSession.QueryLine(":TRIG:SOUR?")
+    Select Case p_source
+        Case "IMM"
+            This.Source = TriggerSource.Immediate
+        Case "EXT"
+            This.Source = TriggerSource.External
+        Case Else
+            This.Source = TriggerSource.None
+    End Select
+    SourceGetter = This.Source
+    
+End Function
+

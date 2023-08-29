@@ -13,7 +13,7 @@ Attribute VB_Exposed = True
 
 Option Explicit
 
-Private Type ThisData
+Private Type this_
     Name As String
     Capacity As Integer
     SlotNumber As Integer
@@ -23,7 +23,7 @@ Private Type ThisData
     FunctionScanList As String
 End Type
 
-Private This As ThisData
+Private This As this_
 
 ''' <summary>   Initializes a new card. </summary>
 ''' <param name="a_name">       The card name. </param>

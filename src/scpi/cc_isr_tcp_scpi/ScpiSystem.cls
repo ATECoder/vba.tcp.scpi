@@ -13,11 +13,11 @@ Attribute VB_Exposed = True
 
 Option Explicit
 
-Private Type ThisData
+Private Type this_
     ViSession As cc_isr_Ieee488.ViSession
 End Type
 
-Private This As ThisData
+Private This As this_
 
 ''' <summary>   Returns a reference to the <see cref="ScpiSystem"/>. </summary>
 ''' <param name="a_session">    [<see cref="<see cref="cc_isr_IEEE488.VISession"/>"/>] A connected session. </param>

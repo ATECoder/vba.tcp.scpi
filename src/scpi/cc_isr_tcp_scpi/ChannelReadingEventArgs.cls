@@ -13,12 +13,12 @@ Attribute VB_Exposed = True
 
 Option Explicit
 
-Private Type ThisData
+Private Type this_
     ChannelNumber As Integer
     Reading As String
 End Type
 
-Private This As ThisData
+Private This As this_
 
 ''' <summary>   Initializes and returns the event arguments. </summary>
 ''' <para name="a_channelNumber">   [Integer] The channel number. </param>
