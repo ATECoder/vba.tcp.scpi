@@ -92,6 +92,7 @@ Private Type this_
     BottomCard As String
     TopCardFunctionScanList As String
     BottomCardFunctionScanList As String
+    ReadingBeepEnabled As Boolean
     FrontInputsRequired As Boolean
     FrontInputsValue As Boolean
     FrontInputsCaption As String
@@ -176,6 +177,9 @@ Public Sub Initialize()
     ' the main workbook is activated.
     ' Trap errors to the error handler
     On Error GoTo err_Handler
+    
+    ' clear the last error message
+    Me.LastErrorMessage = VBA.vbNullString
 
     ' populate the combo box commands
     PopulateScpiCommands
@@ -766,7 +770,6 @@ Public Property Let MessageToSendExecutable(ByVal a_value As Boolean)
         Me.OnPropertyChanged "MessageToSendExecutable"
     End If
 End Property
-
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
@@ -1902,6 +1905,22 @@ Public Property Let FrontInputsRequired(ByVal a_value As Boolean)
     End If
 End Property
 
+''' <summary>   Gets the instrumnent beep souncd on each reading is enabled. </summary>
+''' <remarks>   True if instrumnent beep souncd on each reading is enabled. </remarks>
+''' <value>   [Boolean]. </value>
+Public Property Get ReadingBeepEnabled() As Boolean
+    ReadingBeepEnabled = This.ReadingBeepEnabled
+End Property
+
+''' <summary>   Gets the instrumnent beep souncd on each reading is enabled. </summary>
+''' <param name="a_value">   [Boolean] instrumnent beep souncd on each reading is enabled. </value>
+Public Property Let ReadingBeepEnabled(ByVal a_value As Boolean)
+    If This.ReadingBeepEnabled <> a_value Then
+        This.ReadingBeepEnabled = a_value
+        Me.OnPropertyChanged "ReadingBeepEnabled"
+    End If
+End Property
+
 ''' <summary>   Gets the Front Inputs Value. </summary>
 ''' <remarks>   True if front inputs; otherwise, Rear inputs. </remarks>
 ''' <value>   [Boolean]. </value>
@@ -2392,6 +2411,39 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
+''' <summary>   Restores the instrument to its known state in case the instrument power
+'''             was toggled. </summary>
+''' <remakrs>   This method attempts to restore the instrument to a known state in case it is
+'''             powered off while the program is active. </remakrs>
+Public Sub RestoreKnownState()
+
+    If VBA.vbNullString = This.SenseFunctionName Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".RestoreKnownState", _
+            " A sense function must be specified for restoring the instrument state."
+    
+    If This.K2700 Is Nothing Then Me.Initialize
+    
+    If Not Me.Connected Then Me.ToggleConnectionCommand True
+    
+    If Not Me.Connected Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".RestoreKnownState", _
+            " Failed connecting to " & This.Host & ":" & VBA.CStr(This.Port) & "."
+    
+    ' validate the sense function
+    Dim p_senseFunction  As String: p_senseFunction = This.ViSession.QueryLine(":FUNC?")
+    If 1 <> InStr(1, This.SenseFunctionName, p_senseFunction, vbTextCompare) Then
+        
+        ' if the sense function does not match, initialize the instrument
+        ' connection state.
+        
+        OnInstrumentConnected
+    
+    End If
+    
+End Sub
+
 ''' <summary>   Returns true if the inputs are valid for front or rear settings. </summary>
 Public Function ValidateInputs() As Boolean
 
@@ -2427,8 +2479,13 @@ Public Sub ConfigureExternalTriggerReadingCommand()
     Const p_procedureName = "ConfigureExternalTriggerReadingCommand"
 
     ' Trap errors to the error handler
+    
     On Error GoTo err_Handler
 
+    ' restor the instrument state if it had a power toggle.
+    
+    Me.RestoreKnownState
+    
     ' exit if inputs are not in the correct settings
 
     If Me.ValidateInputs() Then
@@ -2501,6 +2558,10 @@ Public Sub ConfigureImmediateTriggerReadingsCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
+    ' restor the instrument state if it had a power toggle.
+    
+    Me.RestoreKnownState
+
     ' exit if inputs are not in the correct settings
 
     If Me.ValidateInputs() Then
@@ -2542,7 +2603,7 @@ err_Handler:
 End Sub
 
 ''' <summary> Queries the Inputs status. </summary>
-Private Sub QueryInputsCommand()
+Public Sub QueryInputsCommand()
 
     Const p_procedureName = "QueryInputsCommand"
 
@@ -2738,12 +2799,27 @@ err_Handler:
 End Sub
 
 ''' <summary>   Handles the external trigger toggle button. </summary>
-Public Sub MonitorExtTrigToggleCommand()
+''' <param name="a_enabeld">   [Optional, Boolean] Toggles the enabeld state </param>
+Public Sub MonitorExtTrigToggleCommand(Optional ByVal a_enabled As Boolean)
 
     Const p_procedureName = "MonitorExtTrigToggleCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
+    
+    ' check if the optional value is provided.
+    
+    If Not VBA.IsMissing("a_enabled") Then
+    
+        ' if the argument is provided, make it so
+        
+        Me.ExternalTrigMonitoringEnabled = a_enabled
+        
+        ' and take some time for it to take effect.
+        
+        cc_isr_Core_IO.Factory.NewStopwatch.Wait 100
+        
+    End If
 
     If Me.ExternalTrigMonitoringEnabled Then
 
@@ -2803,6 +2879,8 @@ Private Sub m_k2700_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Channel
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
+    
+    If Me.ReadingBeepEnabled Then This.K2700.ScpiSystem.Beep
 
     ' notify the observer of a channel measurements
     If VBA.vbNullString = a_eventArgs.Reading Then
@@ -2814,10 +2892,9 @@ Private Sub m_k2700_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Channel
     If Me.AutoIncrementChannelNoEnabled Then
 
         ' increment the resistance for the next reading
-        This.CurrentChannelNumber = a_eventArgs.ChannelNumber + 1
-        If This.CurrentChannelNumber > Me.ChannelCount Then
-            This.CurrentChannelNumber = 1
-        End If
+        
+        This.CurrentChannelNumber = IIf(a_eventArgs.ChannelNumber < Me.ChannelCount, _
+            a_eventArgs.ChannelNumber + 1, 1)
 
     End If
 
@@ -2842,56 +2919,47 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Handles the K2700 <see cref="cc_isr_Tcp_Scpi.K2700.ConnectionChanged"/> event. </summary>
-''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/>] event arguments. </param>
-Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
+''' <summary>   Process the initial connection instrument actions. </summary>
+Private Sub OnInstrumentConnected()
 
-    Const p_procedureName = "m_k2700_ConnectionChanged"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    If a_eventArgs.Connected Then
-
-        ' report the socket number
-        Me.SocketAddress = This.ViSession.SocketAddress
-        Me.SocketId = This.ViSession.SocketId
+    ' report the socket number
+    Me.SocketAddress = This.ViSession.SocketAddress
+    Me.SocketId = This.ViSession.SocketId
     
-        If This.ViSession.UsingGpibLan Then
+    If This.ViSession.UsingGpibLan Then
+        Me.ReadAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
+        If Me.ReadAfterWriteEnabled Then
+            ' for the 2700 with needs this off
+            This.ViSession.GpibLan.ReadAfterWriteEnabledSetter False
             Me.ReadAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
-            If Me.ReadAfterWriteEnabled Then
-                ' for the 2700 with needs this off
-                This.ViSession.GpibLan.ReadAfterWriteEnabledSetter False
-                Me.ReadAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
-            End If
         End If
-    
-        This.ViSession.GpibLan.SelectiveDeviceClear
-        This.Device.ResetKnownState
-        This.Device.ClearExecutionState
-    
-        Me.TopCard = This.K2700.CardName(1)
-        Me.BottomCard = This.K2700.CardName(2)
-    
-        If VBA.vbNullString <> This.SenseFunctionName Then
-        
-            ' set the instrument function scan list
-            This.K2700.DefineFunctionScanLists This.SenseFunctionName
-        
-            ' show the results.
-            Me.TopCardFunctionScanList = This.K2700.FunctionScanList(1)
-            Me.BottomCardFunctionScanList = This.K2700.FunctionScanList(2)
-        End If
-
-        ' clear any errors
-        This.Device.ClearExecutionState
-
-    Else
-
-        Me.SocketAddress = vbNullString
-        Me.SocketId = 0
-    
     End If
+    
+    This.ViSession.GpibLan.SelectiveDeviceClear
+    This.Device.ResetKnownState
+    This.Device.ClearExecutionState
+    
+    Me.TopCard = This.K2700.CardName(1)
+    Me.BottomCard = This.K2700.CardName(2)
+    
+    If VBA.vbNullString <> This.SenseFunctionName Then
+    
+        ' set the instrument function scan list
+        This.K2700.DefineFunctionScanLists This.SenseFunctionName
+    
+        ' show the results.
+        Me.TopCardFunctionScanList = This.K2700.FunctionScanList(1)
+        Me.BottomCardFunctionScanList = This.K2700.FunctionScanList(2)
+    End If
+
+    ' clear any errors
+    This.Device.ClearExecutionState
+
+End Sub
+
+''' <summary>   Process the initial view model connection actions.
+'''             This sets the executable action.  </summary>
+Private Sub OnViewModelConnected()
 
     Me.ClearReadingsExecutable = True
 
@@ -2927,6 +2995,30 @@ Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Connec
     Me.GpibAddressSetExecutable = p_GpibLanConnected
     Me.ReadTimeoutGetExecutable = p_GpibLanConnected
     Me.ReadTimeoutSetExecutable = p_GpibLanConnected
+
+End Sub
+
+''' <summary>   Handles the K2700 <see cref="cc_isr_Tcp_Scpi.K2700.ConnectionChanged"/> event. </summary>
+''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/>] event arguments. </param>
+Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
+
+    Const p_procedureName = "m_k2700_ConnectionChanged"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    If a_eventArgs.Connected Then
+
+        OnInstrumentConnected
+
+    Else
+
+        Me.SocketAddress = vbNullString
+        Me.SocketId = 0
+    
+    End If
+
+    OnViewModelConnected
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -3344,6 +3436,9 @@ Private Sub IConnectable_Dispose()
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
+
+    ' clear the last error message
+    Me.LastErrorMessage = VBA.vbNullString
 
     Set This.Stopwatch = Nothing
 

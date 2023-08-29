@@ -527,9 +527,9 @@ Private Sub ImmediateTriggerOptionButton_Change()
         On Error GoTo 0
 
         ' Commands for click
-        If ImmediateTriggerOptionButton.Value Then _
+        If ImmediateTriggerOptionButton.Value Then
             This.ViewModel.ConfigureImmediateTriggerReadingsCommand
-        
+        End If
     Else
 
         On Error GoTo 0
@@ -630,18 +630,14 @@ Private Sub MonitorExtTrigToggleButton_Change()
         On Error GoTo 0
 
         ' Commands for click
-        This.ViewModel.ExternalTriggerModeEnabled = MonitorExtTrigToggleButton.Value
-        cc_isr_Core_IO.Factory.NewStopwatch.Wait 100
-        This.ViewModel.MonitorExtTrigToggleCommand
+        This.ViewModel.MonitorExtTrigToggleCommand MonitorExtTrigToggleButton.Value
         
     Else
 
         On Error GoTo 0
 
         ' Commands for change from within the sheet
-        This.ViewModel.ExternalTriggerModeEnabled = MonitorExtTrigToggleButton.Value
-        cc_isr_Core_IO.Factory.NewStopwatch.Wait 100
-        This.ViewModel.MonitorExtTrigToggleCommand
+        This.ViewModel.MonitorExtTrigToggleCommand MonitorExtTrigToggleButton.Value
 
     End If
     
@@ -657,9 +653,7 @@ err_Handler:
     On Error GoTo 0
     
     ' Commands for change from outside the sheet
-    This.ViewModel.ExternalTriggerModeEnabled = MonitorExtTrigToggleButton.Value
-    cc_isr_Core_IO.Factory.NewStopwatch.Wait 100
-    This.ViewModel.MonitorExtTrigToggleCommand
+    This.ViewModel.MonitorExtTrigToggleCommand MonitorExtTrigToggleButton.Value
     
 End Sub
 
@@ -729,7 +723,7 @@ Public Sub PopulateFunctionComboBox()
     Dim p_item As Variant
     Dim p_senseFunction As String
     For Each p_item In This.ViewModel.SenseFunctions
-        p_senseFunction = VBA.sctr(p_item)
+        p_senseFunction = VBA.CStr(p_item)
         Me.FunctionComboBox.AddItem p_senseFunction
         If "FRES" = p_senseFunction Then
             p_fourWireResistanceIndex = Me.FunctionComboBox.Count
@@ -770,9 +764,14 @@ End Sub
 ''' <param name="a_value">       [double] the value. </param>
 Private Sub SetReading(ByVal a_channelNo As Integer, ByVal a_value As Double)
 
-    Dim p_rowNo As Integer: p_rowNo = m_measurementTopRow + a_channelNo - 1
-    Range(m_measurementNoCol & VBA.CStr(p_rowNo)).Value = CStr(a_channelNo)
-    Range(m_measurementValueCol & VBA.CStr(p_rowNo)).Value = Format(a_value, Me.ReadingFormat)
+    Dim p_rowNo As String: p_rowNo = VBA.CStr(m_measurementTopRow + a_channelNo - 1)
+    Dim p_cell As String
+    
+    p_cell = m_measurementNoCol & p_rowNo
+    Range(p_cell).Value = VBA.CStr(a_channelNo)
+    
+    p_cell = m_measurementValueCol & p_rowNo
+    Range(p_cell).Value = Format(a_value, This.ViewModel.MeasuredValueFormat)
     
 End Sub
 
@@ -789,16 +788,6 @@ Private Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Cha
         SetReading a_eventArgs.ChannelNumber, -1#
     Else
         SetReading a_eventArgs.ChannelNumber, CDbl(a_eventArgs.Reading)
-    End If
-    
-    If Me.AutoIncrementChannelNoEnabled Then
-    
-        ' increment the resistance for the next reading
-        This.CurrentChannelNumber = a_eventArgs.ChannelNumber + 1
-        If This.CurrentChannelNumber > Me.ChannelCount Then
-            This.CurrentChannelNumber = 1
-        End If
-    
     End If
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -825,70 +814,6 @@ End Sub
 ''' <summary>   Handles the <see cref="cc_isr_Tcp_Scpi.Demo.K2700ViewModel.ConnectionChanged"/> event. </summary>
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/>] event arguments. </param>
 Private Sub m_viewModel_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
-
-    Const p_procedureName = "m_viewModel_ConnectionChanged"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.EnableControls a_eventArgs.Connected
-
-    If a_eventArgs.Connected Then
-    
-        ' report the socket number
-        Range(m_socketAddressCell).Value = This.ViSession.SocketAddress
-        Range(m_socketIdCell).Value = This.ViSession.SocketId
-        
-        If This.ViSession.UsingGpibLan Then
-            Me.ReadAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
-            If Me.ReadAfterWriteEnabled Then
-                ' for the 2700 with needs this off
-                This.ViSession.GpibLan.ReadAfterWriteEnabledSetter False
-                Me.ReadAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
-            End If
-        End If
-        
-        This.ViSession.GpibLan.SelectiveDeviceClear
-        This.Device.ResetKnownState
-        This.Device.ClearExecutionState
-        
-        Range(m_card1Cell).Value = This.K2700.CardName(1)
-        Range(m_card2Cell).Value = This.K2700.CardName(2)
-        
-        This.K2700.DefineFunctionScanLists Me.FunctionComboBox.Text
-        
-        Range(m_card1ScanListCell).Value = This.K2700.FunctionScanList(1)
-        Range(m_card2ScanListCell).Value = This.K2700.FunctionScanList(2)
-    
-        ' clear any errors
-        This.Device.ClearExecutionState
-
-    Else
-    
-        Range(m_socketAddressCell).Value = vbNullString
-        Range(m_socketIdCell).Value = vbNullString
-        
-    End If
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
-    
-    ' display the error message
-    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-    
 End Sub
 
 ''' <summary>   Handles the <see cref="cc_isr_Tcp_Scpi.Demo.K2700ViewModel.ConnectionChanging"/> event. </summary>
@@ -1127,14 +1052,11 @@ Private Sub Worksheet_Activate()
     If Not This.Initialized Then
     
         Set This.ViewModel = K2700ViewModel
+        
         This.ViewModel.Initialize
         
-        m_viewModel_ConnectionChanged cc_isr_Winsock.Factory.NewConnectionChangedEventArgs.Initialize()
-
-        Set This.Device = This.K2700.Device
-        Set This.ViSession = This.Device.ViSession
-        
-        Set This.Stopwatch = cc_isr_Core_IO.Factory.NewStopwatch()
+        ' set focus to the last message cell to clear all focus info
+        Range(m_lastMessageCell).Select
     
     End If
     
