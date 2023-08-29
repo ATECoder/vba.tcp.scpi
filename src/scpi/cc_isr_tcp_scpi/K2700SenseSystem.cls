@@ -6,7 +6,7 @@ Attribute VB_Name = "K2700SenseSystem"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ''' <summary>   K2700 sense Subsystem Implementation. </summary>
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -

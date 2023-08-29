@@ -47,6 +47,8 @@ Attribute m_k2700.VB_VarHelpID = -1
 
 Private Type this_
 
+    Tracer As IErrTracer
+    
     Stopwatch As Stopwatch
 
     K2700 As K2700
@@ -67,7 +69,7 @@ Private Type this_
     Port As Integer
     SocketAddress As String
     SocketId As Integer
-    ReceiveTimeout As Integer
+    SocketReceiveTimeout As Integer
 
     ' ieee488 control properties
     SessionReadTimeout As Integer
@@ -85,7 +87,7 @@ Private Type this_
     SerialPollByte As Integer
     GpibAddress As Integer
     ReadAfterWriteEnabled As Boolean
-    ReadTimeout As Integer
+    GpibLanReadTimeout As Integer
     
     ' 2700 properties
     TopCard As String
@@ -119,7 +121,7 @@ Private Type this_
 
     ' Service request monitoring properties
     ' this must be enable before stating monitoring.
-    ExternalTrigMonitoringEnabled As Boolean
+    ExternalTrigMonitoringActive As Boolean
     MonitoringState As String
     AutoIncrementChannelNoEnabled As Boolean
     SingleReadEnabled As Boolean
@@ -135,6 +137,7 @@ Private Type this_
     QueryExecutable As Boolean
     ReadExecutable As Boolean
     ReadStatusByteExecutable As Boolean
+    ReadStatusAfterWriteExecutable As Boolean
     ReadStandardEventStatusExecutable As Boolean
     ResetKnownStateExecutable As Boolean
     ServiceRequestedExecutable As Boolean
@@ -160,8 +163,8 @@ Private Type this_
     SerialPollExecutable As Boolean
     GpibAddressGetExecutable As Boolean
     GpibAddressSetExecutable As Boolean
-    ReadTimeoutGetExecutable As Boolean
-    ReadTimeoutSetExecutable As Boolean
+    GpibLanReadTimeoutGetExecutable As Boolean
+    GpibLanReadTimeoutSetExecutable As Boolean
 
 
 End Type
@@ -169,14 +172,14 @@ End Type
 Private This As this_
 
 ''' <summary>   Initialize this worksheet. </summary>
-Public Sub Initialize()
+''' <param name="a_tracer">   <see cref="IErrTracer"/> implementation. </param>
+''' <returns>   [<see cref="K2700ViewModel"/>]. </returns>
+Public Function Initialize(ByVal a_tracer As IErrTracer) As K2700ViewModel
 
-    Const p_procedureName = "Initialize"
-
-    ' Error are trapped to prevent crashes because this method gets started when
-    ' the main workbook is activated.
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
+    ' store reference to the tracer in case we need to restore the
+    ' connection
+    
+    This.Tracer = a_tracer
     
     ' clear the last error message
     Me.LastErrorMessage = VBA.vbNullString
@@ -187,10 +190,7 @@ Public Sub Initialize()
     ' populate the function box commands
     PopulateSenseFunctions
 
-    Dim p_errTracer As ErrTracer
-    Set p_errTracer = New ErrTracer
-    p_errTracer.Initialize Me
-    Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize(p_errTracer)
+    Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize(a_tracer)
     Set m_k2700 = This.K2700
     Set This.Device = This.K2700.Device
     Set This.ViSession = This.Device.ViSession
@@ -200,26 +200,9 @@ Public Sub Initialize()
 
     Me.ToggleConnectionExecutableSetter
     
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
+    Set Initialize = Me
 
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
+End Function
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
@@ -293,16 +276,16 @@ End Property
 
 ''' <summary>   Gets the socket receive timeout in milliseconds. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get ReceiveTimeout() As Integer
-    ReceiveTimeout = This.ReceiveTimeout
+Public Property Get SocketReceiveTimeout() As Integer
+    SocketReceiveTimeout = This.SocketReceiveTimeout
 End Property
 
 ''' <summary>   Sets the receive timeout in milliseconds. </summary>
 ''' <param name="a_value">   [Integer] the timeout value in milliseconds. </value>
-Public Property Let ReceiveTimeout(ByVal a_value As Integer)
-    If This.ReceiveTimeout <> a_value Then
-        This.ReceiveTimeout = a_value
-        Me.OnPropertyChanged "ReceiveTimeout"
+Public Property Let SocketReceiveTimeout(ByVal a_value As Integer)
+    If This.SocketReceiveTimeout <> a_value Then
+        This.SocketReceiveTimeout = a_value
+        Me.OnPropertyChanged "SocketReceiveTimeout"
         Me.ToggleConnectionExecutableSetter
     End If
 End Property
@@ -352,7 +335,7 @@ End Property
 Friend Sub ToggleConnectionExecutableSetter()
     Me.ToggleConnectionExecutable = VBA.vbNullString <> Me.Host _
         And (5025 = This.Port Or 1234 = This.Port) _
-        And 0 < This.ReceiveTimeout
+        And 0 < This.SocketReceiveTimeout
 End Sub
 
 ''' <summary>   Gets the condition indicating that the Toggle Connection command
@@ -395,7 +378,7 @@ Public Sub ToggleConnectionCommand(ByVal a_connect As Boolean)
     
     ElseIf a_connect And Not Me.Connected Then
 
-        This.K2700.OpenConnection This.Host, This.Port, This.ReceiveTimeout
+        This.K2700.OpenConnection This.Host, This.Port, This.SocketReceiveTimeout
     
         This.ViSession.SessionReadTimeout = This.SessionReadTimeout
     
@@ -719,6 +702,23 @@ Public Property Let ReadStatusByteExecutable(ByVal a_value As Boolean)
     If This.ReadStatusByteExecutable <> a_value Then
         This.ReadStatusByteExecutable = a_value
         Me.OnPropertyChanged "ReadStatusByteExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Read Status After Write command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Read Status After Write command can be executed. </value>
+Public Property Get ReadStatusAfterWriteExecutable() As Boolean
+    ReadStatusAfterWriteExecutable = This.ReadStatusAfterWriteExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Read Status After Write command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Read Status After Write command can be executed. </param>
+Public Property Let ReadStatusAfterWriteExecutable(ByVal a_value As Boolean)
+    If This.ReadStatusAfterWriteExecutable <> a_value Then
+        This.ReadStatusAfterWriteExecutable = a_value
+        Me.OnPropertyChanged "ReadStatusAfterWriteExecutable"
     End If
 End Property
 
@@ -1119,17 +1119,17 @@ End Property
 ''' <summary>   Gets the GPIB-Lan Device timeout in milliseconds for reading from the
 '''             instrument to the Gpib-Lan device using the <c>++read</c> command. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get ReadTimeout() As Integer
-    ReadTimeout = This.ReadTimeout
+Public Property Get GpibLanReadTimeout() As Integer
+    GpibLanReadTimeout = This.GpibLanReadTimeout
 End Property
 
 ''' <summary>   Sets the GPIB-Lan Device timeout in milliseconds for reading from the
 '''             instrument to the Gpib-Lan device using the <c>++read</c> command. </summary>
 ''' <param name="a_value">   [Integer] the timeout value in milliseconds. </value>
-Public Property Let ReadTimeout(ByVal a_value As Integer)
-    If This.ReadTimeout <> a_value Then
-        This.ReadTimeout = a_value
-        Me.OnPropertyChanged "ReadTimeout"
+Public Property Let GpibLanReadTimeout(ByVal a_value As Integer)
+    If This.GpibLanReadTimeout <> a_value Then
+        This.GpibLanReadTimeout = a_value
+        Me.OnPropertyChanged "GpibLanReadTimeout"
         Me.ToggleConnectionExecutableSetter
     End If
 End Property
@@ -1296,32 +1296,32 @@ End Property
 ''' <summary>   Gets the condition indicating that the Read Timeout Get command
 '''             can be executed. </summary>
 ''' <value>   [Boolean] True if the Read Timeout Get command can be executed. </value>
-Public Property Get ReadTimeoutGetExecutable() As Boolean
-    ReadTimeoutGetExecutable = This.ReadTimeoutGetExecutable
+Public Property Get GpibLanReadTimeoutGetExecutable() As Boolean
+    GpibLanReadTimeoutGetExecutable = This.GpibLanReadTimeoutGetExecutable
 End Property
 
 ''' <summary>   Gets the Read Timeout Get command condition. </summary>
 ''' <param name="a_value">   [Boolean] True if the Read Timeout Get command can be executed. </param>
-Public Property Let ReadTimeoutGetExecutable(ByVal a_value As Boolean)
-    If This.ReadTimeoutGetExecutable <> a_value Then
-        This.ReadTimeoutGetExecutable = a_value
-        Me.OnPropertyChanged "ReadTimeoutGetExecutable"
+Public Property Let GpibLanReadTimeoutGetExecutable(ByVal a_value As Boolean)
+    If This.GpibLanReadTimeoutGetExecutable <> a_value Then
+        This.GpibLanReadTimeoutGetExecutable = a_value
+        Me.OnPropertyChanged "GpibLanReadTimeoutGetExecutable"
     End If
 End Property
 
 ''' <summary>   Gets the condition indicating that the Read Timeout Set command
 '''             can be executed. </summary>
 ''' <value>   [Boolean] True if the Read Timeout Set command can be executed. </value>
-Public Property Get ReadTimeoutSetExecutable() As Boolean
-    ReadTimeoutSetExecutable = This.ReadTimeoutSetExecutable
+Public Property Get GpibLanReadTimeoutSetExecutable() As Boolean
+    GpibLanReadTimeoutSetExecutable = This.GpibLanReadTimeoutSetExecutable
 End Property
 
 ''' <summary>   Sets the Read Timeout Set command condition. </summary>
 ''' <param name="a_value">   [Boolean] True if the Read Timeout Set command can be executed. </param>
-Public Property Let ReadTimeoutSetExecutable(ByVal a_value As Boolean)
-    If This.ReadTimeoutSetExecutable <> a_value Then
-        This.ReadTimeoutSetExecutable = a_value
-        Me.OnPropertyChanged "ReadTimeoutSetExecutable"
+Public Property Let GpibLanReadTimeoutSetExecutable(ByVal a_value As Boolean)
+    If This.GpibLanReadTimeoutSetExecutable <> a_value Then
+        This.GpibLanReadTimeoutSetExecutable = a_value
+        Me.OnPropertyChanged "GpibLanReadTimeoutSetExecutable"
     End If
 End Property
 
@@ -1747,16 +1747,16 @@ err_Handler:
 End Sub
 
 ''' <summary>   Handles the Read Timeout get button click event. </summary>
-Public Sub ReadTimeoutGetCommand()
+Public Sub GpibLanReadTimeoutGetCommand()
 
-    Const p_procedureName = "ReadTimeoutGetCommand"
+    Const p_procedureName = "GpibLanReadTimeoutGetCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
     Me.RestartStopwatchCommand
 
-    Me.ReadTimeout = This.ViSession.GpibLan.ReadTimeoutGetter
+    Me.GpibLanReadTimeout = This.ViSession.GpibLan.ReadTimeoutGetter
 
     Me.ReadStopwatchCommand
 
@@ -1782,16 +1782,16 @@ err_Handler:
 End Sub
 
 ''' <summary>   Handles the Read Timeout set button click event. </summary>
-Public Sub ReadTimeoutSetCommand()
+Public Sub GpibLanReadTimeoutSetCommand()
 
-    Const p_procedureName = "ReadTimeoutSetCommand"
+    Const p_procedureName = "GpibLanReadTimeoutSetCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
     Me.RestartStopwatchCommand
 
-    This.ViSession.GpibLan.ReadTimeoutSetter Me.ReadTimeout
+    This.ViSession.GpibLan.ReadTimeoutSetter Me.GpibLanReadTimeout
 
     Me.ReadStopwatchCommand
 
@@ -2217,16 +2217,16 @@ End Property
 ''' <summary>   Gets the External Trigger Monitoring Enabled. </summary>
 ''' <remarks>   Indicates that front inputs are Value for this mode. </remarks>
 ''' <value>   [Boolean]. </value>
-Public Property Get ExternalTrigMonitoringEnabled() As Boolean
-    ExternalTrigMonitoringEnabled = This.ExternalTrigMonitoringEnabled
+Public Property Get ExternalTrigMonitoringActive() As Boolean
+    ExternalTrigMonitoringActive = This.ExternalTrigMonitoringActive
 End Property
 
 ''' <summary>   Sets the External Trigger Monitoring Enabled. </summary>
 ''' <param name="a_value">   [Boolean] the External Trigger Monitoring Enabled value. </value>
-Public Property Let ExternalTrigMonitoringEnabled(ByVal a_value As Boolean)
-    If This.ExternalTrigMonitoringEnabled <> a_value Then
-        This.ExternalTrigMonitoringEnabled = a_value
-        Me.OnPropertyChanged "ExternalTrigMonitoringEnabled"
+Public Property Let ExternalTrigMonitoringActive(ByVal a_value As Boolean)
+    If This.ExternalTrigMonitoringActive <> a_value Then
+        This.ExternalTrigMonitoringActive = a_value
+        Me.OnPropertyChanged "ExternalTrigMonitoringActive"
     End If
 End Property
 
@@ -2422,7 +2422,12 @@ Public Sub RestoreKnownState()
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".RestoreKnownState", _
             " A sense function must be specified for restoring the instrument state."
     
-    If This.K2700 Is Nothing Then Me.Initialize
+    If This.Tracer Is Nothing Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".RestoreKnownState", _
+            " An Error Tracer must be specified for restoring the instrument state."
+    
+    If This.K2700 Is Nothing Then Me.Initialize This.Tracer
     
     If Not Me.Connected Then Me.ToggleConnectionCommand True
     
@@ -2647,7 +2652,7 @@ Public Sub MeasureImmediatelyCommand()
 
     ' reinitialize if device not defined
     If Not This.K2700.Connected Then
-        ' This.K2700.InitializeLegacy Me.host, Me.port, Me.ReceiveTimeout
+        ' This.K2700.InitializeLegacy Me.host, Me.port, Me.SocketReceiveTimeout
     End If
 
     ' exit if inputs are not in the correct settings
@@ -2799,8 +2804,10 @@ err_Handler:
 End Sub
 
 ''' <summary>   Handles the external trigger toggle button. </summary>
-''' <param name="a_enabeld">   [Optional, Boolean] Toggles the enabeld state </param>
-Public Sub MonitorExtTrigToggleCommand(Optional ByVal a_enabled As Boolean)
+''' <param name="a_enabeld">   [Optional, Boolean] is true when the external trigger
+'''                            monitoring is active such as when the relevant
+'''                            toggle buutton is depressed. </param>
+Public Sub MonitorExtTrigToggleCommand(Optional ByVal a_activated As Boolean)
 
     Const p_procedureName = "MonitorExtTrigToggleCommand"
 
@@ -2809,11 +2816,11 @@ Public Sub MonitorExtTrigToggleCommand(Optional ByVal a_enabled As Boolean)
     
     ' check if the optional value is provided.
     
-    If Not VBA.IsMissing("a_enabled") Then
+    If Not VBA.IsMissing("a_activated") Then
     
         ' if the argument is provided, make it so
         
-        Me.ExternalTrigMonitoringEnabled = a_enabled
+        Me.ExternalTrigMonitoringActive = a_activated
         
         ' and take some time for it to take effect.
         
@@ -2821,7 +2828,7 @@ Public Sub MonitorExtTrigToggleCommand(Optional ByVal a_enabled As Boolean)
         
     End If
 
-    If Me.ExternalTrigMonitoringEnabled Then
+    If Me.ExternalTrigMonitoringActive Then
 
         Me.ImmediateTriggerOptionExecutable = False
         Me.ExternalTriggerOptionExecutable = False
@@ -2993,8 +3000,8 @@ Private Sub OnViewModelConnected()
     Me.ServiceRequestedExecutable = p_GpibLanConnected
     Me.GpibAddressGetExecutable = p_GpibLanConnected
     Me.GpibAddressSetExecutable = p_GpibLanConnected
-    Me.ReadTimeoutGetExecutable = p_GpibLanConnected
-    Me.ReadTimeoutSetExecutable = p_GpibLanConnected
+    Me.GpibLanReadTimeoutGetExecutable = p_GpibLanConnected
+    Me.GpibLanReadTimeoutSetExecutable = p_GpibLanConnected
 
 End Sub
 
@@ -3239,7 +3246,7 @@ Friend Sub OnMonitoringDone(ByVal a_infoMessage As String)
 
     ' finally, toggle off the trigger monitoring. This
     ' should be superfluous
-    Me.ExternalTrigMonitoringEnabled = False
+    Me.ExternalTrigMonitoringActive = False
 
 End Sub
 
@@ -3280,7 +3287,7 @@ Private Sub HandleTimerEvent()
     ' allow other events to occur
     VBA.DoEvents
 
-    Dim p_isDone As Boolean: p_isDone = Not Me.ExternalTrigMonitoringEnabled
+    Dim p_isDone As Boolean: p_isDone = Not Me.ExternalTrigMonitoringActive
 
     ' stop the timer.
     If p_isDone Then Me.PauseTimer

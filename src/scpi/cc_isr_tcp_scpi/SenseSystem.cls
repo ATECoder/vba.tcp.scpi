@@ -6,7 +6,7 @@ Attribute VB_Name = "SenseSystem"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ''' <summary>   A generic Sense Subsystem Implementation. </summary>
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
