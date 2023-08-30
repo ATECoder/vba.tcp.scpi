@@ -1,7 +1,30 @@
 # TODO
 
-View model:
-* clear last error when switching modes.
+
+git scpi:
+Get errors upon connecting.
+Tests: Add scpi system tests.
+Scpi system: rename error dequeue to Dequeue Device Error
+
+Ieee:
+hide the factory code window.
+
+Tests:
+Test connecting.
+Test no errors upon connecting.
+Test restoring known state.
+Test reading and parsing errors.
+Test all view model commands.
+
+
+test switching modes.
+
+
+
+
+This.ViSession.QueryLine(":SYST:ERR?")
+
+
 
 Use unit testsTest connecting,
 Use before all to determine if tests are inconclusive (i.e., instrument is off).

@@ -3092,7 +3092,10 @@ Private Sub OnInstrumentConnected()
     
     ' report any errors.
     
-    
+    Dim p_errors As String
+    If This.K2700.ScpiSystem.TryDequeueDeviceErrors(p_errors) Then
+        Me.LastErrorMessage = p_errors
+    End If
     
     ' clear any errors
     ' This.Device.ClearExecutionState
@@ -3148,7 +3151,7 @@ Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Connec
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
-
+    
     If a_eventArgs.Connected Then
 
         OnInstrumentConnected
@@ -3161,6 +3164,8 @@ Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Connec
     End If
 
     OnViewModelConnected
+    
+    OnConnectionChanged Connectable.Connected
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -3661,24 +3666,11 @@ Private Function IConnectable_OpenConnection(ByVal a_host As String, ByVal a_por
 
     If Not p_eventArgs.Cancel Then
 
-        Connectable.OpenConnection a_host, a_port, a_timeoutMs
-    
-        If Me.Connected Then
-    
-            If This.ViSession.UsingGpibLan Then
-                If This.ViSession.GpibLan.ReadAfterWriteEnabledGetter Then
-                    ' for the 2700 with needs this off
-                    This.ViSession.GpibLan.ReadAfterWriteEnabledSetter False
-                End If
-            End If
-        
-        End If
-    
-        OnConnectionChanged Connectable.Connected
+        Me.Connectable.OpenConnection a_host, a_port, a_timeoutMs
     
     End If
 
-    IConnectable_OpenConnection = Connectable.Connected
+    IConnectable_OpenConnection = Me.Connectable.Connected
 
 End Function
 
@@ -3700,13 +3692,11 @@ Private Function IConnectable_CloseConnection() As Boolean
    
     If Not p_args.Cancel Then
 
-        IConnectable_CloseConnection = Connectable.CloseConnection
-
-        OnConnectionChanged Connectable.Connected
+        IConnectable_CloseConnection = Me.Connectable.CloseConnection
 
     End If
 
-    IConnectable_CloseConnection = Not Connectable.Connected
+    IConnectable_CloseConnection = Not Me.Connectable.Connected
 
 End Function
 
@@ -3716,7 +3706,6 @@ End Function
 Private Sub OnConnectionChanged(ByVal a_isConnected As Boolean)
 
     IConnectable_OnConnectionChanged cc_isr_Winsock.Factory.NewConnectionChangedEventArgs.Initialize(a_isConnected)
-    OnConnectionChanged "Connected"
 
 End Sub
 

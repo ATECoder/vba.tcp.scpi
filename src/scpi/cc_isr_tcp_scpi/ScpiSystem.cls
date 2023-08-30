@@ -15,6 +15,8 @@ Option Explicit
 
 Private Type this_
     ViSession As cc_isr_Ieee488.ViSession
+    LastDeviceError As String
+    LastDeviceErrors As String
 End Type
 
 Private This As this_
@@ -44,31 +46,47 @@ Public Sub Beep()
     This.ViSession.WriteLine ("SYST:BEEP")
 End Sub
 
-''' <summary>   Gets the top error from the error queue. </summary>
-''' <value>   A String; the top error on the error queue. </value>
-Public Function ErrorDequeue() As Boolean
-    ErrorDequeue = This.ViSession.QueryLine(":SYST:ERR?")
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+'  Device errors
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   The last error that was dequeued from the device. </summary>
+''' <value>   [String] </value>
+Public Property Get LastDeviceError() As String
+    LastDeviceError = This.LastDeviceError
+End Property
+
+''' <summary>   The last errors that were dequeued from the device. </summary>
+''' <value>   [String] </value>
+Public Property Get LastDeviceErrors() As String
+    LastDeviceErrors = This.LastDeviceErrors
+End Property
+
+''' <summary>   Dequeues the top device error from the device error queue. </summary>
+''' <value>   [String] the top error on the error queue. </value>
+Public Function DequeueDeviceError() As String
+    This.LastDeviceError = This.ViSession.QueryLine(":SYST:ERR?")
+    DequeueDeviceError = This.LastDeviceError
 End Function
 
 ''' <summary>   Clears the error queue. </summary>
-Public Sub ErrorQueueClear()
+Public Sub ClearDeviceErrors()
     This.ViSession.WriteLine (":SYST:CLE")
 End Sub
 
-''' <summary>   Query INPUTS switch (0=rear, 1=front). </summary>
-''' <value>   [Boolean] true if the inputs are set to the front panel. </value>
-Public Function QueryFrontSwitch() As Boolean
-    QueryFrontSwitch = 1 = This.ViSession.QueryLine(":SYST:FRSW?")
-End Function
-
 ''' <summary>   Queries and tries to parse a device error into a number and a message. </summary>
-''' <param name="a_number">    [String] the error number; set to the <see cref="Err.Number"/>
-'''                            if exception occurred parsing. </param>
-''' <param name="a_message">   [String] the error message; set to the <see cref="Err.Description"/>
-'''                            if exception occurred parsing. </param>
+''' <param name="a_number">      [String] the error number; set to the <see cref="Err.Number"/>
+'''                              if exception occurred parsing. </param>
+''' <param name="a_message">     [String] the error message; set to the <see cref="Err.Description"/>
+'''                              if exception occurred parsing. </param>
+''' <param name="a_decorator">   [String] the decorator around the message part of the device error. </param>
 ''' <value>   [Boolean] true if parsed. </value>
-Public Function QueryTryParseError(ByRef a_number As String, ByRef a_message As String) As Boolean
-    QueryTryParseError = Me.TryParseError(Me.ErrorDequeue(), a_number, a_message)
+Public Function TryDequeueParseDeviceError(ByRef a_number As String, _
+    ByRef a_message As String, Optional ByVal a_decorator As String = """") As Boolean
+    TryDequeueParseDeviceError = Me.TryParseError(Me.DequeueDeviceError(), _
+        a_number, a_message, a_decorator)
 End Function
 
 ''' <summary>   Queries and concatenates device errors into a delimited replay. </summary>
@@ -77,8 +95,10 @@ End Function
 ''' <param name="a_delimiter">   [Optional, String, VBA.vbCrLf] the delimiter to use when building
 '''                              the reply. Note that a comma separates the device error number and error
 '''                              description. </param>
+''' <param name="a_decorator">   [String] the decorator around the message part of the device error. </param>
 ''' <value>   [Boolean] true if errors available. </value>
-Public Function TryQueryDequeueDeviceErrors(ByRef a_errors As String, _
+Public Function TryDequeueDeviceErrors(ByRef a_errors As String, _
+    Optional ByVal a_decorator As String = """", _
     Optional ByVal a_delimiter As String = VBA.vbCrLf) As Boolean
 
     Dim p_delimiter As String
@@ -97,7 +117,7 @@ Public Function TryQueryDequeueDeviceErrors(ByRef a_errors As String, _
         
         p_delimiter = IIf(VBA.vbNullString = p_builder, VBA.vbNullString, a_delimiter)
         
-        If Me.QueryTryParseError(p_errorNumber, p_errorMessage) Then
+        If Me.TryDequeueParseDeviceError(p_errorNumber, p_errorMessage, a_decorator) Then
             p_builder = p_builder & p_delimiter & p_errorNumber & "," & p_errorMessage
             p_done = "0" = p_errorNumber
         Else
@@ -118,25 +138,23 @@ Public Function TryQueryDequeueDeviceErrors(ByRef a_errors As String, _
     
     On Error GoTo 0
     
-    TryQueryDequeueDeviceErrors = p_errorAvailable
+    a_errors = p_builder
+    TryDequeueDeviceErrors = p_errorAvailable
     
 
 End Function
 
-''' <summary>   Return to :SYST:PRES defaults. </summary>
-Public Sub Preset()
-    This.ViSession.WriteLine (":SYST:PRES")
-End Sub
-
 ''' <summary>   Tries to parse a device error into a number and a message. </summary>
-''' <param name="a_value">     [String] the device error. </param>
-''' <param name="a_number">    [String] the error number; set to the <see cref="Err.Number"/>
-'''                            if exception occurred parsing. </param>
-''' <param name="a_message">   [String] the error message; set to the <see cref="Err.Description"/>
-'''                            if exception occurred parsing. </param>
+''' <param name="a_value">       [String] the device error. </param>
+''' <param name="a_number">      [String] the error number; set to the <see cref="Err.Number"/>
+'''                              if exception occurred parsing. </param>
+''' <param name="a_message">     [String] the error message; set to the <see cref="Err.Description"/>
+'''                              if exception occurred parsing. </param>
+''' <param name="a_decorator">   [String] the decorator around the message part of the device error. </param>
 ''' <value>   [Boolean] true if parsed. </value>
 Public Function TryParseError(ByVal a_value As String, _
-    ByRef a_number As String, ByRef a_message As String) As Boolean
+    ByRef a_number As String, ByRef a_message As String, _
+    Optional ByVal a_decorator As String = """") As Boolean
     
     On Error Resume Next
     
@@ -153,7 +171,12 @@ Public Function TryParseError(ByVal a_value As String, _
         If VBA.vbNullString = a_message Then
             a_message = "Parsing '" & a_value & "' failed getting the error message."
             p_success = False
+        Else
+            a_message = cc_isr_Core.StringExtensions.TrimLeft(a_message, a_decorator)
+            a_message = cc_isr_Core.StringExtensions.TrimRight(a_message, a_decorator)
+            p_success = True
         End If
+        
     End If
     
     ' if an exception, set the error number and message to the error info.
@@ -168,3 +191,34 @@ Public Function TryParseError(ByVal a_value As String, _
     TryParseError = p_success
 
 End Function
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+'  Misc
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Query INPUTS switch (0=rear, 1=front). </summary>
+''' <value>   [Boolean] true if the inputs are set to the front panel. </value>
+Public Function QueryFrontSwitch() As Boolean
+    QueryFrontSwitch = 1 = This.ViSession.QueryLine(":SYST:FRSW?")
+End Function
+
+''' <summary>   Return to :SYST:PRES defaults. </summary>
+Public Sub Preset()
+    This.ViSession.WriteLine (":SYST:PRES")
+End Sub
+
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+'  Class events
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+
+''' <summary>   Initializes the class properties. </summary>
+Private Sub Class_Initialize()
+    This.LastDeviceError = VBA.vbNullString
+    This.LastDeviceErrors = VBA.vbNullString
+End Sub

@@ -639,8 +639,6 @@ End Sub
 ''' <summary>   Closes the connection and releases the <see cref="cc_isr_Winsock.IConnectable">Session</see>. </summary>
 Private Sub IConnectable_Dispose()
 
-    Set m_viSession = Nothing
-
     If Not Me.Connectable Is Nothing Then
         If Me.Connectable.Connected Then
             Me.Connectable.CloseConnection
@@ -651,6 +649,7 @@ Private Sub IConnectable_Dispose()
         Me.Connectable.Dispose
     End If
     
+    Set m_viSession = Nothing
     Set This.RouteSystem = Nothing
     Set This.ScpiSystem = Nothing
     Set This.ViSession = Nothing
@@ -658,7 +657,7 @@ Private Sub IConnectable_Dispose()
     If Not This.Device Is Nothing Then
         This.Device.Dispose
     End If
-    This.Device = Nothing
+    Set This.Device = Nothing
     
 End Sub
 
