@@ -105,7 +105,7 @@ Public Function PopulateCards(ByVal a_cards As String) As Integer
         Dim p_cardName As String
         p_cardName = cc_isr_Core.StringExtensions.Pop(a_cards, ",")
         Dim p_multiplexerCard As MultiplexerCard
-        
+        Set p_multiplexerCard = Nothing
         On Error Resume Next
         Set p_multiplexerCard = This.InstrumentFamilyCards.Item(p_cardName)
         On Error GoTo 0

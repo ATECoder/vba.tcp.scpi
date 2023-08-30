@@ -66,7 +66,7 @@ Private Type this_
 
     ' Winsock properties
     Host As String
-    Port As Integer
+    Port As Long
     SocketAddress As String
     SocketId As Integer
     SocketReceiveTimeout As Integer
@@ -179,7 +179,7 @@ Public Function Initialize(ByVal a_tracer As IErrTracer) As K2700ViewModel
     ' store reference to the tracer in case we need to restore the
     ' connection
     
-    This.Tracer = a_tracer
+    Set This.Tracer = a_tracer
     
     ' clear the last error message
     Me.LastErrorMessage = VBA.vbNullString
@@ -228,15 +228,14 @@ End Property
 
 ''' <summary>   Gets the port number. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get Port() As Integer
+Public Property Get Port() As Long
     Port = This.Port
 End Property
 
 ''' <summary>   Sets the Port. </summary>
-''' <param name="a_value">   [Integer] the Port. </value>
-Public Property Let Port(ByVal a_value As Integer)
+''' <param name="a_value">   [Long] the Port. </value>
+Public Property Let Port(ByVal a_value As Long)
     If This.Port <> a_value Then
-        This.Port = a_value
         This.Port = a_value
         Me.OnPropertyChanged "Port"
         Me.ToggleConnectionExecutableSetter

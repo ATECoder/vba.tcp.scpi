@@ -146,7 +146,7 @@ Public Function BuildFunctionScanList(ByVal a_measurement As String) As String
     
     This.FunctionScanList = ":FUNC '" & a_measurement & _
             "',(@" & CStr(p_firstChannelNumber) & _
-            ":" & CStr(p_lastChannelNumber) & ")"
+            "," & CStr(p_lastChannelNumber) & ")"
             
     BuildFunctionScanList = This.FunctionScanList
     

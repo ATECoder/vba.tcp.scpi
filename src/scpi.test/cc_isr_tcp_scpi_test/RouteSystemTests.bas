@@ -311,7 +311,6 @@ Public Function Test7700CardsShouldBuildScanLists() As Assert
             "The expected scan list should be returned for card '" & p_cardName & "' and channel " & CStr(p_channelNumber) & ".")
     End If
     
-    
     Debug.Print p_outcome.BuildReport("Test7700CardsShouldBuildScanLists")
     
     Set Test7700CardsShouldBuildScanLists = p_outcome

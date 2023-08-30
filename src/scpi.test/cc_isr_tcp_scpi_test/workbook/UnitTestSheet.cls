@@ -13,12 +13,12 @@ Private Const m_lastErrorMessageCell As String = "C4"
 
 ''' <summary>   Gets the Last Error Message. </summary>
 Friend Property Get LastErrorMessage() As String
-    LastErrorMessage = Range(m_lastErrorMessageCell).value
+    LastErrorMessage = Range(m_lastErrorMessageCell).Value
 End Property
 
 ''' <summary>   Sets the Last Error Message. </summary>
 Friend Property Let LastErrorMessage(ByVal a_value As String)
-    Range(m_lastErrorMessageCell).value = a_value
+    Range(m_lastErrorMessageCell).Value = a_value
 End Property
 
 ''' <summary>   Populates a combo box with the list of tests. </summary>

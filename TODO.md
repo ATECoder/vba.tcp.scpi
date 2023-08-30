@@ -1,26 +1,28 @@
 # TODO
 
-Streamline this workbook code.
+Route:
+Fix setting the channel numbers and scan lists depending on the function mode.
+with 7700 we have 10 or 20 channels per card
+with 7702 with 20 or 40 channels per card.
+Check how flying sets the channels and scan lists.
 
 
-Core:
-Add support for property changed events.
+View model:
+* Add a Configuration Mode enum: Immediate, External, Continuous
+* detect switching configuration modes between 
+* issue reset clear whenever switching model. 
+* clear last error when switching modes.
+
+Use unit testsTest connecting,
+Use before all to determine if tests are inconclusive (i.e., instrument is off).
+Test getting and setting sense function. 
+
 
 ## Beta 202308
 
-* 2700 View Model: Add Executable conditions to match the old code and updated the old code for moving to the sheet.
-* Move the code to move to the actual sheet to a new temporary file.
-* include the view model in the project and fix code errors.
-* figure out how to detect Sheet cell change.
 
 https://stackoverflow.com/questions/18124853/excel-vba-checkbox-click-and-change-events-the-same
 
-* figure out if check box changed occurs before checkbox click.
-
-* move button code to functions and arrange those according to topics.
-
-
-* issue reset clear whenever switching model. 
 * Demo:
 	Use 2700 to implement all SCPI commands.
 	Use trigger system to toggle the trigger source.
