@@ -21,6 +21,7 @@ Private Type this_
     DeviceFirstChannel As Integer
     DeviceLastChannel As Integer
     FunctionScanList As String
+    FunctionChannelCount As Integer
 End Type
 
 Private This As this_
@@ -37,6 +38,7 @@ Public Function Initialize(ByVal a_name As String, ByVal a_capacity As Integer) 
     This.DeviceFirstChannel = 0
     This.DeviceLastChannel = 0
     This.FunctionScanList = VBA.vbNull
+    This.FunctionChannelCount = This.Capacity
     Set Initialize = Me
 End Function
 
@@ -85,6 +87,14 @@ Public Property Let SlotNumber(ByVal a_value As Integer)
 
 End Property
 
+''' <summary>   Gets the multiplexer functional channel count. </summary>
+''' <value> [Integer]. </value>
+Public Property Get FunctionChannelCount() As Integer
+        
+    FunctionChannelCount = This.FunctionChannelCount
+
+End Property
+
 ''' <summary>   Gets the device channel number that corresponds to the
 '''             multiplexer card First Channel Number. </summary>
 ''' <value> [Integer]. </value>
@@ -101,7 +111,7 @@ End Property
 Public Property Let DeviceFirstChannel(ByVal a_value As Integer)
     
     This.DeviceFirstChannel = a_value
-    This.DeviceLastChannel = a_value + Me.Capacity - 1
+    This.DeviceLastChannel = a_value + Me.FunctionChannelCount - 1
 
 End Property
 
@@ -132,19 +142,22 @@ Public Property Get FunctionScanList() As String
 
 End Property
 
-''' <summary>   Builds the function scan list, e.g., <c>:FUNC 'RES',(@101:120)</c>. </summary>
+''' <summary>   Builds the function scan list, e.g., <c>:FUNC 'RES',(@101,120)</c>. </summary>
 ''' <remarks>   2023-08-17. </remarks>
-''' <param name="a_measurement">   The measurement function, e.g., RES. </param>
+''' <param name="a_senseFunction">   The sense function, e.g., RES. </param>
 ''' <returns>   [String]. </returns>
-Public Function BuildFunctionScanList(ByVal a_measurement As String) As String
+Public Function BuildFunctionScanList(ByVal a_senseFunction As String) As String
 
+    ' update the function channel count
+    This.FunctionChannelCount = IIf("FRES" = a_senseFunction, This.Capacity / 2, This.Capacity)
+    
     Dim p_firstChannelNumber As Integer
     p_firstChannelNumber = This.SlotNumber * 100 + 1
     
     Dim p_lastChannelNumber As Integer
-    p_lastChannelNumber = p_firstChannelNumber + This.Capacity - 1
+    p_lastChannelNumber = p_firstChannelNumber + This.FunctionChannelCount - 1
     
-    This.FunctionScanList = ":FUNC '" & a_measurement & _
+    This.FunctionScanList = ":FUNC '" & a_senseFunction & _
             "',(@" & CStr(p_firstChannelNumber) & _
             "," & CStr(p_lastChannelNumber) & ")"
             

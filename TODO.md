@@ -1,16 +1,6 @@
 # TODO
 
-Route:
-Fix setting the channel numbers and scan lists depending on the function mode.
-with 7700 we have 10 or 20 channels per card
-with 7702 with 20 or 40 channels per card.
-Check how flying sets the channels and scan lists.
-
-
 View model:
-* Add a Configuration Mode enum: Immediate, External, Continuous
-* detect switching configuration modes between 
-* issue reset clear whenever switching model. 
 * clear last error when switching modes.
 
 Use unit testsTest connecting,

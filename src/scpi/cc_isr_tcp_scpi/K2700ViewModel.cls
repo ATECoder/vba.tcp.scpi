@@ -13,6 +13,12 @@ Attribute VB_Exposed = True
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Option Explicit
 
+Public Enum MeasurementMode
+    Continuous = 0
+    Immediate = 1
+    External = 2
+End Enum
+
 ''' <summary>   Represents an observer pattern subject that can notify observers
 '''             when a property value changes. </summary>
 Implements cc_isr_Core.INotifyPropertyChanged
@@ -63,6 +69,7 @@ Private Type this_
     ElapsedTimeCaption As String
     LastErrorMessage As String
     LastMessage As String
+    MeasurementMode As MeasurementMode
 
     ' Winsock properties
     Host As String
@@ -102,6 +109,9 @@ Private Type this_
     SelectedChannelNumber As Integer
     CurrentChannelNumber As Integer
     MeasuredChannelNumber As Integer
+    ContinuousSenseFunctionName As String
+    ImmediateSenseFunctionName As String
+    ExternalSenseFunctionName As String
     SenseFunctionName As String
     SenseFunctionCaption As String
     SenseFunctionUnit As String
@@ -195,6 +205,8 @@ Public Function Initialize(ByVal a_tracer As IErrTracer) As K2700ViewModel
     Set This.Device = This.K2700.Device
     Set This.ViSession = This.Device.ViSession
     Set This.Stopwatch = cc_isr_Core_IO.Factory.NewStopwatch()
+    
+    This.MeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.Continuous
     
     m_k2700_ConnectionChanged cc_isr_Winsock.Factory.NewConnectionChangedEventArgs.Initialize()
 
@@ -2012,14 +2024,59 @@ Public Property Let MeasuredChannelNumber(ByVal a_value As Integer)
     End If
 End Property
 
-''' <summary>   Gets the  Sense Function Name. </summary>
+''' <summary>   Gets the Sense Function Name for continuous mode. </summary>
+''' <value>   [String]. </value>
+Public Property Get ContinuousSenseFunctionName() As String
+    ContinuousSenseFunctionName = This.ContinuousSenseFunctionName
+End Property
+
+''' <summary>   Sets the Sense Function Name for continuous mode. </summary>
+''' <param name="a_value">   [String] the Sense Function Name. </value>
+Public Property Let ContinuousSenseFunctionName(ByVal a_value As String)
+    If This.ContinuousSenseFunctionName <> a_value Then
+        This.ContinuousSenseFunctionName = a_value
+        Me.OnPropertyChanged "ContinuousSenseFunctionName"
+    End If
+End Property
+
+''' <summary>   Gets the Sense Function Name for Immediate trigger mode. </summary>
+''' <value>   [String]. </value>
+Public Property Get ImmediateSenseFunctionName() As String
+    ImmediateSenseFunctionName = This.ImmediateSenseFunctionName
+End Property
+
+''' <summary>   Sets the Sense Function Name for Immediate trigger  mode. </summary>
+''' <param name="a_value">   [String] the Sense Function Name. </value>
+Public Property Let ImmediateSenseFunctionName(ByVal a_value As String)
+    If This.ImmediateSenseFunctionName <> a_value Then
+        This.ImmediateSenseFunctionName = a_value
+        Me.OnPropertyChanged "ImmediateSenseFunctionName"
+    End If
+End Property
+
+''' <summary>   Gets the Sense Function Name for External trigger mode. </summary>
+''' <value>   [String]. </value>
+Public Property Get ExternalSenseFunctionName() As String
+    ExternalSenseFunctionName = This.ExternalSenseFunctionName
+End Property
+
+''' <summary>   Sets the Sense Function Name for External trigger mode. </summary>
+''' <param name="a_value">   [String] the Sense Function Name. </value>
+Public Property Let ExternalSenseFunctionName(ByVal a_value As String)
+    If This.ExternalSenseFunctionName <> a_value Then
+        This.ExternalSenseFunctionName = a_value
+        Me.OnPropertyChanged "ExternalSenseFunctionName"
+    End If
+End Property
+
+''' <summary>   Gets the Sense Function Name. </summary>
 ''' <value>   [String]. </value>
 Public Property Get SenseFunctionName() As String
     SenseFunctionName = This.SenseFunctionName
 End Property
 
-''' <summary>   Sets the  Sense Function Name. </summary>
-''' <param name="a_value">   [String] the  Sense Function Name. </value>
+''' <summary>   Sets the Sense Function Name. </summary>
+''' <param name="a_value">   [String] the Sense Function Name. </value>
 Public Property Let SenseFunctionName(ByVal a_value As String)
     If This.SenseFunctionName <> a_value Then
         This.SenseFunctionName = a_value
@@ -2477,6 +2534,56 @@ Public Function ValidateInputs() As Boolean
 
 End Function
 
+''' <summary>   Configure continuous trigger mode. </summary>
+Public Sub ConfigureContinuousModeCommand()
+
+    Const p_procedureName = "ConfigureContinuousModeCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    ' restore the instrument state if it had a power toggle.
+    
+    Me.RestoreKnownState
+
+    ' clear execution state when switching mode.
+
+    This.K2700.Device.ClearExecutionState
+
+    Me.SenseFunctionName = This.ContinuousSenseFunctionName
+
+    ' configure measuring a single value on each read.
+    This.K2700.ConfigureContinuousFunctionAutoRange Me.SenseFunctionName
+
+    ' Disable making immediate measurements.
+    Me.MeasureExecutable = False
+
+    ' disable monitoring the external trigger.
+    Me.MonitorExtTrigExecutable = False
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    This.MeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.Continuous
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+
 ''' <summary>   Turns on external trigger mode. </summary>
 Public Sub ConfigureExternalTriggerReadingCommand()
 
@@ -2494,11 +2601,18 @@ Public Sub ConfigureExternalTriggerReadingCommand()
 
     If Me.ValidateInputs() Then
    
+        ' reset if changing modes.
+        If cc_isr_Tcp_Scpi.MeasurementMode.External <> This.MeasurementMode Then
+            This.K2700.Device.ResetKnownState
+        End If
+        
         ' clear execution state when switching mode.
 
         This.K2700.Device.ClearExecutionState
    
         ' Configure external triggering reading requiring the front panel
+        
+        Me.SenseFunctionName = This.ExternalSenseFunctionName
 
         This.K2700.ConfigureExternalTriggerReading This.SenseFunctionName, _
                 This.FrontInputsValue
@@ -2570,9 +2684,16 @@ Public Sub ConfigureImmediateTriggerReadingsCommand()
 
     If Me.ValidateInputs() Then
 
+        ' reset if changing modes.
+        If cc_isr_Tcp_Scpi.MeasurementMode.Immediate <> This.MeasurementMode Then
+            This.K2700.Device.ResetKnownState
+        End If
+
         ' clear execution state when switching mode.
 
         This.K2700.Device.ClearExecutionState
+
+        Me.SenseFunctionName = This.ImmediateSenseFunctionName
 
         ' configure measuring a single value on each read.
         This.K2700.ConfigureSingleFunctionReading Me.SenseFunctionName
@@ -2948,10 +3069,11 @@ Private Sub OnInstrumentConnected()
     Me.TopCard = This.K2700.CardName(1)
     Me.BottomCard = This.K2700.CardName(2)
     
-    If VBA.vbNullString <> This.SenseFunctionName Then
+    ' initialize the scan list for immediate trigger.
+    If VBA.vbNullString <> This.ImmediateSenseFunctionName Then
     
         ' set the instrument function scan list
-        This.K2700.DefineFunctionScanLists This.SenseFunctionName
+        This.K2700.DefineFunctionScanLists This.ImmediateSenseFunctionName
     
         ' show the results.
         Me.TopCardFunctionScanList = This.K2700.FunctionScanList(1)
@@ -3609,4 +3731,7 @@ End Sub
 
 Private Sub Class_Initialize()
     This.ElapsedTimeFormat = "0.0"
+    This.ContinuousSenseFunctionName = "FRES"
+    This.ImmediateSenseFunctionName = "RES"
+    This.ExternalSenseFunctionName = "FRES"
 End Sub

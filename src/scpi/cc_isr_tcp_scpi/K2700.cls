@@ -102,7 +102,7 @@ End Property
 ''' <param name="a_timeoutMs">   [Optional, 3000] The session read timeout in milliseconds. </param>
 ''' <returns>   True if the device was initialized. </returns>
 Public Function InitializeLegacy(ByVal a_host As String, ByVal a_port As Long, _
-        Optional ByVal a_function As String = "FRES", _
+        Optional ByVal a_function As String = "RES", _
         Optional ByVal a_timeoutMs As Long = 3000) As Boolean
 
     Me.OpenConnection a_host, a_port
@@ -122,7 +122,7 @@ Public Function InitializeLegacy(ByVal a_host As String, ByVal a_port As Long, _
     Me.DefineFunctionScanLists a_function
    
     ' turn on continuous auto range
-    Me.ConfigureContinuousFunctionAutorRange a_function
+    Me.ConfigureContinuousFunctionAutoRange a_function
     
     InitializeLegacy = True
     
@@ -199,8 +199,11 @@ End Function
 
 ''' <summary>   Sets the instrument to continuous auto range reading. </summary>
 ''' <param name="a_function">    [String] The measurement function. </param>
-Public Sub ConfigureContinuousFunctionAutorRange(ByVal a_function As String)
+Public Sub ConfigureContinuousFunctionAutoRange(ByVal a_function As String)
 
+    This.Device.ResetKnownState
+    This.Device.ClearExecutionState
+    
     ' set function defaults
     ' This.ViSession.WriteLine ":RES:RANG:AUTO ON"
     ' This.ViSession.WriteLine ":RES:NPLC 1"
@@ -419,7 +422,7 @@ Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDo
         Me.RestoreContinuousReading
         
         ' these were replaced with restoration of
-        ' continous reading method above.
+        ' Continuous reading method above.
         ' This.ViSession.WriteLine ":INIT:CONT OFF"
         ' This.ViSession.WriteLine ":FUNC 'FRES'"
         ' This.ViSession.WriteLine ":TRIG:SOUR IMM"
