@@ -59,7 +59,6 @@ Public Function Populate7700Cards() As Integer
 
     Dim p_cards As New Collection
     Dim p_name As String
-    Dim p_capacity As Integer
     Dim p_card As MultiplexerCard
     Set p_card = New MultiplexerCard: p_cards.Add p_card.Initialize("7700", 20), p_card.Name
     Set p_card = New MultiplexerCard: p_cards.Add p_card.Initialize("7702", 40), p_card.Name
@@ -114,8 +113,8 @@ Public Function PopulateCards(ByVal a_cards As String) As Integer
             p_multiplexerCard.SlotNumber = p_slotNumber
             p_multiplexerCard.DeviceFirstChannel = p_firstChannelNumber
             p_cards.Add p_multiplexerCard.Clone(), CStr(p_slotNumber)
-            p_firstChannelNumber = p_firstChannelNumber + p_multiplexerCard.Capacity
-            This.ChannelCount = This.ChannelCount + p_multiplexerCard.Capacity
+            p_firstChannelNumber = p_firstChannelNumber + p_multiplexerCard.FunctionalCapacity
+            This.ChannelCount = This.ChannelCount + p_multiplexerCard.FunctionalCapacity
         End If
     
     Wend
@@ -132,13 +131,37 @@ Public Property Get ChannelCount() As Integer
     ChannelCount = This.ChannelCount
 End Property
 
-''' <summary>   Sets the full capacity function scan lists for on all cards. </summary>
-Public Sub BuildFunctionScanLists(ByVal a_scpiFunction As String)
+''' <summary>   Updates the functional capacity of the cards and their starting and ending
+'''             channels to match any change in channel capacity.. </summary>
+Public Sub UpdateFunctionalCapacities()
+
+    Dim p_slotNumber As Integer: p_slotNumber = 0
+    Dim p_firstChannelNumber As Integer
+    p_firstChannelNumber = 1
+    This.ChannelCount = 0
 
     Dim p_multiplexerCard As MultiplexerCard
     For Each p_multiplexerCard In This.InstalledCards
-        p_multiplexerCard.BuildFunctionScanList a_scpiFunction
+        p_slotNumber = p_slotNumber + 1
+        If Not p_multiplexerCard Is Nothing Then
+            p_multiplexerCard.SlotNumber = p_slotNumber
+            p_multiplexerCard.DeviceFirstChannel = p_firstChannelNumber
+            p_firstChannelNumber = p_firstChannelNumber + p_multiplexerCard.FunctionalCapacity
+            This.ChannelCount = This.ChannelCount + p_multiplexerCard.FunctionalCapacity
+        End If
     Next
+End Sub
+
+''' <summary>   Sets the full capacity function scan lists for on all cards. </summary>
+''' <para name="a_senseFunction">   [String] The sense function. </param>
+Public Sub BuildFunctionScanLists(ByVal a_senseFunction As String)
+    Dim p_multiplexerCard As MultiplexerCard
+    For Each p_multiplexerCard In This.InstalledCards
+        p_multiplexerCard.BuildFunctionScanList a_senseFunction
+    Next
+    ' update the functional capacities based on the modified
+    ' card sense function.
+    Me.UpdateFunctionalCapacities
 End Sub
 
 ''' <summary>   Returns the scan card for the specific channel. </summary>

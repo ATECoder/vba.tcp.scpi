@@ -21,7 +21,7 @@ Private Type this_
     DeviceFirstChannel As Integer
     DeviceLastChannel As Integer
     FunctionScanList As String
-    FunctionChannelCount As Integer
+    FunctionalCapacity As Integer
 End Type
 
 Private This As this_
@@ -38,7 +38,7 @@ Public Function Initialize(ByVal a_name As String, ByVal a_capacity As Integer) 
     This.DeviceFirstChannel = 0
     This.DeviceLastChannel = 0
     This.FunctionScanList = VBA.vbNull
-    This.FunctionChannelCount = This.Capacity
+    This.FunctionalCapacity = This.Capacity
     Set Initialize = Me
 End Function
 
@@ -89,9 +89,9 @@ End Property
 
 ''' <summary>   Gets the multiplexer functional channel count. </summary>
 ''' <value> [Integer]. </value>
-Public Property Get FunctionChannelCount() As Integer
+Public Property Get FunctionalCapacity() As Integer
         
-    FunctionChannelCount = This.FunctionChannelCount
+    FunctionalCapacity = This.FunctionalCapacity
 
 End Property
 
@@ -111,7 +111,7 @@ End Property
 Public Property Let DeviceFirstChannel(ByVal a_value As Integer)
     
     This.DeviceFirstChannel = a_value
-    This.DeviceLastChannel = a_value + Me.FunctionChannelCount - 1
+    This.DeviceLastChannel = a_value + Me.FunctionalCapacity - 1
 
 End Property
 
@@ -149,13 +149,13 @@ End Property
 Public Function BuildFunctionScanList(ByVal a_senseFunction As String) As String
 
     ' update the function channel count
-    This.FunctionChannelCount = IIf("FRES" = a_senseFunction, This.Capacity / 2, This.Capacity)
+    This.FunctionalCapacity = IIf("FRES" = a_senseFunction, This.Capacity / 2, This.Capacity)
     
     Dim p_firstChannelNumber As Integer
     p_firstChannelNumber = This.SlotNumber * 100 + 1
     
     Dim p_lastChannelNumber As Integer
-    p_lastChannelNumber = p_firstChannelNumber + This.FunctionChannelCount - 1
+    p_lastChannelNumber = p_firstChannelNumber + This.FunctionalCapacity - 1
     
     This.FunctionScanList = ":FUNC '" & a_senseFunction & _
             "',(@" & CStr(p_firstChannelNumber) & _

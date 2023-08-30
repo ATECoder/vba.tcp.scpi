@@ -8,7 +8,7 @@ Attribute VB_Name = "K2700ViewModelTests"
 Option Explicit
 
 Private Type this_
-    BeforeEachAssert As Assert
+    BeforeEachAssert As assert
     ViewModel As cc_isr_Tcp_Scpi.K2700ViewModel
     Host As String
     Port As Long
@@ -48,8 +48,8 @@ End Sub
 
 Public Sub BeforeEach()
 
-    Set This.BeforeEachAssert = IIf(This.ViewModel.Connected, Assert.IsTrue(True, "Connected"), _
-                        Assert.Inconclusive("View Model should be connected"))
+    Set This.BeforeEachAssert = IIf(This.ViewModel.Connected, assert.IsTrue(True, "Connected"), _
+                        assert.Inconclusive("View Model should be connected"))
                         
     This.ViewModel.LastErrorMessage = VBA.vbNullString
     This.ViewModel.ClearExecutionStateCommand
@@ -79,16 +79,16 @@ End Sub
 
 ''' <summary>   Unit test. Asserts that view model should initialize. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function TestViewModelShouldInitialize() As Assert
+Public Function TestViewModelShouldInitialize() As assert
 
-    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    Dim p_outcome As assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.IsTrue(This.ViewModel.ToggleConnectionExecutable, _
+        Set p_outcome = assert.IsTrue(This.ViewModel.ToggleConnectionExecutable, _
             "Toggle connection should be executable after initializing the View Model")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
+        Set p_outcome = assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
             "Exception: " & This.ViewModel.LastErrorMessage)
         
     Debug.Print p_outcome.BuildReport("TestViewModelShouldInitialize")
@@ -99,16 +99,16 @@ End Function
 
 ''' <summary>   Unit test. Asserts that view model should connect. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function TestViewModelShouldConnect() As Assert
+Public Function TestViewModelShouldConnect() As assert
 
-    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    Dim p_outcome As assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.IsTrue(This.ViewModel.Connected, _
+        Set p_outcome = assert.IsTrue(This.ViewModel.Connected, _
             "View model should connect")
         
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
+        Set p_outcome = assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
             "Exception: " & This.ViewModel.LastErrorMessage)
     
     Debug.Print p_outcome.BuildReport("TestViewModelShouldConnect")
@@ -119,35 +119,35 @@ End Function
 
 ''' <summary>   Unit test. Asserts that view model should read cards. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function TestViewModelShouldReadCards() As Assert
+Public Function TestViewModelShouldReadCards() As assert
 
-    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    Dim p_outcome As assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.AreEqual(This.TopCard, This.ViewModel.TopCard, _
+        Set p_outcome = assert.AreEqual(This.TopCard, This.ViewModel.TopCard, _
             "View Model should be read the top card")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.AreEqual(This.BottomCard, This.ViewModel.BottomCard, _
+        Set p_outcome = assert.AreEqual(This.BottomCard, This.ViewModel.BottomCard, _
             "View Model should be read the bottom card")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.AreEqual(This.SenseFuncation, _
+        Set p_outcome = assert.AreEqual(This.SenseFuncation, _
             This.ViewModel.SenseFunctionName, _
             "View Model should set the sense function name")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.AreEqual(This.TopCardFunctionScanList, _
+        Set p_outcome = assert.AreEqual(This.TopCardFunctionScanList, _
             This.ViewModel.TopCardFunctionScanList, _
             "View Model should be read the top card function scan list")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.AreEqual(This.BottomCardFunctionScanList, _
+        Set p_outcome = assert.AreEqual(This.BottomCardFunctionScanList, _
             This.ViewModel.BottomCardFunctionScanList, _
             "View Model should be read the top card function scan list")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.AreEqual(VBA.vbNullString, _
+        Set p_outcome = assert.AreEqual(VBA.vbNullString, _
             This.ViewModel.LastErrorMessage, _
             "Exception: " & This.ViewModel.LastErrorMessage)
 

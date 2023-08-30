@@ -211,8 +211,11 @@ Public Sub ConfigureContinuousFunctionAutoRange(ByVal a_function As String)
     ' set reading format
     This.ViSession.WriteLine ":FORM:ELEM READ"
     
+    ' set the sense function
+    This.SenseSystem.SenseFunctionSetter a_function
+    ' This.ViSession.WriteLine ":FUNC '" & a_function & "'"
+    
     ' turn on continuous mode
-    This.ViSession.WriteLine ":FUNC '" & a_function & "'"
     This.ViSession.WriteLine ":" & a_function & ":RANG:AUTO ON"
     This.ViSession.WriteLine ":" & a_function & ":NPLC 1"
     This.ViSession.WriteLine ":INIT:CONT ON"
@@ -246,7 +249,10 @@ Public Sub ConfigureSingleFunctionReading(ByVal a_function As String)
     This.ViSession.WriteLine ":INIT:CONT OFF"
     This.ViSession.WriteLine ":SAMP:COUN 1"
     This.ViSession.WriteLine ":TRIG:COUN 1"
-    This.ViSession.WriteLine ":FUNC '" & a_function & "'"
+    
+    ' set the sense function
+    This.SenseSystem.SenseFunctionSetter a_function
+    ' This.ViSession.WriteLine ":FUNC '" & a_function & "'"
     
     ' set reading format
     This.ViSession.WriteLine ":FORM:ELEM READ"
@@ -327,7 +333,11 @@ Public Sub ConfigureExternalTriggerReading(ByVal a_function As String, ByVal a_f
     
     ' set external triggering
     This.ViSession.WriteLine ":INIT:CONT OFF"
-    This.ViSession.WriteLine ":FUNC '" & a_function & "'"
+    
+    ' set the sense function
+    This.SenseSystem.SenseFunctionSetter a_function
+    ' This.ViSession.WriteLine ":FUNC '" & a_function & "'"
+    
     This.ViSession.WriteLine ":" & a_function & ":RANG:AUTO ON"
     This.ViSession.WriteLine ":" & a_function & ":NPLC 1"
     This.ViSession.WriteLine ":SAMP:COUN 1"

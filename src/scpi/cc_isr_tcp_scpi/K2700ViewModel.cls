@@ -796,6 +796,8 @@ Public Sub ClearExecutionStateCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
+    Me.LastErrorMessage = VBA.vbNullString
+
     Me.LastMessage = "Clearing execution state."
 
     Me.RestartStopwatchCommand
@@ -2493,8 +2495,11 @@ Public Sub RestoreKnownState()
             " Failed connecting to " & This.Host & ":" & VBA.CStr(This.Port) & "."
     
     ' validate the sense function
-    Dim p_senseFunction  As String: p_senseFunction = This.ViSession.QueryLine(":FUNC?")
-    If 1 <> InStr(1, This.SenseFunctionName, p_senseFunction, vbTextCompare) Then
+    Dim p_senseFunction As String
+    p_senseFunction = This.K2700.SenseSystem.SenseFunctionGetter()
+    If Not ((1 = InStr(1, This.ContinuousSenseFunctionName, p_senseFunction, vbTextCompare)) Or _
+            (1 = InStr(1, This.ImmediateSenseFunctionName, p_senseFunction, vbTextCompare)) Or _
+            (1 = InStr(1, This.ExternalSenseFunctionName, p_senseFunction, vbTextCompare))) Then
         
         ' if the sense function does not match, initialize the instrument
         ' connection state.
@@ -3078,10 +3083,19 @@ Private Sub OnInstrumentConnected()
         ' show the results.
         Me.TopCardFunctionScanList = This.K2700.FunctionScanList(1)
         Me.BottomCardFunctionScanList = This.K2700.FunctionScanList(2)
+        
     End If
 
+    ' configure the instrument for continuous mode.
+    
+    Me.ConfigureContinuousModeCommand
+    
+    ' report any errors.
+    
+    
+    
     ' clear any errors
-    This.Device.ClearExecutionState
+    ' This.Device.ClearExecutionState
 
 End Sub
 
