@@ -1,6 +1,6 @@
 CommitID,LocalRepoName,TargetDirectory
-190c68af4a6e060f23d9f55e58a779d42e39f692,core,lib\vba\core
+a7b1961187a4a5e5b5c93708f90bf2a5c18842f7,core,lib\vba\core
 30f1e13eb7eb1a283e0329debbcf5e852d260f07,mvvm,lib\vba\core
-6d9f5ab61d88714de0c9aa44821356b02de7d4b1,winsock,lib\vba\iot
-fb898fbc454bdedac2880cd515b7294ce432e9b4,tcp.ieee488,lib\vba\iot
-f9dbb4dd301a86a0bcc6a23288b727de3835fbdb,tcp.scpi,lib\vba\iot
+91adbb75658ce39cd4f4687aee7759fe4ee25096,winsock,lib\vba\iot
+d79f398b1633b91b881d1e44ad1a7c044fa6cf2c,tcp.ieee488,lib\vba\iot
+abf478bcb220210e0e55fba2a58cea810adf9883,tcp.scpi,lib\vba\iot

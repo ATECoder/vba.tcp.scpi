@@ -68,6 +68,13 @@ LogInfo ( "Opened " + $excel.ActiveWorkbook.Name )
 
 $ReadOnly = $true
 
+$src = "C:\my\lib\vba\core\core\src\testFx\cc.isr.test.fx.xlsm"
+LogInfo( "opening " + $src)
+$book = $excel.Workbooks.Open($src, $missing, $ReadOnly, $missing, $missing, $missing, $true)
+LogInfo ( "Opened " + $excel.ActiveWorkbook.Name )
+
+$ReadOnly = $true
+
 $src = "C:\my\lib\vba\core\core\src\core\cc.isr.core.xlsm"
 LogInfo( "opening " + $src)
 $book = $excel.Workbooks.Open($src, $missing, $ReadOnly, $missing, $missing, $missing, $true)
@@ -93,14 +100,6 @@ $src = "C:\my\lib\vba\iot\tcp.scpi\src\scpi\cc.isr.tcp.scpi.xlsm"
 LogInfo( "opening " + $src)
 $book = $excel.Workbooks.Open($src, $missing, $ReadOnly, $missing, $missing, $missing, $true)
 LogInfo ( "Opened " + $excel.ActiveWorkbook.Name )
-
-$ReadOnly = $false
-
-$src = "C:\my\lib\vba\iot\tcp.scpi\src\scpi.demo\cc.isr.tcp.scpi.demo.xlsm"
-LogInfo( "opening " + $src)
-$book = $excel.Workbooks.Open($src, $missing, $ReadOnly, $missing, $missing, $missing, $true)
-LogInfo ( "Opened " + $excel.ActiveWorkbook.Name )
-
 
 $excel.EnableEvents = $true;
 

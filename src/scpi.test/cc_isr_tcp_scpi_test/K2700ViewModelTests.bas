@@ -41,8 +41,11 @@ Public Sub BeforeAll()
     ' initialize the view model.
     This.ViewModel.Initialize This.ErrTracer
 
+    ' trap errors in case connection fails rendering all tests inconclusive.
+    On Error Resume Next
     ' connect
     This.ViewModel.ToggleConnectionCommand True
+    On Error GoTo 0
 
 End Sub
 

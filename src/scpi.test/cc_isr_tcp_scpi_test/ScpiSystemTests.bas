@@ -26,7 +26,10 @@ Public Sub BeforeAll()
     
     Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700().Initialize(This.ErrTracer)
     
+    ' trap errors in case connection fails rendering all tests inconclusive.
+    On Error Resume Next
     This.K2700.OpenConnection This.Host, This.Port, This.SocketReceiveTimeout
+    On Error GoTo 0
     
 End Sub
 

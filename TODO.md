@@ -1,35 +1,35 @@
 # TODO
 
+## GIT:
 
-git scpi:
-Get errors upon connecting.
-Tests: Add scpi system tests.
-Scpi system: rename error dequeue to Dequeue Device Error
+    If This.BeforeEachAssert.AssertSuccessful Then _
+        This.K2700.Device.ClearExecutionState
 
-Ieee:
-hide the factory code window.
+Core:
 
-Tests:
+Ieee488:
+Device and VI Session. add error tracer and trap errors on connection change.
+
+Scpi:
+K2700 and View Model: move on connection changed to the VI Session Connected event.
+K2700: add error tracer and trap errors on connection change.
+
+
+## TODO
+
+2700:  
+Change how connected is set to ensure that the instrument is actually connected. 
+Update tests: 
+	
+Update View Model tests to detection connection for inconclusive outcome.
+Run the view mode test to ensure inconclusive works.
 Test connecting.
 Test no errors upon connecting.
 Test restoring known state.
 Test reading and parsing errors.
 Test all view model commands.
-
-
 test switching modes.
-
-
-
-
-This.ViSession.QueryLine(":SYST:ERR?")
-
-
-
-Use unit testsTest connecting,
-Use before all to determine if tests are inconclusive (i.e., instrument is off).
 Test getting and setting sense function. 
-
 
 ## Beta 202308
 

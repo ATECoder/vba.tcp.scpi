@@ -23,6 +23,7 @@ Private Type this_
     SenseSystem As SenseSystem
     TriggerSystem As TriggerSystem
     ExtTrigInitiated As Boolean
+    ErrTracer As cc_isr_Core.IErrTracer
 End Type
 
 Private This As this_
@@ -66,6 +67,8 @@ End Sub
 Public Function Initialize(ByVal a_tracer As IErrTracer) As K2700
    
     This.Device.Initialize a_tracer
+    
+    Set This.ErrTracer = a_tracer
     
     Set Initialize = Me
    
@@ -659,6 +662,8 @@ Private Sub IConnectable_Dispose()
     End If
     Set This.Device = Nothing
     
+    Set This.ErrTracer = Nothing
+    
 End Sub
 
 ''' <summary>   Opens a VI Session connection to the specified host at the specified port
@@ -691,17 +696,6 @@ Private Function IConnectable_OpenConnection(ByVal a_host As String, ByVal a_por
     
         Connectable.OpenConnection a_host, a_port, a_timeoutMs
         
-        If This.ViSession.UsingGpibLan Then
-            If This.ViSession.GpibLan.ReadAfterWriteEnabledGetter Then
-                ' for the 2700 with needs this off
-                This.ViSession.GpibLan.ReadAfterWriteEnabledSetter False
-            End If
-        End If
-        Dim p_installedCardsCount As Integer
-        p_installedCardsCount = Me.ReadCards()
-        
-        OnConnectionChanged Connectable.Connected
-        
     End If
 
     IConnectable_OpenConnection = Connectable.Connected
@@ -727,8 +721,6 @@ Private Function IConnectable_CloseConnection() As Boolean
     If Not p_args.Cancel Then
     
         IConnectable_CloseConnection = Connectable.CloseConnection
-    
-        OnConnectionChanged Connectable.Connected
     
     End If
     
@@ -771,13 +763,55 @@ End Sub
 ''' <summary>   Handles the <see cref="cc_isr_Ieee488.ViSession.ConnectionChanged"/> event. </summary>
 ''' <param name="a_eventArgs">   Reference to the <see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/> event arguments. </param>
 Private Sub m_viSession_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
+    
+    Const p_procedureName = "m_viSession_ConnectionChanged"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    If a_eventArgs.Connected Then
+    
+        ' while this is done in VI Session, the 2700 needs to
+        ' implement this nonetheless in case the VI Sessioncode will change
+        If This.ViSession.UsingGpibLan Then
+            If This.ViSession.GpibLan.ReadAfterWriteEnabledGetter Then
+                ' for the 2700 with needs this off
+                This.ViSession.GpibLan.ReadAfterWriteEnabledSetter False
+            End If
+        End If
+        
+        Dim p_installedCardsCount As Integer
+        p_installedCardsCount = Me.ReadCards()
+    
+    End If
+       
+    OnConnectionChanged Me.Connected
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' report the error message
+    This.ErrTracer.TraceError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
 
 End Sub
 
 ''' <summary>   Handles the <see cref="cc_isr_Ieee488.ViSession.ConnectionChanging"/> event. </summary>
 ''' <param name="a_eventArgs">   Reference to the <see cref="cc_isr_Winsock.ConnectionChangingEventArgs"/> event arguments. </param>
 Private Sub m_viSession_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
-
+    IConnectable_OnConnectionChanging a_eventArgs
 End Sub
 
 

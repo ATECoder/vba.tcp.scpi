@@ -3165,7 +3165,7 @@ Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Connec
 
     OnViewModelConnected
     
-    OnConnectionChanged Connectable.Connected
+    OnConnectionChanged Me.Connected
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -3191,6 +3191,7 @@ End Sub
 ''' <summary>   Handles the <see cref="cc_isr_Tcp_Scpi.K2700.ConnectionChanging"/> event. </summary>
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangingEventArgs"/>] event arguments. </param>
 Private Sub m_k2700_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
+    IConnectable_OnConnectionChanging a_eventArgs
 End Sub
 
 
