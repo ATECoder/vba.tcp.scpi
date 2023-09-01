@@ -3058,15 +3058,6 @@ Private Sub OnInstrumentConnected()
     Me.SocketAddress = This.ViSession.SocketAddress
     Me.SocketId = This.ViSession.SocketId
     
-    If This.ViSession.UsingGpibLan Then
-        Me.ReadAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
-        If Me.ReadAfterWriteEnabled Then
-            ' for the 2700 with needs this off
-            This.ViSession.GpibLan.ReadAfterWriteEnabledSetter False
-            Me.ReadAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
-        End If
-    End If
-    
     This.ViSession.GpibLan.SelectiveDeviceClear
     This.Device.ResetKnownState
     This.Device.ClearExecutionState
@@ -3094,12 +3085,12 @@ Private Sub OnInstrumentConnected()
     
     Dim p_errors As String
     If This.K2700.ScpiSystem.TryDequeueDeviceErrors(p_errors) Then
-        Me.LastErrorMessage = p_errors
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError _
+            cc_isr_Core_IO.UserDefinedErrors.Ieee488DeviceError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".OnInstrumentConnected", _
+            " Device error(s): " & p_errors
     End If
     
-    ' clear any errors
-    ' This.Device.ClearExecutionState
-
 End Sub
 
 ''' <summary>   Process the initial view model connection actions.

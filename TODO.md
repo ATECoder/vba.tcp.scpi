@@ -2,27 +2,34 @@
 
 ## GIT:
 
-    If This.BeforeEachAssert.AssertSuccessful Then _
-        This.K2700.Device.ClearExecutionState
+Core_IO:
+Add Ieee488 Device Error
 
-Core:
-
-Ieee488:
-Device and VI Session. add error tracer and trap errors on connection change.
+ieee 488:
+Test: Clear error state before each test.
+GPIB Lan: 
+add error handling to the connection changed event handler;
+Add Assert talk after write required condition.
+Remove test of current state from the read after write setter.
+Rename setter property value to a_value by value.
 
 Scpi:
-K2700 and View Model: move on connection changed to the VI Session Connected event.
-K2700: add error tracer and trap errors on connection change.
+K2700: Set the Gpib Lan Assert Talk option to false. 
+K2700 and View Model: Remove setting the read after write.
+View Model:
+Raise Device error when detecting those so that gets reported as part of the last error.
+Test: add detection of connection failure as in the IEEE488 tests;
+Clear error state before each test.
+
+
 
 
 ## TODO
 
 2700:  
-Change how connected is set to ensure that the instrument is actually connected. 
-Update tests: 
-	
-Update View Model tests to detection connection for inconclusive outcome.
-Run the view mode test to ensure inconclusive works.
+run the scpi test. 
+Add the sense test and test function query.
+Run the view model test to ensure inconclusive works.
 Test connecting.
 Test no errors upon connecting.
 Test restoring known state.

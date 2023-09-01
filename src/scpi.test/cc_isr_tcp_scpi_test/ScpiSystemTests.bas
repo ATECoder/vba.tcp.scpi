@@ -6,42 +6,90 @@ Attribute VB_Name = "ScpiSystemTests"
 Option Explicit
 
 Private Type this_
+    TestNumber As Integer
+    BeforeAllAssert As Assert
     BeforeEachAssert As Assert
     K2700 As cc_isr_Tcp_Scpi.K2700
     Host As String
     Port As Long
     SocketReceiveTimeout As Integer
-    ErrTracer As ErrTracer
+    ErrTracer As IErrTracer
 End Type
 
 Private This As this_
 
 Public Sub BeforeAll()
 
+    This.TestNumber = 0
     This.Host = "192.168.0.252"
     This.Port = 1234
     This.SocketReceiveTimeout = 100
     
     Set This.ErrTracer = New ErrTracer
     
+    ' clear the error trace and the last error.
+    This.ErrTracer.TraceError
+    
+    ' clear the error stack
+    cc_isr_Core_IO.UserDefinedErrors.LastErrorsStack.Clear
+    
     Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700().Initialize(This.ErrTracer)
     
     ' trap errors in case connection fails rendering all tests inconclusive.
+    
     On Error Resume Next
+    
     This.K2700.OpenConnection This.Host, This.Port, This.SocketReceiveTimeout
+    
+    If Err.Number <> 0 Then
+        Set This.BeforeAllAssert = Assert.Inconclusive("K2700 failed to connect: " & _
+            cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage())
+    ElseIf cc_isr_Core_IO.UserDefinedErrors.LastErrorsStack.Count > 0 Then
+        Set This.BeforeAllAssert = Assert.Inconclusive("K2700 failed to connect: " & _
+            cc_isr_Core_IO.UserDefinedErrors.LastErrorsStack.Pop().ToString())
+    ElseIf This.K2700.Connected Then
+        Set This.BeforeAllAssert = Assert.IsTrue(True, "Connected")
+    Else
+        Set This.BeforeAllAssert = Assert.Inconclusive("K2700 should be connected")
+    End If
+    
+    ' clear the error object.
+    
     On Error GoTo 0
     
 End Sub
 
 Public Sub BeforeEach()
 
-    Set This.BeforeEachAssert = IIf(This.K2700.Connected, _
-        Assert.IsTrue(True, "Connected"), _
-        Assert.Inconclusive("View Model should be connected"))
-                        
-    If This.BeforeEachAssert.AssertSuccessful Then _
-        This.K2700.Device.ClearExecutionState
-
+    If This.BeforeAllAssert.AssertSuccessful Or This.TestNumber > 0 Then
+        
+        Set This.BeforeEachAssert = IIf(This.K2700.Connected, _
+            Assert.IsTrue(True, "Connected"), _
+            Assert.Inconclusive("K2700 should be connected"))
+    
+    Else
+    
+        Set This.BeforeEachAssert = Assert.Inconclusive(This.BeforeAllAssert.AssertMessage)
+    
+    End If
+    
+    This.TestNumber = This.TestNumber + 1
+    
+    If This.BeforeEachAssert.AssertSuccessful Then
+    
+        ' clear the error trace and the last error.
+        This.ErrTracer.TraceError
+        
+        ' clear the error stack
+        cc_isr_Core_IO.UserDefinedErrors.LastErrorsStack.Clear
+        
+        ' clear execution state before each test.
+                            
+        If This.BeforeEachAssert.AssertSuccessful Then _
+            This.K2700.Device.ClearExecutionState
+    
+    End If
+    
 End Sub
 
 Public Sub AfterEach()
@@ -56,6 +104,8 @@ Public Sub AfterAll()
 
     If Not This.K2700 Is Nothing Then This.K2700.Dispose
     Set This.K2700 = Nothing
+
+    Set This.BeforeAllAssert = Nothing
 
 End Sub
 

@@ -46,6 +46,8 @@ Private Sub Class_Initialize()
     Set This.Device = cc_isr_Ieee488.Factory.NewDevice()
     Set This.ViSession = This.Device.ViSession
     Set m_viSession = This.Device.ViSession
+    ' make sure to turn off assering talk after write.
+    This.ViSession.GpibLan.AssertTalkAfterWriteRequired = False
     
     Set This.ScpiSystem = New ScpiSystem
     This.ScpiSystem.Initialize This.ViSession
@@ -771,15 +773,6 @@ Private Sub m_viSession_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Co
     
     If a_eventArgs.Connected Then
     
-        ' while this is done in VI Session, the 2700 needs to
-        ' implement this nonetheless in case the VI Sessioncode will change
-        If This.ViSession.UsingGpibLan Then
-            If This.ViSession.GpibLan.ReadAfterWriteEnabledGetter Then
-                ' for the 2700 with needs this off
-                This.ViSession.GpibLan.ReadAfterWriteEnabledSetter False
-            End If
-        End If
-        
         Dim p_installedCardsCount As Integer
         p_installedCardsCount = Me.ReadCards()
     
@@ -800,7 +793,7 @@ err_Handler:
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
     ' report the error message
-    This.ErrTracer.TraceError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    This.ErrTracer.TraceError
 
     ' exit this procedure (not an active handler)
     On Error Resume Next

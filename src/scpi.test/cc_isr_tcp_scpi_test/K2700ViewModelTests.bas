@@ -8,11 +8,13 @@ Attribute VB_Name = "K2700ViewModelTests"
 Option Explicit
 
 Private Type this_
+    TestNumber As Integer
+    BeforeAllAssert As Assert
     BeforeEachAssert As Assert
     ViewModel As cc_isr_Tcp_Scpi.K2700ViewModel
     Host As String
     Port As Long
-    ErrTracer As ErrTracer
+    ErrTracer As IErrTracer
     TopCard As String
     BottomCard As String
     TopCardFunctionScanList As String
@@ -25,6 +27,7 @@ Private This As this_
 Public Sub BeforeAll()
 
     ' initialize known data.
+    This.TestNumber = 0
     This.TopCard = "7700"
     This.BottomCard = VBA.vbNullString
     This.SenseFunction = "FRES"
@@ -38,25 +41,73 @@ Public Sub BeforeAll()
     This.ViewModel.SenseFunctionName = This.SenseFunction
     Set This.ErrTracer = New ErrTracer
     
+    ' clear the error trace and the last error.
+    This.ErrTracer.TraceError
+    
+    ' clear the error stack
+    cc_isr_Core_IO.UserDefinedErrors.LastErrorsStack.Clear
+    
     ' initialize the view model.
     This.ViewModel.Initialize This.ErrTracer
 
     ' trap errors in case connection fails rendering all tests inconclusive.
+    
     On Error Resume Next
+    
     ' connect
+    
     This.ViewModel.ToggleConnectionCommand True
+    
+    If Err.Number <> 0 Then
+        Set This.BeforeAllAssert = Assert.Inconclusive("View Model failed to connect: " & _
+            cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage())
+    ElseIf cc_isr_Core_IO.UserDefinedErrors.LastErrorsStack.Count > 0 Then
+        Set This.BeforeAllAssert = Assert.Inconclusive("View Model failed to connect: " & _
+            cc_isr_Core_IO.UserDefinedErrors.LastErrorsStack.Pop().ToString())
+    ElseIf This.ViewModel.Connected Then
+        Set This.BeforeAllAssert = Assert.IsTrue(True, "Connected")
+    Else
+        Set This.BeforeAllAssert = Assert.Inconclusive("View Model should be connected")
+    End If
+    
+    ' clear the error object.
+    
     On Error GoTo 0
 
 End Sub
 
 Public Sub BeforeEach()
 
-    Set This.BeforeEachAssert = IIf(This.ViewModel.Connected, Assert.IsTrue(True, "Connected"), _
-                        Assert.Inconclusive("View Model should be connected"))
-                        
-    This.ViewModel.LastErrorMessage = VBA.vbNullString
-    If This.BeforeEachAssert.AssertSuccessful Then _
-        This.ViewModel.ClearExecutionStateCommand
+    If This.BeforeAllAssert.AssertSuccessful Or This.TestNumber > 0 Then
+        
+        Set This.BeforeEachAssert = IIf(This.ViewModel.Connected, _
+            Assert.IsTrue(True, "Connected"), _
+            Assert.Inconclusive("View Model should be connected"))
+    
+    Else
+    
+        Set This.BeforeEachAssert = Assert.Inconclusive(This.BeforeAllAssert.AssertMessage)
+    
+    End If
+    
+    This.TestNumber = This.TestNumber + 1
+    
+    If This.BeforeEachAssert.AssertSuccessful Then
+    
+        ' clear the error trace and the last error.
+        This.ErrTracer.TraceError
+        
+        ' clear the error stack
+        cc_isr_Core_IO.UserDefinedErrors.LastErrorsStack.Clear
+        
+        This.ViewModel.LastErrorMessage = VBA.vbNullString
+        
+        ' clear execution state before each test.
+                            
+        If This.BeforeEachAssert.AssertSuccessful Then _
+            This.ViewModel.ClearExecutionStateCommand
+    
+    End If
 
 End Sub
 
@@ -72,6 +123,8 @@ Public Sub AfterAll()
 
     If Not This.ViewModel Is Nothing Then This.ViewModel.Dispose
     Set This.ViewModel = Nothing
+
+    Set This.BeforeAllAssert = Nothing
 
 End Sub
 
