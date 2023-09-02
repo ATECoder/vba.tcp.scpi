@@ -2,19 +2,35 @@
 
 ## GIT:
 
-Core_IO: Fix raising, enqueuing and cloning user defined errors. 
-Replace the show method in the work book activation as the referenced object may not be fully referenced yet.
+
+Test FX: 
+Move error tracer interface to test framework workbook and add implementation of assertion of leftover errors.
+
+Core Test:
+Add implementation of the error tracer interface.
+
+IEEE488:
+Replace Error tracing with enqueuing the error.
+
+Tests:
+Clear the error state before each test.
+Update the error trace.
+Use the error trace at the end of each test for reporting enqueued errors.
+
+
 
 ## TODO
 
 IEEE488:
-Consider removing the error tracers in favor for actually reporting the errors in the user interface.
-See how this works in the test sheet and then in the IEEE 488 sheet.
-? remove the error tracers in favor of logging or raising the error.
-
 
 2700:  
 update the tests per the ieee tests.
+Replace Error tracing with enqueuing the error.
+
+Tests:
+Clear the error state before each test.
+Update the error trace.
+Use the error trace at the end of each test for reporting enqueued errors.
 
 run the scpi test. 
 Sense System Test

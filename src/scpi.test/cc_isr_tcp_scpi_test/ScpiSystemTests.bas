@@ -18,6 +18,19 @@ End Type
 
 Private This As this_
 
+Public Sub RunTests()
+    BeforeAll
+    BeforeEach
+    Dim a_testNumber As Integer: a_testNumber = 1
+    Select Case a_testNumber
+        Case 1
+            TestParsingDeviceError
+        Case Else
+    End Select
+    AfterEach
+    AfterAll
+End Sub
+
 Public Sub BeforeAll()
 
     This.TestNumber = 0
@@ -25,13 +38,12 @@ Public Sub BeforeAll()
     This.Port = 1234
     This.SocketReceiveTimeout = 100
     
+    Set This.BeforeAllAssert = Assert.IsTrue(True, "initialize the overall assert.")
+    
+    ' clear the error state.
+    cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
+    
     Set This.ErrTracer = New ErrTracer
-    
-    ' clear the error trace and the last error.
-    This.ErrTracer.TraceError
-    
-    ' clear the error stack
-    cc_isr_Core_IO.UserDefinedErrors.LastErrorsStack.Clear
     
     Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700().Initialize(This.ErrTracer)
     
@@ -41,17 +53,24 @@ Public Sub BeforeAll()
     
     This.K2700.OpenConnection This.Host, This.Port, This.SocketReceiveTimeout
     
+    Dim p_leftoverErrorMessage As String
+    p_leftoverErrorMessage = VBA.vbNullString
+    
     If Err.Number <> 0 Then
+        p_leftoverErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
         Set This.BeforeAllAssert = Assert.Inconclusive("K2700 failed to connect: " & _
-            cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage())
-    ElseIf cc_isr_Core_IO.UserDefinedErrors.LastErrorsStack.Count > 0 Then
+            p_leftoverErrorMessage)
+    ElseIf cc_isr_Core_IO.UserDefinedErrors.ErrorsArchiveStack.Count > 0 Then
+        p_leftoverErrorMessage = cc_isr_Core_IO.UserDefinedErrors.ErrorsArchiveStack.Pop().ToString()
         Set This.BeforeAllAssert = Assert.Inconclusive("K2700 failed to connect: " & _
-            cc_isr_Core_IO.UserDefinedErrors.LastErrorsStack.Pop().ToString())
+            p_leftoverErrorMessage)
     ElseIf This.K2700.Connected Then
         Set This.BeforeAllAssert = Assert.IsTrue(True, "Connected")
     Else
         Set This.BeforeAllAssert = Assert.Inconclusive("K2700 should be connected")
     End If
+    
+    This.ErrTracer.TraceError p_leftoverErrorMessage
     
     ' clear the error object.
     
@@ -73,22 +92,22 @@ Public Sub BeforeEach()
     
     End If
     
-    This.TestNumber = This.TestNumber + 1
+    ' clear the error state.
+    cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
     
     If This.BeforeEachAssert.AssertSuccessful Then
     
-        ' clear the error trace and the last error.
-        This.ErrTracer.TraceError
-        
-        ' clear the error stack
-        cc_isr_Core_IO.UserDefinedErrors.LastErrorsStack.Clear
-        
-        ' clear execution state before each test.
-                            
-        If This.BeforeEachAssert.AssertSuccessful Then _
-            This.K2700.Device.ClearExecutionState
-    
+        Set This.BeforeEachAssert = Assert.AreEqual(0, Err.Number, _
+            "Error Number should be 0.")
+            
     End If
+    
+    This.TestNumber = This.TestNumber + 1
+    
+    ' clear execution state before each test.
+    
+    If This.BeforeEachAssert.AssertSuccessful Then _
+        This.K2700.Device.ClearExecutionState
     
 End Sub
 
@@ -157,17 +176,12 @@ Public Function TestParsingDeviceError() As Assert
 
     End If
 
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
+
     Debug.Print p_outcome.BuildReport("TestParsingDeviceError")
     
     Set TestParsingDeviceError = p_outcome
     
 End Function
-
-Public Sub RunTests()
-    BeforeAll
-    BeforeEach
-    TestParsingDeviceError
-    AfterEach
-    AfterAll
-End Sub
 

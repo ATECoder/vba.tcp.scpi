@@ -23,7 +23,6 @@ Private Type this_
     SenseSystem As SenseSystem
     TriggerSystem As TriggerSystem
     ExtTrigInitiated As Boolean
-    ErrTracer As cc_isr_Core.IErrTracer
 End Type
 
 Private This As this_
@@ -63,14 +62,11 @@ Private Sub Class_Initialize()
 
 End Sub
 
-''' <summary>   Initializes and returns the <see cref="IErrTracer"/> for the <see cref="Ieee488Session"/>. </summary>
-''' <param name="a_tracer">   <see cref="IErrTracer"/> implementation. </param>
+''' <summary>   Initializes and returns the <see cref="Ieee488Session"/>. </summary>
 ''' <returns>   [<see cref="K2700"/>]. </returns>
-Public Function Initialize(ByVal a_tracer As IErrTracer) As K2700
+Public Function Initialize() As K2700
    
-    This.Device.Initialize a_tracer
-    
-    Set This.ErrTracer = a_tracer
+    This.Device.Initialize
     
     Set Initialize = Me
    
@@ -664,8 +660,6 @@ Private Sub IConnectable_Dispose()
     End If
     Set This.Device = Nothing
     
-    Set This.ErrTracer = Nothing
-    
 End Sub
 
 ''' <summary>   Opens a VI Session connection to the specified host at the specified port
@@ -792,8 +786,9 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' report the error message
-    This.ErrTracer.TraceError
+    ' enqueue the error if not user defined error
+    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
+        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
 
     ' exit this procedure (not an active handler)
     On Error Resume Next
