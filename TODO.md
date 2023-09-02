@@ -2,44 +2,37 @@
 
 ## GIT:
 
-Core_IO:
-Add Ieee488 Device Error
-
-ieee 488:
-Test: Clear error state before each test.
-GPIB Lan: 
-add error handling to the connection changed event handler;
-Add Assert talk after write required condition.
-Remove test of current state from the read after write setter.
-Rename setter property value to a_value by value.
-
-Scpi:
-K2700: Set the Gpib Lan Assert Talk option to false. 
-K2700 and View Model: Remove setting the read after write.
-View Model:
-Raise Device error when detecting those so that gets reported as part of the last error.
-Test: add detection of connection failure as in the IEEE488 tests;
-Clear error state before each test.
-
-
-
+Core_IO: Fix raising, enqueuing and cloning user defined errors. 
+Replace the show method in the work book activation as the referenced object may not be fully referenced yet.
 
 ## TODO
 
+IEEE488:
+Consider removing the error tracers in favor for actually reporting the errors in the user interface.
+See how this works in the test sheet and then in the IEEE 488 sheet.
+? remove the error tracers in favor of logging or raising the error.
+
+
 2700:  
+update the tests per the ieee tests.
+
 run the scpi test. 
-Add the sense test and test function query.
-Run the view model test to ensure inconclusive works.
-Test connecting.
-Test no errors upon connecting.
-Test restoring known state.
-Test reading and parsing errors.
-Test all view model commands.
-test switching modes.
-Test getting and setting sense function. 
+Sense System Test
+* Add and test the function write and query.
+View Model test:
+* Run the view model test to ensure inconclusive works.
+* Test connecting.
+* Test no errors upon connecting.
+* Test restoring known state.
+* Test reading and parsing errors.
+* Test all view model commands.
+* test switching modes.
+* Test getting and setting sense function. 
+2700 Demo
+* fix and test
+
 
 ## Beta 202308
-
 
 https://stackoverflow.com/questions/18124853/excel-vba-checkbox-click-and-change-events-the-same
 
