@@ -5,6 +5,83 @@ Attribute VB_Name = "RouteSystemTests"
 
 Option Explicit
 
+Private Type this_
+    TestNumber As Integer
+    BeforeAllAssert As Assert
+    BeforeEachAssert As Assert
+    ErrTracer As IErrTracer
+End Type
+
+Private This As this_
+
+Public Sub RunTests()
+    BeforeAll
+    BeforeEach
+    Dim a_testNumber As Integer: a_testNumber = 4
+    Select Case a_testNumber
+        Case 1
+            Test7700CardsShouldBePopulated
+        Case 2
+            Test7700CardsShouldSelected
+        Case 3
+            Test7700CardsShouldBuildScanLists
+        Case 4
+            Test7700CardsShouldBuild4WireScanLists
+        Case 6
+        Case Else
+    End Select
+    AfterEach
+    AfterAll
+End Sub
+
+Public Sub BeforeAll()
+
+    This.TestNumber = 0
+    
+    Set This.BeforeAllAssert = Assert.IsTrue(True, "initialize the overall assert.")
+    
+    ' clear the error state.
+    cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
+    
+    Set This.ErrTracer = New ErrTracer
+    
+    ' clear the error object.
+    
+    On Error GoTo 0
+    
+End Sub
+
+Public Sub BeforeEach()
+
+    Set This.BeforeEachAssert = Assert.IsTrue(True, "initialize the pre-test assert.")
+    
+    If This.BeforeAllAssert.AssertSuccessful Or This.TestNumber > 0 Then
+    Else
+        Set This.BeforeEachAssert = Assert.Inconclusive(This.BeforeAllAssert.AssertMessage)
+    End If
+    
+    ' clear the error state.
+    cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
+    
+    If This.BeforeEachAssert.AssertSuccessful Then
+    
+        Set This.BeforeEachAssert = Assert.AreEqual(0, Err.Number, _
+            "Error Number should be 0.")
+            
+    End If
+    
+    This.TestNumber = This.TestNumber + 1
+    
+End Sub
+
+Public Sub AfterEach()
+    Set This.BeforeEachAssert = Nothing
+End Sub
+
+Public Sub AfterAll()
+    Set This.BeforeAllAssert = Nothing
+End Sub
+
 ''' <summary>   Unit test. Asserts populating the multimplexer card 7700 cards. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
 Public Function Test7700CardsShouldBePopulated() As Assert
@@ -38,7 +115,6 @@ Public Function Test7700CardsShouldBePopulated() As Assert
     Debug.Print p_outcome.BuildReport("Test7700CardsShouldBePopulated")
     
     Set Test7700CardsShouldBePopulated = p_outcome
-    
     
 End Function
 

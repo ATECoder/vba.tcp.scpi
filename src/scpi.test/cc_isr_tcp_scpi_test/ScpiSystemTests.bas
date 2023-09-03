@@ -80,6 +80,8 @@ End Sub
 
 Public Sub BeforeEach()
 
+    Set This.BeforeEachAssert = Assert.IsTrue(True, "initialize the pre-test assert.")
+
     If This.BeforeAllAssert.AssertSuccessful Or This.TestNumber > 0 Then
         
         Set This.BeforeEachAssert = IIf(This.K2700.Connected, _

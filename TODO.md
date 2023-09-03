@@ -2,30 +2,21 @@
 
 ## GIT:
 
+Update open workbook script to show read ony status.
 
-Test FX: 
-Move error tracer interface to test framework workbook and add implementation of assertion of leftover errors.
 
-Core Test:
-Add implementation of the error tracer interface.
-
-IEEE488:
-Replace Error tracing with enqueuing the error.
-
-Tests:
-Clear the error state before each test.
-Update the error trace.
-Use the error trace at the end of each test for reporting enqueued errors.
+Scpi:
+Add selection for running the Route Test.
 
 
 
 ## TODO
 
-IEEE488:
+
+Demos:
+Add Error tracers to report the errors in the demo workbooks.
 
 2700:  
-update the tests per the ieee tests.
-Replace Error tracing with enqueuing the error.
 
 Tests:
 Clear the error state before each test.

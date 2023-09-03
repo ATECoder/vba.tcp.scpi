@@ -102,6 +102,8 @@ End Sub
 
 Public Sub BeforeEach()
 
+    Set This.BeforeEachAssert = Assert.IsTrue(True, "initialize the pre-test assert.")
+    
     If This.BeforeAllAssert.AssertSuccessful Or This.TestNumber > 0 Then
         
         Set This.BeforeEachAssert = IIf(This.ViewModel.Connected, _
@@ -129,7 +131,7 @@ Public Sub BeforeEach()
     ' clear execution state before each test.
     
     If This.BeforeEachAssert.AssertSuccessful Then _
-        This.ViewModel.ClearExecutionState
+        This.ViewModel.Device.ClearExecutionState
     
 End Sub
 
