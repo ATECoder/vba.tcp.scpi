@@ -57,7 +57,7 @@ Private Sub ReadIdentity(ByVal a_host As String, ByVal a_port As Long, ByVal a_r
     Range(m_receivedMessageLengthCell).Value = vbNullString
     Range(m_receivedMessageCell).Value = vbNullString
     Range(m_elapsedTimeCell).Value = vbNullString
-    Range(m_errorMessageCell).Value = vbNullString
+    Me.LastError = vbNullString
 
     Dim p_stopper As cc_isr_Core_IO.Stopwatch: Set p_stopper = cc_isr_Core_IO.Factory.NewStopwatch()
     Dim p_totalMilliseconds As Double
@@ -105,16 +105,15 @@ Private Sub ReadIdentity(ByVal a_host As String, ByVal a_port As Long, ByVal a_r
         Range(m_receivedMessageCell).Value = "testing connect and disconnect; disconnected."
     
     Else
-        Range(m_errorMessageCell).Value = "connection failed without reporting an exception"
+        Me.LastError = "connection failed without reporting an exception"
     End If
     
 Finally:
 
-    Dim p_errorMessage As String
     If Not Err Is Nothing Then
         If Err.Number <> 0 Then
-            p_errorMessage = "Reading identity failed using Tcp session. " & _
-                             cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage
+            cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+            cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject a_suffix:="Reading identity failed."
         End If
     End If
     
@@ -128,12 +127,40 @@ Finally:
     ' terminate the session
     Set p_device = Nothing
     
-    If Len(p_errorMessage) > 0 Then
-        Range(m_errorMessageCell).Value = p_errorMessage
-    End If
+    Me.TraceErrorQueue
     
     On Error GoTo 0
 
+End Sub
+
+''' <summary>   Displays the last error. </summary>
+Public Property Let LastError(ByVal a_value As String)
+    
+    Range(m_errorMessageCell).Value = a_value
+
+End Property
+
+''' <summary>   Dequeues and displays the
+''' <see cref="cc_isr_Core_IO.UserDefinedErrors.ErrorsQueue">errors queue</see>. </summary>
+Public Sub TraceErrorQueue()
+    
+    If cc_isr_Core_IO.UserDefinedErrors.ErrorsQueue.Count > 0 Then _
+        Me.LastError = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage(VBA.vbCrLf)
+
+End Sub
+
+' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+' Worksheet events
+' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+''' <summary>   Initialize this worksheet if not initialized. </summary>
+Private Sub Worksheet_Activate()
+    If Not This.Initialized Then
+        Range(m_socketAddressCell) = vbNullString
+        Range(m_connectedSocketIdCell).Value = vbNullString
+        Range(m_connectedCell).Value = vbNullString
+    End If
+    This.Initialized = True
 End Sub
 
 

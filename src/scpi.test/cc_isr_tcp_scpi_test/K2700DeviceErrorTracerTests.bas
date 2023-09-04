@@ -1,6 +1,6 @@
-Attribute VB_Name = "ScpiSystemTests"
+Attribute VB_Name = "K2700DeviceErrorTracerTests"
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-''' <summary>   Scpi System Tests. </summary>
+''' <summary>   K2700 Device Error Tracer Tests. </summary>
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 Option Explicit
@@ -199,4 +199,6 @@ Public Function TestParsingDeviceError() As Assert
     Set TestParsingDeviceError = p_outcome
     
 End Function
+
+
 

@@ -11,16 +11,17 @@ Option Explicit
 
 Implements cc_isr_Winsock.IConnectable
 
-' reference to the VI session
+' references the event handler of the VI session
 Private WithEvents m_viSession As cc_isr_Ieee488.ViSession
 Attribute m_viSession.VB_VarHelpID = -1
 
 Private Type this_
     Device As cc_isr_Ieee488.Device
     ViSession As cc_isr_Ieee488.ViSession
+    DeviceErrorTracer As IDeviceErrorTracer
     RouteSystem As RouteSystem
     ScpiSystem As ScpiSystem
-    SenseSystem As SenseSystem
+    SenseSystem As K2700SenseSystem
     TriggerSystem As TriggerSystem
     ExtTrigInitiated As Boolean
 End Type
@@ -44,15 +45,21 @@ Private Sub Class_Initialize()
 
     Set This.Device = cc_isr_Ieee488.Factory.NewDevice()
     Set This.ViSession = This.Device.ViSession
-    Set m_viSession = This.Device.ViSession
+    
     ' make sure to turn off assering talk after write.
-    This.ViSession.GpibLan.AssertTalkAfterWriteRequired = False
+    This.ViSession.GpibLan.AssertTalkAfterWriteAllowed = False
+    
+    Set This.DeviceErrorTracer = New K2700DeviceErrorTracer
+    This.DeviceErrorTracer.Initialize This.ViSession
     
     Set This.ScpiSystem = New ScpiSystem
     This.ScpiSystem.Initialize This.ViSession
     
-    Set This.SenseSystem = New SenseSystem
-    This.SenseSystem.Initialize This.ViSession
+    Dim p_senseSystem As SenseSystem
+    Set p_senseSystem = New SenseSystem
+    p_senseSystem.Initialize This.ViSession
+    Set This.SenseSystem = New K2700SenseSystem
+    This.SenseSystem.Initialize p_senseSystem
     
     Set This.RouteSystem = New RouteSystem
     This.RouteSystem.Initialize This.ViSession
@@ -68,6 +75,8 @@ Public Function Initialize() As K2700
    
     This.Device.Initialize
     
+    Set m_viSession = This.Device.ViSession
+    
     Set Initialize = Me
    
 End Function
@@ -82,6 +91,12 @@ End Property
 ''' <value>   An <see cref="cc_isr_Ieee488.Device"/>. </returns>
 Public Property Get Device() As cc_isr_Ieee488.Device
     Set Device = This.Device
+End Property
+
+''' <summary>   Returns a reference to the <see cref="IDeviceErrorTracer"/> subsystem. </summary>
+''' <value>   An <see cref="IDeviceErrorTracer"/>. </returns>
+Public Property Get DeviceErrorTracer() As IDeviceErrorTracer
+    Set DeviceErrorTracer = This.DeviceErrorTracer
 End Property
 
 ''' <summary>   Returns a reference to the <see cref="ScpiSystem"/> subsystem. </summary>
@@ -213,7 +228,7 @@ Public Sub ConfigureContinuousFunctionAutoRange(ByVal a_function As String)
     This.ViSession.WriteLine ":FORM:ELEM READ"
     
     ' set the sense function
-    This.SenseSystem.SenseFunctionSetter a_function
+    This.SenseSystem.SenseSystem.SenseFunctionSetter a_function
     ' This.ViSession.WriteLine ":FUNC '" & a_function & "'"
     
     ' turn on continuous mode
@@ -252,7 +267,7 @@ Public Sub ConfigureSingleFunctionReading(ByVal a_function As String)
     This.ViSession.WriteLine ":TRIG:COUN 1"
     
     ' set the sense function
-    This.SenseSystem.SenseFunctionSetter a_function
+    This.SenseSystem.SenseSystem.SenseFunctionSetter a_function
     ' This.ViSession.WriteLine ":FUNC '" & a_function & "'"
     
     ' set reading format
@@ -336,7 +351,7 @@ Public Sub ConfigureExternalTriggerReading(ByVal a_function As String, ByVal a_f
     This.ViSession.WriteLine ":INIT:CONT OFF"
     
     ' set the sense function
-    This.SenseSystem.SenseFunctionSetter a_function
+    This.SenseSystem.SenseSystem.SenseFunctionSetter a_function
     ' This.ViSession.WriteLine ":FUNC '" & a_function & "'"
     
     This.ViSession.WriteLine ":" & a_function & ":RANG:AUTO ON"

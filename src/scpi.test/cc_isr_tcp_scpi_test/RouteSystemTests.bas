@@ -14,10 +14,8 @@ End Type
 
 Private This As this_
 
-Public Sub RunTests()
-    BeforeAll
+Public Sub RunTest(ByVal a_testNumber As Integer)
     BeforeEach
-    Dim a_testNumber As Integer: a_testNumber = 4
     Select Case a_testNumber
         Case 1
             Test7700CardsShouldBePopulated
@@ -27,10 +25,24 @@ Public Sub RunTests()
             Test7700CardsShouldBuildScanLists
         Case 4
             Test7700CardsShouldBuild4WireScanLists
-        Case 6
         Case Else
     End Select
     AfterEach
+End Sub
+
+Public Sub RunOneTest()
+    BeforeAll
+    RunTest 1
+    AfterAll
+End Sub
+
+Public Sub RunAllTests()
+    BeforeAll
+    Dim p_testNumber As Integer
+    For p_testNumber = 1 To 4
+        RunTest p_testNumber
+        DoEvents
+    Next p_testNumber
     AfterAll
 End Sub
 

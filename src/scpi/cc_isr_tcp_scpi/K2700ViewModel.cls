@@ -91,6 +91,7 @@ Private Type this_
     ServiceRequested As Boolean
     SerialPollByte As Integer
     GpibAddress As Integer
+    AssertTalkAfterWriteAllowed As Boolean
     ReadAfterWriteEnabled As Boolean
     GpibLanReadTimeout As Integer
     
@@ -198,6 +199,7 @@ Public Function Initialize() As K2700ViewModel
     Set This.ViSession = This.Device.ViSession
     Set This.Stopwatch = cc_isr_Core_IO.Factory.NewStopwatch()
     
+    Me.AssertTalkAfterWriteAllowed = This.ViSession.GpibLan.AssertTalkAfterWriteAllowed
     This.MeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.Continuous
     
     m_k2700_ConnectionChanged cc_isr_Winsock.Factory.NewConnectionChangedEventArgs.Initialize()
@@ -1091,6 +1093,21 @@ End Sub
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
+''' <summary>   Gets the Assert Talk After Write Allowed. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get AssertTalkAfterWriteAllowed() As Boolean
+    AssertTalkAfterWriteAllowed = This.AssertTalkAfterWriteAllowed
+End Property
+
+''' <summary>   Sets the Assert Talk After Write Allowed. </summary>
+''' <param name="a_value">   [Boolean] the value. </value>
+Public Property Let AssertTalkAfterWriteAllowed(ByVal a_value As Boolean)
+    If This.AssertTalkAfterWriteAllowed <> a_value Then
+        This.AssertTalkAfterWriteAllowed = a_value
+        Me.OnPropertyChanged "AssertTalkAfterWriteAllowed"
+    End If
+End Property
+
 ''' <summary>   Gets the Serial Poll Byte. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get SerialPollByte() As Integer
@@ -1665,12 +1682,19 @@ Public Sub ReadAfterWriteSetCommand()
     On Error GoTo err_Handler
 
     Me.RestartStopwatchCommand
-
-    This.ViSession.GpibLan.ReadAfterWriteEnabledSetter Me.ReadAfterWriteEnabled
+    
+    If This.ReadAfterWriteEnabled = Me.AssertTalkAfterWriteAllowed Then
+        This.ViSession.GpibLan.ReadAfterWriteEnabledSetter Me.ReadAfterWriteEnabled
+    Else
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError _
+            cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            "Setting read after write to '" & VBA.CStr(This.ReadAfterWriteEnabled) & _
+            "' is not allowed because the AssertTalkAfterWriteAllowed setting is '" & _
+            VBA.CStr(This.AssertTalkAfterWriteAllowed) & "'."
+    End If
 
     Me.ReadStopwatchCommand
-
-    This.ViSession.GpibLan.DisableReadAfterWriteOnWrite = This.ReadAfterWriteEnabled
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1710,8 +1734,6 @@ Public Sub ReadAfterWriteGetCommand()
     Me.ReadAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
 
     Me.ReadStopwatchCommand
-
-    This.ViSession.GpibLan.DisableReadAfterWriteOnWrite = This.ReadAfterWriteEnabled
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -3187,7 +3209,7 @@ Private Sub OnInstrumentConnected()
     ' report any errors.
     
     Dim p_errors As String
-    If This.K2700.ScpiSystem.TryDequeueDeviceErrors(p_errors) Then
+    If This.K2700.DeviceErrorTracer.TryDequeueDeviceErrors(p_errors) Then
         cc_isr_Core_IO.UserDefinedErrors.RaiseError _
             cc_isr_Core_IO.UserDefinedErrors.Ieee488DeviceError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".OnInstrumentConnected", _
@@ -3221,7 +3243,6 @@ Private Sub OnViewModelConnected()
 
     Dim p_GpibLanConnected As Boolean
     p_GpibLanConnected = Me.Connected And This.ViSession.UsingGpibLan
-    
 
     Me.SelectiveDeviceClearExecutable = p_GpibLanConnected
     Me.GoToLocalExecutable = p_GpibLanConnected
@@ -3291,9 +3312,6 @@ End Sub
 Private Sub m_k2700_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
     IConnectable_OnConnectionChanging a_eventArgs
 End Sub
-
-
-
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '

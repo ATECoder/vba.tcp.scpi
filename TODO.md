@@ -2,21 +2,22 @@
 
 ## GIT:
 
-Update open workbook script to show read ony status.
-
-
-Scpi:
-Add selection for running the Route Test.
-
-
+Device:
+Return reply from clear execution state.
+Add tests for recovering form bad command and incorrect read-after-write setting.
 
 ## TODO
-
 
 Demos:
 Add Error tracers to report the errors in the demo workbooks.
 
-2700:  
+2700:
+include device tracer interface and implementation.
+
+See that the with events element is set from the This structure and that the this structure elements rather than me. are called.
+    ' set the event handler after initializing the VI Session to ensure that the
+    ' Vi Session handles the connection events first.
+    Set m_viSession = This.ViSession
 
 Tests:
 Clear the error state before each test.
