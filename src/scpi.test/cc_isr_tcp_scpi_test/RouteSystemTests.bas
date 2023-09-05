@@ -7,8 +7,8 @@ Option Explicit
 
 Private Type this_
     TestNumber As Integer
-    BeforeAllAssert As Assert
-    BeforeEachAssert As Assert
+    BeforeAllAssert As cc_isr_Test_Fx.Assert
+    BeforeEachAssert As cc_isr_Test_Fx.Assert
     ErrTracer As IErrTracer
 End Type
 
@@ -96,9 +96,9 @@ End Sub
 
 ''' <summary>   Unit test. Asserts populating the multimplexer card 7700 cards. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function Test7700CardsShouldBePopulated() As Assert
+Public Function Test7700CardsShouldBePopulated() As cc_isr_Test_Fx.Assert
 
-    Dim p_outcome As Assert
+    Dim p_outcome As cc_isr_Test_Fx.Assert
 
     Dim p_routeSystem As cc_isr_Tcp_Scpi.RouteSystem
     Set p_routeSystem = cc_isr_Tcp_Scpi.Factory.NewRouteSystem.Initialize(cc_isr_Ieee488.Factory.NewViSession())
@@ -132,9 +132,9 @@ End Function
 
 ''' <summary>   Unit test. Asserts populating the multimplexer card 7700 cards. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function Test7700CardsShouldSelected() As Assert
+Public Function Test7700CardsShouldSelected() As cc_isr_Test_Fx.Assert
 
-    Dim p_outcome As Assert
+    Dim p_outcome As cc_isr_Test_Fx.Assert
 
     Dim p_routeSystem As cc_isr_Tcp_Scpi.RouteSystem
     Set p_routeSystem = cc_isr_Tcp_Scpi.Factory.NewRouteSystem.Initialize(cc_isr_Ieee488.Factory.NewViSession())
@@ -262,9 +262,9 @@ End Function
 
 ''' <summary>   Asserts building scan lists. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As String) As Assert
+Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As String) As cc_isr_Test_Fx.Assert
 
-    Dim p_outcome As Assert
+    Dim p_outcome As cc_isr_Test_Fx.Assert
 
     Dim p_routeSystem As cc_isr_Tcp_Scpi.RouteSystem
     Set p_routeSystem = cc_isr_Tcp_Scpi.Factory.NewRouteSystem.Initialize(cc_isr_Ieee488.Factory.NewViSession())
@@ -405,9 +405,9 @@ End Function
 
 ''' <summary>   Unit test. Asserts building scan lists. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function Test7700CardsShouldBuildScanLists() As Assert
+Public Function Test7700CardsShouldBuildScanLists() As cc_isr_Test_Fx.Assert
     
-    Dim p_outcome As Assert
+    Dim p_outcome As cc_isr_Test_Fx.Assert
     Set p_outcome = Assert7700CardsShouldBuildScanLists("RES")
 
     Debug.Print p_outcome.BuildReport("Test7700CardsShouldBuildScanLists")
@@ -418,9 +418,9 @@ End Function
 
 ''' <summary>   Unit test. Asserts building 4-wire scan lists. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function Test7700CardsShouldBuild4WireScanLists() As Assert
+Public Function Test7700CardsShouldBuild4WireScanLists() As cc_isr_Test_Fx.Assert
     
-    Dim p_outcome As Assert
+    Dim p_outcome As cc_isr_Test_Fx.Assert
     Set p_outcome = Assert7700CardsShouldBuildScanLists("FRES")
 
     Debug.Print p_outcome.BuildReport("Test7700CardsShouldBuild4WireScanLists")

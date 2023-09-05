@@ -9,8 +9,8 @@ Option Explicit
 
 Private Type this_
     TestNumber As Integer
-    BeforeAllAssert As Assert
-    BeforeEachAssert As Assert
+    BeforeAllAssert As cc_isr_Test_Fx.Assert
+    BeforeEachAssert As cc_isr_Test_Fx.Assert
     ViewModel As cc_isr_Tcp_Scpi.K2700ViewModel
     Host As String
     Port As Long
@@ -160,9 +160,9 @@ End Sub
 
 ''' <summary>   Unit test. Asserts that view model should initialize. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function TestViewModelShouldInitialize() As Assert
+Public Function TestViewModelShouldInitialize() As cc_isr_Test_Fx.Assert
 
-    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.IsTrue(This.ViewModel.ToggleConnectionExecutable, _
@@ -183,9 +183,9 @@ End Function
 
 ''' <summary>   Unit test. Asserts that view model should connect. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function TestViewModelShouldConnect() As Assert
+Public Function TestViewModelShouldConnect() As cc_isr_Test_Fx.Assert
 
-    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.IsTrue(This.ViewModel.Connected, _
@@ -206,9 +206,9 @@ End Function
 
 ''' <summary>   Unit test. Asserts that view model should read cards. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function TestViewModelShouldReadCards() As Assert
+Public Function TestViewModelShouldReadCards() As cc_isr_Test_Fx.Assert
 
-    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.AreEqual(This.TopCard, This.ViewModel.TopCard, _

@@ -18,7 +18,7 @@ Attribute m_viSession.VB_VarHelpID = -1
 Private Type this_
     Device As cc_isr_Ieee488.Device
     ViSession As cc_isr_Ieee488.ViSession
-    DeviceErrorTracer As IDeviceErrorTracer
+    DeviceErrorReader As IDeviceErrorReader
     RouteSystem As RouteSystem
     ScpiSystem As ScpiSystem
     SenseSystem As K2700SenseSystem
@@ -49,8 +49,8 @@ Private Sub Class_Initialize()
     ' make sure to turn off assering talk after write.
     This.ViSession.GpibLan.AssertTalkAfterWriteAllowed = False
     
-    Set This.DeviceErrorTracer = New K2700DeviceErrorTracer
-    This.DeviceErrorTracer.Initialize This.ViSession
+    Set This.DeviceErrorReader = New K2700DeviceErrorReader
+    This.DeviceErrorReader.Initialize This.ViSession
     
     Set This.ScpiSystem = New ScpiSystem
     This.ScpiSystem.Initialize This.ViSession
@@ -93,10 +93,10 @@ Public Property Get Device() As cc_isr_Ieee488.Device
     Set Device = This.Device
 End Property
 
-''' <summary>   Returns a reference to the <see cref="IDeviceErrorTracer"/> subsystem. </summary>
-''' <value>   An <see cref="IDeviceErrorTracer"/>. </returns>
-Public Property Get DeviceErrorTracer() As IDeviceErrorTracer
-    Set DeviceErrorTracer = This.DeviceErrorTracer
+''' <summary>   Returns a reference to the <see cref="IDeviceErrorReader"/> subsystem. </summary>
+''' <value>   An <see cref="IDeviceErrorReader"/>. </returns>
+Public Property Get DeviceErrorReader() As IDeviceErrorReader
+    Set DeviceErrorReader = This.DeviceErrorReader
 End Property
 
 ''' <summary>   Returns a reference to the <see cref="ScpiSystem"/> subsystem. </summary>

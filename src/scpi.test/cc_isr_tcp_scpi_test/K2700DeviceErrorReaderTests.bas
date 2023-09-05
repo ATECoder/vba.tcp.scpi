@@ -1,14 +1,14 @@
-Attribute VB_Name = "K2700DeviceErrorTracerTests"
+Attribute VB_Name = "K2700DeviceErrorReaderTests"
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-''' <summary>   K2700 Device Error Tracer Tests. </summary>
+''' <summary>   K2700 Device Error Reader Tests. </summary>
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 Option Explicit
 
 Private Type this_
     TestNumber As Integer
-    BeforeAllAssert As Assert
-    BeforeEachAssert As Assert
+    BeforeAllAssert As cc_isr_Test_Fx.Assert
+    BeforeEachAssert As cc_isr_Test_Fx.Assert
     K2700 As cc_isr_Tcp_Scpi.K2700
     Host As String
     Port As Long
@@ -37,7 +37,7 @@ End Sub
 Public Sub RunAllTests()
     BeforeAll
     Dim p_testNumber As Integer
-    For p_testNumber = 1 To 4
+    For p_testNumber = 1 To 1
         RunTest p_testNumber
         DoEvents
     Next p_testNumber
@@ -145,23 +145,23 @@ End Sub
 
 ''' <summary>   Unit test. Asserts parsing device error. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function TestParsingDeviceError() As Assert
+Public Function TestParsingDeviceError() As cc_isr_Test_Fx.Assert
 
-    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     Dim p_errorNumber As String
     Dim p_errorMessage As String
     Dim p_success As Boolean
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.IsNotNothing(This.K2700.ScpiSystem, _
-            "Scpi System should be instantiated.")
+        Set p_outcome = Assert.IsNotNothing(This.K2700.DeviceErrorReader, _
+            "Device Error Reader should be instantiated.")
     
     If p_outcome.AssertSuccessful Then
         
-        p_success = This.K2700.ScpiSystem.TryDequeueParseDeviceError(p_errorNumber, p_errorMessage)
+        p_success = This.K2700.DeviceErrorReader.TryDequeueParseDeviceError(p_errorNumber, p_errorMessage)
         Set p_outcome = Assert.IsTrue(p_success, _
-            "Scpi System should dequeue and parse the last device error.")
+            "Device Error Reader should dequeue and parse the last device error.")
 
     End If
 
@@ -169,7 +169,7 @@ Public Function TestParsingDeviceError() As Assert
     If p_outcome.AssertSuccessful Then
         
         Set p_outcome = Assert.AreEqual(p_expectedErrorNumber, p_errorNumber, _
-            "Scpi System should dequeue the 'No Error' error number.")
+            "Device Error Reader should dequeue the 'No Error' error number.")
 
     End If
 
@@ -177,7 +177,7 @@ Public Function TestParsingDeviceError() As Assert
     If p_outcome.AssertSuccessful Then
         
         Set p_outcome = Assert.AreEqual(p_expectedErrorMessage, p_errorMessage, _
-            "Scpi System should dequeue the 'No Error' error message.")
+            "Device Error Reader should dequeue the 'No Error' error message.")
 
     End If
 
@@ -185,9 +185,9 @@ Public Function TestParsingDeviceError() As Assert
     Dim p_expectedErrorMessages As String: p_expectedErrorMessages = "0,No error"
     If p_outcome.AssertSuccessful Then
         
-        p_success = Not This.K2700.ScpiSystem.TryDequeueDeviceErrors(p_actualErrorMessages)
+        p_success = Not This.K2700.DeviceErrorReader.TryDequeueDeviceErrors(p_actualErrorMessages)
         Set p_outcome = Assert.AreEqual(p_expectedErrorMessages, p_actualErrorMessages, _
-            "Scpi System should dequeue the '0,No Error' error messages.")
+            "Device Error Reader should dequeue the '0,No Error' error messages.")
 
     End If
 

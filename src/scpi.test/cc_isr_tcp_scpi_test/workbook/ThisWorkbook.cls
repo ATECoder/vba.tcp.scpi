@@ -29,6 +29,10 @@ Public Function CollectionIsNothingOrEmpty(ByVal a_collection As Collection)
     End If
 End Function
 
+Public Sub CloseEditorWindows()
+    cc_isr_Core_IO.EditorExtensions.CloseAllEditorWindows
+End Sub
+
 ''' <summary>   Gets all referenced workbooks for this workbook including
 '''             itself. </summary>
 ''' <value>   [Collection]. </value>

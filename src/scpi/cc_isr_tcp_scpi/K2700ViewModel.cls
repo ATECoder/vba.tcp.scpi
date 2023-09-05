@@ -3209,7 +3209,7 @@ Private Sub OnInstrumentConnected()
     ' report any errors.
     
     Dim p_errors As String
-    If This.K2700.DeviceErrorTracer.TryDequeueDeviceErrors(p_errors) Then
+    If This.K2700.DeviceErrorReader.TryDequeueDeviceErrors(p_errors) Then
         cc_isr_Core_IO.UserDefinedErrors.RaiseError _
             cc_isr_Core_IO.UserDefinedErrors.Ieee488DeviceError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".OnInstrumentConnected", _

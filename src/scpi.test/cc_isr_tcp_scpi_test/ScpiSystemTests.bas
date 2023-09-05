@@ -7,13 +7,14 @@ Option Explicit
 
 Private Type this_
     TestNumber As Integer
-    BeforeAllAssert As Assert
-    BeforeEachAssert As Assert
+    BeforeAllAssert As cc_isr_Test_Fx.Assert
+    BeforeEachAssert As cc_isr_Test_Fx.Assert
     K2700 As cc_isr_Tcp_Scpi.K2700
     Host As String
     Port As Long
     SocketReceiveTimeout As Integer
     ErrTracer As IErrTracer
+    DeviceErrorsTracer As IErrTracer
 End Type
 
 Private This As this_
@@ -22,7 +23,7 @@ Public Sub RunTest(ByVal a_testNumber As Integer)
     BeforeEach
     Select Case a_testNumber
         Case 1
-            TestParsingDeviceError
+            TestInputsShouldBeFront
         Case Else
     End Select
     AfterEach
@@ -37,7 +38,7 @@ End Sub
 Public Sub RunAllTests()
     BeforeAll
     Dim p_testNumber As Integer
-    For p_testNumber = 1 To 4
+    For p_testNumber = 1 To 1
         RunTest p_testNumber
         DoEvents
     Next p_testNumber
@@ -57,6 +58,9 @@ Public Sub BeforeAll()
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
     
     Set This.ErrTracer = New ErrTracer
+    
+    Dim p_deviceErrorsTracer As New DeviceErrorsTracer
+    Set This.DeviceErrorsTracer = p_deviceErrorsTracer.Initialize(This.K2700)
     
     Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700().Initialize(This.ErrTracer)
     
@@ -132,6 +136,9 @@ End Sub
 
 Public Sub AfterAll()
     
+    Set This.ErrTracer = Nothing
+    Set This.DeviceErrorsTracer = Nothing
+    
     ' disconnect if connected
     If Not This.K2700 Is Nothing Then _
         This.K2700.CloseConnection
@@ -143,15 +150,11 @@ Public Sub AfterAll()
 
 End Sub
 
-''' <summary>   Unit test. Asserts parsing device error. </summary>
+''' <summary>   Unit test. Asserts inputs should be front. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function TestParsingDeviceError() As Assert
+Public Function TestInputsShouldBeFront() As cc_isr_Test_Fx.Assert
 
-    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
-    
-    Dim p_errorNumber As String
-    Dim p_errorMessage As String
-    Dim p_success As Boolean
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.IsNotNothing(This.K2700.ScpiSystem, _
@@ -159,44 +162,27 @@ Public Function TestParsingDeviceError() As Assert
     
     If p_outcome.AssertSuccessful Then
         
-        p_success = This.K2700.ScpiSystem.TryDequeueParseDeviceError(p_errorNumber, p_errorMessage)
-        Set p_outcome = Assert.IsTrue(p_success, _
-            "Scpi System should dequeue and parse the last device error.")
+        Set p_outcome = Assert.IsTrue(This.K2700.ScpiSystem.QueryFrontSwitch(), _
+            "Scpi System should query and report the correct state of the front switch.")
 
     End If
+    
+    Dim p_deviceErrorAssert As cc_isr_Test_Fx.Assert
+    Set p_deviceErrorAssert = This.DeviceErrorsTracer.AssertLeftoverErrors
 
-    Dim p_expectedErrorNumber As String: p_expectedErrorNumber = "0"
     If p_outcome.AssertSuccessful Then
-        
-        Set p_outcome = Assert.AreEqual(p_expectedErrorNumber, p_errorNumber, _
-            "Scpi System should dequeue the 'No Error' error number.")
-
-    End If
-
-    Dim p_expectedErrorMessage As String: p_expectedErrorMessage = "No error"
-    If p_outcome.AssertSuccessful Then
-        
-        Set p_outcome = Assert.AreEqual(p_expectedErrorMessage, p_errorMessage, _
-            "Scpi System should dequeue the 'No Error' error message.")
-
-    End If
-
-    Dim p_actualErrorMessages As String
-    Dim p_expectedErrorMessages As String: p_expectedErrorMessages = "0,No error"
-    If p_outcome.AssertSuccessful Then
-        
-        p_success = Not This.K2700.ScpiSystem.TryDequeueDeviceErrors(p_actualErrorMessages)
-        Set p_outcome = Assert.AreEqual(p_expectedErrorMessages, p_actualErrorMessages, _
-            "Scpi System should dequeue the '0,No Error' error messages.")
-
+        Set p_outcome = p_deviceErrorAssert
+    ElseIf Not p_deviceErrorAssert.AssertSuccessful Then
+        Set p_outcome = Assert.Fail(p_outcome.AssertMessage & VBA.vbCrLf & _
+        "Device errors: " & VBA.vbCrLf & p_deviceErrorAssert.AssertMessage)
     End If
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
 
-    Debug.Print p_outcome.BuildReport("TestParsingDeviceError")
+    Debug.Print p_outcome.BuildReport("TestInputsShouldBeFront")
     
-    Set TestParsingDeviceError = p_outcome
+    Set TestInputsShouldBeFront = p_outcome
     
 End Function
 
