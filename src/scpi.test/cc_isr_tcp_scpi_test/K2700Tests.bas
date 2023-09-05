@@ -56,7 +56,7 @@ Public Sub BeforeAll()
     This.Port = 1234
     This.SocketReceiveTimeout = 100
     
-    Set This.BeforeAllAssert = Assert.IsTrue(True, "initialize the overall assert.")
+    Set This.BeforeAllAssert = Assert.Pass("initialized.")
     
     ' clear the error state.
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
@@ -172,7 +172,8 @@ Public Function TestQueryOperationCompletion() As Assert
     End If
 
     Dim p_deviceErrorAssert As cc_isr_Test_Fx.Assert
-    Set p_deviceErrorAssert = This.DeviceErrorsTracer.AssertLeftoverErrors
+    Set p_deviceErrorAssert = IIf(This.BeforeEachAssert.AssertSuccessful, _
+        This.DeviceErrorsTracer.AssertLeftoverErrors, Assert.Pass("Initialized."))
 
     If p_outcome.AssertSuccessful Then
         Set p_outcome = p_deviceErrorAssert
@@ -229,7 +230,8 @@ Public Function TestRecoveryFromSyntaxFromError() As Assert
     End If
     
     Dim p_deviceErrorAssert As cc_isr_Test_Fx.Assert
-    Set p_deviceErrorAssert = This.DeviceErrorsTracer.AssertLeftoverErrors
+    Set p_deviceErrorAssert = IIf(This.BeforeEachAssert.AssertSuccessful, _
+        This.DeviceErrorsTracer.AssertLeftoverErrors, Assert.Pass("Initialized."))
 
     If p_outcome.AssertSuccessful Then
         Set p_outcome = p_deviceErrorAssert
@@ -286,7 +288,8 @@ Public Function TestRecoveryFromReadAfterWriteTrue() As Assert
     End If
 
     Dim p_deviceErrorAssert As cc_isr_Test_Fx.Assert
-    Set p_deviceErrorAssert = This.DeviceErrorsTracer.AssertLeftoverErrors
+    Set p_deviceErrorAssert = IIf(This.BeforeEachAssert.AssertSuccessful, _
+        This.DeviceErrorsTracer.AssertLeftoverErrors, Assert.Pass("Initialized."))
 
     If p_outcome.AssertSuccessful Then
         Set p_outcome = p_deviceErrorAssert

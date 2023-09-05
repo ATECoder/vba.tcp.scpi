@@ -58,7 +58,7 @@ Public Sub BeforeAll()
     This.ViewModel.SocketReceiveTimeout = 100
     This.ViewModel.SenseFunctionName = This.SenseFunction
     
-    Set This.BeforeAllAssert = Assert.IsTrue(True, "initialize the overall assert.")
+    Set This.BeforeAllAssert = Assert.Pass("initialized.")
     
     ' clear the error state.
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
@@ -105,7 +105,7 @@ End Sub
 
 Public Sub BeforeEach()
 
-    Set This.BeforeEachAssert = Assert.IsTrue(True, "initialize the pre-test assert.")
+    Set This.BeforeEachAssert = Assert.Pass("initialized.")
     
     If This.BeforeAllAssert.AssertSuccessful Or This.TestNumber > 0 Then
         
@@ -202,7 +202,8 @@ Public Function TestViewModelShouldConnect() As cc_isr_Test_Fx.Assert
             "Exception: " & This.ViewModel.LastErrorMessage)
     
     Dim p_deviceErrorAssert As cc_isr_Test_Fx.Assert
-    Set p_deviceErrorAssert = This.DeviceErrorsTracer.AssertLeftoverErrors
+    Set p_deviceErrorAssert = IIf(This.BeforeEachAssert.AssertSuccessful, _
+        This.DeviceErrorsTracer.AssertLeftoverErrors, Assert.Pass("Initialized."))
 
     If p_outcome.AssertSuccessful Then
         Set p_outcome = p_deviceErrorAssert
@@ -255,7 +256,8 @@ Public Function TestViewModelShouldReadCards() As cc_isr_Test_Fx.Assert
             "Exception: " & This.ViewModel.LastErrorMessage)
 
     Dim p_deviceErrorAssert As cc_isr_Test_Fx.Assert
-    Set p_deviceErrorAssert = This.DeviceErrorsTracer.AssertLeftoverErrors
+    Set p_deviceErrorAssert = IIf(This.BeforeEachAssert.AssertSuccessful, _
+        This.DeviceErrorsTracer.AssertLeftoverErrors, Assert.Pass("Initialized."))
 
     If p_outcome.AssertSuccessful Then
         Set p_outcome = p_deviceErrorAssert

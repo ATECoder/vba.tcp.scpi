@@ -2,26 +2,19 @@
 
 ## GIT:
 
-Scpi:
+SCPI:
+All tests: condition getting the device errors on 'Before Each' assert successful indicating that the device is accessible.
 
 
 ## TODO
 
-Assert:
-Add Are Equal String with conditions.
+### SCPI:
+Run all tests with system off to check the inconclusive works.
 
-
-2700:
-Tests:
-Clear the error state before each test.
-Update the error trace.
-Use the error trace at the end of each test for reporting enqueued errors.
-
-run the scpi test. 
 Sense System Test
 * Add and test the function write and query.
+
 View Model test:
-* Run the view model test to ensure inconclusive works.
 * Test connecting.
 * Test no errors upon connecting.
 * Test restoring known state.

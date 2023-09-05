@@ -50,7 +50,7 @@ Public Sub BeforeAll()
 
     This.TestNumber = 0
     
-    Set This.BeforeAllAssert = Assert.IsTrue(True, "initialize the overall assert.")
+    Set This.BeforeAllAssert = Assert.Pass("initialized.")
     
     ' clear the error state.
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
@@ -65,7 +65,7 @@ End Sub
 
 Public Sub BeforeEach()
 
-    Set This.BeforeEachAssert = Assert.IsTrue(True, "initialize the pre-test assert.")
+    Set This.BeforeEachAssert = Assert.Pass("initialized.")
     
     If This.BeforeAllAssert.AssertSuccessful Or This.TestNumber > 0 Then
     Else
