@@ -3,14 +3,13 @@
 ## GIT:
 
 Scpi:
-Tests:
-Add trace for device errors.
-Scpi System Tests:
-Move Scpi system tests to the device error trace tests;
-Add test of front switch state.
 
 
 ## TODO
+
+Assert:
+Add Are Equal String with conditions.
+
 
 2700:
 Tests:

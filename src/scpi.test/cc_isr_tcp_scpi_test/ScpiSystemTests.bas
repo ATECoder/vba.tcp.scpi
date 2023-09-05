@@ -57,12 +57,11 @@ Public Sub BeforeAll()
     ' clear the error state.
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
     
-    Set This.ErrTracer = New ErrTracer
+    Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700().Initialize()
     
+    Set This.ErrTracer = New ErrTracer
     Dim p_deviceErrorsTracer As New DeviceErrorsTracer
     Set This.DeviceErrorsTracer = p_deviceErrorsTracer.Initialize(This.K2700)
-    
-    Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700().Initialize(This.ErrTracer)
     
     ' trap errors in case connection fails rendering all tests inconclusive.
     

@@ -22,7 +22,9 @@ Public Sub RunTest(ByVal a_testNumber As Integer)
     BeforeEach
     Select Case a_testNumber
         Case 1
-            TestParsingDeviceError
+            TestNoErrorShouldParse
+        Case 2
+            TestUndefinedHeaderErrorShouldParse
         Case Else
     End Select
     AfterEach
@@ -30,14 +32,14 @@ End Sub
 
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 1
+    RunTest 2
     AfterAll
 End Sub
 
 Public Sub RunAllTests()
     BeforeAll
     Dim p_testNumber As Integer
-    For p_testNumber = 1 To 1
+    For p_testNumber = 1 To 2
         RunTest p_testNumber
         DoEvents
     Next p_testNumber
@@ -58,7 +60,7 @@ Public Sub BeforeAll()
     
     Set This.ErrTracer = New ErrTracer
     
-    Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700().Initialize(This.ErrTracer)
+    Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700().Initialize()
     
     ' trap errors in case connection fails rendering all tests inconclusive.
     
@@ -143,9 +145,9 @@ Public Sub AfterAll()
 
 End Sub
 
-''' <summary>   Unit test. Asserts parsing device error. </summary>
+''' <summary>   Unit test. Asserts the device <c>No Error</c> should. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function TestParsingDeviceError() As cc_isr_Test_Fx.Assert
+Public Function TestNoErrorShouldParse() As cc_isr_Test_Fx.Assert
 
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
@@ -194,11 +196,83 @@ Public Function TestParsingDeviceError() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
 
-    Debug.Print p_outcome.BuildReport("TestParsingDeviceError")
+    Debug.Print p_outcome.BuildReport("TestNoErrorShouldParse")
     
-    Set TestParsingDeviceError = p_outcome
+    Set TestNoErrorShouldParse = p_outcome
     
 End Function
+
+
+''' <summary>   Unit test. Asserts parsing device <c>UndefinedHeader</c> Error. </summary>
+''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
+Public Function TestUndefinedHeaderErrorShouldParse() As cc_isr_Test_Fx.Assert
+
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
+    
+    Dim p_errorNumber As String
+    Dim p_errorMessage As String
+    Dim p_success As Boolean
+    
+    ' validate the existence of no errors.
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = TestNoErrorShouldParse()
+    
+    If p_outcome.AssertSuccessful Then
+    
+        ' create and fetch the error.
+        This.K2700.Device.ViSession.WriteLine "**CLS", False
+        cc_isr_Core_IO.Factory.NewStopwatch.Wait 50
+        p_success = This.K2700.DeviceErrorReader.TryDequeueParseDeviceError(p_errorNumber, p_errorMessage)
+        Set p_outcome = Assert.IsTrue(p_success, _
+            "Device Error Reader should dequeue and parse the last device error.")
+
+    End If
+
+    Dim p_expectedErrorMessage As String: p_expectedErrorMessage = "Undefined header"
+    Dim p_expectedErrorNumber As String: p_expectedErrorNumber = "-113"
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = Assert.AreEqual(p_expectedErrorNumber, p_errorNumber, _
+            "Device Error Reader should dequeue the '" & _
+            p_expectedErrorMessage & "' error number.")
+
+    End If
+
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = Assert.AreEqual(p_expectedErrorMessage, p_errorMessage, _
+            "Device Error Reader should dequeue the expected error message.")
+
+    End If
+
+    If p_outcome.AssertSuccessful Then
+        
+        Dim p_expectedReply As String: p_expectedReply = "1"
+        Dim p_actualReply As String: p_actualReply = This.K2700.Device.QueryOperationCompleted()
+        Set p_outcome = Assert.AreEqual(p_expectedReply, p_actualReply, _
+            "The Device shoudl query operation completion.")
+
+    End If
+
+    Dim p_actualErrorMessages As String
+    Dim p_expectedErrorMessages As String: p_expectedErrorMessages = "0,No error"
+    If p_outcome.AssertSuccessful Then
+        
+        p_success = Not This.K2700.DeviceErrorReader.TryDequeueDeviceErrors(p_actualErrorMessages)
+        Set p_outcome = Assert.AreEqual(p_expectedErrorMessages, p_actualErrorMessages, _
+            "Device Error Reader should dequeue the '0,No Error' error messages.")
+
+    End If
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
+
+    Debug.Print p_outcome.BuildReport("TestUndefinedHeaderErrorShouldParse")
+    
+    Set TestUndefinedHeaderErrorShouldParse = p_outcome
+    
+End Function
+
 
 
 

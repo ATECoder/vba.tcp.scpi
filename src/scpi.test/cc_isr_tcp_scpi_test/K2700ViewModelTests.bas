@@ -14,12 +14,13 @@ Private Type this_
     ViewModel As cc_isr_Tcp_Scpi.K2700ViewModel
     Host As String
     Port As Long
-    ErrTracer As IErrTracer
     TopCard As String
     BottomCard As String
     TopCardFunctionScanList As String
     BottomCardFunctionScanList As String
     SenseFunction As String
+    ErrTracer As IErrTracer
+    DeviceErrorsTracer As IErrTracer
 End Type
 
 Private This As this_
@@ -62,11 +63,13 @@ Public Sub BeforeAll()
     ' clear the error state.
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
     
-    Set This.ErrTracer = New ErrTracer
-    
     ' initialize the view model.
     This.ViewModel.Initialize
 
+    Set This.ErrTracer = New ErrTracer
+    Dim p_deviceErrorsTracer As New DeviceErrorsTracer
+    Set This.DeviceErrorsTracer = p_deviceErrorsTracer.Initialize(This.ViewModel)
+    
     ' trap errors in case connection fails rendering all tests inconclusive.
     
     On Error Resume Next
@@ -141,6 +144,9 @@ End Sub
 
 Public Sub AfterAll()
     
+    Set This.ErrTracer = Nothing
+    Set This.DeviceErrorsTracer = Nothing
+    
     ' disconnect if connected
     If Not This.ViewModel Is Nothing Then _
         This.ViewModel.ToggleConnectionCommand False
@@ -195,6 +201,16 @@ Public Function TestViewModelShouldConnect() As cc_isr_Test_Fx.Assert
         Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
             "Exception: " & This.ViewModel.LastErrorMessage)
     
+    Dim p_deviceErrorAssert As cc_isr_Test_Fx.Assert
+    Set p_deviceErrorAssert = This.DeviceErrorsTracer.AssertLeftoverErrors
+
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = p_deviceErrorAssert
+    ElseIf Not p_deviceErrorAssert.AssertSuccessful Then
+        Set p_outcome = Assert.Fail(p_outcome.AssertMessage & VBA.vbCrLf & _
+        "Device errors: " & VBA.vbCrLf & p_deviceErrorAssert.AssertMessage)
+    End If
+
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
@@ -238,6 +254,16 @@ Public Function TestViewModelShouldReadCards() As cc_isr_Test_Fx.Assert
             This.ViewModel.LastErrorMessage, _
             "Exception: " & This.ViewModel.LastErrorMessage)
 
+    Dim p_deviceErrorAssert As cc_isr_Test_Fx.Assert
+    Set p_deviceErrorAssert = This.DeviceErrorsTracer.AssertLeftoverErrors
+
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = p_deviceErrorAssert
+    ElseIf Not p_deviceErrorAssert.AssertSuccessful Then
+        Set p_outcome = Assert.Fail(p_outcome.AssertMessage & VBA.vbCrLf & _
+        "Device errors: " & VBA.vbCrLf & p_deviceErrorAssert.AssertMessage)
+    End If
+    
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     

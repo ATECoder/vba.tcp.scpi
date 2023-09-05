@@ -14,6 +14,7 @@ Private Type this_
     Port As Long
     SocketReceiveTimeout As Integer
     ErrTracer As IErrTracer
+    DeviceErrorsTracer As IErrTracer
 End Type
 
 Private This As this_
@@ -60,9 +61,11 @@ Public Sub BeforeAll()
     ' clear the error state.
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
     
-    Set This.ErrTracer = New ErrTracer
-    
     Set This.Device = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize()
+    
+    Set This.ErrTracer = New ErrTracer
+    Dim p_deviceErrorsTracer As New DeviceErrorsTracer
+    Set This.DeviceErrorsTracer = p_deviceErrorsTracer.Initialize(This.Device)
     
     ' trap errors in case connection fails rendering all tests inconclusive.
     
@@ -134,6 +137,9 @@ End Sub
 
 Public Sub AfterAll()
     
+    Set This.ErrTracer = Nothing
+    Set This.DeviceErrorsTracer = Nothing
+    
     ' disconnect if connected
     If Not This.Device Is Nothing Then _
         This.Device.CloseConnection
@@ -163,6 +169,16 @@ Public Function TestQueryOperationCompletion() As Assert
         Set p_outcome = Assert.AreEqual(p_expectedReply, p_actualReply, _
             "K2700 Device should query operation completion.")
 
+    End If
+
+    Dim p_deviceErrorAssert As cc_isr_Test_Fx.Assert
+    Set p_deviceErrorAssert = This.DeviceErrorsTracer.AssertLeftoverErrors
+
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = p_deviceErrorAssert
+    ElseIf Not p_deviceErrorAssert.AssertSuccessful Then
+        Set p_outcome = Assert.Fail(p_outcome.AssertMessage & VBA.vbCrLf & _
+        "Device errors: " & VBA.vbCrLf & p_deviceErrorAssert.AssertMessage)
     End If
 
     If p_outcome.AssertSuccessful Then _
@@ -212,6 +228,16 @@ Public Function TestRecoveryFromSyntaxFromError() As Assert
             "K2700 Device should query operation completion.")
     End If
     
+    Dim p_deviceErrorAssert As cc_isr_Test_Fx.Assert
+    Set p_deviceErrorAssert = This.DeviceErrorsTracer.AssertLeftoverErrors
+
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = p_deviceErrorAssert
+    ElseIf Not p_deviceErrorAssert.AssertSuccessful Then
+        Set p_outcome = Assert.Fail(p_outcome.AssertMessage & VBA.vbCrLf & _
+        "Device errors: " & VBA.vbCrLf & p_deviceErrorAssert.AssertMessage)
+    End If
+
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
 
@@ -257,6 +283,16 @@ Public Function TestRecoveryFromReadAfterWriteTrue() As Assert
         p_actualReply = This.Device.Device.QueryOperationCompleted()
         Set p_outcome = Assert.AreEqual(p_expectedReply, p_actualReply, _
             "K2700 Device should query operation completion.")
+    End If
+
+    Dim p_deviceErrorAssert As cc_isr_Test_Fx.Assert
+    Set p_deviceErrorAssert = This.DeviceErrorsTracer.AssertLeftoverErrors
+
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = p_deviceErrorAssert
+    ElseIf Not p_deviceErrorAssert.AssertSuccessful Then
+        Set p_outcome = Assert.Fail(p_outcome.AssertMessage & VBA.vbCrLf & _
+        "Device errors: " & VBA.vbCrLf & p_deviceErrorAssert.AssertMessage)
     End If
 
     If p_outcome.AssertSuccessful Then _
