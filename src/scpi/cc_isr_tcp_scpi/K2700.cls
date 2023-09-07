@@ -801,9 +801,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
 
     ' exit this procedure (not an active handler)
     On Error Resume Next

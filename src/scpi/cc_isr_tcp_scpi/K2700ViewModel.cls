@@ -403,9 +403,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
 
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -818,9 +817,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -874,9 +872,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -916,9 +913,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -956,9 +952,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -995,9 +990,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1035,9 +1029,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1074,9 +1067,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1411,9 +1403,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1450,9 +1441,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1494,9 +1484,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1533,9 +1522,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1582,9 +1570,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1621,9 +1608,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1660,9 +1646,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1708,9 +1693,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1747,9 +1731,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1797,9 +1780,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1836,9 +1818,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1875,9 +1856,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -1914,9 +1894,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -2672,9 +2651,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -2760,9 +2738,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -2824,9 +2801,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -2863,9 +2839,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -2955,9 +2930,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -3032,9 +3006,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -3105,9 +3078,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -3163,9 +3135,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -3294,9 +3265,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -3310,7 +3280,36 @@ End Sub
 ''' <summary>   Handles the <see cref="cc_isr_Tcp_Scpi.K2700.ConnectionChanging"/> event. </summary>
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangingEventArgs"/>] event arguments. </param>
 Private Sub m_k2700_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
+    
+    Const p_procedureName = "m_k2700_ConnectionChanging"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
     IConnectable_OnConnectionChanging a_eventArgs
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
 End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -3579,9 +3578,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
@@ -3750,9 +3748,8 @@ err_Handler:
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-    ' enqueue the error if not user defined error
-    If Not cc_isr_Core_IO.UserDefinedErrors.IsUserDefinedError(VBA.Err.Number) Then _
-        cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
     
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()

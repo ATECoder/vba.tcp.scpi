@@ -6,6 +6,7 @@ Attribute VB_Name = "RouteSystemTests"
 Option Explicit
 
 Private Type this_
+    Name As String
     TestNumber As Integer
     BeforeAllAssert As cc_isr_Test_Fx.Assert
     BeforeEachAssert As cc_isr_Test_Fx.Assert
@@ -14,6 +15,11 @@ End Type
 
 Private This As this_
 
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'  Test runners
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Runs the specified test. </summary>
 Public Sub RunTest(ByVal a_testNumber As Integer)
     BeforeEach
     Select Case a_testNumber
@@ -30,12 +36,14 @@ Public Sub RunTest(ByVal a_testNumber As Integer)
     AfterEach
 End Sub
 
+''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
     RunTest 1
     AfterAll
 End Sub
 
+''' <summary>   Runs all tests. </summary>
 Public Sub RunAllTests()
     BeforeAll
     Dim p_testNumber As Integer
@@ -46,64 +54,265 @@ Public Sub RunAllTests()
     AfterAll
 End Sub
 
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'  Tests initialize and cleanup.
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Prepares all tests. </summary>
+''' <remarks>   This method sets up the 'Before All' <see cref="cc_isr_Test_Fx.Assert"/>
+''' which serves to set the 'Before Each' <see cref="cc_isr_Test_Fx.Assert"/>.
+''' The error object and user defined errors state are left clear after this method. </remarks>
 Public Sub BeforeAll()
 
+    Const p_procedureName As String = "BeforeAll"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("Primed to run all tests.")
+
+    This.Name = "RouteSystemTests"
+    
     This.TestNumber = 0
-    
-    Set This.BeforeAllAssert = Assert.Pass("initialized.")
-    
-    ' clear the error state.
-    cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
     
     Set This.ErrTracer = New ErrTracer
     
-    ' clear the error object.
+    ' clear the error state.
+    cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
+    
+    ' Prime all tests
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then
+        ' report any leftover errors.
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors()
+        If p_outcome.AssertSuccessful Then
+            Set p_outcome = Assert.Pass("Primed to run all tests.")
+        Else
+            Set p_outcome = Assert.Inconclusive("Failed priming all tests;" & _
+                VBA.vbCrLf & p_outcome.AssertMessage)
+        End If
+    End If
+    
+    Set This.BeforeAllAssert = p_outcome
     
     On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
     
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
 End Sub
 
+''' <summary>   Prepares each test before it is run. </summary>
+''' <remarks>   This method sets up the 'Before Each' <see cref="cc_isr_Test_Fx.Assert"/>
+''' which serves to initialize the <see cref="cc_isr_Test_Fx.Assert"/> of each test.
+''' The error object and user defined errors state are left clear after this method. </remarks>
 Public Sub BeforeEach()
 
-    Set This.BeforeEachAssert = Assert.Pass("initialized.")
+    Const p_procedureName As String = "BeforeEach"
     
-    If This.BeforeAllAssert.AssertSuccessful Or This.TestNumber > 0 Then
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    This.TestNumber = This.TestNumber + 1
+
+    Dim p_outcome As cc_isr_Test_Fx.Assert
+
+    If This.BeforeAllAssert.AssertSuccessful Then
+         Set p_outcome = Assert.Pass("Primed pre-test #" & VBA.CStr(This.TestNumber))
     Else
-        Set This.BeforeEachAssert = Assert.Inconclusive(This.BeforeAllAssert.AssertMessage)
+        Set p_outcome = Assert.Inconclusive("Unable to prime pre-test #" & VBA.CStr(This.TestNumber) & _
+            ";" & VBA.vbCrLf & This.BeforeAllAssert.AssertMessage)
     End If
     
     ' clear the error state.
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
-    
-    If This.BeforeEachAssert.AssertSuccessful Then
-    
-        Set This.BeforeEachAssert = Assert.AreEqual(0, Err.Number, _
-            "Error Number should be 0.")
-            
+   
+    ' Prepare the next test
+   
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then
+        ' report any leftover errors.
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors()
+        If p_outcome.AssertSuccessful Then
+             Set p_outcome = Assert.Pass("Primed pre-test #" & VBA.CStr(This.TestNumber))
+        Else
+            Set p_outcome = Assert.Inconclusive("Failed priming pre-test #" & VBA.CStr(This.TestNumber) & _
+                ";" & VBA.vbCrLf & p_outcome.AssertMessage)
+        End If
     End If
     
-    This.TestNumber = This.TestNumber + 1
+    Set This.BeforeEachAssert = p_outcome
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
     
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
 End Sub
 
+''' <summary>   Releases test elements after each tests is run. </summary>
+''' <remarks>   This method uses the <see cref="ErrTracer"/> to report any leftover errors
+''' in the user defined errors queue and stack. The error object and user defined errors
+''' state are left clear after this method. </remarks>
 Public Sub AfterEach()
+    
+    Const p_procedureName As String = "AfterEach"
+    
+    ' Trap errors to the error handler.
+    On Error GoTo err_Handler
+
+    Dim p_outcome As cc_isr_Test_Fx.Assert
+    Set p_outcome = Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
+
+    ' cleanup after each test.
+    If This.BeforeEachAssert.AssertSuccessful Then
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    ' release the 'Before Each' assert.
     Set This.BeforeEachAssert = Nothing
+
+    ' report any leftover errors.
+    Set p_outcome = This.ErrTracer.AssertLeftoverErrors()
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
+    Else
+        Set p_outcome = Assert.Inconclusive("Errors reported cleaning up test #" & VBA.CStr(This.TestNumber) & _
+            ";" & VBA.vbCrLf & p_outcome.AssertMessage)
+    End If
+    
+    If Not p_outcome.AssertSuccessful Then _
+        This.ErrTracer.TraceError p_outcome.AssertMessage
+    
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
+    
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
 End Sub
 
+''' <summary>   Releases the test class after all tests run. </summary>
+''' <remarks>   This method uses the <see cref="ErrTracer"/> to report any leftover errors
+''' in the user defined errors queue and stack. The error object and user defined errors
+''' state are left clear after this method. </remarks>
 Public Sub AfterAll()
+    
+    Const p_procedureName As String = "AfterAll"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("All tests cleaned up.")
+    
+    ' cleanup after all tests.
+    If This.BeforeAll.AssertSuccessful Then
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    ' release the 'Before All' assert.
     Set This.BeforeAllAssert = Nothing
+
+    ' report any leftover errors.
+    Set p_outcome = This.ErrTracer.AssertLeftoverErrors()
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
+    Else
+        Set p_outcome = Assert.Inconclusive("Errors reported cleaning up all tests;" & _
+            VBA.vbCrLf & p_outcome.AssertMessage)
+    End If
+    
+    If Not p_outcome.AssertSuccessful Then _
+        This.ErrTracer.TraceError p_outcome.AssertMessage
+    
+    Set This.ErrTracer = Nothing
+    
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
+    
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
 End Sub
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'  Tests
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Unit test. Asserts populating the multimplexer card 7700 cards. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
 Public Function Test7700CardsShouldBePopulated() As cc_isr_Test_Fx.Assert
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert
+    Const p_procedureName As String = "TestPrimeAndCleanup"
 
-    Dim p_routeSystem As cc_isr_Tcp_Scpi.RouteSystem
-    Set p_routeSystem = cc_isr_Tcp_Scpi.Factory.NewRouteSystem.Initialize(cc_isr_Ieee488.Factory.NewViSession())
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
     
-    Set p_outcome = Assert.IsNotNothing(p_routeSystem, TypeName(p_routeSystem) & " should be instantiated.")
+    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    ' proceed with test assertions.
+    
+    Dim p_routeSystem As cc_isr_Tcp_Scpi.RouteSystem
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_routeSystem = cc_isr_Tcp_Scpi.Factory.NewRouteSystem.Initialize(cc_isr_Ieee488.Factory.NewViSession())
+        Set p_outcome = Assert.IsNotNothing(p_routeSystem, TypeName(p_routeSystem) & " should be instantiated.")
+    End If
     
     If p_outcome.AssertSuccessful Then
         Set p_outcome = Assert.IsNotNothing(p_routeSystem.InstrumentFamilyCards, "Instrument family cardcollection should be instantiated.")
@@ -111,37 +320,72 @@ Public Function Test7700CardsShouldBePopulated() As cc_isr_Test_Fx.Assert
     
     Dim p_expectedCount As Integer
     p_expectedCount = 4
-    Dim p_actualCount As Integer: p_actualCount = p_routeSystem.Populate7700Cards
+    Dim p_actualCount As Integer
     If p_outcome.AssertSuccessful Then
+        p_actualCount = p_routeSystem.Populate7700Cards
         Set p_outcome = Assert.AreEqual(p_expectedCount, p_routeSystem.InstrumentFamilyCards.Count, "Instrument family card collection should have the expected number of cards.")
     End If
     
     Dim p_cardName As String
     p_cardName = "7700"
     Dim p_card As MultiplexerCard
-    Set p_card = p_routeSystem.InstrumentFamilyCards(p_cardName)
     If p_outcome.AssertSuccessful Then
+        Set p_card = p_routeSystem.InstrumentFamilyCards(p_cardName)
         Set p_outcome = Assert.AreEqual(p_cardName, p_card.Name, "The expected cad should be selected from the Instrument family card collection.")
     End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
     Debug.Print p_outcome.BuildReport("Test7700CardsShouldBePopulated")
     
     Set Test7700CardsShouldBePopulated = p_outcome
     
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
+    
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
 End Function
 
 ''' <summary>   Unit test. Asserts populating the multimplexer card 7700 cards. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
 Public Function Test7700CardsShouldSelected() As cc_isr_Test_Fx.Assert
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert
+    Const p_procedureName As String = "TestPrimeAndCleanup"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    ' proceed with test assertions.
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_routeSystem = cc_isr_Tcp_Scpi.Factory.NewRouteSystem.Initialize(cc_isr_Ieee488.Factory.NewViSession())
+        Set p_outcome = Assert.IsNotNothing(p_routeSystem, _
+            TypeName(p_routeSystem) & " should be instantiated.")
+    End If
 
     Dim p_routeSystem As cc_isr_Tcp_Scpi.RouteSystem
-    Set p_routeSystem = cc_isr_Tcp_Scpi.Factory.NewRouteSystem.Initialize(cc_isr_Ieee488.Factory.NewViSession())
-    
-    Set p_outcome = Assert.IsNotNothing(p_routeSystem, _
-        TypeName(p_routeSystem) & " should be instantiated.")
-    
     If p_outcome.AssertSuccessful Then
         Set p_outcome = Assert.IsNotNothing(p_routeSystem.InstrumentFamilyCards, _
             "Instrument family cardcollection should be instantiated.")
@@ -253,24 +497,57 @@ Public Function Test7700CardsShouldSelected() As cc_isr_Test_Fx.Assert
             "Card '" & p_cardName & "' should have the expected slot number.")
     End If
     
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
+    
     Debug.Print p_outcome.BuildReport("Test7700CardsShouldSelected")
     
     Set Test7700CardsShouldSelected = p_outcome
     
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
     
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
 End Function
 
 ''' <summary>   Asserts building scan lists. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
 Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As String) As cc_isr_Test_Fx.Assert
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert
+    Const p_procedureName As String = "TestPrimeAndCleanup"
 
-    Dim p_routeSystem As cc_isr_Tcp_Scpi.RouteSystem
-    Set p_routeSystem = cc_isr_Tcp_Scpi.Factory.NewRouteSystem.Initialize(cc_isr_Ieee488.Factory.NewViSession())
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
     
-    Set p_outcome = Assert.IsNotNothing(p_routeSystem, _
-        TypeName(p_routeSystem) & " should be instantiated.")
+    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    ' proceed with test assertions.
+    
+    Dim p_routeSystem As cc_isr_Tcp_Scpi.RouteSystem
+    If p_outcome.AssertSuccessful Then
+        Set p_routeSystem = cc_isr_Tcp_Scpi.Factory.NewRouteSystem.Initialize(cc_isr_Ieee488.Factory.NewViSession())
+        Set p_outcome = Assert.IsNotNothing(p_routeSystem, _
+            TypeName(p_routeSystem) & " should be instantiated.")
+    End If
 
     Dim p_expectedCount As Integer
     p_expectedCount = 4
@@ -292,12 +569,13 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As Str
             "Installed card collection should have the expected number of cards.")
     End If
     
-    ' buid the scan lists here so as to set the channel numbers properly.
-    p_routeSystem.BuildFunctionScanLists a_senseFunction
-    
     p_cardName = "7700"
     p_channelNumber = 1
     If p_outcome.AssertSuccessful Then
+        
+        ' build the scan lists here so as to set the channel numbers properly.
+        p_routeSystem.BuildFunctionScanLists a_senseFunction
+        
         Set p_card = p_routeSystem.SelectMultiplexerCard(p_channelNumber)
         Set p_outcome = Assert.IsNotNothing(p_card, _
             "A card should be selected for channel " & CStr(p_channelNumber) & ".")
@@ -312,9 +590,9 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As Str
     Dim p_expectedFunctionScanList As String
     p_expectedFunctionScanList = ":FUNC '" & a_senseFunction & "',(@101,1" & VBA.CStr(p_card.FunctionalCapacity) & ")"
     Dim p_actualFunctionScanList As String
-    p_actualFunctionScanList = p_card.FunctionScanList
     
     If p_outcome.AssertSuccessful Then
+        p_actualFunctionScanList = p_card.FunctionScanList
         Set p_outcome = Assert.AreEqual(p_expectedFunctionScanList, p_actualFunctionScanList, _
             "The expected scan list should be built for card '" & p_cardName & "'.")
     End If
@@ -398,21 +676,81 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As Str
             "The expected route command should be returned for card '" & p_cardName & "'.")
     End If
     
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
+    
+    Debug.Print p_outcome.BuildReport("Assert7700CardsShouldBuildScanLists ")
+    
     Set Assert7700CardsShouldBuildScanLists = p_outcome
     
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
+    
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
 End Function
 
 
 ''' <summary>   Unit test. Asserts building scan lists. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
 Public Function Test7700CardsShouldBuildScanLists() As cc_isr_Test_Fx.Assert
-    
-    Dim p_outcome As cc_isr_Test_Fx.Assert
-    Set p_outcome = Assert7700CardsShouldBuildScanLists("RES")
 
+    Const p_procedureName As String = "TestPrimeAndCleanup"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    ' proceed with test assertions.
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert7700CardsShouldBuildScanLists("RES")
+    End If
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
+    
     Debug.Print p_outcome.BuildReport("Test7700CardsShouldBuildScanLists")
     
     Set Test7700CardsShouldBuildScanLists = p_outcome
+    
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
+    
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
 
 End Function
 
@@ -420,12 +758,48 @@ End Function
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
 Public Function Test7700CardsShouldBuild4WireScanLists() As cc_isr_Test_Fx.Assert
     
-    Dim p_outcome As cc_isr_Test_Fx.Assert
-    Set p_outcome = Assert7700CardsShouldBuildScanLists("FRES")
+    Const p_procedureName As String = "TestPrimeAndCleanup"
 
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    ' proceed with test assertions.
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert7700CardsShouldBuildScanLists("FRES")
+    End If
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
+    
     Debug.Print p_outcome.BuildReport("Test7700CardsShouldBuild4WireScanLists")
     
     Set Test7700CardsShouldBuild4WireScanLists = p_outcome
+    
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
+    
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
 
 End Function
 

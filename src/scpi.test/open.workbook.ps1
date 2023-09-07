@@ -61,6 +61,8 @@ $Password = $missing
 $WriteReservedPassword = $missing
 $IgnoreReadOnlyDisplay = $true
 
+$ReadOnly = $true
+
 $src = "C:\my\lib\vba\core\core\src\io\cc.isr.core.io.xlsm"
 LogInfo( "opening " + $src)
 $book = $excel.Workbooks.Open($src, $missing, $ReadOnly, $missing, $missing, $missing, $true)

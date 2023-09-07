@@ -93,6 +93,8 @@ Private Function IDeviceErrorReader_TryDequeueDeviceErrors(ByRef a_errors As Str
     p_done = False
     
     Do
+    
+        DoEvents
         
         p_delimiter = IIf(VBA.vbNullString = p_builder, VBA.vbNullString, a_delimiter)
         
@@ -176,7 +178,6 @@ End Function
 '  Class events
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
 
 ''' <summary>   Initializes the class properties. </summary>
 Private Sub Class_Initialize()

@@ -35,11 +35,11 @@ Private Function IErrTracer_AssertLeftoverErrors(Optional ByVal a_delimiter As S
 
     Dim p_outcome As cc_isr_Test_Fx.Assert
     
-    Dim p_actualErrorMessages As String
+    Dim p_messages As String
     Dim p_hasErrors As Boolean
-    p_hasErrors = This.K2700.DeviceErrorReader.TryDequeueDeviceErrors(p_actualErrorMessages)
+    p_hasErrors = This.K2700.DeviceErrorReader.TryDequeueDeviceErrors(p_messages)
     Set p_outcome = Assert.IsFalse(p_hasErrors, _
-        "Found errors: " & VBA.vbCrLf & p_actualErrorMessages)
+        "Found device errors: " & VBA.vbCrLf & p_messages)
     
     Set IErrTracer_AssertLeftoverErrors = p_outcome
 
