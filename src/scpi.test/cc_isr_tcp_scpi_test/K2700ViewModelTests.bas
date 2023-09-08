@@ -109,7 +109,7 @@ Public Sub BeforeAll()
 
     ' set the final error tracer capable of reporting device errors.
     Dim p_errTracer As New DeviceErrorsTracer
-    Set This.ErrTracer = p_errTracer.Initialize(This.ViewModel)
+    Set This.ErrTracer = p_errTracer.Initialize(This.ViewModel.K2700)
     
     ' connect
     This.ViewModel.ToggleConnectionCommand True
@@ -340,23 +340,15 @@ err_Handler:
 End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'  Tests
+' Tests
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-
-
-' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-'
-' Connection Tests
-'
-' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 ''' <summary>   Unit test. Asserts that view model should initialize. </summary>
-''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestViewModelShouldInitialize() As cc_isr_Test_FX.Assert
 
-
-    Const p_procedureName As String = "TestPrimeAndCleanup"
+    Const p_procedureName As String = "TestViewModelShouldInitialize"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -405,11 +397,11 @@ err_Handler:
 End Function
 
 ''' <summary>   Unit test. Asserts that view model should connect. </summary>
-''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestViewModelShouldConnect() As cc_isr_Test_FX.Assert
 
-
-    Const p_procedureName As String = "TestPrimeAndCleanup"
+    Const p_procedureName As String = "TestViewModelShouldConnect"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -460,11 +452,11 @@ err_Handler:
 End Function
 
 ''' <summary>   Unit test. Asserts that view model should read cards. </summary>
-''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestViewModelShouldReadCards() As cc_isr_Test_FX.Assert
 
-
-    Const p_procedureName As String = "TestPrimeAndCleanup"
+    Const p_procedureName As String = "TestViewModelShouldReadCards"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler

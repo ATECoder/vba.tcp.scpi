@@ -2568,7 +2568,7 @@ Public Sub RestoreKnownState()
     
     ' validate the sense function
     Dim p_senseFunction As String
-    p_senseFunction = This.K2700.SenseSystem.SenseFunctionGetter()
+    p_senseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
     If Not ((1 = InStr(1, This.ContinuousSenseFunctionName, p_senseFunction, vbTextCompare)) Or _
             (1 = InStr(1, This.ImmediateSenseFunctionName, p_senseFunction, vbTextCompare)) Or _
             (1 = InStr(1, This.ExternalSenseFunctionName, p_senseFunction, vbTextCompare))) Then

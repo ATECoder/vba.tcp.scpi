@@ -41,7 +41,7 @@ End Sub
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 3
+    RunTest 1
     AfterAll
 End Sub
 
@@ -100,7 +100,7 @@ Public Sub BeforeAll()
         Set p_outcome = Assert.Pass("Primed to run all tests; K2700 is connected.")
     Else
         Set p_outcome = Assert.Inconclusive( _
-            "Failed priming all tests; IEEE488 Device should be connected.")
+            "Failed priming all tests; K2700 should be connected.")
     End If
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -323,14 +323,12 @@ End Sub
 '  Tests
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-
-
 ''' <summary>   Unit test. Asserts querying operation completion. </summary>
-''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestQueryOperationCompletion() As Assert
 
-
-    Const p_procedureName As String = "TestPrimeAndCleanup"
+    Const p_procedureName As String = "TestQueryOperationCompletion"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -386,10 +384,11 @@ err_Handler:
 End Function
 
 ''' <summary>   Unit test. Asserts recovery from Syntax error. </summary>
-''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestRecoveryFromSyntaxFromError() As Assert
 
-    Const p_procedureName As String = "TestPrimeAndCleanup"
+    Const p_procedureName As String = "TestRecoveryFromSyntaxFromError"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -463,10 +462,11 @@ err_Handler:
 End Function
 
 ''' <summary>   Unit test. Asserts recovery from read after write true condition. </summary>
-''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestRecoveryFromReadAfterWriteTrue() As Assert
 
-    Const p_procedureName As String = "TestPrimeAndCleanup"
+    Const p_procedureName As String = "TestRecoveryFromReadAfterWriteTrue"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler

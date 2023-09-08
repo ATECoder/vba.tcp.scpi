@@ -1,6 +1,6 @@
-Attribute VB_Name = "ScpiSystemTests"
+Attribute VB_Name = "K2700SenseSystemTests"
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-''' <summary>   Scpi System Tests. </summary>
+''' <summary>   K2700 Sense System Tests. </summary>
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 Option Explicit
@@ -28,7 +28,9 @@ Public Sub RunTest(ByVal a_testNumber As Integer)
     BeforeEach
     Select Case a_testNumber
         Case 1
-            TestInputsShouldBeFront
+            TestInitialSenseFunctionShouldGet
+        Case 2
+            TestSenseFunctionShouldSet
         Case Else
     End Select
     AfterEach
@@ -45,7 +47,7 @@ End Sub
 Public Sub RunAllTests()
     BeforeAll
     Dim p_testNumber As Integer
-    For p_testNumber = 1 To 1
+    For p_testNumber = 1 To 2
         RunTest p_testNumber
         DoEvents
     Next p_testNumber
@@ -100,9 +102,9 @@ Public Sub BeforeAll()
             "Failed priming all tests; K2700 should be connected.")
     End If
     
+    ' reset known state so that we initialize the default the sense function
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.IsNotNothing(This.Device.ScpiSystem, _
-            "Scpi System should be instantiated.")
+        This.Device.Device.ResetKnownState
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -173,6 +175,14 @@ Public Sub BeforeEach()
     
     If p_outcome.AssertSuccessful Then _
         This.Device.Device.ClearExecutionState
+   
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.IsNotNothing(This.Device.SenseSystem, _
+            "K2700 sense System should be instantiated.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.IsNotNothing(This.Device.SenseSystem.SenseSystem, _
+            "Sense System should be instantiated.")
    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -326,12 +336,12 @@ End Sub
 '  Tests
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Unit test. Asserts inputs should be front. </summary>
+''' <summary>   Unit test. Asserts initial sense function should get. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestInputsShouldBeFront() As cc_isr_Test_FX.Assert
+Public Function TestInitialSenseFunctionShouldGet() As cc_isr_Test_FX.Assert
 
-    Const p_procedureName As String = "TestInputsShouldBeFront"
+    Const p_procedureName As String = "TestInitialSenseFunctionShouldGet"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -345,9 +355,13 @@ Public Function TestInputsShouldBeFront() As cc_isr_Test_FX.Assert
     ' proceed with test assertions.
     
     If p_outcome.AssertSuccessful Then
-        
-        Set p_outcome = Assert.IsTrue(This.Device.ScpiSystem.QueryFrontSwitch(), _
-            "Scpi System should query and report the correct state of the front switch.")
+    
+        Dim p_expectedSenseFunction As String
+        p_expectedSenseFunction = "VOLT:DC"
+        Dim p_actualSenseFunction As String
+        p_actualSenseFunction = This.Device.SenseSystem.SenseSystem.SenseFunctionGetter()
+        Set p_outcome = Assert.AreEqualString(p_expectedSenseFunction, p_actualSenseFunction, vbTextCompare, _
+            "Initial sense function should match.")
 
     End If
     
@@ -357,9 +371,9 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestInputsShouldBeFront")
+    Debug.Print p_outcome.BuildReport("TestInitialSenseFunctionShouldGet")
     
-    Set TestInputsShouldBeFront = p_outcome
+    Set TestInitialSenseFunctionShouldGet = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -378,4 +392,80 @@ err_Handler:
     GoTo exit_Handler
 
 End Function
+
+
+''' <summary>   Unit test. Asserts that the sense function should set. </summary>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
+Public Function TestSenseFunctionShouldSet() As cc_isr_Test_FX.Assert
+
+    Const p_procedureName As String = "TestSenseFunctionShouldSet"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    ' proceed with test assertions.
+    
+    Dim p_expectedK2700SenseFunction As cc_isr_Tcp_Scpi.K2700SenseFunction
+    p_expectedK2700SenseFunction = cc_isr_Tcp_Scpi.K2700SenseFunction.FourWireResistance
+    
+    Dim p_actualK2700SenseFunction As cc_isr_Tcp_Scpi.K2700SenseFunction
+    
+    If p_outcome.AssertSuccessful Then
+    
+        ' set the sense function
+        This.Device.SenseSystem.K2700SenseFunctionSetter p_expectedK2700SenseFunction
+        p_actualK2700SenseFunction = This.Device.SenseSystem.K2700SenseFunctionGetter()
+        
+        Set p_outcome = Assert.AreEqual(p_expectedK2700SenseFunction, p_actualK2700SenseFunction, _
+            "Set K2700 sense function should match.")
+
+    End If
+    
+    Dim p_expectedSenseFunction As String
+    Dim p_actualSenseFunction As String
+    
+    If p_outcome.AssertSuccessful Then
+        p_expectedSenseFunction = "FRES"
+        p_actualSenseFunction = This.Device.SenseSystem.SenseSystem.SenseFunction
+        Set p_outcome = Assert.AreEqualString(p_expectedSenseFunction, p_actualSenseFunction, vbTextCompare, _
+            "Set sense function should match.")
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
+    
+    Debug.Print p_outcome.BuildReport("TestSenseFunctionShouldSet")
+    
+    Set TestSenseFunctionShouldSet = p_outcome
+    
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
+    
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Function
+
+
+
 

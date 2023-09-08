@@ -321,10 +321,11 @@ End Sub
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Unit test. Asserts the device <c>No Error</c> should. </summary>
-''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestNoErrorShouldParse() As cc_isr_Test_FX.Assert
 
-    Const p_procedureName As String = "TestPrimeAndCleanup"
+    Const p_procedureName As String = "TestNoErrorShouldParse"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -410,11 +411,11 @@ End Function
 
 
 ''' <summary>   Unit test. Asserts parsing device <c>UndefinedHeader</c> Error. </summary>
-''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestUndefinedHeaderErrorShouldParse() As cc_isr_Test_FX.Assert
-
-
-    Const p_procedureName As String = "TestPrimeAndCleanup"
+    
+    Const p_procedureName As String = "TestUndefinedHeaderErrorShouldParse"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler

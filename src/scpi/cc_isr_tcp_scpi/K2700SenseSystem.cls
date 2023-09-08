@@ -59,29 +59,35 @@ End Property
 ''' <param name="a_value">   [<see cref="K2700SenseFunction"/>] the K2700 sense function. </param>
 Public Sub K2700SenseFunctionSetter(ByVal a_value As cc_isr_Tcp_Scpi.K2700SenseFunction)
 
-    This.SenseFunction = FromK2700SenseFunction(a_value)
-    This.SenseSystem.SenseFunctionSetter This.SenseFunction, "'"
+    Dim p_senseFunctionName As String:  p_senseFunctionName = FromK2700SenseFunction(a_value)
+    This.SenseSystem.SenseFunctionSetter p_senseFunctionName, "'"
+    This.SenseFunction = a_value
 
 End Sub
 
 ''' <summary>   Gets the <see cref="K2700SenseFunction"/>. </summary>
 ''' <param name="a_value">   [<see cref="K2700SenseFunction"/>] the sense function. </param>
-Public Function K2700SourceGetter() As cc_isr_Tcp_Scpi.K2700SenseFunction
+''' <value>   [<see cref="cc_isr_Tcp_Scpi.K2700SenseFunction"/>]. </value>
+Public Function K2700SenseFunctionGetter() As cc_isr_Tcp_Scpi.K2700SenseFunction
 
     This.SenseFunction = ToK2700SenseFunction(This.SenseSystem.SenseFunctionGetter(""""))
-    K2700SourceGetter = This.SenseFunction
+    K2700SenseFunctionGetter = This.SenseFunction
 
 End Function
 
+''' <summary>   Converts a sense function <see cref="K2700SenseFunction"/>
+''' to a sense function name. </summary>
+''' <param name="a_value">   [<see cref="K2700SenseFunction"/>] the sense function. </param>
+''' <returns>   [String]. </returns>
 Public Function FromK2700SenseFunction(ByVal a_value As cc_isr_Tcp_Scpi.K2700SenseFunction) As String
 
     Select Case a_value
         Case K2700SenseFunction.DcVoltage
-            FromK2700SenseFunction = "VOLT"
+            FromK2700SenseFunction = "VOLT:DC"
         Case K2700SenseFunction.AcVoltage
             FromK2700SenseFunction = "VOLT:AC"
         Case K2700SenseFunction.DcCurrent
-            FromK2700SenseFunction = "CURR"
+            FromK2700SenseFunction = "CURR:DC"
         Case K2700SenseFunction.AcCurrent
             FromK2700SenseFunction = "CURR:AC"
         Case K2700SenseFunction.Resistance
@@ -102,14 +108,22 @@ Public Function FromK2700SenseFunction(ByVal a_value As cc_isr_Tcp_Scpi.K2700Sen
     
 End Function
 
+''' <summary>   Converts a sense function name to a <see cref="K2700SenseFunction"/>
+''' sense function. </summary>
+''' <param name="a_value">   [String] the sense function name. </param>
+''' <returns>   [<see cref="cc_isr_Tcp_Scpi.K2700SenseFunction"/>]. </returns>
 Public Function ToK2700SenseFunction(ByVal a_value As String) As cc_isr_Tcp_Scpi.K2700SenseFunction
 
     Select Case a_value
         Case "VOLT"
             ToK2700SenseFunction = K2700SenseFunction.DcVoltage
+        Case "VOLT:DC"
+            ToK2700SenseFunction = K2700SenseFunction.DcVoltage
         Case "VOLT:AC"
             ToK2700SenseFunction = K2700SenseFunction.AcVoltage
         Case "CURR"
+            ToK2700SenseFunction = K2700SenseFunction.DcCurrent
+        Case "CURR:DC"
             ToK2700SenseFunction = K2700SenseFunction.DcCurrent
         Case "CURR:AC"
             ToK2700SenseFunction = K2700SenseFunction.AcCurrent

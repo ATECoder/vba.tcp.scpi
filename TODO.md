@@ -5,10 +5,14 @@
 Core IO: Close editor windows.
 
 Scpi:
-Integrate the assertion of queue and archive and device leftover errors.
-Finish updating exception handling of all tests.
+
 
 ## TODO
+
+Core IO: when appending error source, check if same source
+
+IEEE 488 fix assert return values commend 
+
 
 ### SCPI:
 

@@ -291,10 +291,11 @@ End Sub
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Unit test. Asserts populating the multimplexer card 7700 cards. </summary>
-''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function Test7700CardsShouldBePopulated() As cc_isr_Test_FX.Assert
 
-    Const p_procedureName As String = "TestPrimeAndCleanup"
+    Const p_procedureName As String = "Test7700CardsShouldBePopulated"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -363,10 +364,11 @@ err_Handler:
 End Function
 
 ''' <summary>   Unit test. Asserts populating the multimplexer card 7700 cards. </summary>
-''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function Test7700CardsShouldSelected() As cc_isr_Test_FX.Assert
 
-    Const p_procedureName As String = "TestPrimeAndCleanup"
+    Const p_procedureName As String = "Test7700CardsShouldSelected"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -526,10 +528,11 @@ err_Handler:
 End Function
 
 ''' <summary>   Asserts building scan lists. </summary>
-''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As String) As cc_isr_Test_FX.Assert
 
-    Const p_procedureName As String = "TestPrimeAndCleanup"
+    Const p_procedureName As String = "Assert7700CardsShouldBuildScanLists"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -704,10 +707,11 @@ End Function
 
 
 ''' <summary>   Unit test. Asserts building scan lists. </summary>
-''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function Test7700CardsShouldBuildScanLists() As cc_isr_Test_FX.Assert
 
-    Const p_procedureName As String = "TestPrimeAndCleanup"
+    Const p_procedureName As String = "Test7700CardsShouldBuildScanLists"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -753,10 +757,11 @@ err_Handler:
 End Function
 
 ''' <summary>   Unit test. Asserts building 4-wire scan lists. </summary>
-''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function Test7700CardsShouldBuild4WireScanLists() As cc_isr_Test_FX.Assert
     
-    Const p_procedureName As String = "TestPrimeAndCleanup"
+    Const p_procedureName As String = "Test7700CardsShouldBuild4WireScanLists"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler

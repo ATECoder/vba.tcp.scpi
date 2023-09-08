@@ -105,9 +105,9 @@ Public Property Get ScpiSystem() As ScpiSystem
     Set ScpiSystem = This.ScpiSystem
 End Property
 
-''' <summary>   Returns a reference to the <see cref="SenseSystem"/> subsystem. </summary>
-''' <value>   An <see cref="SenseSystem"/>. </returns>
-Public Property Get SenseSystem() As SenseSystem
+''' <summary>   Returns a reference to the <see cref="K2700SenseSystem"/> subsystem. </summary>
+''' <value>   [<see cref="K2700SenseSystem"/>]. </returns>
+Public Property Get SenseSystem() As K2700SenseSystem
     Set SenseSystem = This.SenseSystem
 End Property
 
@@ -602,7 +602,11 @@ End Sub
 ''' <see cref="cc_isr_Ieee488.Ieee488Session"/> object . </summary>
 ''' <value>   [<see cref="cc_isr_Winsock.IConnectable"/>]. </value>
 Public Property Get Connectable() As cc_isr_Winsock.IConnectable
-    Set Connectable = This.Device.ViSession
+    If This.Device Is Nothing Then
+        Set Connectable = Nothing
+    Else
+        Set Connectable = This.Device.ViSession
+    End If
 End Property
 
 ''' <summary>   Returns the connection state of the client. </summary>
