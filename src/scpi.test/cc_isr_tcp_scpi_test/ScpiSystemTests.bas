@@ -8,14 +8,13 @@ Option Explicit
 Private Type this_
     Name As String
     TestNumber As Integer
-    BeforeAllAssert As cc_isr_Test_Fx.Assert
-    BeforeEachAssert As cc_isr_Test_Fx.Assert
+    BeforeAllAssert As cc_isr_Test_FX.Assert
+    BeforeEachAssert As cc_isr_Test_FX.Assert
     Device As cc_isr_Tcp_Scpi.K2700
     Host As String
     Port As Long
     SocketReceiveTimeout As Integer
-    ErrTracer As IErrTracer
-    DeviceErrorsTracer As IErrTracer
+    ErrTracer As cc_isr_Test_FX.IErrTracer
 End Type
 
 Private This As this_
@@ -68,13 +67,14 @@ Public Sub BeforeAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("Primed to run all tests.")
+    Dim p_outcome As cc_isr_Test_FX.Assert: Set p_outcome = Assert.Pass("Primed to run all tests.")
 
     This.Name = "ScpiSystemTests"
     
     This.TestNumber = 0
     
-    Set This.ErrTracer = New ErrTracer
+    ' set a temporary error tracer
+    Set This.ErrTracer = New DeviceErrorsTracer
     
     ' clear the error state.
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
@@ -87,8 +87,9 @@ Public Sub BeforeAll()
     
     Set This.Device = cc_isr_Tcp_Scpi.Factory.NewK2700().Initialize()
     
-    Dim p_deviceErrorsTracer As New DeviceErrorsTracer
-    Set This.DeviceErrorsTracer = p_deviceErrorsTracer.Initialize(This.Device)
+    ' set the final error tracer capable of reporting device errors.
+    Dim p_errTracer As New DeviceErrorsTracer
+    Set This.ErrTracer = p_errTracer.Initialize(This.Device)
     
     This.Device.OpenConnection This.Host, This.Port, This.SocketReceiveTimeout
     
@@ -147,7 +148,7 @@ Public Sub BeforeEach()
 
     This.TestNumber = This.TestNumber + 1
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert
+    Dim p_outcome As cc_isr_Test_FX.Assert
 
     If This.BeforeAllAssert.AssertSuccessful Then
         Set p_outcome = IIf(This.Device.Connected, _
@@ -214,7 +215,7 @@ Public Sub AfterEach()
     ' Trap errors to the error handler.
     On Error GoTo err_Handler
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert
+    Dim p_outcome As cc_isr_Test_FX.Assert
     Set p_outcome = Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
 
     ' cleanup after each test.
@@ -268,13 +269,11 @@ Public Sub AfterAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("All tests cleaned up.")
+    Dim p_outcome As cc_isr_Test_FX.Assert: Set p_outcome = Assert.Pass("All tests cleaned up.")
     
     ' cleanup after all tests.
-    If This.BeforeAll.AssertSuccessful Then
+    If This.BeforeAllAssert.AssertSuccessful Then
     End If
-    
-    Set This.DeviceErrorsTracer = Nothing
     
     ' disconnect if connected
     If Not This.Device Is Nothing Then _
@@ -325,7 +324,7 @@ End Sub
 
 ''' <summary>   Unit test. Asserts inputs should be front. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function TestInputsShouldBeFront() As cc_isr_Test_Fx.Assert
+Public Function TestInputsShouldBeFront() As cc_isr_Test_FX.Assert
 
     Const p_procedureName As String = "TestPrimeAndCleanup"
 
@@ -351,19 +350,6 @@ Public Function TestInputsShouldBeFront() As cc_isr_Test_Fx.Assert
 
     End If
     
-    Dim p_deviceErrorAssert As cc_isr_Test_Fx.Assert
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_deviceErrorAssert = IIf(This.BeforeEachAssert.AssertSuccessful, _
-            This.DeviceErrorsTracer.AssertLeftoverErrors, Assert.Pass("Initialized."))
-
-    If p_outcome.AssertSuccessful Then
-        Set p_outcome = p_deviceErrorAssert
-    ElseIf Not p_deviceErrorAssert.AssertSuccessful Then
-        Set p_outcome = Assert.Fail(p_outcome.AssertMessage & VBA.vbCrLf & _
-        "Device errors: " & VBA.vbCrLf & p_deviceErrorAssert.AssertMessage)
-    End If
-
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 

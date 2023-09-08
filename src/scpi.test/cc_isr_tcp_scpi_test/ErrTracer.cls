@@ -13,14 +13,14 @@ Attribute VB_Exposed = True
 
 Option Explicit
 
-Implements cc_isr_Test_Fx.IErrTracer
+Implements cc_isr_Test_FX.IErrTracer
 
 ''' <summary>   Asserts and traces leftover errors from the error queue and error stack. </summary>
 ''' <para name="a_delimiter">   [String] a delimiter for concatenating error messages
 '''                             from the error queue. </param>
-Private Function IErrTracer_AssertLeftoverErrors(Optional ByVal a_delimiter As String = VBA.vbCrLf) As cc_isr_Test_Fx.Assert
+Private Function IErrTracer_AssertLeftoverErrors(Optional ByVal a_delimiter As String = VBA.vbCrLf) As cc_isr_Test_FX.Assert
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert
+    Dim p_outcome As cc_isr_Test_FX.Assert
     
     Dim p_archivedErrorCount As Integer
     p_archivedErrorCount = cc_isr_Core_IO.UserDefinedErrors.ArchivedErrorCount

@@ -4,21 +4,15 @@
 
 Core IO: Close editor windows.
 
-Ieee488:
-
+Scpi:
+Integrate the assertion of queue and archive and device leftover errors.
+Finish updating exception handling of all tests.
 
 ## TODO
 
 ### SCPI:
-@ err_Handler:
-    ' enqueue the error or append its source to the last error.
-    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
-
-Add exception handling to all unit tests.
-Add test for device errors before and after each test.
 
 Run all tests with system off to check the inconclusive works.
-
 
 Sense System Test
 * Add and test the function write and query.

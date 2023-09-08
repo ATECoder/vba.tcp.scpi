@@ -14,8 +14,7 @@ Private Type this_
     Host As String
     Port As Long
     SocketReceiveTimeout As Integer
-    ErrTracer As IErrTracer
-    DeviceErrorsTracer As IErrTracer
+    ErrTracer As cc_isr_Test_FX.IErrTracer
 End Type
 
 Private This As this_
@@ -72,13 +71,14 @@ Public Sub BeforeAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("Primed to run all tests.")
+    Dim p_outcome As cc_isr_Test_FX.Assert: Set p_outcome = Assert.Pass("Primed to run all tests.")
 
     This.Name = "K2700Tests"
     
     This.TestNumber = 0
     
-    Set This.ErrTracer = New ErrTracer
+    ' set a temporate error tracer.
+    Set This.ErrTracer = New DeviceErrorsTracer
     
     ' clear the error state.
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
@@ -91,8 +91,8 @@ Public Sub BeforeAll()
     
     Set This.Device = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize()
     
-    Dim p_deviceErrorsTracer As New DeviceErrorsTracer
-    Set This.DeviceErrorsTracer = p_deviceErrorsTracer.Initialize(This.Device)
+    Dim p_errTracer As New DeviceErrorsTracer
+    Set This.ErrTracer = p_errTracer.Initialize(This.Device)
     
     This.Device.OpenConnection This.Host, This.Port, This.SocketReceiveTimeout
     
@@ -150,7 +150,7 @@ Public Sub BeforeEach()
 
     This.TestNumber = This.TestNumber + 1
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert
+    Dim p_outcome As cc_isr_Test_FX.Assert
 
     If This.BeforeAllAssert.AssertSuccessful Then
         Set p_outcome = IIf(This.Device.Connected, _
@@ -217,7 +217,7 @@ Public Sub AfterEach()
     ' Trap errors to the error handler.
     On Error GoTo err_Handler
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert
+    Dim p_outcome As cc_isr_Test_FX.Assert
     Set p_outcome = Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
 
     ' cleanup after each test.
@@ -271,13 +271,11 @@ Public Sub AfterAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("All tests cleaned up.")
+    Dim p_outcome As cc_isr_Test_FX.Assert: Set p_outcome = Assert.Pass("All tests cleaned up.")
     
     ' cleanup after all tests.
-    If This.BeforeAll.AssertSuccessful Then
+    If This.BeforeAllAssert.AssertSuccessful Then
     End If
-    
-    Set This.DeviceErrorsTracer = Nothing
     
     ' disconnect if connected
     If Not This.Device Is Nothing Then _
@@ -345,7 +343,6 @@ Public Function TestQueryOperationCompletion() As Assert
     
     ' proceed with test assertions.
     
-    
     Dim p_errorNumber As String
     Dim p_errorMessage As String
     Dim p_success As Boolean
@@ -360,16 +357,8 @@ Public Function TestQueryOperationCompletion() As Assert
 
     End If
 
-    Dim p_deviceErrorAssert As cc_isr_Test_Fx.Assert
-    Set p_deviceErrorAssert = IIf(This.BeforeEachAssert.AssertSuccessful, _
-        This.DeviceErrorsTracer.AssertLeftoverErrors, Assert.Pass("Initialized."))
-
-    If p_outcome.AssertSuccessful Then
-        Set p_outcome = p_deviceErrorAssert
-    ElseIf Not p_deviceErrorAssert.AssertSuccessful Then
-        Set p_outcome = Assert.Fail(p_outcome.AssertMessage & VBA.vbCrLf & _
-        "Device errors: " & VBA.vbCrLf & p_deviceErrorAssert.AssertMessage)
-    End If
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
@@ -377,17 +366,6 @@ Public Function TestQueryOperationCompletion() As Assert
     Debug.Print p_outcome.BuildReport("TestQueryOperationCompletion")
     
     Set TestQueryOperationCompletion = p_outcome
-    
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
-    
-    Debug.Print p_outcome.BuildReport("TestCreateSocket")
-    
-    Set TestCreateSocket = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -411,7 +389,6 @@ End Function
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
 Public Function TestRecoveryFromSyntaxFromError() As Assert
 
-
     Const p_procedureName As String = "TestPrimeAndCleanup"
 
     ' Trap errors to the error handler
@@ -425,12 +402,11 @@ Public Function TestRecoveryFromSyntaxFromError() As Assert
     
     ' proceed with test assertions.
     
-    
     Dim p_errorNumber As String
     Dim p_errorMessage As String
     Dim p_success As Boolean
-        Dim p_actualReply As String
-        Dim p_expectedReply As String
+    Dim p_actualReply As String
+    Dim p_expectedReply As String
     
     If p_outcome.AssertSuccessful Then
         p_expectedReply = "1"
@@ -458,34 +434,15 @@ Public Function TestRecoveryFromSyntaxFromError() As Assert
             "K2700 Device should query operation completion.")
     End If
     
-    Dim p_deviceErrorAssert As cc_isr_Test_Fx.Assert
-    Set p_deviceErrorAssert = IIf(This.BeforeEachAssert.AssertSuccessful, _
-        This.DeviceErrorsTracer.AssertLeftoverErrors, Assert.Pass("Initialized."))
-
-    If p_outcome.AssertSuccessful Then
-        Set p_outcome = p_deviceErrorAssert
-    ElseIf Not p_deviceErrorAssert.AssertSuccessful Then
-        Set p_outcome = Assert.Fail(p_outcome.AssertMessage & VBA.vbCrLf & _
-        "Device errors: " & VBA.vbCrLf & p_deviceErrorAssert.AssertMessage)
-    End If
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
-
-    Debug.Print p_outcome.BuildReport("TestQueryOperationCompletion")
-    
-    Set TestRecoveryFromSyntaxFromError = p_outcome
-    
-    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestCreateSocket")
+    Debug.Print p_outcome.BuildReport("TestQueryOperationCompletion")
     
-    Set TestCreateSocket = p_outcome
+    Set TestRecoveryFromSyntaxFromError = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -509,7 +466,6 @@ End Function
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
 Public Function TestRecoveryFromReadAfterWriteTrue() As Assert
 
-
     Const p_procedureName As String = "TestPrimeAndCleanup"
 
     ' Trap errors to the error handler
@@ -523,12 +479,11 @@ Public Function TestRecoveryFromReadAfterWriteTrue() As Assert
     
     ' proceed with test assertions.
     
-    
     Dim p_errorNumber As String
     Dim p_errorMessage As String
     Dim p_success As Boolean
-        Dim p_actualReply As String
-        Dim p_expectedReply As String
+    Dim p_actualReply As String
+    Dim p_expectedReply As String
     
     If p_outcome.AssertSuccessful And This.Device.ViSession.UsingGpibLan Then
         ' turn on read after write condition.
@@ -556,34 +511,15 @@ Public Function TestRecoveryFromReadAfterWriteTrue() As Assert
             "K2700 Device should query operation completion.")
     End If
 
-    Dim p_deviceErrorAssert As cc_isr_Test_Fx.Assert
-    Set p_deviceErrorAssert = IIf(This.BeforeEachAssert.AssertSuccessful, _
-        This.DeviceErrorsTracer.AssertLeftoverErrors, Assert.Pass("Initialized."))
-
-    If p_outcome.AssertSuccessful Then
-        Set p_outcome = p_deviceErrorAssert
-    ElseIf Not p_deviceErrorAssert.AssertSuccessful Then
-        Set p_outcome = Assert.Fail(p_outcome.AssertMessage & VBA.vbCrLf & _
-        "Device errors: " & VBA.vbCrLf & p_deviceErrorAssert.AssertMessage)
-    End If
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
-
-    Debug.Print p_outcome.BuildReport("TestRecoveryFromReadAfterWriteTrue")
-    
-    Set TestRecoveryFromReadAfterWriteTrue = p_outcome
-    
-    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestCreateSocket")
+    Debug.Print p_outcome.BuildReport("TestRecoveryFromReadAfterWriteTrue")
     
-    Set TestCreateSocket = p_outcome
+    Set TestRecoveryFromReadAfterWriteTrue = p_outcome
     
     On Error GoTo 0
     Exit Function

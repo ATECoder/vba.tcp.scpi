@@ -8,8 +8,8 @@ Option Explicit
 Private Type this_
     Name As String
     TestNumber As Integer
-    BeforeAllAssert As cc_isr_Test_Fx.Assert
-    BeforeEachAssert As cc_isr_Test_Fx.Assert
+    BeforeAllAssert As cc_isr_Test_FX.Assert
+    BeforeEachAssert As cc_isr_Test_FX.Assert
     Device As cc_isr_Tcp_Scpi.K2700
     Host As String
     Port As Long
@@ -69,7 +69,7 @@ Public Sub BeforeAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("Primed to run all tests.")
+    Dim p_outcome As cc_isr_Test_FX.Assert: Set p_outcome = Assert.Pass("Primed to run all tests.")
 
     This.Name = "K2700DeviceErrorReaderTests"
     
@@ -144,7 +144,7 @@ Public Sub BeforeEach()
 
     This.TestNumber = This.TestNumber + 1
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert
+    Dim p_outcome As cc_isr_Test_FX.Assert
 
     If This.BeforeAllAssert.AssertSuccessful Then
         Set p_outcome = IIf(This.Device.Connected, _
@@ -211,7 +211,7 @@ Public Sub AfterEach()
     ' Trap errors to the error handler.
     On Error GoTo err_Handler
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert
+    Dim p_outcome As cc_isr_Test_FX.Assert
     Set p_outcome = Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
 
     ' cleanup after each test.
@@ -265,10 +265,10 @@ Public Sub AfterAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("All tests cleaned up.")
+    Dim p_outcome As cc_isr_Test_FX.Assert: Set p_outcome = Assert.Pass("All tests cleaned up.")
     
     ' cleanup after all tests.
-    If This.BeforeAll.AssertSuccessful Then
+    If This.BeforeAllAssert.AssertSuccessful Then
     
     End If
     
@@ -320,12 +320,9 @@ End Sub
 '  Tests
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-
-
 ''' <summary>   Unit test. Asserts the device <c>No Error</c> should. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function TestNoErrorShouldParse() As cc_isr_Test_Fx.Assert
-
+Public Function TestNoErrorShouldParse() As cc_isr_Test_FX.Assert
 
     Const p_procedureName As String = "TestPrimeAndCleanup"
 
@@ -383,22 +380,15 @@ Public Function TestNoErrorShouldParse() As cc_isr_Test_Fx.Assert
 
     End If
 
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
-
-    Debug.Print p_outcome.BuildReport("TestNoErrorShouldParse")
-    
-    Set TestNoErrorShouldParse = p_outcome
-    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestCreateSocket")
+    Debug.Print p_outcome.BuildReport("TestNoErrorShouldParse")
     
-    Set TestCreateSocket = p_outcome
+    Set TestNoErrorShouldParse = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -421,7 +411,7 @@ End Function
 
 ''' <summary>   Unit test. Asserts parsing device <c>UndefinedHeader</c> Error. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function TestUndefinedHeaderErrorShouldParse() As cc_isr_Test_Fx.Assert
+Public Function TestUndefinedHeaderErrorShouldParse() As cc_isr_Test_FX.Assert
 
 
     Const p_procedureName As String = "TestPrimeAndCleanup"
@@ -493,23 +483,16 @@ Public Function TestUndefinedHeaderErrorShouldParse() As cc_isr_Test_Fx.Assert
 
     End If
 
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
-
-    Debug.Print p_outcome.BuildReport("TestUndefinedHeaderErrorShouldParse")
-    
-    Set TestUndefinedHeaderErrorShouldParse = p_outcome
-    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestCreateSocket")
+    Debug.Print p_outcome.BuildReport("TestUndefinedHeaderErrorShouldParse")
     
-    Set TestCreateSocket = p_outcome
-    
+    Set TestUndefinedHeaderErrorShouldParse = p_outcome
+   
     On Error GoTo 0
     Exit Function
 
@@ -527,7 +510,4 @@ err_Handler:
     GoTo exit_Handler
 
 End Function
-
-
-
 

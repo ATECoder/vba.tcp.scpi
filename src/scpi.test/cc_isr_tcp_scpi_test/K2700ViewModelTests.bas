@@ -10,8 +10,8 @@ Option Explicit
 Private Type this_
     Name As String
     TestNumber As Integer
-    BeforeAllAssert As cc_isr_Test_Fx.Assert
-    BeforeEachAssert As cc_isr_Test_Fx.Assert
+    BeforeAllAssert As cc_isr_Test_FX.Assert
+    BeforeEachAssert As cc_isr_Test_FX.Assert
     ViewModel As cc_isr_Tcp_Scpi.K2700ViewModel
     Host As String
     Port As Long
@@ -20,8 +20,7 @@ Private Type this_
     TopCardFunctionScanList As String
     BottomCardFunctionScanList As String
     SenseFunction As String
-    ErrTracer As IErrTracer
-    DeviceErrorsTracer As IErrTracer
+    ErrTracer As cc_isr_Test_FX.IErrTracer
 End Type
 
 Private This As this_
@@ -78,13 +77,14 @@ Public Sub BeforeAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("Primed to run all tests.")
+    Dim p_outcome As cc_isr_Test_FX.Assert: Set p_outcome = Assert.Pass("Primed to run all tests.")
 
     This.Name = "K2700ViewModelTests"
     
     This.TestNumber = 0
     
-    Set This.ErrTracer = New ErrTracer
+    ' set a temporary error tracer
+    Set This.ErrTracer = New DeviceErrorsTracer
     
     ' clear the error state.
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
@@ -107,8 +107,9 @@ Public Sub BeforeAll()
     ' initialize the view model.
     This.ViewModel.Initialize
 
-    Dim p_deviceErrorsTracer As New DeviceErrorsTracer
-    Set This.DeviceErrorsTracer = p_deviceErrorsTracer.Initialize(This.ViewModel)
+    ' set the final error tracer capable of reporting device errors.
+    Dim p_errTracer As New DeviceErrorsTracer
+    Set This.ErrTracer = p_errTracer.Initialize(This.ViewModel)
     
     ' connect
     This.ViewModel.ToggleConnectionCommand True
@@ -167,7 +168,7 @@ Public Sub BeforeEach()
 
     This.TestNumber = This.TestNumber + 1
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert
+    Dim p_outcome As cc_isr_Test_FX.Assert
 
     If This.BeforeAllAssert.AssertSuccessful Then
         Set p_outcome = IIf(This.ViewModel.Connected, _
@@ -234,7 +235,7 @@ Public Sub AfterEach()
     ' Trap errors to the error handler.
     On Error GoTo err_Handler
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert
+    Dim p_outcome As cc_isr_Test_FX.Assert
     Set p_outcome = Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
 
     ' cleanup after each test.
@@ -288,13 +289,11 @@ Public Sub AfterAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("All tests cleaned up.")
+    Dim p_outcome As cc_isr_Test_FX.Assert: Set p_outcome = Assert.Pass("All tests cleaned up.")
     
     ' cleanup after all tests.
-    If This.BeforeAll.AssertSuccessful Then
+    If This.BeforeAllAssert.AssertSuccessful Then
     End If
-    
-    Set This.DeviceErrorsTracer = Nothing
     
     ' disconnect if connected
     If Not This.ViewModel Is Nothing Then _
@@ -354,7 +353,7 @@ End Sub
 
 ''' <summary>   Unit test. Asserts that view model should initialize. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function TestViewModelShouldInitialize() As cc_isr_Test_Fx.Assert
+Public Function TestViewModelShouldInitialize() As cc_isr_Test_FX.Assert
 
 
     Const p_procedureName As String = "TestPrimeAndCleanup"
@@ -369,8 +368,6 @@ Public Function TestViewModelShouldInitialize() As cc_isr_Test_Fx.Assert
     End If
     
     ' proceed with test assertions.
-    
-    
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.IsTrue(This.ViewModel.ToggleConnectionExecutable, _
             "Toggle connection should be executable after initializing the View Model")
@@ -379,23 +376,15 @@ Public Function TestViewModelShouldInitialize() As cc_isr_Test_Fx.Assert
         Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
             "Exception: " & This.ViewModel.LastErrorMessage)
         
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
-    
-    Debug.Print p_outcome.BuildReport("TestViewModelShouldInitialize")
-    
-    Set TestViewModelShouldInitialize = p_outcome
-
-    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestCreateSocket")
+    Debug.Print p_outcome.BuildReport("TestViewModelShouldInitialize")
     
-    Set TestCreateSocket = p_outcome
+    Set TestViewModelShouldInitialize = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -417,7 +406,7 @@ End Function
 
 ''' <summary>   Unit test. Asserts that view model should connect. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function TestViewModelShouldConnect() As cc_isr_Test_Fx.Assert
+Public Function TestViewModelShouldConnect() As cc_isr_Test_FX.Assert
 
 
     Const p_procedureName As String = "TestPrimeAndCleanup"
@@ -442,16 +431,8 @@ Public Function TestViewModelShouldConnect() As cc_isr_Test_Fx.Assert
         Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
             "Exception: " & This.ViewModel.LastErrorMessage)
     
-    Dim p_deviceErrorAssert As cc_isr_Test_Fx.Assert
-    Set p_deviceErrorAssert = IIf(This.BeforeEachAssert.AssertSuccessful, _
-        This.DeviceErrorsTracer.AssertLeftoverErrors, Assert.Pass("Initialized."))
-
-    If p_outcome.AssertSuccessful Then
-        Set p_outcome = p_deviceErrorAssert
-    ElseIf Not p_deviceErrorAssert.AssertSuccessful Then
-        Set p_outcome = Assert.Fail(p_outcome.AssertMessage & VBA.vbCrLf & _
-        "Device errors: " & VBA.vbCrLf & p_deviceErrorAssert.AssertMessage)
-    End If
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
@@ -459,17 +440,6 @@ Public Function TestViewModelShouldConnect() As cc_isr_Test_Fx.Assert
     Debug.Print p_outcome.BuildReport("TestViewModelShouldConnect")
     
     Set TestViewModelShouldConnect = p_outcome
-
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
-    
-    Debug.Print p_outcome.BuildReport("TestCreateSocket")
-    
-    Set TestCreateSocket = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -491,7 +461,7 @@ End Function
 
 ''' <summary>   Unit test. Asserts that view model should read cards. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function TestViewModelShouldReadCards() As cc_isr_Test_Fx.Assert
+Public Function TestViewModelShouldReadCards() As cc_isr_Test_FX.Assert
 
 
     Const p_procedureName As String = "TestPrimeAndCleanup"
@@ -536,34 +506,15 @@ Public Function TestViewModelShouldReadCards() As cc_isr_Test_Fx.Assert
             This.ViewModel.LastErrorMessage, _
             "Exception: " & This.ViewModel.LastErrorMessage)
 
-    Dim p_deviceErrorAssert As cc_isr_Test_Fx.Assert
-    Set p_deviceErrorAssert = IIf(This.BeforeEachAssert.AssertSuccessful, _
-        This.DeviceErrorsTracer.AssertLeftoverErrors, Assert.Pass("Initialized."))
-
-    If p_outcome.AssertSuccessful Then
-        Set p_outcome = p_deviceErrorAssert
-    ElseIf Not p_deviceErrorAssert.AssertSuccessful Then
-        Set p_outcome = Assert.Fail(p_outcome.AssertMessage & VBA.vbCrLf & _
-        "Device errors: " & VBA.vbCrLf & p_deviceErrorAssert.AssertMessage)
-    End If
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
-    
-    Debug.Print p_outcome.BuildReport("TestViewModelShouldReadCards")
-    
-    Set TestViewModelShouldReadCards = p_outcome
-
-    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestCreateSocket")
+    Debug.Print p_outcome.BuildReport("TestViewModelShouldReadCards")
     
-    Set TestCreateSocket = p_outcome
+    Set TestViewModelShouldReadCards = p_outcome
     
     On Error GoTo 0
     Exit Function

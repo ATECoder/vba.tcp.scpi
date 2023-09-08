@@ -8,8 +8,8 @@ Option Explicit
 Private Type this_
     Name As String
     TestNumber As Integer
-    BeforeAllAssert As cc_isr_Test_Fx.Assert
-    BeforeEachAssert As cc_isr_Test_Fx.Assert
+    BeforeAllAssert As cc_isr_Test_FX.Assert
+    BeforeEachAssert As cc_isr_Test_FX.Assert
     ErrTracer As IErrTracer
 End Type
 
@@ -69,7 +69,7 @@ Public Sub BeforeAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("Primed to run all tests.")
+    Dim p_outcome As cc_isr_Test_FX.Assert: Set p_outcome = Assert.Pass("Primed to run all tests.")
 
     This.Name = "RouteSystemTests"
     
@@ -129,7 +129,7 @@ Public Sub BeforeEach()
 
     This.TestNumber = This.TestNumber + 1
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert
+    Dim p_outcome As cc_isr_Test_FX.Assert
 
     If This.BeforeAllAssert.AssertSuccessful Then
          Set p_outcome = Assert.Pass("Primed pre-test #" & VBA.CStr(This.TestNumber))
@@ -188,7 +188,7 @@ Public Sub AfterEach()
     ' Trap errors to the error handler.
     On Error GoTo err_Handler
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert
+    Dim p_outcome As cc_isr_Test_FX.Assert
     Set p_outcome = Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
 
     ' cleanup after each test.
@@ -242,10 +242,10 @@ Public Sub AfterAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("All tests cleaned up.")
+    Dim p_outcome As cc_isr_Test_FX.Assert: Set p_outcome = Assert.Pass("All tests cleaned up.")
     
     ' cleanup after all tests.
-    If This.BeforeAll.AssertSuccessful Then
+    If This.BeforeAllAssert.AssertSuccessful Then
     End If
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -292,7 +292,7 @@ End Sub
 
 ''' <summary>   Unit test. Asserts populating the multimplexer card 7700 cards. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function Test7700CardsShouldBePopulated() As cc_isr_Test_Fx.Assert
+Public Function Test7700CardsShouldBePopulated() As cc_isr_Test_FX.Assert
 
     Const p_procedureName As String = "TestPrimeAndCleanup"
 
@@ -364,7 +364,7 @@ End Function
 
 ''' <summary>   Unit test. Asserts populating the multimplexer card 7700 cards. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function Test7700CardsShouldSelected() As cc_isr_Test_Fx.Assert
+Public Function Test7700CardsShouldSelected() As cc_isr_Test_FX.Assert
 
     Const p_procedureName As String = "TestPrimeAndCleanup"
 
@@ -379,16 +379,16 @@ Public Function Test7700CardsShouldSelected() As cc_isr_Test_Fx.Assert
     
     ' proceed with test assertions.
     
+    Dim p_routeSystem As cc_isr_Tcp_Scpi.RouteSystem
     If p_outcome.AssertSuccessful Then
         Set p_routeSystem = cc_isr_Tcp_Scpi.Factory.NewRouteSystem.Initialize(cc_isr_Ieee488.Factory.NewViSession())
         Set p_outcome = Assert.IsNotNothing(p_routeSystem, _
             TypeName(p_routeSystem) & " should be instantiated.")
     End If
 
-    Dim p_routeSystem As cc_isr_Tcp_Scpi.RouteSystem
     If p_outcome.AssertSuccessful Then
         Set p_outcome = Assert.IsNotNothing(p_routeSystem.InstrumentFamilyCards, _
-            "Instrument family cardcollection should be instantiated.")
+            "Instrument family card collection should be instantiated.")
     End If
     
     Dim p_expectedCount As Integer
@@ -527,7 +527,7 @@ End Function
 
 ''' <summary>   Asserts building scan lists. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As String) As cc_isr_Test_Fx.Assert
+Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As String) As cc_isr_Test_FX.Assert
 
     Const p_procedureName As String = "TestPrimeAndCleanup"
 
@@ -682,8 +682,6 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("Assert7700CardsShouldBuildScanLists ")
-    
     Set Assert7700CardsShouldBuildScanLists = p_outcome
     
     On Error GoTo 0
@@ -707,7 +705,7 @@ End Function
 
 ''' <summary>   Unit test. Asserts building scan lists. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function Test7700CardsShouldBuildScanLists() As cc_isr_Test_Fx.Assert
+Public Function Test7700CardsShouldBuildScanLists() As cc_isr_Test_FX.Assert
 
     Const p_procedureName As String = "TestPrimeAndCleanup"
 
@@ -756,7 +754,7 @@ End Function
 
 ''' <summary>   Unit test. Asserts building 4-wire scan lists. </summary>
 ''' <returns>   An <see cref="Assert"/>   instance of <see cref="Assert.AssertSuccessful"/>   True if the test passed. </returns>
-Public Function Test7700CardsShouldBuild4WireScanLists() As cc_isr_Test_Fx.Assert
+Public Function Test7700CardsShouldBuild4WireScanLists() As cc_isr_Test_FX.Assert
     
     Const p_procedureName As String = "TestPrimeAndCleanup"
 
