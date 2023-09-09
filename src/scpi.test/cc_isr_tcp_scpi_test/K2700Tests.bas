@@ -196,9 +196,6 @@ Public Sub BeforeEach()
    
     ' clear execution state before each test.
     
-    If p_outcome.AssertSuccessful Then _
-        This.Device.Device.ClearExecutionState
-
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
@@ -212,6 +209,9 @@ exit_Handler:
                 ";" & VBA.vbCrLf & p_outcome.AssertMessage)
         End If
     End If
+    
+    If p_outcome.AssertSuccessful Then _
+        This.Device.Device.ClearExecutionState
     
     Set This.BeforeEachAssert = p_outcome
 

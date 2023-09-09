@@ -2,18 +2,9 @@
 
 ## GIT:
 
-View Model:
-Add internal methods for the configuration commands.
-Add validation of restored state.
-Raise an exception if state note restored on internal commands.
-
 ## TODO
 
 ### SCPI:
-
-Getting error -410 in association with error querying after reset known state.
-Most likely timeout is not long enough to handle the reset of known state. 
-The session timeout must be set after making a connection.
 
 #### View Model
 Review all internal calls to commands and separate those out.

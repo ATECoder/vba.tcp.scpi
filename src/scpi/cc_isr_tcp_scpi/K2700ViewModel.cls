@@ -366,16 +366,16 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Handles the Toggle connection button click event. </summary>
+''' <summary>   Internal. Toggles the connectivity of the View Model. </summary>
 ''' <param name=a_connect>   [Boolean] true to connect; otherwise, disconnect. </param>
-Public Sub ToggleConnectionCommand(ByVal a_connect As Boolean)
+Friend Sub ToggleConnection(ByVal a_connect As Boolean)
 
-    Const p_procedureName = "ToggleConnectionCommand"
+    Const p_procedureName = "ToggleConnection"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     If Not a_connect And Me.Connected Then
     
@@ -389,7 +389,43 @@ Public Sub ToggleConnectionCommand(ByVal a_connect As Boolean)
     
     End If
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+
+End Sub
+
+''' <summary>   Handles the Toggle connection button click event. </summary>
+''' <param name=a_connect>   [Boolean] true to connect; otherwise, disconnect. </param>
+Public Sub ToggleConnectionCommand(ByVal a_connect As Boolean)
+
+    Const p_procedureName = "ToggleConnectionCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.ToggleConnection a_connect
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -785,23 +821,23 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Handles the Clear Known State button click event. </summary>
-Public Sub ClearExecutionStateCommand()
+''' <summary>   Internal. Sends the instrument to is Clear Known State. </summary>
+Friend Sub ClearExecutionState()
 
-    Const p_procedureName = "ClearExecutionStateCommand"
+    Const p_procedureName = "ClearExecutionState"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
-
+    
     Me.LastErrorMessage = VBA.vbNullString
 
     Me.LastMessage = "Clearing execution state."
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     This.Device.ClearExecutionState
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
 
     Me.LastMessage = "Done clearing execution state."
 
@@ -830,6 +866,40 @@ err_Handler:
 
 End Sub
 
+''' <summary>   Handles the Clear Known State button click event. </summary>
+Public Sub ClearExecutionStateCommand()
+
+    Const p_procedureName = "ClearExecutionStateCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.ClearExecutionState
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
 ''' <summary>   Writes the <see cref="MessageToSend"/> and update elapsed times. </summary>
 Public Sub WriteCommand()
 
@@ -838,11 +908,11 @@ Public Sub WriteCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     This.ViSession.WriteLine This.MessageToSend
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
 
     Me.SentMessage = This.MessageToSend
 
@@ -893,11 +963,11 @@ Public Sub QueryCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     Me.ReceivedMessage = This.ViSession.QueryLine(Me.MessageToSend)
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
 
     Me.SentMessage = This.MessageToSend
    
@@ -923,7 +993,6 @@ err_Handler:
     On Error Resume Next
     GoTo exit_Handler
 
-
 End Sub
 
 ''' <summary>   Read from the instrument updating the elap[es times. </summary>
@@ -934,11 +1003,11 @@ Public Sub ReadCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     Me.ReceivedMessage = This.ViSession.Read()
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -972,11 +1041,11 @@ Public Sub ReadStandardEventStatusCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     Me.StandardByte = This.Device.QueryStandardEventsStatus
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1011,11 +1080,11 @@ Public Sub ResetKnownStateCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     This.Device.ResetKnownState
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1049,11 +1118,11 @@ Public Sub QueryStatusByteCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     Me.StatusByte = This.Device.QueryServiceRequestStatus()
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1385,11 +1454,49 @@ Public Sub SelectiveDeviceClearCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     This.ViSession.GpibLan.SelectiveDeviceClear
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Internal. Serial polls the instrument. </summary>
+Friend Sub SerialPoll()
+
+    Const p_procedureName = "SerialPoll"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopwatch
+
+    Me.StatusByte = This.Device.ReadStatusByte(True)
+
+    Me.ReadStopwatch
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1423,11 +1530,7 @@ Public Sub SerialPollCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
-
-    Me.StatusByte = This.Device.ReadStatusByte(True)
-
-    Me.ReadStopwatchCommand
+    Me.SerialPoll
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1462,13 +1565,13 @@ Public Sub QueryGpibLanCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     If 0 < This.ViSession.GpibLan.SendToController(Me.MessageToSend) Then
         Me.ReceivedMessage = This.ViSession.GpibLan.ReceiveFromDevice()
     End If
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
 
     Me.SentMessage = This.MessageToSend
 
@@ -1504,11 +1607,11 @@ Public Sub ReadGpibLanCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     Me.ReceivedMessage = This.ViSession.GpibLan.ReceiveFromDevice()
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1542,11 +1645,11 @@ Public Sub WriteGpibLanCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     This.ViSession.GpibLan.SendToController (Me.MessageToSend)
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
 
     Me.SentMessage = This.MessageToSend
 
@@ -1590,11 +1693,11 @@ Public Sub GoToLocalCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     This.ViSession.GpibLan.GoToLocal
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1628,11 +1731,11 @@ Public Sub LocalLockoutCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     This.ViSession.GpibLan.LocalLockout
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1666,7 +1769,7 @@ Public Sub ReadAfterWriteSetCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
     
     If This.ReadAfterWriteEnabled = Me.AssertTalkAfterWriteAllowed Then
         This.ViSession.GpibLan.ReadAfterWriteEnabledSetter Me.ReadAfterWriteEnabled
@@ -1679,7 +1782,7 @@ Public Sub ReadAfterWriteSetCommand()
             VBA.CStr(This.AssertTalkAfterWriteAllowed) & "'."
     End If
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1713,11 +1816,11 @@ Public Sub ReadAfterWriteGetCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     Me.ReadAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1750,7 +1853,7 @@ Public Sub ServiceRequestedQueryCommand()
     ' Me.ServiceRequested = This.VISession.GpibLan.ServiceRequested
 
     ' do this instead.
-    Me.SerialPollCommand
+    Me.SerialPoll
 
 End Sub
 
@@ -1762,11 +1865,11 @@ Public Sub GpibAddressGetCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     Me.GpibAddress = This.ViSession.GpibLan.GpibAddressGetter
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1800,11 +1903,11 @@ Public Sub GpibAddressSetCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     This.ViSession.GpibLan.GpibAddressSetter Me.GpibAddress
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1838,11 +1941,11 @@ Public Sub GpibLanReadTimeoutGetCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     Me.GpibLanReadTimeout = This.ViSession.GpibLan.ReadTimeoutGetter
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1876,11 +1979,11 @@ Public Sub GpibLanReadTimeoutSetCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     This.ViSession.GpibLan.ReadTimeoutSetter Me.GpibLanReadTimeout
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -2616,7 +2719,7 @@ Public Sub RestoreKnownState()
     
     If This.K2700 Is Nothing Then Me.Initialize
     
-    If Not Me.Connected Then Me.ToggleConnectionCommand True
+    If Not Me.Connected Then Me.ToggleConnection True
     
     If Not Me.Connected Then _
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
@@ -2974,7 +3077,6 @@ err_Handler:
 
 End Sub
 
-
 ''' <summary>   Configures immediate trigger redading mode. </summary>
 Public Sub ConfigureImmediateTriggerReadingsCommand()
 
@@ -3029,11 +3131,11 @@ Public Sub QueryInputsCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.RestartStopwatchCommand
+    Me.RestartStopwatch
 
     Me.FrontInputsValue = This.K2700.IsFrontInputs
 
-    Me.ReadStopwatchCommand
+    Me.ReadStopwatch
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -3086,7 +3188,7 @@ Public Sub MeasureImmediatelyCommand()
     If Me.AutoIncrementChannelNoEnabled Then
     
         ' Clear all cells
-        Me.ClearReadingsCommand
+        Me.ClearReadings
 
         ' scan all channels
         For p_channelNumber = 1 To Me.ChannelCount
@@ -3097,13 +3199,13 @@ Public Sub MeasureImmediatelyCommand()
             ' set the current channel number
             Me.CurrentChannelNumber = p_channelNumber
         
-            Me.RestartStopwatchCommand
+            Me.RestartStopwatch
             If Me.FrontInputsValue Then
                 This.K2700.TakeFrontReading p_channelNumber
             Else
                 This.K2700.TakeRearReading p_channelNumber
             End If
-            Me.ReadStopwatchCommand
+            Me.ReadStopwatch
     
         Next p_channelNumber
 
@@ -3111,14 +3213,14 @@ Public Sub MeasureImmediatelyCommand()
 
         p_channelNumber = This.SelectedChannelNumber
     
-        Me.RestartStopwatchCommand
+        Me.RestartStopwatch
         If Me.FrontInputsValue Then
             This.K2700.TakeFrontReading p_channelNumber
         Else
             This.K2700.TakeRearReading p_channelNumber
         End If
     
-        Me.ReadStopwatchCommand
+        Me.ReadStopwatch
     
     End If
 
@@ -3150,9 +3252,13 @@ err_Handler:
 
 End Sub
 
+''' <summary>   Internal. Clears the readings. </summary>
+Friend Sub ClearReadings()
 
-''' <summary>   Clears the readings. </summary>
-Public Sub ClearReadingsCommand()
+    Const p_procedureName = "ClearReadings"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
 
     Dim p_channelNumber As Integer
     For p_channelNumber = 1 To Me.ChannelCount
@@ -3160,12 +3266,68 @@ Public Sub ClearReadingsCommand()
         OnChannelMeasured p_channelNumber, Me.ReadingOffset
     Next p_channelNumber
   
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
 End Sub
 
-''' <summary> Toggles monitoring the instrument for external triggered measurements. </summary>
-Public Sub StartMonitoringExternalTriggersCommand()
+''' <summary>   Clears the readings. </summary>
+Public Sub ClearReadingsCommand()
 
-    Const p_procedureName = "StartMonitoringExternalTriggersCommand"
+    Const p_procedureName = "ClearReadingsCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.ClearReadings
+  
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Internal. Starts monitoring the instrument for external triggered measurements. </summary>
+Friend Sub StartMonitoringExternalTriggers()
+
+    Const p_procedureName = "StartMonitoringExternalTriggers"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -3173,7 +3335,7 @@ Public Sub StartMonitoringExternalTriggersCommand()
     If Me.AutoIncrementChannelNoEnabled Then
     
         ' Clear all readings
-        Me.ClearReadingsCommand
+        Me.ClearReadings
 
     End If
 
@@ -3198,6 +3360,43 @@ Public Sub StartMonitoringExternalTriggersCommand()
     ' start the timer
     Me.StartTimer Me.TimerInterval
  
+ 
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+
+    ' stop the timer if the timer started.
+    Me.PauseTimer
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+    
+End Sub
+
+''' <summary>   Starts monitoring the instrument for external triggered measurements. </summary>
+Public Sub StartMonitoringExternalTriggersCommand()
+
+    Const p_procedureName = "StartMonitoringExternalTriggersCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.StartMonitoringExternalTriggers
  
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -3256,7 +3455,7 @@ Public Sub MonitorExtTrigToggleCommand(Optional ByVal a_activated As Boolean)
         Me.ImmediateTriggerOptionExecutable = False
         Me.ExternalTriggerOptionExecutable = False
 
-        Me.StartMonitoringExternalTriggersCommand
+        Me.StartMonitoringExternalTriggers
 
     Else
 
@@ -3655,18 +3854,32 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Restarts the stop watch and clears the elapsed time cell. </summary>
-Public Sub RestartStopwatchCommand()
+''' <summary>   Internal. Restarts the stop watch and clears the elapsed time cell. </summary>
+Friend Sub RestartStopwatch()
 
     Me.ElapsedTimeCaption = vbNullString
     This.Stopwatch.Restart
 
 End Sub
 
+''' <summary>   Restarts the stop watch and clears the elapsed time cell. </summary>
+Public Sub RestartStopwatchCommand()
+
+    Me.RestartStopwatch
+    
+End Sub
+
+''' <summary>   Internal. Reads the stop watch and updates the elapsed time cell. </summary>
+Friend Sub ReadStopwatch()
+
+    Me.ElapsedTime = This.Stopwatch.ElapsedMilliseconds
+
+End Sub
+
 ''' <summary>   Reads the stop watch and updates the elapsed time cell. </summary>
 Public Sub ReadStopwatchCommand()
 
-    Me.ElapsedTime = This.Stopwatch.ElapsedMilliseconds
+    Me.ReadStopwatch
 
 End Sub
 
