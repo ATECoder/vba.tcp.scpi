@@ -320,6 +320,7 @@ Public Sub AfterAll()
     
     ' cleanup after all tests.
     If This.BeforeAllAssert.AssertSuccessful Then
+        This.ViewModel.ResetKnownStateCommand
     End If
     
     ' disconnect if connected

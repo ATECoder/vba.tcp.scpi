@@ -62,7 +62,7 @@ Private Type this_
     ViSession As cc_isr_Ieee488.ViSession
 
     ' view model properties
-    ElapsedTime As Integer
+    ElapsedTime As Double
     ElapsedTimeFormat As String
     ElapsedTimeCaption As String
     LastErrorMessage As String
@@ -2546,6 +2546,63 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
+''' <summary>   Returns true and a message if the specified sense function does not match the
+''' expected sense function. </summary>
+''' <param name="a_senseFunction">   [String] The actual sense function. </param>
+''' <param name="a_message">         [String] The message for an optional exception in case the
+'''                                  the state is not as expected. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function ShouldRestoreSenseFunction(ByVal a_senseFunction As String, _
+    ByRef a_message As String) As Boolean
+
+    Dim p_result As Boolean: p_result = False
+    
+    If Not ((1 = InStr(1, This.ContinuousSenseFunctionName, a_senseFunction, vbTextCompare)) Or _
+            (1 = InStr(1, This.ImmediateSenseFunctionName, a_senseFunction, vbTextCompare)) Or _
+            (1 = InStr(1, This.ExternalSenseFunctionName, a_senseFunction, vbTextCompare))) Then
+        a_message = "The K2700 device current sense function '" & a_senseFunction & _
+            "'is not set as expected to either " & _
+            This.ContinuousSenseFunctionName & " or " & _
+            This.ImmediateSenseFunctionName & " or " & _
+            This.ExternalSenseFunctionName & "."
+        p_result = True
+    Else
+        p_result = False
+    End If
+
+End Function
+
+''' <summary>   Returns true and a message if the current state does not match the expected restore state. </summary>
+''' <remarks>   This is the expected state for making resistance measurements. In future releases
+''' we could define a set of states. </remarks>
+''' <param name="a_message">   [String] The message for an optional exception in case the
+'''                             the state is not as expected. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function ShouldRestoreState(ByRef a_message As String) As Boolean
+
+    Dim p_result As Boolean: p_result = False
+    
+    If VBA.vbNullString = This.SenseFunctionName Then
+        a_message = "The required sense function name is empty."
+        p_result = True
+    ElseIf This.K2700 Is Nothing Then
+        a_message = "The K2700 device instance is nothing."
+        p_result = True
+    ElseIf Not Me.Connected Then
+        a_message = "The K2700 device is not connected to " & This.Host & ":" & VBA.CStr(This.Port) & "."
+        p_result = True
+    Else
+        ' validate the sense function
+        Dim p_senseFunction As String
+        p_senseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
+        p_result = Me.ShouldRestoreSenseFunction(p_senseFunction, a_message)
+    End If
+    
+    ShouldRestoreState = p_result
+
+End Function
+
+
 ''' <summary>   Restores the instrument to its known state in case the instrument power
 '''             was toggled. </summary>
 ''' <remakrs>   This method attempts to restore the instrument to a known state in case it is
@@ -2569,9 +2626,8 @@ Public Sub RestoreKnownState()
     ' validate the sense function
     Dim p_senseFunction As String
     p_senseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
-    If Not ((1 = InStr(1, This.ContinuousSenseFunctionName, p_senseFunction, vbTextCompare)) Or _
-            (1 = InStr(1, This.ImmediateSenseFunctionName, p_senseFunction, vbTextCompare)) Or _
-            (1 = InStr(1, This.ExternalSenseFunctionName, p_senseFunction, vbTextCompare))) Then
+    Dim a_message As String: a_message = VBA.vbNullString
+    If Me.ShouldRestoreSenseFunction(p_senseFunction, a_message) Then
         
         ' if the sense function does not match, initialize the instrument
         ' connection state.
@@ -2611,17 +2667,23 @@ Public Function ValidateInputs() As Boolean
 
 End Function
 
-''' <summary>   Configure continuous trigger mode. </summary>
-Public Sub ConfigureContinuousModeCommand()
+''' <summary>   Internal. Configures continuous trigger mode. </summary>
+''' <remarks>   This method requires that the instrument be connected as per
+''' <see cref=RestoreKnownState"/>. This method disables both the trigger
+''' monitoring executable and disable the immediate reading executable (Measure). </remarks>
+Friend Sub ConfigureContinuousMode()
 
     Const p_procedureName = "ConfigureContinuousModeCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    ' restore the instrument state if it had a power toggle.
-    
-    Me.RestoreKnownState
+    ' throw an error if the state was not restored before this method.
+    Dim a_message As String: a_message = VBA.vbNullString
+    If Me.ShouldRestoreState(a_message) Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " Instrument not set in the expected state: " & VBA.vbCrLf & a_message
 
     ' clear execution state when switching mode.
 
@@ -2632,14 +2694,17 @@ Public Sub ConfigureContinuousModeCommand()
     ' configure measuring a single value on each read.
     This.K2700.ConfigureContinuousFunctionAutoRange Me.SenseFunctionName
 
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
     ' Disable making immediate measurements.
     Me.MeasureExecutable = False
 
     ' disable monitoring the external trigger.
     Me.MonitorExtTrigExecutable = False
 
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
+    ' set the measurment mode to continuous
+    This.MeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.Continuous
 
     This.MeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.Continuous
     On Error GoTo 0
@@ -2663,8 +2728,139 @@ err_Handler:
 
 End Sub
 
+''' <summary>   Configure continuous trigger mode. </summary>
+Public Sub ConfigureContinuousModeCommand()
 
-''' <summary>   Turns on external trigger mode. </summary>
+    Const p_procedureName = "ConfigureContinuousModeCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    ' restore the instrument state if it had a power toggle.
+    
+    Me.RestoreKnownState
+
+    ' executed the specific actions for configuring conditinuous mode.
+    
+    Me.ConfigureContinuousMode
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Internal. Configures external trigger reading mode. </summary>
+''' <remarks>   This method requires that instrument be connected as per
+''' <see cref=RestoreKnownState"/> and inputs are set as required.
+''' This method enables the trigger monitoring executable and disables the
+''' immediate reading executable (Measure). </remarks>
+Friend Sub ConfigureExternalTriggerReading()
+
+    Const p_procedureName = "ConfigureExternalTriggerReading"
+    
+    ' Trap errors to the error handler
+    
+    On Error GoTo err_Handler
+    
+    ' throw an error if the state was not restored before this method.
+    Dim a_message As String: a_message = VBA.vbNullString
+    If Me.ShouldRestoreState(a_message) Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " Instrument not set in the expected state: " & VBA.vbCrLf & a_message
+    
+    ' reset if changing modes.
+    If cc_isr_Tcp_Scpi.MeasurementMode.External <> This.MeasurementMode Then
+        This.K2700.Device.ResetKnownState
+    End If
+    
+    ' clear execution state when switching mode.
+    
+    This.K2700.Device.ClearExecutionState
+    
+    ' Configure external triggering reading requiring the front panel
+    
+    Me.SenseFunctionName = This.ExternalSenseFunctionName
+    
+    This.K2700.ConfigureExternalTriggerReading This.SenseFunctionName, _
+            This.FrontInputsValue
+    
+    ' this is done in the previous command.
+    ' This.VISession.WriteLine ":TRIG:SOUR IMM"
+    ' This.VISession.WriteLine ":TRIG:SOUR EXT"
+    
+    ' clear the serial poll register
+    ' these are also part of the previous command.
+    ' This.VISession.WriteLine "*ESE 0"
+    ' This.VISession.WriteLine "*SRE 63"
+    
+    ' clear the measurement event enable register
+    ' This.VISession.WriteLine "STAT:PRES"
+    
+    ' enable the reading available bit of the measurement event register.
+    ' This.VISession.WriteLine "STAT:MEAS:ENAB 32"
+    
+    ' This.Device.QueryServiceRequestStatus
+    
+    ' move this to starting the monitoring.
+    ' initiate awaiting for the external trigger
+    ' This.VISession.WriteLine ":INIT; *CLS"
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+    
+    ' disable the immediate reading mode buttons
+    Me.MeasureExecutable = False
+    
+    ' enable toggling the external trigger monitoring.
+    Me.MonitorExtTrigExecutable = True
+    
+    ' set the measurment mode to external
+    This.MeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.External
+    
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+
+End Sub
+
+
+''' <summary>   Configures external trigger reading mode. </summary>
 Public Sub ConfigureExternalTriggerReadingCommand()
 
     Const p_procedureName = "ConfigureExternalTriggerReadingCommand"
@@ -2673,57 +2869,16 @@ Public Sub ConfigureExternalTriggerReadingCommand()
     
     On Error GoTo err_Handler
 
-    ' restor the instrument state if it had a power toggle.
+    ' restore the instrument state if it had a power toggle.
     
     Me.RestoreKnownState
     
     ' exit if inputs are not in the correct settings
 
     If Me.ValidateInputs() Then
-   
-        ' reset if changing modes.
-        If cc_isr_Tcp_Scpi.MeasurementMode.External <> This.MeasurementMode Then
-            This.K2700.Device.ResetKnownState
-        End If
+    
+        Me.ConfigureExternalTriggerReading
         
-        ' clear execution state when switching mode.
-
-        This.K2700.Device.ClearExecutionState
-   
-        ' Configure external triggering reading requiring the front panel
-        
-        Me.SenseFunctionName = This.ExternalSenseFunctionName
-
-        This.K2700.ConfigureExternalTriggerReading This.SenseFunctionName, _
-                This.FrontInputsValue
-
-        ' this is done in the previous command.
-        ' This.VISession.WriteLine ":TRIG:SOUR IMM"
-        ' This.VISession.WriteLine ":TRIG:SOUR EXT"
-    
-        ' clear the serial poll register
-        ' these are also part of the previous command.
-        ' This.VISession.WriteLine "*ESE 0"
-        ' This.VISession.WriteLine "*SRE 63"
-    
-        ' clear the measurement event enable register
-        ' This.VISession.WriteLine "STAT:PRES"
-    
-        ' enable the reading available bit of the measurement event register.
-        ' This.VISession.WriteLine "STAT:MEAS:ENAB 32"
-    
-        ' This.Device.QueryServiceRequestStatus
-    
-        ' move this to starting the monitoring.
-        ' initiate awaiting for the external trigger
-        ' This.VISession.WriteLine ":INIT; *CLS"
-   
-        ' disable the immediate reading mode buttons
-        Me.MeasureExecutable = False
-
-        ' enable toggling the external trigger monitoring.
-        Me.MonitorExtTrigExecutable = True
-
     End If
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -2751,7 +2906,76 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Configure immediate trigger mode and enables the read button. </summary>
+''' <summary>   Internal. Configures immediate trigger redading mode. </summary>
+''' <remarks>   This method requires that instrument be connected as per
+''' <see cref=RestoreKnownState"/> and inputs are set as required.
+''' This method enables the immediate reading executable (Measure) and
+''' disables trigger monitoring executable. </remarks>
+Friend Sub ConfigureImmediateTriggerReadings()
+
+    Const p_procedureName = "ConfigureImmediateTriggerReadings"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    ' throw an error if the state was not restored before this method.
+    Dim a_message As String: a_message = VBA.vbNullString
+    If Me.ShouldRestoreState(a_message) Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " Instrument not set in the expected state: " & VBA.vbCrLf & a_message
+
+    ' reset if changing modes.
+    If cc_isr_Tcp_Scpi.MeasurementMode.Immediate <> This.MeasurementMode Then
+    
+        This.K2700.Device.ResetKnownState
+    
+    End If
+    
+    ' clear execution state.
+    
+    This.K2700.Device.ClearExecutionState
+    
+    Me.SenseFunctionName = This.ImmediateSenseFunctionName
+    
+    ' configure measuring a single value on each read.
+    This.K2700.ConfigureSingleFunctionReading Me.SenseFunctionName
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    ' Enable making immediate measurements.
+    Me.MeasureExecutable = True
+    
+    ' disable monitoring the external trigger.
+    Me.MonitorExtTrigExecutable = False
+
+    ' set the measurment mode to external
+    This.MeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.External
+    
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+
+''' <summary>   Configures immediate trigger redading mode. </summary>
 Public Sub ConfigureImmediateTriggerReadingsCommand()
 
     Const p_procedureName = "ConfigureImmediateTriggerReadingsCommand"
@@ -2759,7 +2983,7 @@ Public Sub ConfigureImmediateTriggerReadingsCommand()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    ' restor the instrument state if it had a power toggle.
+    ' restore the instrument state if it had a power toggle.
     
     Me.RestoreKnownState
 
@@ -2767,26 +2991,10 @@ Public Sub ConfigureImmediateTriggerReadingsCommand()
 
     If Me.ValidateInputs() Then
 
-        ' reset if changing modes.
-        If cc_isr_Tcp_Scpi.MeasurementMode.Immediate <> This.MeasurementMode Then
-            This.K2700.Device.ResetKnownState
-        End If
-
-        ' clear execution state when switching mode.
-
-        This.K2700.Device.ClearExecutionState
-
-        Me.SenseFunctionName = This.ImmediateSenseFunctionName
-
-        ' configure measuring a single value on each read.
-        This.K2700.ConfigureSingleFunctionReading Me.SenseFunctionName
-    
-        ' Enable making immediate measurements.
-        Me.MeasureExecutable = True
-    
-        ' disable monitoring the external trigger.
-        Me.MonitorExtTrigExecutable = False
-
+        ' configure for immediate trigger readings
+        
+        Me.ConfigureImmediateTriggerReadings
+        
     End If
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -3154,6 +3362,16 @@ Private Sub OnInstrumentConnected()
     Me.SocketAddress = This.ViSession.SocketAddress
     Me.SocketId = This.ViSession.SocketId
     
+    ' report device errors if any before clearing states.
+    
+    Dim p_errors As String
+    If This.K2700.DeviceErrorReader.TryDequeueDeviceErrors(p_errors) Then
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError _
+            cc_isr_Core_IO.UserDefinedErrors.Ieee488DeviceError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".OnInstrumentConnected", _
+            " Device error(s) occurred on session connection: " & p_errors
+    End If
+    
     This.ViSession.GpibLan.SelectiveDeviceClear
     This.Device.ResetKnownState
     This.Device.ClearExecutionState
@@ -3175,16 +3393,15 @@ Private Sub OnInstrumentConnected()
 
     ' configure the instrument for continuous mode.
     
-    Me.ConfigureContinuousModeCommand
+    Me.ConfigureContinuousMode
     
     ' report any errors.
     
-    Dim p_errors As String
     If This.K2700.DeviceErrorReader.TryDequeueDeviceErrors(p_errors) Then
         cc_isr_Core_IO.UserDefinedErrors.RaiseError _
             cc_isr_Core_IO.UserDefinedErrors.Ieee488DeviceError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".OnInstrumentConnected", _
-            " Device error(s): " & p_errors
+            " Device error(s) occurred on session initialization: " & p_errors
     End If
     
 End Sub
@@ -3351,14 +3568,14 @@ Public Property Let TimerInterval(ByVal a_value As Integer)
 End Property
 
 ''' <summary>   Gets the Elapsed Time in milliseconds. </summary>
-''' <value>   [Integer]. </value>
-Public Property Get ElapsedTime() As Integer
+''' <value>   [Double]. </value>
+Public Property Get ElapsedTime() As Double
     ElapsedTime = This.ElapsedTime
 End Property
 
 ''' <summary>   Sets the Elapsed Time in milliseconds. </summary>
-''' <param name="a_value">   [Integer] the Elapsed Time in milliseconds. </value>
-Public Property Let ElapsedTime(ByVal a_value As Integer)
+''' <param name="a_value">   [Double] the Elapsed Time in milliseconds. </value>
+Public Property Let ElapsedTime(ByVal a_value As Double)
     If This.ElapsedTime <> a_value Then
         This.ElapsedTime = a_value
         Me.OnPropertyChanged "ElapsedTime"
@@ -3855,8 +4072,27 @@ End Sub
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 Private Sub Class_Initialize()
+    
+    ' view model properties
     This.ElapsedTimeFormat = "0.0"
+    
+    ' Winsock properties
+    This.SocketReceiveTimeout = 100
+    
+    ' ieee488 control properties
+    This.SessionReadTimeout = 3000
+    
+    ' GPIB-Lan properties.
+    This.AssertTalkAfterWriteAllowed = False
+    This.GpibLanReadTimeout = 500
+    
+    ' 2700 properties
     This.ContinuousSenseFunctionName = "FRES"
     This.ImmediateSenseFunctionName = "RES"
     This.ExternalSenseFunctionName = "FRES"
+    This.MeasuredValueFormat = "0.0"
+    
+    ' service request monitoring timer control
+    This.TimerInterval = 500
+    
 End Sub
