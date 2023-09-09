@@ -36,7 +36,7 @@ End Sub
 ''' <summary>   Runs the selected test. </summary>
 Private Sub RunTestsButton_Click()
     
-    cc_isr_Test_FX.TestExecutive.Execute UnitTestSheet, True
+    cc_isr_Test_Fx.TestExecutive.Execute UnitTestSheet, True
 
 End Sub
 

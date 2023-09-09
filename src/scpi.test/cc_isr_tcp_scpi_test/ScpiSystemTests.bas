@@ -5,16 +5,22 @@ Attribute VB_Name = "ScpiSystemTests"
 
 Option Explicit
 
+''' <summary>   This class properties. </summary>
 Private Type this_
     Name As String
     TestNumber As Integer
-    BeforeAllAssert As cc_isr_Test_FX.Assert
-    BeforeEachAssert As cc_isr_Test_FX.Assert
+    BeforeAllAssert As cc_isr_Test_Fx.Assert
+    BeforeEachAssert As cc_isr_Test_Fx.Assert
     Device As cc_isr_Tcp_Scpi.K2700
     Host As String
     Port As Long
     SocketReceiveTimeout As Integer
-    ErrTracer As cc_isr_Test_FX.IErrTracer
+    ErrTracer As cc_isr_Test_Fx.IErrTracer
+    TestCount As Integer
+    RunCount As Integer
+    PassedCount As Integer
+    FailedCount As Integer
+    InconclusiveCount As Integer
 End Type
 
 Private This As this_
@@ -24,15 +30,17 @@ Private This As this_
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Runs the specified test. </summary>
-Public Sub RunTest(ByVal a_testNumber As Integer)
+Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
+    Dim p_outcome As cc_isr_Test_Fx.Assert
     BeforeEach
     Select Case a_testNumber
         Case 1
-            TestInputsShouldBeFront
+            Set p_outcome = TestInputsShouldBeFront
         Case Else
     End Select
     AfterEach
-End Sub
+    Set RunTest = p_outcome
+End Function
 
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
@@ -44,12 +52,31 @@ End Sub
 ''' <summary>   Runs all tests. </summary>
 Public Sub RunAllTests()
     BeforeAll
+    Dim p_outcome As cc_isr_Test_Fx.Assert
+    This.RunCount = 0
+    This.PassedCount = 0
+    This.FailedCount = 0
+    This.InconclusiveCount = 0
+    This.TestCount = 1
     Dim p_testNumber As Integer
-    For p_testNumber = 1 To 1
-        RunTest p_testNumber
+    For p_testNumber = 1 To This.TestCount
+        Set p_outcome = RunTest(p_testNumber)
+        If Not p_outcome Is Nothing Then
+            This.RunCount = This.RunCount + 1
+            If p_outcome.AssertInconclusive Then
+                This.InconclusiveCount = This.InconclusiveCount + 1
+            ElseIf p_outcome.AssertSuccessful Then
+                This.PassedCount = This.PassedCount + 1
+            Else
+                This.FailedCount = This.FailedCount + 1
+            End If
+        End If
         DoEvents
     Next p_testNumber
     AfterAll
+    Debug.Print "Ran " & VBA.CStr(This.RunCount) & " out of " & VBA.CStr(This.TestCount) & " tests."
+    Debug.Print "Passed: " & VBA.CStr(This.PassedCount) & "; Failed: " & VBA.CStr(This.FailedCount) & _
+                "; Inconclusive: " & VBA.CStr(This.InconclusiveCount) & "."
 End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -67,7 +94,7 @@ Public Sub BeforeAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Dim p_outcome As cc_isr_Test_FX.Assert: Set p_outcome = Assert.Pass("Primed to run all tests.")
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("Primed to run all tests.")
 
     This.Name = "ScpiSystemTests"
     
@@ -152,7 +179,7 @@ Public Sub BeforeEach()
 
     This.TestNumber = This.TestNumber + 1
 
-    Dim p_outcome As cc_isr_Test_FX.Assert
+    Dim p_outcome As cc_isr_Test_Fx.Assert
 
     If This.BeforeAllAssert.AssertSuccessful Then
         Set p_outcome = IIf(This.Device.Connected, _
@@ -219,7 +246,7 @@ Public Sub AfterEach()
     ' Trap errors to the error handler.
     On Error GoTo err_Handler
 
-    Dim p_outcome As cc_isr_Test_FX.Assert
+    Dim p_outcome As cc_isr_Test_Fx.Assert
     Set p_outcome = Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
 
     ' cleanup after each test.
@@ -273,7 +300,7 @@ Public Sub AfterAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Dim p_outcome As cc_isr_Test_FX.Assert: Set p_outcome = Assert.Pass("All tests cleaned up.")
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("All tests cleaned up.")
     
     ' cleanup after all tests.
     If This.BeforeAllAssert.AssertSuccessful Then
@@ -329,14 +356,14 @@ End Sub
 ''' <summary>   Unit test. Asserts inputs should be front. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestInputsShouldBeFront() As cc_isr_Test_FX.Assert
+Public Function TestInputsShouldBeFront() As cc_isr_Test_Fx.Assert
 
     Const p_procedureName As String = "TestInputsShouldBeFront"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then
         Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")

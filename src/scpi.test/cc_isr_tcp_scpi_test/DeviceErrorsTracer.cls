@@ -19,7 +19,7 @@ End Type
 
 Private This As this_
 
-Implements cc_isr_Test_FX.IErrTracer
+Implements cc_isr_Test_Fx.IErrTracer
 
 ''' <summary>   Initializes this object. </summary>
 ''' <para name="a_k2700">   [K2700] reference tot he instrument object. </param>
@@ -32,9 +32,9 @@ End Function
 ''' as well as the user defined errors queue and archive. </summary>
 ''' <para name="a_delimiter">   [String] a delimiter for concatenating error messages
 '''                             from the error queue. </param>
-Private Function IErrTracer_AssertLeftoverErrors(Optional ByVal a_delimiter As String = VBA.vbCrLf) As cc_isr_Test_FX.Assert
+Private Function IErrTracer_AssertLeftoverErrors(Optional ByVal a_delimiter As String = VBA.vbCrLf) As cc_isr_Test_Fx.Assert
 
-    Dim p_outcome As cc_isr_Test_FX.Assert
+    Dim p_outcome As cc_isr_Test_Fx.Assert
     
     Dim p_deviceErrors As String
     Dim p_hasDeviceErrors As Boolean

@@ -2,26 +2,18 @@
 
 ## GIT:
 
-Core IO: Close editor windows.
-
-Scpi:
-
-
 ## TODO
 
-Core IO: when appending error source, check if same source
-
-IEEE 488 fix assert return values commend 
+### Core
 
 
 ### SCPI:
 
-Run all tests with system off to check the inconclusive works.
-
-Sense System Test
-* Add and test the function write and query.
-
 View Model test:
+* run existing tests.
+* Add tests:
+* test recovery from this and that like the Device tests.
+
 * Test connecting.
 * Test no errors upon connecting.
 * Test restoring known state.
@@ -30,7 +22,7 @@ View Model test:
 * test switching modes.
 * Test getting and setting sense function. 
 2700 Demo
-* fix and test
+* fix and test using the view model.
 
 
 ## Beta 202308

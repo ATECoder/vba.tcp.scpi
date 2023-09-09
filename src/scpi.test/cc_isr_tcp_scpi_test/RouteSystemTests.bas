@@ -5,12 +5,18 @@ Attribute VB_Name = "RouteSystemTests"
 
 Option Explicit
 
+''' <summary>   This class properties. </summary>
 Private Type this_
     Name As String
     TestNumber As Integer
-    BeforeAllAssert As cc_isr_Test_FX.Assert
-    BeforeEachAssert As cc_isr_Test_FX.Assert
-    ErrTracer As IErrTracer
+    BeforeAllAssert As cc_isr_Test_Fx.Assert
+    BeforeEachAssert As cc_isr_Test_Fx.Assert
+    ErrTracer As cc_isr_Test_Fx.IErrTracer
+    TestCount As Integer
+    RunCount As Integer
+    PassedCount As Integer
+    FailedCount As Integer
+    InconclusiveCount As Integer
 End Type
 
 Private This As this_
@@ -20,21 +26,23 @@ Private This As this_
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Runs the specified test. </summary>
-Public Sub RunTest(ByVal a_testNumber As Integer)
+Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
+    Dim p_outcome As cc_isr_Test_Fx.Assert
     BeforeEach
     Select Case a_testNumber
         Case 1
-            Test7700CardsShouldBePopulated
+            Set p_outcome = Test7700CardsShouldBePopulated
         Case 2
-            Test7700CardsShouldSelected
+            Set p_outcome = Test7700CardsShouldSelected
         Case 3
-            Test7700CardsShouldBuildScanLists
+            Set p_outcome = Test7700CardsShouldBuildScanLists
         Case 4
-            Test7700CardsShouldBuild4WireScanLists
+            Set p_outcome = Test7700CardsShouldBuild4WireScanLists
         Case Else
     End Select
     AfterEach
-End Sub
+    Set RunTest = p_outcome
+End Function
 
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
@@ -46,12 +54,31 @@ End Sub
 ''' <summary>   Runs all tests. </summary>
 Public Sub RunAllTests()
     BeforeAll
+    Dim p_outcome As cc_isr_Test_Fx.Assert
+    This.RunCount = 0
+    This.PassedCount = 0
+    This.FailedCount = 0
+    This.InconclusiveCount = 0
+    This.TestCount = 4
     Dim p_testNumber As Integer
-    For p_testNumber = 1 To 4
-        RunTest p_testNumber
+    For p_testNumber = 1 To This.TestCount
+        Set p_outcome = RunTest(p_testNumber)
+        If Not p_outcome Is Nothing Then
+            This.RunCount = This.RunCount + 1
+            If p_outcome.AssertInconclusive Then
+                This.InconclusiveCount = This.InconclusiveCount + 1
+            ElseIf p_outcome.AssertSuccessful Then
+                This.PassedCount = This.PassedCount + 1
+            Else
+                This.FailedCount = This.FailedCount + 1
+            End If
+        End If
         DoEvents
     Next p_testNumber
     AfterAll
+    Debug.Print "Ran " & VBA.CStr(This.RunCount) & " out of " & VBA.CStr(This.TestCount) & " tests."
+    Debug.Print "Passed: " & VBA.CStr(This.PassedCount) & "; Failed: " & VBA.CStr(This.FailedCount) & _
+                "; Inconclusive: " & VBA.CStr(This.InconclusiveCount) & "."
 End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -69,7 +96,7 @@ Public Sub BeforeAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Dim p_outcome As cc_isr_Test_FX.Assert: Set p_outcome = Assert.Pass("Primed to run all tests.")
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("Primed to run all tests.")
 
     This.Name = "RouteSystemTests"
     
@@ -129,7 +156,7 @@ Public Sub BeforeEach()
 
     This.TestNumber = This.TestNumber + 1
 
-    Dim p_outcome As cc_isr_Test_FX.Assert
+    Dim p_outcome As cc_isr_Test_Fx.Assert
 
     If This.BeforeAllAssert.AssertSuccessful Then
          Set p_outcome = Assert.Pass("Primed pre-test #" & VBA.CStr(This.TestNumber))
@@ -188,7 +215,7 @@ Public Sub AfterEach()
     ' Trap errors to the error handler.
     On Error GoTo err_Handler
 
-    Dim p_outcome As cc_isr_Test_FX.Assert
+    Dim p_outcome As cc_isr_Test_Fx.Assert
     Set p_outcome = Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
 
     ' cleanup after each test.
@@ -242,7 +269,7 @@ Public Sub AfterAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Dim p_outcome As cc_isr_Test_FX.Assert: Set p_outcome = Assert.Pass("All tests cleaned up.")
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("All tests cleaned up.")
     
     ' cleanup after all tests.
     If This.BeforeAllAssert.AssertSuccessful Then
@@ -293,14 +320,14 @@ End Sub
 ''' <summary>   Unit test. Asserts populating the multimplexer card 7700 cards. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function Test7700CardsShouldBePopulated() As cc_isr_Test_FX.Assert
+Public Function Test7700CardsShouldBePopulated() As cc_isr_Test_Fx.Assert
 
     Const p_procedureName As String = "Test7700CardsShouldBePopulated"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then
         Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
@@ -366,14 +393,14 @@ End Function
 ''' <summary>   Unit test. Asserts populating the multimplexer card 7700 cards. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function Test7700CardsShouldSelected() As cc_isr_Test_FX.Assert
+Public Function Test7700CardsShouldSelected() As cc_isr_Test_Fx.Assert
 
     Const p_procedureName As String = "Test7700CardsShouldSelected"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then
         Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
@@ -530,14 +557,14 @@ End Function
 ''' <summary>   Asserts building scan lists. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As String) As cc_isr_Test_FX.Assert
+Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As String) As cc_isr_Test_Fx.Assert
 
     Const p_procedureName As String = "Assert7700CardsShouldBuildScanLists"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then
         Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
@@ -709,14 +736,14 @@ End Function
 ''' <summary>   Unit test. Asserts building scan lists. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function Test7700CardsShouldBuildScanLists() As cc_isr_Test_FX.Assert
+Public Function Test7700CardsShouldBuildScanLists() As cc_isr_Test_Fx.Assert
 
     Const p_procedureName As String = "Test7700CardsShouldBuildScanLists"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then
         Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
@@ -759,14 +786,14 @@ End Function
 ''' <summary>   Unit test. Asserts building 4-wire scan lists. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function Test7700CardsShouldBuild4WireScanLists() As cc_isr_Test_FX.Assert
+Public Function Test7700CardsShouldBuild4WireScanLists() As cc_isr_Test_Fx.Assert
     
     Const p_procedureName As String = "Test7700CardsShouldBuild4WireScanLists"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then
         Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
