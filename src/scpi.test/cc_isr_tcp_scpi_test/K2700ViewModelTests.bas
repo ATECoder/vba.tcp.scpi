@@ -20,7 +20,9 @@ Private Type this_
     BottomCard As String
     TopCardFunctionScanList As String
     BottomCardFunctionScanList As String
-    SenseFunction As String
+    ContinuousSenseFunctionName As String
+    ImmediateSenseFunctionName As String
+    ExternalSenseFunctionName As String
     ErrTracer As cc_isr_Test_Fx.IErrTracer
     TestCount As Integer
     RunCount As Integer
@@ -43,7 +45,7 @@ Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
         Case 1
             Set p_outcome = TestViewModelShouldInitialize
         Case 2
-            Set p_outcome = TestViewModelShouldConnect
+            Set p_outcome = TestViewModelShouldBeConnected
         Case 3
             Set p_outcome = TestViewModelShouldReadCards
         Case Else
@@ -55,7 +57,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 1
+    RunTest 3
     AfterAll
 End Sub
 
@@ -121,15 +123,17 @@ Public Sub BeforeAll()
     ' initialize known data.
     This.TopCard = "7700"
     This.BottomCard = VBA.vbNullString
-    This.SenseFunction = "FRES"
-    This.TopCardFunctionScanList = ":FUNC 'FRES',(@101,120)"
+    This.ContinuousSenseFunctionName = "FRES"
+    This.ImmediateSenseFunctionName = "RES"
+    This.ExternalSenseFunctionName = "FRES"
+    ' card scan list uses immediate mode sense function
+    This.TopCardFunctionScanList = ":FUNC 'RES',(@101,120)"
     This.BottomCardFunctionScanList = VBA.vbNullString
     
     Set This.ViewModel = cc_isr_Tcp_Scpi.K2700ViewModel
     This.ViewModel.Host = "192.168.0.252"
     This.ViewModel.Port = 1234
     This.ViewModel.SocketReceiveTimeout = 100
-    This.ViewModel.SenseFunctionName = This.SenseFunction
     
     ' initialize the view model.
     This.ViewModel.Initialize
@@ -390,11 +394,11 @@ Public Function TestViewModelShouldInitialize() As cc_isr_Test_Fx.Assert
     ' proceed with test assertions.
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.IsTrue(This.ViewModel.ToggleConnectionExecutable, _
-            "Toggle connection should be executable after initializing the View Model")
+            "Toggle connection should be executable after initializing the View Model.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
-            "Exception: " & This.ViewModel.LastErrorMessage)
+            "Last error message should be empty but found: '" & This.ViewModel.LastErrorMessage & "'.")
         
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -427,9 +431,9 @@ End Function
 ''' <summary>   Unit test. Asserts that view model should connect. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestViewModelShouldConnect() As cc_isr_Test_Fx.Assert
+Public Function TestViewModelShouldBeConnected() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestViewModelShouldConnect"
+    Const p_procedureName As String = "TestViewModelShouldBeConnected"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -442,14 +446,13 @@ Public Function TestViewModelShouldConnect() As cc_isr_Test_Fx.Assert
     
     ' proceed with test assertions.
     
-    
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.IsTrue(This.ViewModel.Connected, _
-            "View model should connect")
+            "View model should be connected.")
         
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
-            "Exception: " & This.ViewModel.LastErrorMessage)
+            "Last error message should be empty but found: '" & This.ViewModel.LastErrorMessage & "'.")
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -457,9 +460,9 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestViewModelShouldConnect")
+    Debug.Print p_outcome.BuildReport("TestViewModelShouldBeConnected")
     
-    Set TestViewModelShouldConnect = p_outcome
+    Set TestViewModelShouldBeConnected = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -497,7 +500,6 @@ Public Function TestViewModelShouldReadCards() As cc_isr_Test_Fx.Assert
     
     ' proceed with test assertions.
     
-    
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.AreEqual(This.TopCard, This.ViewModel.TopCard, _
             "View Model should be read the top card")
@@ -506,11 +508,13 @@ Public Function TestViewModelShouldReadCards() As cc_isr_Test_Fx.Assert
         Set p_outcome = Assert.AreEqual(This.BottomCard, This.ViewModel.BottomCard, _
             "View Model should be read the bottom card")
 
+    ' the view module initializes in continuous mode.
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.AreEqual(This.SenseFunction, _
+        Set p_outcome = Assert.AreEqual(This.ContinuousSenseFunctionName, _
             This.ViewModel.SenseFunctionName, _
             "View Model should set the sense function name")
 
+    ' the cards are set for immeidate mode.
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.AreEqual(This.TopCardFunctionScanList, _
             This.ViewModel.TopCardFunctionScanList, _
@@ -522,9 +526,8 @@ Public Function TestViewModelShouldReadCards() As cc_isr_Test_Fx.Assert
             "View Model should be read the top card function scan list")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.AreEqual(VBA.vbNullString, _
-            This.ViewModel.LastErrorMessage, _
-            "Exception: " & This.ViewModel.LastErrorMessage)
+        Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
+            "Last error message should be empty but found: '" & This.ViewModel.LastErrorMessage & "'.")
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:

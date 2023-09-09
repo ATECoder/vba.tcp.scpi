@@ -2257,9 +2257,9 @@ Public Property Get SenseFunctionName() As String
     SenseFunctionName = This.SenseFunctionName
 End Property
 
-''' <summary>   Sets the Sense Function Name. </summary>
+''' <summary>   Internal. Sets the Sense Function Name. </summary>
 ''' <param name="a_value">   [String] the Sense Function Name. </value>
-Public Property Let SenseFunctionName(ByVal a_value As String)
+Friend Property Let SenseFunctionName(ByVal a_value As String)
     If This.SenseFunctionName <> a_value Then
         This.SenseFunctionName = a_value
         Me.OnPropertyChanged "SenseFunctionName"
@@ -2685,10 +2685,7 @@ Public Function ShouldRestoreState(ByRef a_message As String) As Boolean
 
     Dim p_result As Boolean: p_result = False
     
-    If VBA.vbNullString = This.SenseFunctionName Then
-        a_message = "The required sense function name is empty."
-        p_result = True
-    ElseIf This.K2700 Is Nothing Then
+    If This.K2700 Is Nothing Then
         a_message = "The K2700 device instance is nothing."
         p_result = True
     ElseIf Not Me.Connected Then
@@ -2776,7 +2773,7 @@ End Function
 ''' monitoring executable and disable the immediate reading executable (Measure). </remarks>
 Friend Sub ConfigureContinuousMode()
 
-    Const p_procedureName = "ConfigureContinuousModeCommand"
+    Const p_procedureName = "ConfigureContinuousMode"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
