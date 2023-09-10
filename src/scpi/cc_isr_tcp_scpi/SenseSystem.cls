@@ -15,6 +15,8 @@ Option Explicit
 
 Private Type this_
     ViSession As cc_isr_Ieee488.ViSession
+    AutoRangeEnabled  As Boolean
+    PowerLineCycles As Double
     SenseFunction As String
 End Type
 
@@ -39,6 +41,48 @@ Public Property Get Connected() As Boolean
     End If
 
 End Property
+
+''' <summary>   Gets the last set or get Auto Range enabled. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get AutoRangeEnabled() As Boolean
+    AutoRangeEnabled = This.AutoRangeEnabled
+End Property
+
+''' <summary>   Gets the Auto Range enabled. </summary>
+''' <returns>   [Boolean]. </returns>
+Public Function AutoRangeEnabledGetter() As Boolean
+    Dim p_value As String
+    p_value = This.ViSession.QueryLine(":" & This.SenseFunction & ":RANG:AUTO?")
+    This.AutoRangeEnabled = IIf(p_value = "ON", True, False)
+End Function
+
+''' <summary>   Sets the Auto Range enabled. </summary>
+''' <param name="a_value">   [Boolean] The AutoRange enabled to set. </param >
+Public Function AutoRangeEnabledSetter(ByVal a_value As Boolean)
+    This.ViSession.WriteLine (":" & This.SenseFunction & ":RANG:AUTO " & IIf(a_value, "ON", "OFF"))
+    This.AutoRangeEnabled = a_value
+End Function
+
+''' <summary>   Gets the last set or get Power Line Cycles. </summary>
+''' <value>   [Double]. </value>
+Public Property Get PowerLineCycles() As Double
+    PowerLineCycles = This.PowerLineCycles
+End Property
+
+''' <summary>   Gets the integration rate in Power Line Cycles. </summary>
+''' <returns>   [Double]. </returns>
+Public Function PowerLineCyclesGetter() As Double
+    Dim p_value As String
+    p_value = This.ViSession.QueryLine(":" & This.SenseFunction & ":NPLC?")
+    This.PowerLineCycles = CDbl(p_value)
+End Function
+
+''' <summary>   Sets the integration rate in Power Line Cycles. </summary>
+''' <param name="a_value">   [Double] The integration rate in Power Line Cyclest. </param >
+Public Function PowerLineCyclesSetter(ByVal a_value As Double)
+    This.ViSession.WriteLine (":" & This.SenseFunction & ":NPLC " & VBA.CStr(a_value))
+    This.PowerLineCycles = a_value
+End Function
 
 ''' <summary>   Gets the Sense Function/ </summary>
 Public Property Get SenseFunction() As String

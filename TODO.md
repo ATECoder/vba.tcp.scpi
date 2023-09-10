@@ -2,27 +2,21 @@
 
 ## GIT:
 
+SCPI:
+Add format subsystem./
+Add settings to the sense and trigger subsystems.
+Add unit tests to the viewmodel tests.
+
+
 ## TODO
 
-### SCPI:
+### SCPI View Model Test:
 
-#### View Model
-Review all internal calls to commands and separate those out.
-Before all: Check device error before clearing state.
-
-
-View Model test:
-* run existing tests.
 * Add tests:
-* test recovery from this and that like the Device tests.
-
-* Test connecting.
-* Test no errors upon connecting.
-* Test restoring known state.
-* Test reading and parsing errors.
 * Test all view model commands.
-* test switching modes.
-* Test getting and setting sense function. 
+* test start and stop monitoring.
+
+
 2700 Demo
 * fix and test using the view model.
 

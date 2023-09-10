@@ -15,7 +15,10 @@ Option Explicit
 
 Private Type this_
     ViSession As cc_isr_Ieee488.ViSession
+    ContinuousEnabled As Boolean
+    SampleCount As Long
     Source As cc_isr_Tcp_Scpi.TriggerSource
+    TriggerCount As Long
 End Type
 
 Private This As this_
@@ -49,6 +52,69 @@ Public Property Get Connected() As Boolean
     End If
 
 End Property
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'  Actions
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Aborts triggering. </summary>
+Public Sub Abort()
+    This.ViSession.WriteLine ("ABORT")
+End Sub
+
+
+''' <summary>   Initiates an immediate trigger. </summary>
+Public Sub Initiate()
+    This.ViSession.WriteLine ("INIT:IMM")
+End Sub
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'  Properties
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+
+''' <summary>   Gets the last set or get continuous enabled. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get ContinuousEnabled() As Boolean
+    ContinuousEnabled = This.ContinuousEnabled
+End Property
+
+''' <summary>   Gets the continuous enabled. </summary>
+''' <returns>   [Boolean]. </returns>
+Public Function ContinuousEnabledGetter() As Boolean
+    Dim p_value As String
+    p_value = This.ViSession.QueryLine("INIT:CONT?")
+    This.ContinuousEnabled = IIf(p_value = "ON", True, False)
+End Function
+
+''' <summary>   Sets the continuous enabled. </summary>
+''' <param name="a_value">   [Boolean] The continuous enabled to set. </param >
+Public Function ContinuousEnabledSetter(ByVal a_value As Boolean)
+    This.ViSession.WriteLine ("CONT " & IIf(a_value, "ON", "OFF"))
+    This.ContinuousEnabled = a_value
+End Function
+
+''' <summary>   Gets the last set or get sample count. </summary>
+''' <value>   [Long]. </value>
+Public Property Get SampleCount() As Long
+    SampleCount = This.SampleCount
+End Property
+
+''' <summary>   Gets the sample count. </summary>
+''' <returns>   [Long]. </returns>
+Public Function SampleCountGetter() As Long
+    Dim p_value As String
+    p_value = This.ViSession.QueryLine("SAMP:COUN?")
+    This.SampleCount = CLng(p_value)
+End Function
+
+''' <summary>   Sets the sample count. </summary>
+''' <param name="a_value">   [Long] The sample count to set. </param >
+Public Function SampleCountSetter(ByVal a_value As Long)
+    This.ViSession.WriteLine ("SAMP:COUN " & VBA.CStr(a_value))
+    This.SampleCount = a_value
+End Function
+
 
 ''' <summary>   Gets the <see cref="TriggerSource"/>. </summary>
 ''' <value>   <see cref="TriggerSource"/>. </returns>
@@ -89,4 +155,29 @@ Public Function SourceGetter() As cc_isr_Tcp_Scpi.TriggerSource
     SourceGetter = This.Source
     
 End Function
+
+''' <summary>   Gets the last set or get Trigger count. </summary>
+''' <value>   [Long]. </value>
+Public Property Get TriggerCount() As Long
+    TriggerCount = This.TriggerCount
+End Property
+
+''' <summary>   Gets the Trigger count. </summary>
+''' <returns>   [Long]. </returns>
+Public Function TriggerCountGetter() As Long
+    Dim p_value As String
+    p_value = This.ViSession.QueryLine("TRIG:COUN?")
+    This.TriggerCount = CLng(p_value)
+End Function
+
+''' <summary>   Sets the Trigger count. </summary>
+''' <param name="a_value">   [Long] The Trigger count to set. </param >
+Public Function TriggerCountSetter(ByVal a_value As Long)
+    This.ViSession.WriteLine ("TRIG:COUN " & VBA.CStr(a_value))
+    This.TriggerCount = a_value
+End Function
+
+
+
+
 

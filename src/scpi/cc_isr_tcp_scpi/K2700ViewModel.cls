@@ -67,7 +67,7 @@ Private Type this_
     ElapsedTimeCaption As String
     LastErrorMessage As String
     LastMessage As String
-    MeasurementMode As MeasurementMode
+    CurrentMeasurementMode As cc_isr_Tcp_Scpi.MeasurementMode
 
     ' Winsock properties
     Host As String
@@ -200,7 +200,7 @@ Public Function Initialize() As K2700ViewModel
     Set This.Stopwatch = cc_isr_Core_IO.Factory.NewStopwatch()
     
     Me.AssertTalkAfterWriteAllowed = This.ViSession.GpibLan.AssertTalkAfterWriteAllowed
-    This.MeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.Continuous
+    Me.CurrentMeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.Continuous
     
     m_k2700_ConnectionChanged cc_isr_Winsock.Factory.NewConnectionChangedEventArgs.Initialize()
 
@@ -2082,6 +2082,22 @@ Public Property Let BottomCardFunctionScanList(ByVal a_value As String)
     End If
 End Property
 
+''' <summary>   Gets the current measurement mode. </summary>
+''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementMode"/>]. </value>
+Public Property Get CurrentMeasurementMode() As cc_isr_Tcp_Scpi.MeasurementMode
+    CurrentMeasurementMode = This.CurrentMeasurementMode
+End Property
+
+''' <summary>   Gets the current measurement mode. </summary>
+''' <param name=-"a_value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementMode"/>] the value. </param>
+''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementMode"/>]. </value>
+Friend Property Let CurrentMeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementMode)
+    If This.CurrentMeasurementMode <> a_value Then
+        This.CurrentMeasurementMode = a_value
+        Me.OnPropertyChanged "MeasurementMode"
+    End If
+End Property
+
 ''' <summary>   Gets the Front Inputs Required. </summary>
 ''' <remarks>   True if front inputs are Required; otherwise, Rear inputs. </remarks>
 ''' <value>   [Boolean]. </value>
@@ -2804,9 +2820,8 @@ exit_Handler:
     Me.MonitorExtTrigExecutable = False
 
     ' set the measurment mode to continuous
-    This.MeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.Continuous
+    Me.CurrentMeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.Continuous
 
-    This.MeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.Continuous
     On Error GoTo 0
     Exit Sub
 
@@ -2889,7 +2904,7 @@ Friend Sub ConfigureExternalTriggerReading()
             " Instrument not set in the expected state: " & VBA.vbCrLf & a_message
     
     ' reset if changing modes.
-    If cc_isr_Tcp_Scpi.MeasurementMode.External <> This.MeasurementMode Then
+    If cc_isr_Tcp_Scpi.MeasurementMode.External <> This.CurrentMeasurementMode Then
         This.K2700.Device.ResetKnownState
     End If
     
@@ -2935,7 +2950,7 @@ exit_Handler:
     Me.MonitorExtTrigExecutable = True
     
     ' set the measurment mode to external
-    This.MeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.External
+    Me.CurrentMeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.External
     
     On Error GoTo 0
     Exit Sub
@@ -3026,7 +3041,7 @@ Friend Sub ConfigureImmediateTriggerReadings()
             " Instrument not set in the expected state: " & VBA.vbCrLf & a_message
 
     ' reset if changing modes.
-    If cc_isr_Tcp_Scpi.MeasurementMode.Immediate <> This.MeasurementMode Then
+    If cc_isr_Tcp_Scpi.MeasurementMode.Immediate <> This.CurrentMeasurementMode Then
     
         This.K2700.Device.ResetKnownState
     
@@ -3051,7 +3066,7 @@ exit_Handler:
     Me.MonitorExtTrigExecutable = False
 
     ' set the measurment mode to external
-    This.MeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.External
+    Me.CurrentMeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.External
     
     On Error GoTo 0
     Exit Sub

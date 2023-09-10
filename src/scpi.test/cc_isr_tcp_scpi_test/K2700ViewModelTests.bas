@@ -48,6 +48,12 @@ Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
             Set p_outcome = TestViewModelShouldBeConnected
         Case 3
             Set p_outcome = TestViewModelShouldReadCards
+        Case 4
+            Set p_outcome = TestViewModelShouldRestoreKnownState
+        Case 5
+            Set p_outcome = TestViewModelShouldConfigureImmediateMode
+        Case 6
+            Set p_outcome = TestViewModelShouldConfigureExternalMode
         Case Else
     End Select
     AfterEach
@@ -69,7 +75,7 @@ Public Sub RunAllTests()
     This.PassedCount = 0
     This.FailedCount = 0
     This.InconclusiveCount = 0
-    This.TestCount = 3
+    This.TestCount = 6
     Dim p_testNumber As Integer
     For p_testNumber = 1 To This.TestCount
         Set p_outcome = RunTest(p_testNumber)
@@ -396,6 +402,7 @@ Public Function TestViewModelShouldInitialize() As cc_isr_Test_Fx.Assert
         Set p_outcome = Assert.IsTrue(This.ViewModel.ToggleConnectionExecutable, _
             "Toggle connection should be executable after initializing the View Model.")
 
+    ' Finally, verify that no error message was recorded.
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
             "Last error message should be empty but found: '" & This.ViewModel.LastErrorMessage & "'.")
@@ -450,6 +457,7 @@ Public Function TestViewModelShouldBeConnected() As cc_isr_Test_Fx.Assert
         Set p_outcome = Assert.IsTrue(This.ViewModel.Connected, _
             "View model should be connected.")
         
+    ' Finally, verify that no error message was recorded.
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
             "Last error message should be empty but found: '" & This.ViewModel.LastErrorMessage & "'.")
@@ -525,6 +533,7 @@ Public Function TestViewModelShouldReadCards() As cc_isr_Test_Fx.Assert
             This.ViewModel.BottomCardFunctionScanList, _
             "View Model should be read the top card function scan list")
     
+    ' Finally, verify that no error message was recorded.
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
             "Last error message should be empty but found: '" & This.ViewModel.LastErrorMessage & "'.")
@@ -556,3 +565,392 @@ err_Handler:
     GoTo exit_Handler
 
 End Function
+
+''' <summary>   Unit test. Asserts that view model should restore known state. </summary>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
+Public Function TestViewModelShouldRestoreKnownState() As cc_isr_Test_Fx.Assert
+
+    Const p_procedureName As String = "TestViewModelShouldRestoreKnownState"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    ' proceed with test assertions.
+        
+        
+    Dim p_expectedSenseFunctionName As String: p_expectedSenseFunctionName = "VOLT:DC"
+    If p_outcome.AssertSuccessful Then
+        
+        ' change function mode to voltage
+        This.ViewModel.K2700.SenseSystem.SenseSystem.SenseFunctionSetter p_expectedSenseFunctionName
+        Set p_outcome = Assert.AreEqual(p_expectedSenseFunctionName, _
+            This.ViewModel.K2700.SenseSystem.SenseSystem.SenseFunction, _
+            "Sense function should be set to the expected value.")
+            
+    End If
+    
+    Dim p_actualSenseFunctionName As String
+    If p_outcome.AssertSuccessful Then
+        
+        ' validate the actual function
+        p_actualSenseFunctionName = This.ViewModel.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
+        Set p_outcome = Assert.AreEqual(p_expectedSenseFunctionName, p_actualSenseFunctionName, _
+            "Actual sense function should be set to the expected value.")
+            
+    End If
+    
+    ' now that the function was changed, a resore should be required
+    Dim p_message As String: p_message = VBA.vbNullString
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.IsTrue(This.ViewModel.ShouldRestoreSenseFunction(p_actualSenseFunctionName, p_message), _
+            "Restore should be required after setting the function to: '" & p_actualSenseFunctionName & "'; " & _
+            p_message)
+    End If
+    
+    ' if restore is required we should restore
+    If p_outcome.AssertSuccessful Then
+        
+        This.ViewModel.RestoreKnownState
+        p_actualSenseFunctionName = This.ViewModel.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
+        
+        ' once restore, restore should no longer be required
+        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreSenseFunction(p_actualSenseFunctionName, p_message), _
+            "Restore should not be required after restoring the function to: '" & p_actualSenseFunctionName & "'; " & _
+            p_message)
+        
+    End If
+    
+    ' Finally, verify that no error message was recorded.
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
+            "Last error message should be empty but found: '" & This.ViewModel.LastErrorMessage & "'.")
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
+    
+    Debug.Print p_outcome.BuildReport("TestViewModelShouldReadCards")
+    
+    Set TestViewModelShouldReadCards = p_outcome
+    
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
+    
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Function
+
+''' <summary>   Unit test. Asserts that view model should configure immediate mode. </summary>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
+Public Function TestViewModelShouldConfigureImmediateMode() As cc_isr_Test_Fx.Assert
+
+    Const p_procedureName As String = "TestViewModelShouldConfigureImmediateMode"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    ' proceed with test assertions.
+    
+    If p_outcome.AssertSuccessful Then
+        
+        ' configure immediate mode with front switch.
+        This.ViewModel.FrontInputsRequired = True
+        This.ViewModel.ConfigureImmediateTriggerReadingsCommand
+        
+        Dim p_expectedSenseFunctionName As String: p_expectedSenseFunctionName = This.ImmediateSenseFunctionName
+        Dim p_actualSenseFunctionName As String:
+        p_actualSenseFunctionName = This.ViewModel.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
+        Set p_outcome = Assert.AreEqualString(p_expectedSenseFunctionName, p_actualSenseFunctionName, _
+            VBA.VbCompareMethod.vbTextCompare, _
+            "Immediate mode sense function name should be as expected.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementMode
+        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.Immediate
+        Set p_outcome = Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.CurrentMeasurementMode, _
+            "Immediate measurement mode should be as expected.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = Assert.AreEqual(cc_isr_Tcp_Scpi.TriggerSource.Immediate, _
+            This.ViewModel.K2700.TriggerSystem.TriggerSourceGetter(), _
+            "Immediate trigger source should be as expected.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = Assert.IsFalse(This.ViewModel.K2700.TriggerSystem.ContinuousEnabledGetter, _
+            "Continuous trigger should be disabled.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = Assert.AreEqual(1, This.ViewModel.K2700.TriggerSystem.SampleCountGetter, _
+            "Sample count should be as expected.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = Assert.AreEqual(1, This.ViewModel.K2700.TriggerSystem.TriggerCountGetter, _
+            "Trigger count should be as expected.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = Assert.AreEqual("READ", This.ViewModel.K2700.FormatSystem.ElementsGetter, _
+            "Format elements should be as expected.")
+    End If
+    
+    ' Finally, verify that no error message was recorded.
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
+            "Last error message should be empty but found: '" & This.ViewModel.LastErrorMessage & "'.")
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
+    
+    Debug.Print p_outcome.BuildReport("TestViewModelShouldReadCards")
+    
+    Set TestViewModelShouldReadCards = p_outcome
+    
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
+    
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Function
+
+''' <summary>   Unit test. Asserts that view model should configure external mode. </summary>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
+Public Function TestViewModelShouldConfigureExternalMode() As cc_isr_Test_Fx.Assert
+
+    Const p_procedureName As String = "TestViewModelShouldConfigureExternalMode"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    ' proceed with test assertions.
+    
+    If p_outcome.AssertSuccessful Then
+        
+        ' configure immediate mode with front switch.
+        This.ViewModel.FrontInputsRequired = True
+        This.ViewModel.ConfigureImmediateTriggerReadingsCommand
+        
+        Dim p_expectedSenseFunctionName As String: p_expectedSenseFunctionName = This.ExternalSenseFunctionName
+        Dim p_actualSenseFunctionName As String:
+        p_actualSenseFunctionName = This.ViewModel.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
+        Set p_outcome = Assert.AreEqualString(p_expectedSenseFunctionName, p_actualSenseFunctionName, _
+            VBA.VbCompareMethod.vbTextCompare, _
+            "Immediate mode sense function name should be as expected.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementMode
+        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.External
+        Set p_outcome = Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.CurrentMeasurementMode, _
+            "External measurement mode should be as expected.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = Assert.AreEqual(cc_isr_Tcp_Scpi.TriggerSource.External, _
+            This.ViewModel.K2700.TriggerSystem.TriggerSourceGetter(), _
+            "External trigger source should be as expected.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = Assert.IsFalse(This.ViewModel.K2700.TriggerSystem.ContinuousEnabledGetter, _
+            "Continuous trigger should be disabled.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = Assert.AreEqual(1, This.ViewModel.K2700.TriggerSystem.SampleCountGetter, _
+            "Sample count should be as expected.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = Assert.AreEqual(1, This.ViewModel.K2700.TriggerSystem.TriggerCountGetter, _
+            "Trigger count should be as expected.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = Assert.IsTrue(This.ViewModel.K2700.SenseSystem.SenseSystem.AutoRangeEnabledGetter(), _
+            "Auto range should be enabled.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = Assert.AreEqual(1#, This.ViewModel.K2700.SenseSystem.SenseSystem.PowerLineCycleeGetter(), _
+            "The integration rate in power line cycles should be as expected.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = Assert.AreEqual("READ", This.ViewModel.K2700.FormatSystem.ElementsGetter, _
+            "Format elements should be as expected.")
+    End If
+    
+    ' Finally, verify that no error message was recorded.
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
+            "Last error message should be empty but found: '" & This.ViewModel.LastErrorMessage & "'.")
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
+    
+    Debug.Print p_outcome.BuildReport("TestViewModelShouldReadCards")
+    
+    Set TestViewModelShouldReadCards = p_outcome
+    
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
+    
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Function
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+''' <summary>   Unit test. Asserts that view model should . </summary>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
+Public Function TestViewModelTestTemplate() As cc_isr_Test_Fx.Assert
+
+    Const p_procedureName As String = "TestViewModelShouldReadCards"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    ' proceed with test assertions.
+    
+    
+    
+    
+    
+    ' Finally, verify that no error message was recorded.
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
+            "Last error message should be empty but found: '" & This.ViewModel.LastErrorMessage & "'.")
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
+    
+    Debug.Print p_outcome.BuildReport("TestViewModelShouldReadCards")
+    
+    Set TestViewModelShouldReadCards = p_outcome
+    
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
+    
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Function
+
+

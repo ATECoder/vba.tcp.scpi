@@ -19,6 +19,7 @@ Private Type this_
     Device As cc_isr_Ieee488.Device
     ViSession As cc_isr_Ieee488.ViSession
     DeviceErrorReader As IDeviceErrorReader
+    FormatSystem As FormatSystem
     RouteSystem As RouteSystem
     ScpiSystem As ScpiSystem
     SenseSystem As K2700SenseSystem
@@ -52,6 +53,12 @@ Private Sub Class_Initialize()
     Set This.DeviceErrorReader = New K2700DeviceErrorReader
     This.DeviceErrorReader.Initialize This.ViSession
     
+    Set This.FormatSystem = New FormatSystem
+    This.FormatSystem.Initialize This.ViSession
+
+    Set This.RouteSystem = New RouteSystem
+    This.RouteSystem.Initialize This.ViSession
+
     Set This.ScpiSystem = New ScpiSystem
     This.ScpiSystem.Initialize This.ViSession
     
@@ -61,12 +68,9 @@ Private Sub Class_Initialize()
     Set This.SenseSystem = New K2700SenseSystem
     This.SenseSystem.Initialize p_senseSystem
     
-    Set This.RouteSystem = New RouteSystem
-    This.RouteSystem.Initialize This.ViSession
-
     Set This.TriggerSystem = New TriggerSystem
     This.TriggerSystem.Initialize This.ViSession
-
+   
 End Sub
 
 ''' <summary>   Initializes and returns the <see cref="Ieee488Session"/>. </summary>
@@ -99,6 +103,18 @@ Public Property Get DeviceErrorReader() As IDeviceErrorReader
     Set DeviceErrorReader = This.DeviceErrorReader
 End Property
 
+''' <summary>   Returns a reference to the <see cref="FormatSystem"/> subsystem. </summary>
+''' <value>   An <see cref="FormatSystem"/>. </returns>
+Public Property Get FormatSystem() As FormatSystem
+    Set FormatSystem = This.FormatSystem
+End Property
+
+''' <summary>   Returns a reference to the <see cref="RouteSystem"/> subsystem. </summary>
+''' <value>   An <see cref="RouteSystem"/>. </returns>
+Public Property Get RouteSystem() As RouteSystem
+    Set RouteSystem = This.RouteSystem
+End Property
+
 ''' <summary>   Returns a reference to the <see cref="ScpiSystem"/> subsystem. </summary>
 ''' <value>   An <see cref="ScpiSystem"/>. </returns>
 Public Property Get ScpiSystem() As ScpiSystem
@@ -109,6 +125,12 @@ End Property
 ''' <value>   [<see cref="K2700SenseSystem"/>]. </returns>
 Public Property Get SenseSystem() As K2700SenseSystem
     Set SenseSystem = This.SenseSystem
+End Property
+
+''' <summary>   Returns a reference to the <see cref="TriggerSystem"/> subsystem. </summary>
+''' <value>   [<see cref="TriggerSystem"/>]. </returns>
+Public Property Get TriggerSystem() As TriggerSystem
+    Set TriggerSystem = This.TriggerSystem
 End Property
 
 ''' <summary>   Initializes the k2700 legacy mode. </summary>
@@ -261,7 +283,7 @@ Public Sub ConfigureSingleFunctionReading(ByVal a_function As String)
     
     ' set the trigger source to immediate.
     ' This.ViSession.WriteLine ":TRIG:SOUR IMM"
-    This.TriggerSystem.SourceSetter TriggerSource.Immediate
+    This.TriggerSystem.SourceSetter cc_isr_Tcp_Scpi.TriggerSource.Immediate
     This.ViSession.WriteLine ":INIT:CONT OFF"
     This.ViSession.WriteLine ":SAMP:COUN 1"
     This.ViSession.WriteLine ":TRIG:COUN 1"
@@ -670,8 +692,11 @@ Private Sub IConnectable_Dispose()
     End If
     
     Set m_viSession = Nothing
+    Set This.FormatSystem = Nothing
     Set This.RouteSystem = Nothing
     Set This.ScpiSystem = Nothing
+    Set This.SenseSystem = Nothing
+    Set This.TriggerSystem = Nothing
     Set This.ViSession = Nothing
     
     If Not This.Device Is Nothing Then
