@@ -121,6 +121,8 @@ Private Type this_
     ReadingOffset As Double
     
     ' service request monitoring timer control
+    ExternalTrigMonitoringEnabled As Boolean
+    StopRequested As Boolean
     PauseRequested As Boolean
     TimerInterval As Integer
     ' true when handling the timer event to prevent timer
@@ -129,8 +131,6 @@ Private Type this_
     HandlingTimerEvent As Boolean
 
     ' Service request monitoring properties
-    ' this must be enable before stating monitoring.
-    ExternalTrigMonitoringActive As Boolean
     MonitoringState As String
     AutoIncrementChannelNoEnabled As Boolean
     SingleReadEnabled As Boolean
@@ -138,7 +138,6 @@ Private Type this_
     ' Winsock connection executables
     OpenConnectionExecutable As Boolean
     CloseConnectionExecutable As Boolean
-    ToggleConnectionExecutable As Boolean
     
     ' IEEE488 executables
     ClearExecutionStateExecutable As Boolean
@@ -160,7 +159,8 @@ Private Type this_
     QueryInputsExecutable As Boolean
     
     ' Service request monitoring properties
-    MonitorExtTrigExecutable As Boolean
+    StopMonitoringExecutable As Boolean
+    StartMonitoringExecutable As Boolean
     ExternalTriggerOptionExecutable As Boolean
 
     ' GPIB-Lan executables
@@ -204,7 +204,7 @@ Public Function Initialize() As K2700ViewModel
     
     m_k2700_ConnectionChanged cc_isr_Winsock.Factory.NewConnectionChangedEventArgs.Initialize()
 
-    Me.ToggleConnectionExecutableSetter
+    Me.ConnectionExecutableSetter
     
     Set Initialize = Me
 
@@ -228,7 +228,7 @@ Public Property Let Host(ByVal a_value As String)
     If This.Host <> a_value Then
         This.Host = a_value
         Me.OnPropertyChanged "Host"
-        Me.ToggleConnectionExecutableSetter
+        Me.ConnectionExecutableSetter
     End If
 End Property
 
@@ -244,7 +244,7 @@ Public Property Let Port(ByVal a_value As Long)
     If This.Port <> a_value Then
         This.Port = a_value
         Me.OnPropertyChanged "Port"
-        Me.ToggleConnectionExecutableSetter
+        Me.ConnectionExecutableSetter
     End If
 End Property
 
@@ -256,7 +256,7 @@ End Property
 
 ''' <summary>   Sets the Socket Address. </summary>
 ''' <param name="a_value">   [String] the message value. </value>
-Public Property Let SocketAddress(ByVal a_value As String)
+Friend Property Let SocketAddress(ByVal a_value As String)
     If This.SocketAddress <> a_value Then
         This.SocketAddress = a_value
         Me.OnPropertyChanged "SocketAddress"
@@ -271,7 +271,7 @@ End Property
 
 ''' <summary>   Sets the socket id. </summary>
 ''' <param name="a_value">   [Integer] the socket id. </value>
-Public Property Let SocketId(ByVal a_value As Integer)
+Friend Property Let SocketId(ByVal a_value As Integer)
     If This.SocketId <> a_value Then
         This.SocketId = a_value
         This.SocketId = a_value
@@ -291,7 +291,6 @@ Public Property Let SocketReceiveTimeout(ByVal a_value As Integer)
     If This.SocketReceiveTimeout <> a_value Then
         This.SocketReceiveTimeout = a_value
         Me.OnPropertyChanged "SocketReceiveTimeout"
-        Me.ToggleConnectionExecutableSetter
     End If
 End Property
 
@@ -311,10 +310,11 @@ End Property
 ''' <summary>   Sets the condition indicating that the Open Connection command
 '''             can be executed. </summary>
 ''' <param name="a_value">   [Boolean] True if the Open Connection command can be executed. </param>
-Public Property Let OpenConnectionExecutable(ByVal a_value As Boolean)
+Friend Property Let OpenConnectionExecutable(ByVal a_value As Boolean)
     If This.OpenConnectionExecutable <> a_value Then
         This.OpenConnectionExecutable = a_value
         Me.OnPropertyChanged "OpenConnectionExecutable"
+        Me.OnPropertyChanged "ToggleConnectionExecutable"
     End If
 End Property
 
@@ -328,37 +328,32 @@ End Property
 ''' <summary>   Sets the condition indicating that the Close Connection command
 '''             can be executed. </summary>
 ''' <param name="a_value">   [Boolean] True if the Close Connection command can be executed. </param>
-Public Property Let CloseConnectionExecutable(ByVal a_value As Boolean)
+Friend Property Let CloseConnectionExecutable(ByVal a_value As Boolean)
     If This.CloseConnectionExecutable <> a_value Then
         This.CloseConnectionExecutable = a_value
         Me.OnPropertyChanged "CloseConnectionExecutable"
-    End If
-End Property
-
-''' <summary>   Sets the condition indicating that the Toggle Connection command
-'''             can be executed. </summary>
-Friend Sub ToggleConnectionExecutableSetter()
-    Me.ToggleConnectionExecutable = VBA.vbNullString <> Me.Host _
-        And (5025 = This.Port Or 1234 = This.Port) _
-        And 0 < This.SocketReceiveTimeout
-End Sub
-
-''' <summary>   Gets the condition indicating that the Toggle Connection command
-'''             can be executed. </summary>
-''' <value>   [Boolean] True if the Toggle Connection command can be executed. </value>
-Public Property Get ToggleConnectionExecutable() As Boolean
-    ToggleConnectionExecutable = This.ToggleConnectionExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Toggle Connection command
-'''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Toggle Connection command can be executed. </param>
-Public Property Let ToggleConnectionExecutable(ByVal a_value As Boolean)
-    If This.ToggleConnectionExecutable <> a_value Then
-        This.ToggleConnectionExecutable = a_value
         Me.OnPropertyChanged "ToggleConnectionExecutable"
     End If
 End Property
+
+''' <summary>   Sets the condition indicating that a Connection command
+'''             can be executed. </summary>
+Friend Sub ConnectionExecutableSetter()
+    Dim p_canExecute As Boolean
+    p_canExecute = VBA.vbNullString <> Me.Host _
+        And (5025 = This.Port Or 1234 = This.Port) _
+        And 0 < This.SocketReceiveTimeout
+    This.OpenConnectionExecutable = p_canExecute And Not Me.Connected
+    This.CloseConnectionExecutable = p_canExecute And Me.Connected
+End Sub
+
+''' <summary>   Gets the condition indicating that the toggle Connection command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Toggle Connection command can be executed. </value>
+Public Property Get ToggleConnectionExecutable() As Boolean
+    ToggleConnectionExecutable = This.OpenConnectionExecutable Or This.CloseConnectionExecutable
+End Property
+
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
@@ -1245,7 +1240,6 @@ Public Property Let GpibLanReadTimeout(ByVal a_value As Integer)
     If This.GpibLanReadTimeout <> a_value Then
         This.GpibLanReadTimeout = a_value
         Me.OnPropertyChanged "GpibLanReadTimeout"
-        Me.ToggleConnectionExecutableSetter
     End If
 End Property
 
@@ -2468,22 +2462,6 @@ Public Property Let MonitoringState(ByVal a_value As String)
     End If
 End Property
 
-''' <summary>   Gets the External Trigger Monitoring Enabled. </summary>
-''' <remarks>   Indicates that front inputs are Value for this mode. </remarks>
-''' <value>   [Boolean]. </value>
-Public Property Get ExternalTrigMonitoringActive() As Boolean
-    ExternalTrigMonitoringActive = This.ExternalTrigMonitoringActive
-End Property
-
-''' <summary>   Sets the External Trigger Monitoring Enabled. </summary>
-''' <param name="a_value">   [Boolean] the External Trigger Monitoring Enabled value. </value>
-Public Property Let ExternalTrigMonitoringActive(ByVal a_value As Boolean)
-    If This.ExternalTrigMonitoringActive <> a_value Then
-        This.ExternalTrigMonitoringActive = a_value
-        Me.OnPropertyChanged "ExternalTrigMonitoringActive"
-    End If
-End Property
-
 ''' <summary>   Gets the Auto Increment Channel Number Enabled. </summary>
 ''' <remarks>   Indicates that front inputs are Value for this mode. </remarks>
 ''' <value>   [Boolean]. </value>
@@ -2592,23 +2570,6 @@ Public Property Let MeasureExecutable(ByVal a_value As Boolean)
     End If
 End Property
 
-''' <summary>   Gets the condition indicating that the Monitor External Trigger command
-'''             can be executed. </summary>
-''' <value>   [Boolean] True if the Monitor External Trigger command can be executed. </value>
-Public Property Get MonitorExtTrigExecutable() As Boolean
-    MonitorExtTrigExecutable = This.MonitorExtTrigExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Monitor External Trigger command
-'''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Monitor External Trigger command can be executed. </param>
-Public Property Let MonitorExtTrigExecutable(ByVal a_value As Boolean)
-    If This.MonitorExtTrigExecutable <> a_value Then
-        This.MonitorExtTrigExecutable = a_value
-        Me.OnPropertyChanged "MonitorExtTrigExecutable"
-    End If
-End Property
-
 ''' <summary>   Gets the condition indicating that the Immediate Trigger Option command
 '''             can be executed. </summary>
 ''' <value>   [Boolean] True if the Immediate Trigger Option command  can be executed. </value>
@@ -2657,6 +2618,49 @@ Public Property Let FunctionNameExecutable(ByVal a_value As Boolean)
         This.FunctionNameExecutable = a_value
         Me.OnPropertyChanged "FunctionNameExecutable"
     End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Start Monitoring External Trigger command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Start Monitoring External Trigger command can be executed. </value>
+Public Property Get StartMonitoringExecutable() As Boolean
+    StartMonitoringExecutable = This.StartMonitoringExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Start Monitoring External Trigger command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Start Monitoring External Trigger command can be executed. </param>
+Public Property Let StartMonitoringExecutable(ByVal a_value As Boolean)
+    If This.StartMonitoringExecutable <> a_value Then
+        This.StartMonitoringExecutable = a_value
+        Me.OnPropertyChanged "StartMonitoringExecutable"
+        Me.OnPropertyChanged "ToggleMonitoringExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Stop Monitoring External Trigger command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Stop Monitoring External Trigger command can be executed. </value>
+Public Property Get StopMonitoringExecutable() As Boolean
+    StopMonitoringExecutable = This.StopMonitoringExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Stop Monitoring External Trigger command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Stop Monitoring External Trigger command can be executed. </param>
+Public Property Let StopMonitoringExecutable(ByVal a_value As Boolean)
+    If This.StopMonitoringExecutable <> a_value Then
+        This.StopMonitoringExecutable = a_value
+        Me.OnPropertyChanged "StopMonitoringExecutable"
+        Me.OnPropertyChanged "ToggleMonitoringExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Toggle Monitoring External Trigger command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Toggle Monitoring External Trigger command can be executed. </value>
+Public Property Get ToggleMonitoringExecutable() As Boolean
+    ToggleMonitoringExecutable = This.StartMonitoringExecutable Or This.StopMonitoringExecutable
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -2813,14 +2817,8 @@ Friend Sub ConfigureContinuousMode()
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
-    ' Disable making immediate measurements.
-    Me.MeasureExecutable = False
-
-    ' disable monitoring the external trigger.
-    Me.MonitorExtTrigExecutable = False
-
-    ' set the measurment mode to continuous
-    Me.CurrentMeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.Continuous
+    ' enable the mode executables and conditions.
+    Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementMode.Continuous, "continuous"
 
     On Error GoTo 0
     Exit Sub
@@ -2938,19 +2936,13 @@ Friend Sub ConfigureExternalTriggerReading()
     
     ' move this to starting the monitoring.
     ' initiate awaiting for the external trigger
-    ' This.VISession.WriteLine ":INIT; *CLS"
+    ' This.VISession.WriteLine ":INIT;*CLS"
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
     
-    ' disable the immediate reading mode buttons
-    Me.MeasureExecutable = False
-    
-    ' enable toggling the external trigger monitoring.
-    Me.MonitorExtTrigExecutable = True
-    
-    ' set the measurment mode to external
-    Me.CurrentMeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.External
+    ' enable the mode executables and conditions.
+    Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementMode.External, "external trigger mode"
     
     On Error GoTo 0
     Exit Sub
@@ -3059,14 +3051,8 @@ Friend Sub ConfigureImmediateTriggerReadings()
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
-    ' Enable making immediate measurements.
-    Me.MeasureExecutable = True
-    
-    ' disable monitoring the external trigger.
-    Me.MonitorExtTrigExecutable = False
-
-    ' set the measurment mode to external
-    Me.CurrentMeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.External
+    ' enable the mode executables and conditions.
+    Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementMode.Immediate, "immediate mode"
     
     On Error GoTo 0
     Exit Sub
@@ -3336,6 +3322,39 @@ err_Handler:
 
 End Sub
 
+''' <summary>   Gets the Stop Requested condition. </summary>
+''' <remarks>   When true, a Stop request is set so that the timer event could be used to stop
+''' monitring for external triggers. </remarks>
+''' <value>   [Boolean]. </value>
+Public Property Get StopRequested() As Boolean
+    StopRequested = This.StopRequested
+End Property
+
+''' <summary>   Sets the Stop Requested condition. </summary>
+''' <param name="a_value">   [Boolean] the Stop Requested value. </value>
+Friend Property Let StopRequested(ByVal a_value As Boolean)
+    If This.StopRequested <> a_value Then
+        This.StopRequested = a_value
+        Me.OnPropertyChanged "StopRequested"
+    End If
+End Property
+
+''' <summary>   Gets the External Trigger Monitoring Enabled condition. </summary>
+''' <remarks>   Indicates that external trigger monitoring is on. </remarks>
+''' <value>   [Boolean]. </value>
+Public Property Get ExternalTrigMonitoringEnabled() As Boolean
+    ExternalTrigMonitoringEnabled = This.ExternalTrigMonitoringEnabled
+End Property
+
+''' <summary>   Sets the External Trigger Monitoring Enabled condition. </summary>
+''' <param name="a_value">   [Boolean] the External Trigger Monitoring Enabled value. </value>
+Friend Property Let ExternalTrigMonitoringEnabled(ByVal a_value As Boolean)
+    If This.ExternalTrigMonitoringEnabled <> a_value Then
+        This.ExternalTrigMonitoringEnabled = a_value
+        Me.OnPropertyChanged "ExternalTrigMonitoringEnabled"
+    End If
+End Property
+
 ''' <summary>   Internal. Starts monitoring the instrument for external triggered measurements. </summary>
 Friend Sub StartMonitoringExternalTriggers()
 
@@ -3367,11 +3386,14 @@ Friend Sub StartMonitoringExternalTriggers()
     End If
    
     ' initiate awaiting for the external trigger
-    This.ViSession.WriteLine ":INIT; *CLS"
+    ' this is handled by the K2700.MonitorExternalTrigger method.
+    ' This.ViSession.WriteLine ":INIT;*CLS"
 
     ' start the timer
     Me.StartTimer Me.TimerInterval
  
+    ' take some time for it to take effect.
+    cc_isr_Core_IO.Factory.NewStopwatch.Wait Me.TimerInterval
  
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -3382,7 +3404,7 @@ exit_Handler:
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 err_Handler:
 
-    ' stop the timer if the timer started.
+    ' on exception, stop the timer
     Me.PauseTimer
   
     ' append the error source
@@ -3419,7 +3441,7 @@ exit_Handler:
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 err_Handler:
 
-    ' stop the timer if the timer started.
+    ' on exception, stop the timer.
     Me.PauseTimer
   
     ' append the error source
@@ -3437,51 +3459,23 @@ err_Handler:
     
 End Sub
 
-''' <summary>   Handles the external trigger toggle button. </summary>
-''' <param name="a_enabeld">   [Optional, Boolean] is true when the external trigger
-'''                            monitoring is active such as when the relevant
-'''                            toggle buutton is depressed. </param>
-Public Sub MonitorExtTrigToggleCommand(Optional ByVal a_activated As Boolean)
+''' <summary>   Internal. Stops monitoring the instrument for external triggered measurements. </summary>
+Friend Sub StopMonitoringExternalTriggers()
 
-    Const p_procedureName = "MonitorExtTrigToggleCommand"
+    Const p_procedureName = "StopMonitoringExternalTriggers"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    ' check if the optional value is provided.
+    ' request a stop of external trigger monitoring.
+    Me.StopRequested = True
     
-    If Not VBA.IsMissing("a_activated") Then
+    ' take some time for it to take effect.
+    cc_isr_Core_IO.Factory.NewStopwatch.Wait Me.TimerInterval
     
-        ' if the argument is provided, make it so
-        
-        Me.ExternalTrigMonitoringActive = a_activated
-        
-        ' and take some time for it to take effect.
-        
-        cc_isr_Core_IO.Factory.NewStopwatch.Wait 100
-        
-    End If
+    ' TODO: ? If check if timer stopped. if not,
+    ' for it.
 
-    If Me.ExternalTrigMonitoringActive Then
-
-        Me.ImmediateTriggerOptionExecutable = False
-        Me.ExternalTriggerOptionExecutable = False
-
-        Me.StartMonitoringExternalTriggers
-
-    Else
-
-        ' once monitoring of external triggering is turned off,
-        ' the timer is allowed to turn itself off
-        Me.ImmediateTriggerOptionExecutable = True
-        Me.ExternalTriggerOptionExecutable = True
-
-        ' this is set to require initialization all over again
-        Me.MeasureExecutable = False
-        Me.MonitorExtTrigExecutable = False
-
-    End If
- 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
@@ -3491,7 +3485,7 @@ exit_Handler:
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 err_Handler:
 
-    ' stop the timer if the timer started.
+    ' on exception, stop the timer.
     Me.PauseTimer
   
     ' append the error source
@@ -3506,7 +3500,44 @@ err_Handler:
     ' exit this procedure (not an active handler)
     On Error Resume Next
     GoTo exit_Handler
+    
+End Sub
 
+''' <summary>   Stops monitoring the instrument for external triggered measurements. </summary>
+Public Sub StopMonitoringExternalTriggersCommand()
+
+    Const p_procedureName = "StopMonitoringExternalTriggersCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.StopMonitoringExternalTriggers
+ 
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+
+    ' on exception stop the timer.
+    Me.PauseTimer
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+    
 End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -3638,7 +3669,8 @@ Private Sub OnViewModelConnected()
     Me.MeasureExecutable = False
     
     ' this gets enabled when entering the external trigger mode
-    Me.MonitorExtTrigExecutable = False
+    Me.StartMonitoringExecutable = False
+    Me.StopMonitoringExecutable = False
 
     Dim p_GpibLanConnected As Boolean
     p_GpibLanConnected = Me.Connected And This.ViSession.UsingGpibLan
@@ -3654,6 +3686,7 @@ Private Sub OnViewModelConnected()
     Me.GpibAddressSetExecutable = p_GpibLanConnected
     Me.GpibLanReadTimeoutGetExecutable = p_GpibLanConnected
     Me.GpibLanReadTimeoutSetExecutable = p_GpibLanConnected
+    Me.ConnectionExecutableSetter
 
 End Sub
 
@@ -3666,6 +3699,10 @@ Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Connec
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
+    ' set the executable condition first, which might
+    ' change depending on how the instrument connected methods affects the executable commands.
+    OnViewModelConnected
+    
     If a_eventArgs.Connected Then
 
         OnInstrumentConnected
@@ -3677,8 +3714,6 @@ Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Connec
     
     End If
 
-    OnViewModelConnected
-    
     OnConnectionChanged Me.Connected
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -3756,7 +3791,7 @@ End Property
 
 ''' <summary>   Sets the Pause Requested condition. </summary>
 ''' <param name="a_value">   [Boolean] the Pause Requested value. </value>
-Public Property Let PauseRequested(ByVal a_value As Boolean)
+Friend Property Let PauseRequested(ByVal a_value As Boolean)
     If This.PauseRequested <> a_value Then
         This.PauseRequested = a_value
         Me.OnPropertyChanged "PauseRequested"
@@ -3860,6 +3895,90 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
+''' <summary>   Handles the change of measurement mode. </summary>
+''' <param name="a_infoMessage">   [Option, String] info about the monitoring state. </param>
+Friend Sub OnMeasurementModeChanged(ByVal a_mode As cc_isr_Tcp_Scpi.MeasurementMode, _
+    ByVal a_infoMessage As String)
+    
+    Me.CurrentMeasurementMode = a_mode
+
+    ' update the monitoring state
+    Me.MonitoringState = a_infoMessage
+
+    ' turn on the stop requested in case the timer is still active.
+    Me.StopRequested = True
+
+    ' disable the stop monitoring action
+    Me.StopMonitoringExecutable = False
+    
+    ' enable the start monitoring action in external mode
+    Me.StartMonitoringExecutable = cc_isr_Tcp_Scpi.MeasurementMode.External = a_mode
+    
+    ' enable immediate readings in immediate mode
+    Me.MeasureExecutable = cc_isr_Tcp_Scpi.MeasurementMode.Immediate = a_mode
+    
+    ' enable toggling the configurations
+    Me.ImmediateTriggerOptionExecutable = True
+    Me.ExternalTriggerOptionExecutable = True
+    
+    ' finally, indicates that external trigger monitoring is disabled
+    Me.ExternalTrigMonitoringEnabled = False
+    
+End Sub
+
+''' <summary>   Handles the termination of external trigger monitoring in one place. </summary>
+''' <param name="a_infoMessage">   [String] info about the monitoring state. </param>
+Friend Sub OnMonitoringStarted(ByVal a_infoMessage As String)
+
+    ' turn off the stop requested to allow the onset of external trigger monitoring.
+    Me.StopRequested = True
+    
+    ' update the monitoring state
+    Me.MonitoringState = a_infoMessage
+
+    ' enable the stop monitoring action
+    Me.StopMonitoringExecutable = True
+    
+    ' and disable the start monitoring action
+    Me.StartMonitoringExecutable = False
+    
+    ' disable the measure executable.
+    Me.MeasureExecutable = False
+    
+    ' disable the option buttons that configure the reading modes.
+    Me.ImmediateTriggerOptionExecutable = True
+    Me.ExternalTriggerOptionExecutable = True
+
+    ' finally, indicates that external trigger monitoring is enabled thus updating the related button.
+    Me.ExternalTrigMonitoringEnabled = True
+
+End Sub
+
+''' <summary>   Handles the termination of external trigger monitoring in one place. </summary>
+''' <param name="a_infoMessage">   [String] info about the monitoring state. </param>
+Friend Sub OnMonitoringEnded(ByVal a_infoMessage As String)
+
+    ' update the monitoring state
+    Me.MonitoringState = a_infoMessage
+
+    ' disable both start and stop monitoring thus requiring the
+    ' configuration of external triggering each time.
+    Me.StopMonitoringExecutable = False
+    Me.StartMonitoringExecutable = False
+    
+    ' disable the measure executable.
+    Me.MeasureExecutable = False
+    
+    ' enable the option buttons that configure the reading mdoes.
+    Me.ImmediateTriggerOptionExecutable = True
+    Me.ExternalTriggerOptionExecutable = True
+
+    ' finally, toggle off the trigger monitoring.
+    Me.ExternalTrigMonitoringEnabled = False
+
+End Sub
+
+
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' View Model Commands
@@ -3908,6 +4027,8 @@ Private Sub OnChannelMeasured(ByVal a_channelNumber As Integer, ByVal a_reading 
     RaiseEvent ChannelMeasured( _
             cc_isr_Tcp_Scpi.Factory.NewChannelReadingEventArgs.Initialize(a_channelNumber, _
                                                                           a_reading))
+    ' allow the event to take place.
+    DoEvents
 End Sub
 
 ''' <summary>   Notifies all observers of a property change. </summary>
@@ -3916,6 +4037,8 @@ Public Sub OnPropertyChanged(ByVal a_propertyName As String)
 
     RaiseEvent PropertyChanged( _
             cc_isr_Core.Factory.CreatePropertyChangedEventArgs(a_propertyName))
+    ' allow the event to take place.
+    DoEvents
 
 End Sub
 
@@ -3924,29 +4047,6 @@ End Sub
 ' TIMER CONTROL
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
-''' <summary>   Handles the termination of external trigger monitoring in one place. </summary>
-''' <param name="a_infoMessage">   [String] info about the completion state. </param>
-Friend Sub OnMonitoringDone(ByVal a_infoMessage As String)
-
-    ' update the monitoring state
-    Me.MonitoringState = a_infoMessage
-
-    ' disable the action buttons so as to require
-    ' to initialize monitoring over again
-    Me.MonitorExtTrigExecutable = False
-    Me.MeasureExecutable = False
-    
-    ' make sure the enable the option buttons to allow initialization
-    ' of the two modes.
-    Me.ImmediateTriggerOptionExecutable = True
-    Me.ExternalTriggerOptionExecutable = True
-
-    ' finally, toggle off the trigger monitoring. This
-    ' should be superfluous
-    Me.ExternalTrigMonitoringActive = False
-
-End Sub
 
 ''' <summary>   Handles the external trigger monitoring timer event using the
 ''' device to handle the timing events. </summary>
@@ -3985,22 +4085,15 @@ Private Sub HandleTimerEvent()
     ' allow other events to occur
     VBA.DoEvents
 
-    Dim p_isDone As Boolean: p_isDone = Not Me.ExternalTrigMonitoringActive
-
-    ' stop the timer.
-    If p_isDone Then Me.PauseTimer
+    Dim p_isDone As Boolean: p_isDone = This.StopRequested
 
     This.K2700.MonitorExternalTrigger p_channelNumber, p_isDone
 
-    ' if we ended manual mode, enable the rest of the buttons
-    If p_isDone Then
-
-        Me.OnMonitoringDone "Trigger monitoring done"
-        
-    End If
-
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
+
+    ' request the pause of the timer.
+    If p_isDone Then Me.PauseTimer
 
     ' release reentry prevention
     This.HandlingTimerEvent = False
@@ -4012,10 +4105,10 @@ exit_Handler:
 err_Handler:
   
     ' stop the timer.
-    Me.PauseTimer
+    p_isDone = True
 
     ' handle the termination of monitoring
-    Me.OnMonitoringDone "Error handling the timer event"
+    Me.OnMonitoringEnded "Error handling the timer event"
 
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
@@ -4033,11 +4126,12 @@ err_Handler:
 End Sub
 
 ''' <summary>   Starts the event timer. </summary>
-''' <param name="a_interval">   [Long] Specifies the timer interval in milliseconds. </param>
-Public Sub StartTimer(Optional ByVal a_interval As Long = 100)
+''' <param name="a_interval">   [Optiona, Long, 500] Specifies the timer interval in milliseconds. </param>
+Public Sub StartTimer(Optional ByVal a_interval As Long = 500)
 
     This.HandlingTimerEvent = False
     This.PauseRequested = False
+    Me.OnMonitoringStarted "Trigger monitoring commenced"
     If m_eventTimer Is Nothing Then
         Set m_eventTimer = cc_isr_Core.Factory.NewEventTimer.Initialize(a_interval)
         m_eventTimer.StartTimer
@@ -4068,8 +4162,10 @@ End Sub
 Private Sub m_eventTimer_Tick()
 
     On Error Resume Next
+    DoEvents
     If This.PauseRequested Then
         If Not m_eventTimer Is Nothing Then m_eventTimer.PauseTimer
+        Me.OnMonitoringEnded "Trigger monitoring done"
     Else
         HandleTimerEvent
     End If

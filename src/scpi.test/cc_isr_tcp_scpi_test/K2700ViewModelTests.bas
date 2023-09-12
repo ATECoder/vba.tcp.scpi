@@ -54,6 +54,8 @@ Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
             Set p_outcome = TestViewModelShouldConfigureImmediateMode
         Case 6
             Set p_outcome = TestViewModelShouldConfigureExternalMode
+        Case 7
+            Set p_outcome = TestViewModelShouldMonitorTriggering
         Case Else
     End Select
     AfterEach
@@ -457,6 +459,30 @@ Public Function TestViewModelShouldBeConnected() As cc_isr_Test_Fx.Assert
         Set p_outcome = Assert.IsTrue(This.ViewModel.Connected, _
             "View model should be connected.")
         
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.CloseConnectionExecutable, _
+            "View model close connection executable should be enabled.")
+        
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.IsFalse(This.ViewModel.OpenConnectionExecutable, _
+            "View model open connection executable should be disabled.")
+        
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.ImmediateTriggerOptionExecutable, _
+            "Immediate trigger option button should be enabled.")
+        
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.ExternalTriggerOptionExecutable, _
+            "External trigger option button should be enabled.")
+        
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.StartMonitoringExecutable, _
+            "Start monitoning command should be disabled.")
+        
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.StopMonitoringExecutable, _
+            "Stop monitoning command should be disabled.")
+        
     ' Finally, verify that no error message was recorded.
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
@@ -638,9 +664,9 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestViewModelShouldReadCards")
+    Debug.Print p_outcome.BuildReport("TestViewModelShouldRestoreKnownState")
     
-    Set TestViewModelShouldReadCards = p_outcome
+    Set TestViewModelShouldRestoreKnownState = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -703,7 +729,7 @@ Public Function TestViewModelShouldConfigureImmediateMode() As cc_isr_Test_Fx.As
     If p_outcome.AssertSuccessful Then
         
         Set p_outcome = Assert.AreEqual(cc_isr_Tcp_Scpi.TriggerSource.Immediate, _
-            This.ViewModel.K2700.TriggerSystem.TriggerSourceGetter(), _
+            This.ViewModel.K2700.TriggerSystem.SourceGetter(), _
             "Immediate trigger source should be as expected.")
     End If
     
@@ -731,6 +757,34 @@ Public Function TestViewModelShouldConfigureImmediateMode() As cc_isr_Test_Fx.As
             "Format elements should be as expected.")
     End If
     
+    If p_outcome.AssertSuccessful Then
+    
+        ' turn off auto increment so that we can take a single reading.
+        Dim p_autoIncrementChannelNumber  As Boolean: p_autoIncrementChannelNumber = False
+        This.ViewModel.AutoIncrementChannelNoEnabled = p_autoIncrementChannelNumber
+        Set p_outcome = Assert.AreEqual(p_autoIncrementChannelNumber, _
+            This.ViewModel.AutoIncrementChannelNoEnabled, _
+            "Auto increment channel number should be as expected.")
+    
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        ' take a reading
+        This.ViewModel.MeasureImmediatelyCommand
+        
+        ' get the reading from the observer.
+        Dim p_reading As String
+        
+        ' wait for the reading event to take shape.
+        cc_isr_Core_IO.Factory.NewStopwatch().Wait 10
+        
+        Set p_outcome = Assert.AreEqual("READ", This.ViewModel.K2700.FormatSystem.ElementsGetter, _
+            "Format elements should be as expected.")
+            
+    End If
+    
+
     ' Finally, verify that no error message was recorded.
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
@@ -742,9 +796,9 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestViewModelShouldReadCards")
+    Debug.Print p_outcome.BuildReport("TestViewModelShouldConfigureImmediateMode")
     
-    Set TestViewModelShouldReadCards = p_outcome
+    Set TestViewModelShouldConfigureImmediateMode = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -793,7 +847,7 @@ Public Function TestViewModelShouldConfigureExternalMode() As cc_isr_Test_Fx.Ass
         p_actualSenseFunctionName = This.ViewModel.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
         Set p_outcome = Assert.AreEqualString(p_expectedSenseFunctionName, p_actualSenseFunctionName, _
             VBA.VbCompareMethod.vbTextCompare, _
-            "Immediate mode sense function name should be as expected.")
+            "External mode sense function name should be as expected.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -807,7 +861,7 @@ Public Function TestViewModelShouldConfigureExternalMode() As cc_isr_Test_Fx.Ass
     If p_outcome.AssertSuccessful Then
         
         Set p_outcome = Assert.AreEqual(cc_isr_Tcp_Scpi.TriggerSource.External, _
-            This.ViewModel.K2700.TriggerSystem.TriggerSourceGetter(), _
+            This.ViewModel.K2700.TriggerSystem.SourceGetter(), _
             "External trigger source should be as expected.")
     End If
     
@@ -837,7 +891,8 @@ Public Function TestViewModelShouldConfigureExternalMode() As cc_isr_Test_Fx.Ass
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = Assert.AreEqual(1#, This.ViewModel.K2700.SenseSystem.SenseSystem.PowerLineCycleeGetter(), _
+        Set p_outcome = Assert.AreEqual(1#, _
+            This.ViewModel.K2700.SenseSystem.SenseSystem.PowerLineCyclesGetter(), _
             "The integration rate in power line cycles should be as expected.")
     End If
     
@@ -858,9 +913,169 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestViewModelShouldReadCards")
+    Debug.Print p_outcome.BuildReport("TestViewModelShouldConfigureExternalMode")
     
-    Set TestViewModelShouldReadCards = p_outcome
+    Set TestViewModelShouldConfigureExternalMode = p_outcome
+    
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
+    
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Function
+
+
+''' <summary>   Unit test. Asserts that view model should monitor triggering. </summary>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
+Public Function TestViewModelShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
+
+    Const p_procedureName As String = "TestViewModelShouldMonitorTriggering"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    ' proceed with test assertions.
+    
+    If p_outcome.AssertSuccessful Then
+        
+        ' configure immediate mode with front switch.
+        This.ViewModel.FrontInputsRequired = True
+        This.ViewModel.ConfigureImmediateTriggerReadingsCommand
+        
+        Dim p_expectedSenseFunctionName As String: p_expectedSenseFunctionName = This.ExternalSenseFunctionName
+        Dim p_actualSenseFunctionName As String:
+        p_actualSenseFunctionName = This.ViewModel.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
+        Set p_outcome = Assert.AreEqualString(p_expectedSenseFunctionName, p_actualSenseFunctionName, _
+            VBA.VbCompareMethod.vbTextCompare, _
+            "External mode sense function name should be as expected.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+    
+        Dim p_minimumTimerInterval As Integer: p_minimumTimerInterval = 100
+        Set p_outcome = Assert.IsTrue(This.ViewModel.TimerInterval >= p_minimumTimerInterval, _
+            "Timer interval should exceed" & VBA.CStr(p_minimumTimerInterval - 1) & ".")
+    
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+    
+        Set p_outcome = Assert.IsFalse(This.ViewModel.K2700.ExtTrigInitiated, _
+            "External trigger initiated should be off before starting the monitoring timer.")
+        
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+    
+        Dim p_autoIncrementChannelNumber  As Boolean: p_autoIncrementChannelNumber = False
+        This.ViewModel.AutoIncrementChannelNoEnabled = p_autoIncrementChannelNumber
+        Set p_outcome = Assert.AreEqual(p_autoIncrementChannelNumber, _
+            This.ViewModel.AutoIncrementChannelNoEnabled, _
+            "Auto increment channel number should be as expected.")
+    
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+    
+        Dim p_selectedChannelNumber  As Integer: p_selectedChannelNumber = 3
+        This.ViewModel.SelectedChannelNumber = p_selectedChannelNumber
+        Set p_outcome = Assert.AreEqual(p_selectedChannelNumber, This.ViewModel.SelectedChannelNumber, _
+            "Selected channel number should be as expected.")
+    
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+    
+        This.ViewModel.StartMonitoringExternalTriggers
+        Set p_outcome = Assert.IsFalse(This.ViewModel.PauseRequested, _
+            "Pause Requested should be off after starting the monitoring timer.")
+        
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+    
+        cc_isr_Core_IO.Factory.NewStopwatch().Wait 10
+        Set p_outcome = Assert.IsTrue(This.ViewModel.K2700.ExtTrigInitiated, _
+            "External trigger should get initiated after starting the monitoring timer.")
+        
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+    
+        Set p_outcome = Assert.IsTrue(This.ViewModel.StopMonitoringExecutable, _
+            "The stop monitoring executable to should enabeld.")
+        
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+    
+        Set p_outcome = Assert.AreEqual(p_selectedChannelNumber, This.ViewModel.CurrentChannelNumber, _
+            "Current channel number should be set to the selected channel number.")
+    
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+    
+        This.ViewModel.StopMonitoringExternalTriggersCommand
+        Set p_outcome = Assert.IsTrue(This.ViewModel.StopRequested, _
+            "Stop Requested should be on off after stopping monitoring.")
+        
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+    
+        cc_isr_Core_IO.Factory.NewStopwatch().Wait 10
+        Set p_outcome = Assert.IsTrue(This.ViewModel.PauseRequested, _
+            "Pause should be requested after stopping monitoring.")
+        
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+    
+        Set p_outcome = Assert.IsFalse(This.ViewModel.StopMonitoringExecutable, _
+            "The stop monitoring executable to should disabled after stopping monitoring.")
+        
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+    
+        Set p_outcome = Assert.IsFalse(This.ViewModel.ExternalTrigMonitoringEnabled, _
+            "External monitoring enabled should be off after stopping monitoring.")
+        
+    End If
+    
+    ' Finally, verify that no error message was recorded.
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
+            "Last error message should be empty but found: '" & This.ViewModel.LastErrorMessage & "'.")
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
+    
+    Debug.Print p_outcome.BuildReport("TestViewModelShouldMonitorTriggering")
+    
+    Set TestViewModelShouldMonitorTriggering = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -903,7 +1118,7 @@ End Function
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestViewModelTestTemplate() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestViewModelShouldReadCards"
+    Const p_procedureName As String = "TestViewModelTestTemplate"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -931,9 +1146,9 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestViewModelShouldReadCards")
+    Debug.Print p_outcome.BuildReport("TestViewModelTestTemplate")
     
-    Set TestViewModelShouldReadCards = p_outcome
+    Set TestViewModelTestTemplate = p_outcome
     
     On Error GoTo 0
     Exit Function

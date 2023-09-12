@@ -303,6 +303,13 @@ End Sub
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
+''' <summary>   Gets the condition indicating that the external trigger was initiated
+''' at which state the trigger monitoring loop is looking to receive a triggered
+''' reading. </summary>
+Public Property Get ExtTrigInitiated() As Boolean
+    ExtTrigInitiated = This.ExtTrigInitiated
+End Property
+
 ''' <summary>   Sets the instrument to detect the measurement available bit
 '''             of the status register upon receiving an external trigger. </summary>
 Public Sub EnableMeasurementAvailableMonitoring()
@@ -444,7 +451,7 @@ Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDo
         
         ' initiate awaiting for the external trigger
         
-        This.ViSession.WriteLine ":INIT; *CLS"
+        This.ViSession.WriteLine ":INIT;*WAI;*CLS"
         
         ' and indicate that external triggering was initiated
         

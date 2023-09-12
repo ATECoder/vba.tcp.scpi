@@ -2,12 +2,6 @@
 
 ## GIT:
 
-SCPI:
-Add format subsystem./
-Add settings to the sense and trigger subsystems.
-Add unit tests to the viewmodel tests.
-
-
 ## TODO
 
 ### SCPI View Model Test:
