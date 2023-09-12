@@ -4,11 +4,14 @@
 
 ## TODO
 
+
+IO:
+Change VBA Error name to: Error# & Err.Number. 
+
 ### SCPI View Model Test:
 
-* Add tests:
-* Test all view model commands.
-* test start and stop monitoring.
+* run tests:
+* Add some observer tests to the existing tests.
 
 
 2700 Demo

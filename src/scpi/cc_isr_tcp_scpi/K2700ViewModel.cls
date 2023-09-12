@@ -354,36 +354,24 @@ Public Property Get ToggleConnectionExecutable() As Boolean
     ToggleConnectionExecutable = This.OpenConnectionExecutable Or This.CloseConnectionExecutable
 End Property
 
-
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' Winsock Commands
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Internal. Toggles the connectivity of the View Model. </summary>
-''' <param name=a_connect>   [Boolean] true to connect; otherwise, disconnect. </param>
-Friend Sub ToggleConnection(ByVal a_connect As Boolean)
+''' <summary>   Handles the open connection button click event. </summary>
+Public Sub OpenConnectionCommand()
 
-    Const p_procedureName = "ToggleConnection"
+    Const p_procedureName = "OpenConnectionCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
     Me.RestartStopwatch
 
-    If Not a_connect And Me.Connected Then
-    
-        This.K2700.CloseConnection
-    
-    ElseIf a_connect And Not Me.Connected Then
-
-        This.K2700.OpenConnection This.Host, This.Port, This.SocketReceiveTimeout
-    
-        This.ViSession.SessionReadTimeout = This.SessionReadTimeout
-    
-    End If
-
+    Me.OpenConnection This.Host, This.Port, This.SocketReceiveTimeout
+        
     Me.ReadStopwatch
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -408,19 +396,21 @@ err_Handler:
     On Error Resume Next
     GoTo exit_Handler
 
-
 End Sub
 
-''' <summary>   Handles the Toggle connection button click event. </summary>
-''' <param name=a_connect>   [Boolean] true to connect; otherwise, disconnect. </param>
-Public Sub ToggleConnectionCommand(ByVal a_connect As Boolean)
+''' <summary>   Handles the close connection button click event. </summary>
+Public Sub CloseConnectionCommand()
 
-    Const p_procedureName = "ToggleConnectionCommand"
+    Const p_procedureName = "CloseConnectionCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.ToggleConnection a_connect
+    Me.RestartStopwatch
+
+    Me.CloseConnection
+        
+    Me.ReadStopwatch
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -443,7 +433,6 @@ err_Handler:
     ' exit this procedure (not an active handler)
     On Error Resume Next
     GoTo exit_Handler
-
 
 End Sub
 
@@ -2736,7 +2725,8 @@ Public Sub RestoreKnownState()
     
     If This.K2700 Is Nothing Then Me.Initialize
     
-    If Not Me.Connected Then Me.ToggleConnection True
+    If Not Me.Connected Then _
+        Me.OpenConnection This.Host, This.Port, This.SocketReceiveTimeout
     
     If Not Me.Connected Then _
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
@@ -3652,6 +3642,9 @@ End Sub
 '''             This sets the executable action.  </summary>
 Private Sub OnViewModelConnected()
 
+    Me.OpenConnectionExecutable = Not Me.Connected
+    Me.CloseConnectionExecutable = Me.Connected
+    
     Me.ClearReadingsExecutable = True
 
     Me.ResetKnownStateExecutable = Me.Connected
@@ -3825,7 +3818,7 @@ Public Property Let ElapsedTime(ByVal a_value As Double)
     If This.ElapsedTime <> a_value Then
         This.ElapsedTime = a_value
         Me.OnPropertyChanged "ElapsedTime"
-        Me.ElapsedTimeCaption = Format(a_value, This.ElapsedTimeFormat)
+        Me.ElapsedTimeCaption = VBA.Format$(a_value, This.ElapsedTimeFormat)
     End If
 End Property
 
@@ -4374,7 +4367,11 @@ End Sub
 ''' <para name="a_eventArgs">   [<<see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/>]. </param>
 Private Sub IConnectable_OnConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
 
-    RaiseEvent ConnectionChanged(a_eventArgs)
+    If Not a_eventArgs Is Nothing Then
+        If a_eventArgs.Connected Then _
+            This.ViSession.SessionReadTimeout = This.SessionReadTimeout
+        RaiseEvent ConnectionChanged(a_eventArgs)
+    End If
 
 End Sub
 
@@ -4399,7 +4396,7 @@ Private Sub Class_Initialize()
     
     ' Winsock properties
     This.SocketReceiveTimeout = 100
-    
+   
     ' ieee488 control properties
     This.SessionReadTimeout = 3000
     

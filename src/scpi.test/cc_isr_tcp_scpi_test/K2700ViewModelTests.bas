@@ -14,7 +14,7 @@ Private Type this_
     BeforeAllAssert As cc_isr_Test_Fx.Assert
     BeforeEachAssert As cc_isr_Test_Fx.Assert
     ViewModel As cc_isr_Tcp_Scpi.K2700ViewModel
-    ViewModelObserver As K2700ViewModelObserver
+    Observer As K2700Observer
     Host As String
     Port As Long
     TopCard As String
@@ -66,7 +66,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 3
+    RunTest 2
     AfterAll
 End Sub
 
@@ -141,7 +141,7 @@ Public Sub BeforeAll()
     
     Set This.ViewModel = cc_isr_Tcp_Scpi.K2700ViewModel
     
-    Set This.ViewModelObserver = K2700ViewModelObserver.Initialize(This.ViewModel)
+    Set This.Observer = K2700Observer.Initialize(This.ViewModel)
     
     This.ViewModel.Host = "192.168.0.252"
     This.ViewModel.Port = 1234
@@ -155,7 +155,7 @@ Public Sub BeforeAll()
     Set This.ErrTracer = p_errTracer.Initialize(This.ViewModel.K2700)
     
     ' connect
-    This.ViewModel.ToggleConnectionCommand True
+    This.ViewModel.OpenConnectionCommand
     
     If This.ViewModel.Connected Then
         Set p_outcome = Assert.Pass("Primed to run all tests; K2700 View Model is connected.")
@@ -468,6 +468,14 @@ Public Function TestViewModelShouldBeConnected() As cc_isr_Test_Fx.Assert
             "View model close connection executable should be enabled.")
         
     If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.IsTrue(This.Observer.CloseConnectionExecutable, _
+            "View model Observer close connection executable should be enabled.")
+        
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.IsTrue(This.Observer.ToggleConnectionExecutable, _
+            "View model Observer toggle connection executable should be enabled.")
+        
+    If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.IsFalse(This.ViewModel.OpenConnectionExecutable, _
             "View model open connection executable should be disabled.")
         
@@ -480,11 +488,15 @@ Public Function TestViewModelShouldBeConnected() As cc_isr_Test_Fx.Assert
             "External trigger option button should be enabled.")
         
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.IsTrue(This.ViewModel.StartMonitoringExecutable, _
-            "Start monitoning command should be disabled.")
+        Set p_outcome = Assert.IsTrue(This.Observer.ExternalTriggerOptionExecutable, _
+            "Observer External trigger option button should be enabled.")
         
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.IsTrue(This.ViewModel.StopMonitoringExecutable, _
+        Set p_outcome = Assert.IsFalse(This.ViewModel.StartMonitoringExecutable, _
+            "Start monitoring command should be disabled.")
+        
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.IsFalse(This.ViewModel.StopMonitoringExecutable, _
             "Stop monitoning command should be disabled.")
         
     ' Finally, verify that no error message was recorded.
@@ -782,13 +794,13 @@ Public Function TestViewModelShouldConfigureImmediateMode() As cc_isr_Test_Fx.As
         
         ' get the reading from the observer.
         Dim p_reading As String
-        p_reading = This.ViewModelObserver.MeasuredReading
+        p_reading = This.Observer.MeasuredReading
         
         Dim p_channelNumber As Integer
-        p_channelNumber = This.ViewModelObserver.MeasuredChannelNumber
+        p_channelNumber = This.Observer.MeasuredChannelNumber
 
         Dim p_readingValue As Double
-        p_readingValue = This.ViewModelObserver.MeasuredValue
+        p_readingValue = This.Observer.MeasuredValue
         
         Set p_outcome = Assert.AreEqual(This.ViewModel.SelectedChannelNumber, p_channelNumber, _
             "Reading should come from the expected channel number.")
