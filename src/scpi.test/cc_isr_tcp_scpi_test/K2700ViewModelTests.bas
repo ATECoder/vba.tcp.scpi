@@ -14,6 +14,7 @@ Private Type this_
     BeforeAllAssert As cc_isr_Test_Fx.Assert
     BeforeEachAssert As cc_isr_Test_Fx.Assert
     ViewModel As cc_isr_Tcp_Scpi.K2700ViewModel
+    ViewModelObserver As K2700ViewModelObserver
     Host As String
     Port As Long
     TopCard As String
@@ -139,6 +140,9 @@ Public Sub BeforeAll()
     This.BottomCardFunctionScanList = VBA.vbNullString
     
     Set This.ViewModel = cc_isr_Tcp_Scpi.K2700ViewModel
+    
+    Set This.ViewModelObserver = K2700ViewModelObserver.Initialize(This.ViewModel)
+    
     This.ViewModel.Host = "192.168.0.252"
     This.ViewModel.Port = 1234
     This.ViewModel.SocketReceiveTimeout = 100
@@ -773,14 +777,27 @@ Public Function TestViewModelShouldConfigureImmediateMode() As cc_isr_Test_Fx.As
         ' take a reading
         This.ViewModel.MeasureImmediatelyCommand
         
-        ' get the reading from the observer.
-        Dim p_reading As String
-        
         ' wait for the reading event to take shape.
         cc_isr_Core_IO.Factory.NewStopwatch().Wait 10
         
-        Set p_outcome = Assert.AreEqual("READ", This.ViewModel.K2700.FormatSystem.ElementsGetter, _
-            "Format elements should be as expected.")
+        ' get the reading from the observer.
+        Dim p_reading As String
+        p_reading = This.ViewModelObserver.MeasuredReading
+        
+        Dim p_channelNumber As Integer
+        p_channelNumber = This.ViewModelObserver.MeasuredChannelNumber
+
+        Dim p_readingValue As Double
+        p_readingValue = This.ViewModelObserver.MeasuredValue
+        
+        Set p_outcome = Assert.AreEqual(This.ViewModel.SelectedChannelNumber, p_channelNumber, _
+            "Reading should come from the expected channel number.")
+            
+        Set p_outcome = Assert.IsFalse(VBA.vbNullString = p_reading, _
+            "Reading should not be empty.")
+            
+        Set p_outcome = Assert.IsTrue(p_readingValue > 0, _
+            "Reading value should be positive.")
             
     End If
     
@@ -1004,7 +1021,7 @@ Public Function TestViewModelShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
     
     If p_outcome.AssertSuccessful Then
     
-        This.ViewModel.StartMonitoringExternalTriggers
+        This.ViewModel.StartMonitoringExternalTriggersCommand
         Set p_outcome = Assert.IsFalse(This.ViewModel.PauseRequested, _
             "Pause Requested should be off after starting the monitoring timer.")
         

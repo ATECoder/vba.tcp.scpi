@@ -2108,15 +2108,15 @@ Public Property Let FrontInputsRequired(ByVal a_value As Boolean)
     End If
 End Property
 
-''' <summary>   Gets the instrumnent beep souncd on each reading is enabled. </summary>
-''' <remarks>   True if instrumnent beep souncd on each reading is enabled. </remarks>
+''' <summary>   Gets the instrument beep sound on each reading is enabled. </summary>
+''' <remarks>   True if instrument beep sound on each reading is enabled. </remarks>
 ''' <value>   [Boolean]. </value>
 Public Property Get ReadingBeepEnabled() As Boolean
     ReadingBeepEnabled = This.ReadingBeepEnabled
 End Property
 
-''' <summary>   Gets the instrumnent beep souncd on each reading is enabled. </summary>
-''' <param name="a_value">   [Boolean] instrumnent beep souncd on each reading is enabled. </value>
+''' <summary>   Gets the instrument beep sound on each reading is enabled. </summary>
+''' <param name="a_value">   [Boolean] instrument beep sound on each reading is enabled. </value>
 Public Property Let ReadingBeepEnabled(ByVal a_value As Boolean)
     If This.ReadingBeepEnabled <> a_value Then
         This.ReadingBeepEnabled = a_value
