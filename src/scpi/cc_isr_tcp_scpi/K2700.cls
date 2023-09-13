@@ -153,11 +153,11 @@ Public Function InitializeLegacy(ByVal a_host As String, ByVal a_port As Long, _
     
     ' read the instrument options and parse the card names and types.
     
-    Me.ReadCards
+    Me.RouteSystem.Read7700Cards This.Device.QueryOptions
     
     ' define function scan list for measurements on all cards.
    
-    Me.DefineFunctionScanLists a_function
+    Me.RouteSystem.DefineFunctionScanLists a_function
    
     ' turn on continuous auto range
     Me.ConfigureContinuousFunctionAutoRange a_function
@@ -239,9 +239,6 @@ End Function
 ''' <param name="a_function">    [String] The measurement function. </param>
 Public Sub ConfigureContinuousFunctionAutoRange(ByVal a_function As String)
 
-    This.Device.ResetKnownState
-    This.Device.ClearExecutionState
-    
     ' set function defaults
     ' This.ViSession.WriteLine ":RES:RANG:AUTO ON"
     ' This.ViSession.WriteLine ":RES:NPLC 1"
@@ -352,27 +349,8 @@ End Sub
 ''' <summary> Sets the instrument to read using external trigger. </summary>
 ''' <remarks>   Typically, readings will be fetched when the instrument requests service. </remarks>
 ''' <param name="a_function">        [String] The measurement function. </param>
-''' <param name="a_frontInputs ">    [Boolean] True if front inputs are required;
-'''                                  otherwise, rear inputs are required. </param>
-Public Sub ConfigureExternalTriggerReading(ByVal a_function As String, ByVal a_frontInputs As Boolean)
+Public Sub ConfigureExternalTriggerReading(ByVal a_function As String)
 
-    ' make sure that the instrument is ready to accept
-    ' input from the front panel
-    
-    If a_frontInputs And Not Me.IsFrontInputs Then
-        cc_isr_Core_IO.UserDefinedErrors.RaiseError UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".ConfigurateExternalTriggerFrontReading", _
-            " The instrument Inputs must be set for Front reading."
-    ElseIf Not a_frontInputs And Me.IsFrontInputs Then
-        cc_isr_Core_IO.UserDefinedErrors.RaiseError UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".ConfigurateExternalTriggerFrontReading", _
-            " The instrument Inputs must be set for rear reading."
-    End If
-    
-    ' Clear the device
-    If This.ViSession.UsingGpibLan Then This.ViSession.GpibLan.SelectiveDeviceClear
-    This.Device.ClearExecutionState
-    
     ' set reading format
     This.ViSession.WriteLine ":FORM:ELEM READ"
     
@@ -496,20 +474,6 @@ End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
-'  System Subsystem
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
-''' <summary>   Gets the front (True) or rear (False) inputs. </summary>
-''' <value>   True if front input; otherwise, rear input. </value>
-Public Property Get IsFrontInputs() As Boolean
-
-    IsFrontInputs = Me.ScpiSystem.QueryFrontSwitch()
-
-End Property
-
-' + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
 '  Route Subsystem
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -525,60 +489,6 @@ Public Property Get Options() As String
     End If
 
 End Property
-
-''' <summary>   Gets the card name. </summary>
-''' <returns>   [String]. </returns>
-Public Function CardName(ByVal a_slotNumber As Integer) As String
-    
-    If This.RouteSystem.InstalledCards.Count >= a_slotNumber Then
-        CardName = This.RouteSystem.InstalledCard(a_slotNumber).Name
-    Else
-        CardName = VBA.vbNullString
-    End If
-
-End Function
-
-''' <summary>   Gets the card scan list. </summary>
-''' <returns>   [String]. </returns>
-Public Function FunctionScanList(ByVal a_slotNumber As Integer) As String
-        
-    If This.RouteSystem.InstalledCards.Count >= a_slotNumber Then
-        FunctionScanList = This.RouteSystem.InstalledCard(a_slotNumber).FunctionScanList
-    Else
-        FunctionScanList = VBA.vbNullString
-    End If
-
-End Function
-
-''' <summary>   Gets the options value and sets the cards. </summary>
-''' <returns>   [Integer] the number of installed cards. </returns>
-Public Function ReadCards() As Integer
-
-    Dim p_7700CardCount As Integer
-    p_7700CardCount = This.RouteSystem.Populate7700Cards()
-    
-    Dim p_installedCardsCount As Integer
-    If p_7700CardCount > 0 Then
-    
-        p_installedCardsCount = This.RouteSystem.PopulateCards(This.Device.QueryOptions)
-        
-    End If
-    ReadCards = p_installedCardsCount
-    
-End Function
-
-''' <summary>   Sets the complete scan lists for measurements on all cards. </summary>
-''' <param name="a_function">    The measurement function. </param>
-Public Sub DefineFunctionScanLists(ByVal a_function As String)
-
-    This.RouteSystem.BuildFunctionScanLists a_function
-    
-    Dim p_multiplexerCard As MultiplexerCard
-    For Each p_multiplexerCard In This.RouteSystem.InstalledCards
-        This.ViSession.WriteLine p_multiplexerCard.FunctionScanList
-    Next
-
-End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
@@ -818,8 +728,7 @@ Private Sub m_viSession_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Co
     
     If a_eventArgs.Connected Then
     
-        Dim p_installedCardsCount As Integer
-        p_installedCardsCount = Me.ReadCards()
+        Me.RouteSystem.Read7700Cards This.Device.QueryOptions
     
     End If
        

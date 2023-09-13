@@ -85,6 +85,7 @@ Public Function ContinuousEnabledGetter() As Boolean
     Dim p_value As String
     p_value = This.ViSession.QueryLine("INIT:CONT?")
     This.ContinuousEnabled = IIf(p_value = "ON", True, False)
+    ContinuousEnabledGetter = This.ContinuousEnabled
 End Function
 
 ''' <summary>   Sets the continuous enabled. </summary>
@@ -106,6 +107,7 @@ Public Function SampleCountGetter() As Long
     Dim p_value As String
     p_value = This.ViSession.QueryLine("SAMP:COUN?")
     This.SampleCount = CLng(p_value)
+    SampleCountGetter = This.SampleCount
 End Function
 
 ''' <summary>   Sets the sample count. </summary>
@@ -168,6 +170,7 @@ Public Function TriggerCountGetter() As Long
     Dim p_value As String
     p_value = This.ViSession.QueryLine("TRIG:COUN?")
     This.TriggerCount = CLng(p_value)
+    TriggerCountGetter = This.TriggerCount
 End Function
 
 ''' <summary>   Sets the Trigger count. </summary>

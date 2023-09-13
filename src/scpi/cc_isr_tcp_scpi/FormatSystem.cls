@@ -54,6 +54,7 @@ End Property
 ''' <returns>   [String]. </returns>
 Public Function ElementsGetter() As String
     This.Elements = This.ViSession.QueryLine("FORM:ELEM?")
+    ElementsGetter = This.Elements
 End Function
 
 ''' <summary>   Sets the format elements. </summary>

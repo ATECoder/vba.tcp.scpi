@@ -53,13 +53,14 @@ End Property
 Public Function AutoRangeEnabledGetter() As Boolean
     Dim p_value As String
     p_value = This.ViSession.QueryLine(":" & This.SenseFunction & ":RANG:AUTO?")
-    This.AutoRangeEnabled = IIf(p_value = "ON", True, False)
+    This.AutoRangeEnabled = IIf(p_value = "1", True, False)
+    AutoRangeEnabledGetter = This.AutoRangeEnabled
 End Function
 
 ''' <summary>   Sets the Auto Range enabled. </summary>
 ''' <param name="a_value">   [Boolean] The AutoRange enabled to set. </param >
 Public Function AutoRangeEnabledSetter(ByVal a_value As Boolean)
-    This.ViSession.WriteLine (":" & This.SenseFunction & ":RANG:AUTO " & IIf(a_value, "ON", "OFF"))
+    This.ViSession.WriteLine (":" & This.SenseFunction & ":RANG:AUTO " & IIf(a_value, "1", "0"))
     This.AutoRangeEnabled = a_value
 End Function
 
@@ -75,6 +76,7 @@ Public Function PowerLineCyclesGetter() As Double
     Dim p_value As String
     p_value = This.ViSession.QueryLine(":" & This.SenseFunction & ":NPLC?")
     This.PowerLineCycles = CDbl(p_value)
+    PowerLineCyclesGetter = This.PowerLineCycles
 End Function
 
 ''' <summary>   Sets the integration rate in Power Line Cycles. </summary>

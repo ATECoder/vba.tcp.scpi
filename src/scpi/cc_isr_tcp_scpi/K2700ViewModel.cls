@@ -2754,7 +2754,7 @@ End Sub
 Public Function ValidateInputs() As Boolean
 
     ' gets the front input condition: True is Front.
-    This.FrontInputsValue = This.K2700.IsFrontInputs
+    This.FrontInputsValue = This.K2700.ScpiSystem.QueryFrontSwitch
     
     ' check if front or rear
     If This.FrontInputsRequired And Not This.FrontInputsValue Then
@@ -2797,7 +2797,12 @@ Friend Sub ConfigureContinuousMode()
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
             " The instrument is not ready;" & VBA.vbCrLf & a_message
 
-    ' clear execution state when switching mode.
+    ' reset if changing modes.
+    If cc_isr_Tcp_Scpi.MeasurementMode.Continuous <> This.CurrentMeasurementMode Then
+        This.K2700.Device.ResetKnownState
+    End If
+    
+    ' clear execution state
 
     This.K2700.Device.ClearExecutionState
 
@@ -2805,7 +2810,16 @@ Friend Sub ConfigureContinuousMode()
 
     ' configure measuring a single value on each read.
     This.K2700.ConfigureContinuousFunctionAutoRange Me.SenseFunctionName
-
+    
+    ' validate the sense function.
+    Dim p_senseFunction As String
+    p_senseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
+    If 1 <> VBA.InStr(1, This.SenseFunctionName, p_senseFunction, vbTextCompare) Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " Failed setting sense function from '" & p_senseFunction & _
+            "' to '" & This.SenseFunctionName & "'."
+            
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
@@ -2898,7 +2912,7 @@ Friend Sub ConfigureExternalTriggerReading()
         This.K2700.Device.ResetKnownState
     End If
     
-    ' clear execution state when switching mode.
+    ' clear execution state
     
     This.K2700.Device.ClearExecutionState
     
@@ -2906,8 +2920,7 @@ Friend Sub ConfigureExternalTriggerReading()
     
     Me.SenseFunctionName = This.ExternalSenseFunctionName
     
-    This.K2700.ConfigureExternalTriggerReading This.SenseFunctionName, _
-            This.FrontInputsValue
+    This.K2700.ConfigureExternalTriggerReading This.SenseFunctionName
     
     ' this is done in the previous command.
     ' This.VISession.WriteLine ":TRIG:SOUR IMM"
@@ -2929,6 +2942,15 @@ Friend Sub ConfigureExternalTriggerReading()
     ' move this to starting the monitoring.
     ' initiate awaiting for the external trigger
     ' This.VISession.WriteLine ":INIT;*CLS"
+
+    ' validate the sense function.
+    Dim p_senseFunction As String
+    p_senseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
+    If 1 <> VBA.InStr(1, This.SenseFunctionName, p_senseFunction, vbTextCompare) Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " Failed setting sense function from '" & p_senseFunction & _
+            "' to '" & This.SenseFunctionName & "'."
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -3026,9 +3048,7 @@ Friend Sub ConfigureImmediateTriggerReadings()
 
     ' reset if changing modes.
     If cc_isr_Tcp_Scpi.MeasurementMode.Immediate <> This.CurrentMeasurementMode Then
-    
         This.K2700.Device.ResetKnownState
-    
     End If
     
     ' clear execution state.
@@ -3039,6 +3059,15 @@ Friend Sub ConfigureImmediateTriggerReadings()
     
     ' configure measuring a single value on each read.
     This.K2700.ConfigureSingleFunctionReading Me.SenseFunctionName
+    
+    ' validate the sense function.
+    Dim p_senseFunction As String
+    p_senseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
+    If 1 <> VBA.InStr(1, This.SenseFunctionName, p_senseFunction, vbTextCompare) Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " Failed setting sense function from '" & p_senseFunction & _
+            "' to '" & This.SenseFunctionName & "'."
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -3123,7 +3152,7 @@ Public Sub QueryInputsCommand()
 
     Me.RestartStopwatch
 
-    Me.FrontInputsValue = This.K2700.IsFrontInputs
+    Me.FrontInputsValue = This.K2700.ScpiSystem.QueryFrontSwitch
 
     Me.ReadStopwatch
 
@@ -3610,18 +3639,18 @@ Private Sub OnInstrumentConnected()
     This.Device.ResetKnownState
     This.Device.ClearExecutionState
     
-    Me.TopCard = This.K2700.CardName(1)
-    Me.BottomCard = This.K2700.CardName(2)
+    Me.TopCard = This.K2700.RouteSystem.CardName(1)
+    Me.BottomCard = This.K2700.RouteSystem.CardName(2)
     
     ' initialize the scan list for immediate trigger.
     If VBA.vbNullString <> This.ImmediateSenseFunctionName Then
     
         ' set the instrument function scan list
-        This.K2700.DefineFunctionScanLists This.ImmediateSenseFunctionName
+        This.K2700.RouteSystem.DefineFunctionScanLists This.ImmediateSenseFunctionName
     
         ' show the results.
-        Me.TopCardFunctionScanList = This.K2700.FunctionScanList(1)
-        Me.BottomCardFunctionScanList = This.K2700.FunctionScanList(2)
+        Me.TopCardFunctionScanList = This.K2700.RouteSystem.FunctionScanList(1)
+        Me.BottomCardFunctionScanList = This.K2700.RouteSystem.FunctionScanList(2)
         
     End If
 

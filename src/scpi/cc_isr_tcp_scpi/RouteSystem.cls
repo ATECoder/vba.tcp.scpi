@@ -125,6 +125,61 @@ Public Function PopulateCards(ByVal a_cards As String) As Integer
     
 End Function
 
+''' <summary>   Gets the card name. </summary>
+''' <returns>   [String]. </returns>
+Public Function CardName(ByVal a_slotNumber As Integer) As String
+    
+    If Me.InstalledCards.Count >= a_slotNumber Then
+        CardName = Me.InstalledCard(a_slotNumber).Name
+    Else
+        CardName = VBA.vbNullString
+    End If
+
+End Function
+
+''' <summary>   Gets the card function scan list. </summary>
+''' <returns>   [String]. </returns>
+Public Function FunctionScanList(ByVal a_slotNumber As Integer) As String
+        
+    If Me.InstalledCards.Count >= a_slotNumber Then
+        FunctionScanList = Me.InstalledCard(a_slotNumber).FunctionScanList
+    Else
+        FunctionScanList = VBA.vbNullString
+    End If
+
+End Function
+
+''' <summary>   Gets the options value and sets the cards. </summary>
+''' <para name="a_deviceOptions">   [String] The device option fron the *OPT? query. </param>
+''' <returns>   [Integer] the number of installed cards. </returns>
+Public Function Read7700Cards(ByVal a_deviceOptions As String) As Integer
+
+    Dim p_7700CardCount As Integer
+    p_7700CardCount = Me.Populate7700Cards()
+    
+    Dim p_installedCardsCount As Integer
+    If p_7700CardCount > 0 Then
+    
+        p_installedCardsCount = Me.PopulateCards(a_deviceOptions)
+        
+    End If
+    Read7700Cards = p_installedCardsCount
+    
+End Function
+
+''' <summary>   Sets the complete scan lists for measurements on all cards. </summary>
+''' <param name="a_function">    The measurement function. </param>
+Public Sub DefineFunctionScanLists(ByVal a_function As String)
+
+    Me.BuildFunctionScanLists a_function
+    
+    Dim p_multiplexerCard As MultiplexerCard
+    For Each p_multiplexerCard In Me.InstalledCards
+        This.ViSession.WriteLine p_multiplexerCard.FunctionScanList
+    Next
+
+End Sub
+
 ''' <summary>   Gets the total channel count for all cards. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get ChannelCount() As Integer

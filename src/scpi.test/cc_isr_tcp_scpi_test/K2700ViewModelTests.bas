@@ -66,7 +66,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 4
+    RunTest 6
     AfterAll
 End Sub
 
@@ -769,7 +769,7 @@ Public Function TestViewModelShouldConfigureImmediateMode() As cc_isr_Test_Fx.As
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = Assert.AreEqual("READ", This.ViewModel.K2700.FormatSystem.ElementsGetter, _
+        Set p_outcome = Assert.AreEqual("READ,,,,,", This.ViewModel.K2700.FormatSystem.ElementsGetter, _
             "Format elements should be as expected.")
     End If
     
@@ -867,9 +867,9 @@ Public Function TestViewModelShouldConfigureExternalMode() As cc_isr_Test_Fx.Ass
     
     If p_outcome.AssertSuccessful Then
         
-        ' configure immediate mode with front switch.
+        ' configure external mode with front switch.
         This.ViewModel.FrontInputsRequired = True
-        This.ViewModel.ConfigureImmediateTriggerReadingsCommand
+        This.ViewModel.ConfigureExternalTriggerReadingCommand
         
         Dim p_expectedSenseFunctionName As String: p_expectedSenseFunctionName = This.ExternalSenseFunctionName
         Dim p_actualSenseFunctionName As String:
@@ -927,7 +927,7 @@ Public Function TestViewModelShouldConfigureExternalMode() As cc_isr_Test_Fx.Ass
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = Assert.AreEqual("READ", This.ViewModel.K2700.FormatSystem.ElementsGetter, _
+        Set p_outcome = Assert.AreEqual("READ,,,,,", This.ViewModel.K2700.FormatSystem.ElementsGetter, _
             "Format elements should be as expected.")
     End If
     
@@ -985,9 +985,9 @@ Public Function TestViewModelShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
     
     If p_outcome.AssertSuccessful Then
         
-        ' configure immediate mode with front switch.
+        ' configure external mode with front switch.
         This.ViewModel.FrontInputsRequired = True
-        This.ViewModel.ConfigureImmediateTriggerReadingsCommand
+        This.ViewModel.ConfigureExternalTriggerReadingCommand
         
         Dim p_expectedSenseFunctionName As String: p_expectedSenseFunctionName = This.ExternalSenseFunctionName
         Dim p_actualSenseFunctionName As String:

@@ -953,7 +953,6 @@ End Property
 Friend Property Let CurrentMeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementMode)
     If This.CurrentMeasurementMode <> a_value Then
         This.CurrentMeasurementMode = a_value
-        This.ViewModel.CurrentMeasurementMode = This.CurrentMeasurementMode
     End If
 End Property
 
@@ -1136,7 +1135,6 @@ End Property
 Friend Property Let SenseFunctionName(ByVal a_value As String)
     If This.SenseFunctionName <> a_value Then
         This.SenseFunctionName = a_value
-        This.ViewModel.SenseFunctionName = This.SenseFunctionName
     End If
 End Property
 

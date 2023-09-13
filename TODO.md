@@ -3,18 +3,18 @@
 ## GIT:
 
 
-
-
 ## TODO
-
-
-IO:
 
 ### SCPI View Model Test:
 
+* repeat the tests a few times.
+* test the monitoring.
+* see if we can use a loop to wait for a couple of triggers or a timeout after 5 seconds....
+
+
+
 * run tests:
 * Add some observer tests to the existing tests.
-
 
 2700 Demo
 * fix and test using the view model.
