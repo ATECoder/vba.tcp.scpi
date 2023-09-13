@@ -2250,13 +2250,13 @@ Public Property Let ExternalSenseFunctionName(ByVal a_value As String)
     End If
 End Property
 
-''' <summary>   Gets the Sense Function Name. </summary>
+''' <summary>   Gets the current sense Function Name. </summary>
 ''' <value>   [String]. </value>
 Public Property Get SenseFunctionName() As String
     SenseFunctionName = This.SenseFunctionName
 End Property
 
-''' <summary>   Internal. Sets the Sense Function Name. </summary>
+''' <summary>   Internal. Sets the current Sense Function Name. </summary>
 ''' <param name="a_value">   [String] the Sense Function Name. </value>
 Friend Property Let SenseFunctionName(ByVal a_value As String)
     If This.SenseFunctionName <> a_value Then
@@ -2266,7 +2266,7 @@ Friend Property Let SenseFunctionName(ByVal a_value As String)
     End If
 End Property
 
-''' <summary>   Handles the sense function change. </summary>
+''' <summary>   Handles the sense function change; Set the sense faction caption and units. </summary>
 Public Sub OnSenseFunctionChanged()
 
     Select Case Me.SenseFunctionName
@@ -2658,8 +2658,8 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Returns true and a message if the specified sense function does not match the
-''' expected sense function. </summary>
+''' <summary>   Returns true and a message if the specified sense function matched neither
+''' one of sense functions of the defferent measurement modes. </summary>
 ''' <param name="a_senseFunction">   [String] The actual sense function. </param>
 ''' <param name="a_message">         [String] The message for an optional exception in case the
 '''                                  the state is not as expected. </param>
@@ -2667,21 +2667,37 @@ End Property
 Public Function ShouldRestoreSenseFunction(ByVal a_senseFunction As String, _
     ByRef a_message As String) As Boolean
 
-    Dim p_result As Boolean: p_result = False
-    
     If Not ((1 = InStr(1, This.ContinuousSenseFunctionName, a_senseFunction, vbTextCompare)) Or _
             (1 = InStr(1, This.ImmediateSenseFunctionName, a_senseFunction, vbTextCompare)) Or _
             (1 = InStr(1, This.ExternalSenseFunctionName, a_senseFunction, vbTextCompare))) Then
         a_message = "The K2700 device current sense function '" & a_senseFunction & _
-            "'is not set as expected to either " & _
+            "' is not set; it must be set to either " & _
             This.ContinuousSenseFunctionName & " or " & _
             This.ImmediateSenseFunctionName & " or " & _
             This.ExternalSenseFunctionName & "."
-        p_result = True
+        ShouldRestoreSenseFunction = True
     Else
-        p_result = False
+        ShouldRestoreSenseFunction = False
     End If
 
+End Function
+
+''' <summary>   Returns true and a message if the instrument is nothing or not conneced. </summary>
+''' <param name="a_message">   [String] The message for an optional exception in case the
+'''                             the state is not as expected. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function ShouldConnect(ByRef a_message As String) As Boolean
+
+    If This.K2700 Is Nothing Then
+        a_message = "The K2700 device instance is nothing."
+        ShouldConnect = True
+    ElseIf Not Me.Connected Then
+        a_message = "The K2700 device is not connected to " & This.Host & ":" & VBA.CStr(This.Port) & "."
+        ShouldConnect = True
+    Else
+        ShouldConnect = False
+    End If
+    
 End Function
 
 ''' <summary>   Returns true and a message if the current state does not match the expected restore state. </summary>
@@ -2692,25 +2708,16 @@ End Function
 ''' <returns>   [Boolean]. </returns>
 Public Function ShouldRestoreState(ByRef a_message As String) As Boolean
 
-    Dim p_result As Boolean: p_result = False
-    
-    If This.K2700 Is Nothing Then
-        a_message = "The K2700 device instance is nothing."
-        p_result = True
-    ElseIf Not Me.Connected Then
-        a_message = "The K2700 device is not connected to " & This.Host & ":" & VBA.CStr(This.Port) & "."
-        p_result = True
+    If Me.ShouldConnect(a_message) Then
+        ShouldRestoreState = True
     Else
         ' validate the sense function
         Dim p_senseFunction As String
         p_senseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
-        p_result = Me.ShouldRestoreSenseFunction(p_senseFunction, a_message)
+        ShouldRestoreState = Me.ShouldRestoreSenseFunction(p_senseFunction, a_message)
     End If
-    
-    ShouldRestoreState = p_result
 
 End Function
-
 
 ''' <summary>   Restores the instrument to its known state in case the instrument power
 '''             was toggled. </summary>
@@ -2718,11 +2725,6 @@ End Function
 '''             powered off while the program is active. </remakrs>
 Public Sub RestoreKnownState()
 
-    If VBA.vbNullString = This.SenseFunctionName Then _
-        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".RestoreKnownState", _
-            " A sense function must be specified for restoring the instrument state."
-    
     If This.K2700 Is Nothing Then Me.Initialize
     
     If Not Me.Connected Then _
@@ -2790,10 +2792,10 @@ Friend Sub ConfigureContinuousMode()
 
     ' throw an error if the state was not restored before this method.
     Dim a_message As String: a_message = VBA.vbNullString
-    If Me.ShouldRestoreState(a_message) Then _
+    If Me.ShouldConnect(a_message) Then _
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " Instrument not set in the expected state: " & VBA.vbCrLf & a_message
+            " The instrument is not ready;" & VBA.vbCrLf & a_message
 
     ' clear execution state when switching mode.
 
@@ -2886,10 +2888,10 @@ Friend Sub ConfigureExternalTriggerReading()
     
     ' throw an error if the state was not restored before this method.
     Dim a_message As String: a_message = VBA.vbNullString
-    If Me.ShouldRestoreState(a_message) Then _
+    If Me.ShouldConnect(a_message) Then _
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " Instrument not set in the expected state: " & VBA.vbCrLf & a_message
+            " The instrument not ready;" & VBA.vbCrLf & a_message
     
     ' reset if changing modes.
     If cc_isr_Tcp_Scpi.MeasurementMode.External <> This.CurrentMeasurementMode Then
@@ -3017,10 +3019,10 @@ Friend Sub ConfigureImmediateTriggerReadings()
 
     ' throw an error if the state was not restored before this method.
     Dim a_message As String: a_message = VBA.vbNullString
-    If Me.ShouldRestoreState(a_message) Then _
+    If Me.ShouldConnect(a_message) Then _
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " Instrument not set in the expected state: " & VBA.vbCrLf & a_message
+            " The instrument not ready;" & VBA.vbCrLf & a_message
 
     ' reset if changing modes.
     If cc_isr_Tcp_Scpi.MeasurementMode.Immediate <> This.CurrentMeasurementMode Then
