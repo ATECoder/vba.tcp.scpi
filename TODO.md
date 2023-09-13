@@ -2,16 +2,27 @@
 
 ## GIT:
 
+IEEE488:
+Fix test function names.
+Add reply to reset known state.
+
+SCPI:
+View Model: Add reply from the reset and clear commands.
+Add restoring the GPIB-Lan interface device to its know state.
+Add recovery tests.
+
+
+
 
 ## TODO
 
 ### SCPI View Model Test:
 
+* Look at the device recover test and see what we need to do to recover.
+
 * repeat the tests a few times.
 * test the monitoring.
 * see if we can use a loop to wait for a couple of triggers or a timeout after 5 seconds....
-
-
 
 * run tests:
 * Add some observer tests to the existing tests.

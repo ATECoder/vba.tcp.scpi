@@ -805,8 +805,9 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Internal. Sends the instrument to is Clear Known State. </summary>
-Friend Sub ClearExecutionState()
+''' <summary>   Internal. Sends the instrument to is Clear Known State and returns
+''' the operation completion reply of '1'. </summary>
+Friend Function ClearExecutionState() As String
 
     Const p_procedureName = "ClearExecutionState"
 
@@ -819,7 +820,8 @@ Friend Sub ClearExecutionState()
 
     Me.RestartStopwatch
 
-    This.Device.ClearExecutionState
+    ' clear execution state and return the operation completion reply.
+    ClearExecutionState = This.Device.ClearExecutionState(True)
 
     Me.ReadStopwatch
 
@@ -829,7 +831,7 @@ Friend Sub ClearExecutionState()
 exit_Handler:
 
     On Error GoTo 0
-    Exit Sub
+    Exit Function
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 err_Handler:
@@ -848,23 +850,24 @@ err_Handler:
     GoTo exit_Handler
 
 
-End Sub
+End Function
 
-''' <summary>   Handles the Clear Known State button click event. </summary>
-Public Sub ClearExecutionStateCommand()
+''' <summary>   Handles the Clear Known State button click event; returns the
+''' opertation completion reply. </summary>
+Public Function ClearExecutionStateCommand() As String
 
     Const p_procedureName = "ClearExecutionStateCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.ClearExecutionState
+    ClearExecutionStateCommand = Me.ClearExecutionState
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
     On Error GoTo 0
-    Exit Sub
+    Exit Function
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 err_Handler:
@@ -882,7 +885,7 @@ err_Handler:
     On Error Resume Next
     GoTo exit_Handler
 
-End Sub
+End Function
 
 ''' <summary>   Writes the <see cref="MessageToSend"/> and update elapsed times. </summary>
 Public Sub WriteCommand()
@@ -1056,8 +1059,8 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Handles the Reset Known State button click event. </summary>
-Public Sub ResetKnownStateCommand()
+''' <summary>   Resets Known State and returns the operationcompletion reply of '1'. </summary>
+Public Function ResetKnownStateCommand() As String
 
     Const p_procedureName = "ResetKnownStateCommand"
 
@@ -1066,7 +1069,7 @@ Public Sub ResetKnownStateCommand()
 
     Me.RestartStopwatch
 
-    This.Device.ResetKnownState
+    ResetKnownStateCommand = This.Device.ResetKnownState(True)
 
     Me.ReadStopwatch
 
@@ -1074,7 +1077,7 @@ Public Sub ResetKnownStateCommand()
 exit_Handler:
 
     On Error GoTo 0
-    Exit Sub
+    Exit Function
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 err_Handler:
@@ -1092,9 +1095,9 @@ err_Handler:
     On Error Resume Next
     GoTo exit_Handler
 
-End Sub
+End Function
 
-''' <summary>   Handles the Query Status Byte button click event. </summary>
+''' <summary>   Handles the Query Status Byte button click event and sets the status byte. </summary>
 Public Sub QueryStatusByteCommand()
 
     Const p_procedureName = "QueryStatusByteCommand"
@@ -2658,6 +2661,69 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
+''' <summary>   Returns true and a message if the GPIB-Lan device needs to be
+''' Restored to its known state; i.e., if the <see cref=""/> state is not
+''' commensurate with the <see cref=""/>.. </summary>
+''' <param name="a_message">         [String] The message for an optional exception in case the
+'''                                  the state is not as expected. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function ShouldRestoreGpibLanKnownState(ByRef a_message As String) As Boolean
+
+    ' assert talk after write is not allowed for the K2700 instrument
+    Dim p_assertTalkAfterWriteAllowed As Boolean
+    p_assertTalkAfterWriteAllowed = False
+    
+    If p_assertTalkAfterWriteAllowed <> This.ViSession.GpibLan.AssertTalkAfterWriteAllowed Then
+        a_message = "GPIB Lan AssertTalkAfterWriteAllowed  is '" & _
+            VBA.CStr(This.ViSession.GpibLan.AssertTalkAfterWriteAllowed) & _
+            "' where it must be set to '" & VBA.CStr(p_assertTalkAfterWriteAllowed) & _
+            "' when using the 2700 instrument to prevent the Query Unterminated (-420) errors."
+        ShouldRestoreGpibLanKnownState = True
+    Else
+        Dim p_readAfterWriteEnabled As Boolean
+        p_readAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
+        If This.ViSession.GpibLan.AssertTalkAfterWriteAllowed <> p_readAfterWriteEnabled Then
+            a_message = "GPIB Lan Read After Write is set to '" & _
+                VBA.CStr(p_readAfterWriteEnabled) & _
+                "'. Consequenctly, the 2700 instrument is asserted to talk upon receiving non-query commands causing the Query Unterminated error -420." & _
+                " The GPIB Lan Read After Write must be set to False for the 2700 instrument."
+            ShouldRestoreGpibLanKnownState = True
+        Else
+            ShouldRestoreGpibLanKnownState = False
+        End If
+    End If
+
+
+End Function
+
+''' <summary>   Restores the  GPIB-Lan interfae device to its known state. </summary>
+Public Sub RestoreGpibLanKnownState()
+
+    ' assert talk after write is not allowed for the K2700 instrument
+    Dim p_assertTalkAfterWriteAllowed As Boolean
+    p_assertTalkAfterWriteAllowed = False
+    
+    ' assert talk after write is not allowed for the 2700 instrument
+    If p_assertTalkAfterWriteAllowed <> This.ViSession.GpibLan.AssertTalkAfterWriteAllowed Then _
+        This.ViSession.GpibLan.AssertTalkAfterWriteAllowed = p_assertTalkAfterWriteAllowed
+    
+    ' get the current read after write state.
+    Dim p_readAfterWriteEnabled As Boolean
+    p_readAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
+    If This.ViSession.GpibLan.AssertTalkAfterWriteAllowed <> p_readAfterWriteEnabled Then
+        This.ViSession.GpibLan.ReadAfterWriteEnabledSetter This.ViSession.GpibLan.AssertTalkAfterWriteAllowed
+    End If
+    
+    ' raise an error if we failed to restore.
+    Dim p_message As String
+    If Me.ShouldRestoreGpibLanKnownState(p_message) Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".RestoreGpibLanKnownState", _
+            " Failed restoring GPIB-Lan insterface device to its known state; " & p_message
+    
+End Sub
+
+
 ''' <summary>   Returns true and a message if the specified sense function matched neither
 ''' one of sense functions of the defferent measurement modes. </summary>
 ''' <param name="a_senseFunction">   [String] The actual sense function. </param>
@@ -2721,8 +2787,8 @@ End Function
 
 ''' <summary>   Restores the instrument to its known state in case the instrument power
 '''             was toggled. </summary>
-''' <remakrs>   This method attempts to restore the instrument to a known state in case it is
-'''             powered off while the program is active. </remakrs>
+''' <remarks>   This method attempts to restore the instrument to a known state in case it is
+'''             powered off while the program is active. </remarks>
 Public Sub RestoreKnownState()
 
     If This.K2700 Is Nothing Then Me.Initialize
@@ -2734,6 +2800,9 @@ Public Sub RestoreKnownState()
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".RestoreKnownState", _
             " Failed connecting to " & This.Host & ":" & VBA.CStr(This.Port) & "."
+    
+    ' restore the GPIB-Lan device to its known state.
+    Me.RestoreGpibLanKnownState
     
     ' validate the sense function
     Dim p_senseFunction As String

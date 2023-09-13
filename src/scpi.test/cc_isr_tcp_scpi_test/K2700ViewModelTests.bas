@@ -52,10 +52,14 @@ Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
         Case 4
             Set p_outcome = TestViewModelShouldRestoreKnownState
         Case 5
-            Set p_outcome = TestViewModelShouldConfigureImmediateMode
+            Set p_outcome = TestRecoveryFromSyntaxError
         Case 6
-            Set p_outcome = TestViewModelShouldConfigureExternalMode
+            Set p_outcome = TestRecoveryFromReadAfterWriteTrue
         Case 7
+            Set p_outcome = TestViewModelShouldConfigureImmediateMode
+        Case 8
+            Set p_outcome = TestViewModelShouldConfigureExternalMode
+        Case 9
             Set p_outcome = TestViewModelShouldMonitorTriggering
         Case Else
     End Select
@@ -532,16 +536,13 @@ err_Handler:
 
 End Function
 
-''' <summary>   Unit test. Asserts that view model should read cards. </summary>
+''' <summary>   Asserts that view model should read cards. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestViewModelShouldReadCards() As cc_isr_Test_Fx.Assert
+Public Function AssertViewModelShouldReadCards() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestViewModelShouldReadCards"
+    Const p_procedureName As String = "AssertViewModelShouldReadCards"
 
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then
@@ -579,6 +580,28 @@ Public Function TestViewModelShouldReadCards() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
             "Last error message should be empty but found: '" & This.ViewModel.LastErrorMessage & "'.")
+
+End Function
+
+''' <summary>   Unit test. Asserts that view model should read cards. </summary>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
+Public Function TestViewModelShouldReadCards() As cc_isr_Test_Fx.Assert
+
+    Const p_procedureName As String = "TestViewModelShouldReadCards"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = AssertViewModelShouldReadCards()
+    End If
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -625,8 +648,15 @@ Public Function TestViewModelShouldRestoreKnownState() As cc_isr_Test_Fx.Assert
     End If
     
     ' proceed with test assertions.
-        
-        
+
+    Dim p_message As String: p_message = VBA.vbNullString
+
+    ' check if we need to restore the GPIB-Lan know state.
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreGpibLanKnownState(p_message), _
+            "The GPIB-Lan should be in its expected known state upon connecting; " & p_message)
+    End If
+
     Dim p_expectedSenseFunctionName As String: p_expectedSenseFunctionName = "VOLT:DC"
     If p_outcome.AssertSuccessful Then
         
@@ -649,7 +679,6 @@ Public Function TestViewModelShouldRestoreKnownState() As cc_isr_Test_Fx.Assert
     End If
     
     ' now that the function was changed, a resore should be required
-    Dim p_message As String: p_message = VBA.vbNullString
     If p_outcome.AssertSuccessful Then
         Set p_outcome = Assert.IsTrue(This.ViewModel.ShouldRestoreSenseFunction(p_actualSenseFunctionName, p_message), _
             "Restore should be required after setting the function to: '" & p_actualSenseFunctionName & "'; " & _
@@ -667,6 +696,36 @@ Public Function TestViewModelShouldRestoreKnownState() As cc_isr_Test_Fx.Assert
             "Restore should not be required after restoring the function to: '" & p_actualSenseFunctionName & "'; " & _
             p_message)
         
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreGpibLanKnownState(p_message), _
+            "The GPIB-Lan should be in its expected known state after restoring state #1; " & p_message)
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        This.ViewModel.ViSession.GpibLan.AssertTalkAfterWriteAllowed = True
+        Set p_outcome = Assert.IsTrue(This.ViewModel.ShouldRestoreGpibLanKnownState(p_message), _
+            "The GPIB-Lan should not be in its expected known state after setting allowing to assert talk after write ('" & _
+            VBA.CStr(This.ViewModel.ViSession.GpibLan.AssertTalkAfterWriteAllowed) & "').")
+    End If
+    
+    ' if restore is required we should restore
+    If p_outcome.AssertSuccessful Then
+        
+        This.ViewModel.RestoreKnownState
+        
+        ' once restore, restore should no longer be required
+        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreSenseFunction(p_actualSenseFunctionName, p_message), _
+            "Restore should not be required after restoring the assert talk after write to: '" & _
+            VBA.CStr(This.ViewModel.ViSession.GpibLan.AssertTalkAfterWriteAllowed) & "'; " & _
+            p_message)
+        
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreGpibLanKnownState(p_message), _
+            "The GPIB-Lan should be in its expected known state after restoring know state #2; " & p_message)
     End If
     
     ' Finally, verify that no error message was recorded.
@@ -701,6 +760,168 @@ err_Handler:
     GoTo exit_Handler
 
 End Function
+
+''' <summary>   Unit test. Asserts recovery from Syntax error. </summary>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
+Public Function TestRecoveryFromSyntaxError() As Assert
+
+    Const p_procedureName As String = "TestRecoveryFromSyntaxError"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    Dim p_errorNumber As String
+    Dim p_errorMessage As String
+    Dim p_success As Boolean
+    Dim p_actualReply As String
+    Dim p_expectedReply As String
+    
+    If p_outcome.AssertSuccessful Then
+        p_expectedReply = "1"
+        p_actualReply = This.ViewModel.ClearExecutionStateCommand()
+        Set p_outcome = Assert.AreEqual(p_expectedReply, p_actualReply, _
+            "View Model should clear execution state and query operation completion #1.")
+    End If
+
+    If p_outcome.AssertSuccessful Then
+        
+        ' issue a bad command
+        On Error Resume Next
+        This.ViewModel.ViSession.WriteLine ("**OPC")
+        On Error GoTo 0
+        
+        ' clear the error state
+        cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
+        
+        DoEvents
+        cc_isr_Core_IO.Factory.NewStopwatch().Wait 100
+        
+        p_expectedReply = "1"
+        p_actualReply = This.ViewModel.ClearExecutionStateCommand()
+        Set p_outcome = Assert.AreEqual(p_expectedReply, p_actualReply, _
+            "View Model should clear ewxecution state and query operation completion #2.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = AssertViewModelShouldReadCards()
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
+    
+    Debug.Print p_outcome.BuildReport("TestQueryOperationCompletion")
+    
+    Set TestRecoveryFromSyntaxFromError = p_outcome
+    
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
+    
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+    
+End Function
+
+''' <summary>   Unit test. Asserts recovery from read after write true condition. </summary>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
+Public Function TestRecoveryFromReadAfterWriteTrue() As Assert
+
+    Const p_procedureName As String = "TestRecoveryFromReadAfterWriteTrue"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    Dim p_errorNumber As String
+    Dim p_errorMessage As String
+    Dim p_success As Boolean
+    Dim p_actualReply As String
+    Dim p_expectedReply As String
+    
+    If p_outcome.AssertSuccessful And This.ViewModel.ViSession.UsingGpibLan Then
+        ' turn on read after write condition.
+        This.ViewModel.ViSession.GpibLan.ReadAfterWriteEnabledSetter True
+        Set p_outcome = Assert.IsTrue(This.ViewModel.ViSession.GpibLan.ReadAfterWriteEnabledGetter, _
+            "Read after write should be true.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        This.ViewModel.Device.CloseConnection
+        Set p_outcome = Assert.IsFalse(This.ViewModel.Device.Connected, _
+            "IEEE488 Device should be disconnected.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        This.ViewModel.RestoreKnownState
+        Set p_outcome = Assert.IsTrue(This.ViewModel.Device.Connected, _
+            "IEEE488 Device should be connected.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        p_expectedReply = "1"
+        p_actualReply = This.ViewModel.Device.QueryOperationCompleted()
+        Set p_outcome = Assert.AreEqual(p_expectedReply, p_actualReply, _
+            "IEEE488 Device should query operation completion.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = AssertViewModelShouldReadCards()
+    End If
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
+    
+    Debug.Print p_outcome.BuildReport("TestRecoveryFromReadAfterWriteTrue")
+    
+    Set TestRecoveryFromReadAfterWriteTrue = p_outcome
+    
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
+    
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+    
+End Function
+
+
 
 ''' <summary>   Unit test. Asserts that view model should configure immediate mode. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
