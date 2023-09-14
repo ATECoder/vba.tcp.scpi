@@ -14,7 +14,7 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Private Type this_
-    K2700 As cc_isr_Tcp_Scpi.K2700
+    Device As cc_isr_Ieee488.Device
 End Type
 
 Private This As this_
@@ -22,9 +22,9 @@ Private This As this_
 Implements cc_isr_Test_Fx.IErrTracer
 
 ''' <summary>   Initializes this object. </summary>
-''' <para name="a_k2700">   [K2700] reference tot he instrument object. </param>
-Public Function Initialize(ByVal a_k2700 As cc_isr_Tcp_Scpi.K2700) As DeviceErrorsTracer
-    Set This.K2700 = a_k2700
+''' <para name="a_device">   [Device] reference tot he instrument object. </param>
+Public Function Initialize(ByVal a_device As cc_isr_Ieee488.Device) As DeviceErrorsTracer
+    Set This.Device = a_device
     Set Initialize = Me
 End Function
 
@@ -37,7 +37,7 @@ Private Function IErrTracer_AssertLeftoverErrors(Optional ByVal a_delimiter As S
     Dim p_outcome As cc_isr_Test_Fx.Assert
     
     Dim p_errors As String
-    p_errors = This.K2700.EnumerateErrors(a_delimiter)
+    p_errors = This.Device.EnumerateErrors(a_delimiter)
     If VBA.vbNullString = p_errors Then
         Set p_outcome = Assert.Pass("There are no leftover errors to assert.")
     Else

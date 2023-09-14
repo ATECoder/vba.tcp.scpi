@@ -118,7 +118,7 @@ Public Sub BeforeAll()
     
     ' set the final error tracer capable of reporting device errors.
     Dim p_errTracer As New DeviceErrorsTracer
-    Set This.ErrTracer = p_errTracer.Initialize(This.Device)
+    Set This.ErrTracer = p_errTracer.Initialize(This.Device.Device)
     
     This.Device.OpenConnection This.Host, This.Port, This.SocketReceiveTimeout
     

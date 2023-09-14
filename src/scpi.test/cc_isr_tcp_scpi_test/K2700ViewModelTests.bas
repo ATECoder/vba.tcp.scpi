@@ -70,7 +70,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 8
+    RunTest 2
     AfterAll
 End Sub
 
@@ -156,7 +156,7 @@ Public Sub BeforeAll()
 
     ' set the final error tracer capable of reporting device errors.
     Dim p_errTracer As New DeviceErrorsTracer
-    Set This.ErrTracer = p_errTracer.Initialize(This.ViewModel.K2700)
+    Set This.ErrTracer = p_errTracer.Initialize(This.ViewModel.Device)
     
     ' connect
     This.ViewModel.OpenConnectionCommand

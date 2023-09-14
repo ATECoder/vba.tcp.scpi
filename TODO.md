@@ -2,28 +2,21 @@
 
 ## GIT:
 
-IEEE488:
-Fix test names and report names.
+Add Device Error Reader.
 
-SCPI:
-Device error reader: return the number of errors queued.
 
+"/>"/>]
 
 ## TODO
 
 ### SCPI View Model Test:
-
-* Look at the device recover test and see what we need to do to recover.
-
 * repeat the tests a few times.
 * test the monitoring.
 * see if we can use a loop to wait for a couple of triggers or a timeout after 5 seconds....
 
-* run tests:
-* Add some observer tests to the existing tests.
-
 2700 Demo
-* fix and test using the view model.
+* Use the observer to update the demo
+* test using the view model.
 
 
 ## Beta 202308

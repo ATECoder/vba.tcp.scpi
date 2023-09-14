@@ -2799,7 +2799,7 @@ End Function
 Public Sub RestoreKnownState()
 
     ' enumerate and report any accumulated errors.
-    Me.LastErrorMessage = This.K2700.EnumerateErrors()
+    Me.LastErrorMessage = This.Device.EnumerateErrors()
     
     ' clear the error state
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
@@ -3715,7 +3715,7 @@ Private Sub OnInstrumentConnected()
     ' report device errors if any before clearing states.
     
     Dim p_errors As String
-    If This.K2700.DeviceErrorReader.TryDequeueDeviceErrors(p_errors) Then
+    If This.Device.DeviceErrorReader.TryDequeueErrors(p_errors) Then
         Me.LastErrorMessage = cc_isr_Core_IO.UserDefinedErrors.EnqueueError( _
             cc_isr_Core_IO.UserDefinedErrors.Ieee488DeviceError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".OnInstrumentConnected", _
@@ -3747,7 +3747,7 @@ Private Sub OnInstrumentConnected()
     
     ' report any errors.
     
-    If This.K2700.DeviceErrorReader.TryDequeueDeviceErrors(p_errors) Then
+    If This.Device.DeviceErrorReader.TryDequeueErrors(p_errors) Then
         Me.LastErrorMessage = cc_isr_Core_IO.UserDefinedErrors.EnqueueError( _
             cc_isr_Core_IO.UserDefinedErrors.Ieee488DeviceError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".OnInstrumentConnected", _

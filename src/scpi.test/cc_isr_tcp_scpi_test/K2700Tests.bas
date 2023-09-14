@@ -119,7 +119,7 @@ Public Sub BeforeAll()
     Set This.Device = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize()
     
     Dim p_errTracer As New DeviceErrorsTracer
-    Set This.ErrTracer = p_errTracer.Initialize(This.Device)
+    Set This.ErrTracer = p_errTracer.Initialize(This.Device.Device)
     
     This.Device.OpenConnection This.Host, This.Port, This.SocketReceiveTimeout
     
