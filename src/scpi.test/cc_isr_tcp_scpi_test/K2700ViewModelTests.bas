@@ -44,23 +44,23 @@ Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
     BeforeEach
     Select Case a_testNumber
         Case 1
-            Set p_outcome = TestViewModelShouldInitialize
+            Set p_outcome = TestShouldInitialize
         Case 2
-            Set p_outcome = TestViewModelShouldBeConnected
+            Set p_outcome = TestShouldBeConnected
         Case 3
-            Set p_outcome = TestViewModelShouldReadCards
+            Set p_outcome = TestShouldReadCards
         Case 4
-            Set p_outcome = TestViewModelShouldRestoreKnownState
+            Set p_outcome = TestShouldRestoreKnownState
         Case 5
-            Set p_outcome = TestRecoveryFromSyntaxError
+            Set p_outcome = TestShouldRecoverFromSyntaxError
         Case 6
-            Set p_outcome = TestRecoveryFromReadAfterWriteTrue
+            Set p_outcome = TestShouldRecoverFromReadAfterWriteTrue
         Case 7
-            Set p_outcome = TestViewModelShouldConfigureImmediateMode
+            Set p_outcome = TestShouldConfigureImmediateMode
         Case 8
-            Set p_outcome = TestViewModelShouldConfigureExternalMode
+            Set p_outcome = TestShouldConfigureExternalMode
         Case 9
-            Set p_outcome = TestViewModelShouldMonitorTriggering
+            Set p_outcome = TestShouldMonitorTriggering
         Case Else
     End Select
     AfterEach
@@ -70,7 +70,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 6
+    RunTest 8
     AfterAll
 End Sub
 
@@ -82,7 +82,7 @@ Public Sub RunAllTests()
     This.PassedCount = 0
     This.FailedCount = 0
     This.InconclusiveCount = 0
-    This.TestCount = 6
+    This.TestCount = 8
     Dim p_testNumber As Integer
     For p_testNumber = 1 To This.TestCount
         Set p_outcome = RunTest(p_testNumber)
@@ -394,9 +394,9 @@ End Sub
 ''' <summary>   Unit test. Asserts that view model should initialize. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestViewModelShouldInitialize() As cc_isr_Test_Fx.Assert
+Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestViewModelShouldInitialize"
+    Const p_procedureName As String = "TestShouldInitialize"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -423,9 +423,9 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestViewModelShouldInitialize")
+    Debug.Print p_outcome.BuildReport("TestShouldInitialize")
     
-    Set TestViewModelShouldInitialize = p_outcome
+    Set TestShouldInitialize = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -448,9 +448,9 @@ End Function
 ''' <summary>   Unit test. Asserts that view model should connect. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestViewModelShouldBeConnected() As cc_isr_Test_Fx.Assert
+Public Function TestShouldBeConnected() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestViewModelShouldBeConnected"
+    Const p_procedureName As String = "TestShouldBeConnected"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -514,9 +514,9 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestViewModelShouldBeConnected")
+    Debug.Print p_outcome.BuildReport("TestShouldBeConnected")
     
-    Set TestViewModelShouldBeConnected = p_outcome
+    Set TestShouldBeConnected = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -539,9 +539,9 @@ End Function
 ''' <summary>   Asserts that view model should read cards. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function AssertViewModelShouldReadCards() As cc_isr_Test_Fx.Assert
+Public Function AssertShouldReadCards() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "AssertViewModelShouldReadCards"
+    Const p_procedureName As String = "AssertShouldReadCards"
 
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
@@ -581,14 +581,15 @@ Public Function AssertViewModelShouldReadCards() As cc_isr_Test_Fx.Assert
         Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
             "Last error message should be empty but found: '" & This.ViewModel.LastErrorMessage & "'.")
 
+    Set AssertShouldReadCards = p_outcome
 End Function
 
 ''' <summary>   Unit test. Asserts that view model should read cards. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestViewModelShouldReadCards() As cc_isr_Test_Fx.Assert
+Public Function TestShouldReadCards() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestViewModelShouldReadCards"
+    Const p_procedureName As String = "TestShouldReadCards"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -600,7 +601,7 @@ Public Function TestViewModelShouldReadCards() As cc_isr_Test_Fx.Assert
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = AssertViewModelShouldReadCards()
+        Set p_outcome = AssertShouldReadCards()
     End If
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -609,9 +610,9 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestViewModelShouldReadCards")
+    Debug.Print p_outcome.BuildReport("TestShouldReadCards")
     
-    Set TestViewModelShouldReadCards = p_outcome
+    Set TestShouldReadCards = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -634,9 +635,9 @@ End Function
 ''' <summary>   Unit test. Asserts that view model should restore known state. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestViewModelShouldRestoreKnownState() As cc_isr_Test_Fx.Assert
+Public Function TestShouldRestoreKnownState() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestViewModelShouldRestoreKnownState"
+    Const p_procedureName As String = "TestShouldRestoreKnownState"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -739,9 +740,9 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestViewModelShouldRestoreKnownState")
+    Debug.Print p_outcome.BuildReport("TestShouldRestoreKnownState")
     
-    Set TestViewModelShouldRestoreKnownState = p_outcome
+    Set TestShouldRestoreKnownState = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -764,9 +765,9 @@ End Function
 ''' <summary>   Unit test. Asserts recovery from Syntax error. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestRecoveryFromSyntaxError() As Assert
+Public Function TestShouldRecoverFromSyntaxError() As Assert
 
-    Const p_procedureName As String = "TestRecoveryFromSyntaxError"
+    Const p_procedureName As String = "TestShouldRecoverFromSyntaxError"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -810,7 +811,7 @@ Public Function TestRecoveryFromSyntaxError() As Assert
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = AssertViewModelShouldReadCards()
+        Set p_outcome = AssertShouldReadCards()
     End If
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -819,9 +820,9 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestQueryOperationCompletion")
+    Debug.Print p_outcome.BuildReport("TestShouldRecoverFromSyntaxError")
     
-    Set TestRecoveryFromSyntaxFromError = p_outcome
+    Set TestShouldRecoverFromSyntaxError = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -841,12 +842,12 @@ err_Handler:
     
 End Function
 
-''' <summary>   Unit test. Asserts recovery from read after write true condition. </summary>
+''' <summary>   Unit test. Asserts that view model should recover from read after write true condition. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestRecoveryFromReadAfterWriteTrue() As Assert
+Public Function TestShouldRecoverFromReadAfterWriteTrue() As Assert
 
-    Const p_procedureName As String = "TestRecoveryFromReadAfterWriteTrue"
+    Const p_procedureName As String = "TestShouldRecoverFromReadAfterWriteTrue"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -873,24 +874,24 @@ Public Function TestRecoveryFromReadAfterWriteTrue() As Assert
     If p_outcome.AssertSuccessful Then
         This.ViewModel.Device.CloseConnection
         Set p_outcome = Assert.IsFalse(This.ViewModel.Device.Connected, _
-            "IEEE488 Device should be disconnected.")
+            "View Model should be disconnected.")
     End If
     
     If p_outcome.AssertSuccessful Then
         This.ViewModel.RestoreKnownState
         Set p_outcome = Assert.IsTrue(This.ViewModel.Device.Connected, _
-            "IEEE488 Device should be connected.")
+            "View Model should be connected.")
     End If
     
     If p_outcome.AssertSuccessful Then
         p_expectedReply = "1"
         p_actualReply = This.ViewModel.Device.QueryOperationCompleted()
         Set p_outcome = Assert.AreEqual(p_expectedReply, p_actualReply, _
-            "IEEE488 Device should query operation completion.")
+            "View Model should query operation completion.")
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = AssertViewModelShouldReadCards()
+        Set p_outcome = AssertShouldReadCards()
     End If
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -899,9 +900,9 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestRecoveryFromReadAfterWriteTrue")
+    Debug.Print p_outcome.BuildReport("TestShouldRecoverFromReadAfterWriteTrue")
     
-    Set TestRecoveryFromReadAfterWriteTrue = p_outcome
+    Set TestShouldRecoverFromReadAfterWriteTrue = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -926,9 +927,9 @@ End Function
 ''' <summary>   Unit test. Asserts that view model should configure immediate mode. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestViewModelShouldConfigureImmediateMode() As cc_isr_Test_Fx.Assert
+Public Function TestShouldConfigureImmediateMode() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestViewModelShouldConfigureImmediateMode"
+    Const p_procedureName As String = "TestShouldConfigureImmediateMode"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -1046,9 +1047,9 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestViewModelShouldConfigureImmediateMode")
+    Debug.Print p_outcome.BuildReport("TestShouldConfigureImmediateMode")
     
-    Set TestViewModelShouldConfigureImmediateMode = p_outcome
+    Set TestShouldConfigureImmediateMode = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -1071,9 +1072,9 @@ End Function
 ''' <summary>   Unit test. Asserts that view model should configure external mode. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestViewModelShouldConfigureExternalMode() As cc_isr_Test_Fx.Assert
+Public Function TestShouldConfigureExternalMode() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestViewModelShouldConfigureExternalMode"
+    Const p_procedureName As String = "TestShouldConfigureExternalMode"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -1163,9 +1164,9 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestViewModelShouldConfigureExternalMode")
+    Debug.Print p_outcome.BuildReport("TestShouldConfigureExternalMode")
     
-    Set TestViewModelShouldConfigureExternalMode = p_outcome
+    Set TestShouldConfigureExternalMode = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -1189,9 +1190,9 @@ End Function
 ''' <summary>   Unit test. Asserts that view model should monitor triggering. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestViewModelShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
+Public Function TestShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestViewModelShouldMonitorTriggering"
+    Const p_procedureName As String = "TestShouldMonitorTriggering"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -1323,9 +1324,9 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestViewModelShouldMonitorTriggering")
+    Debug.Print p_outcome.BuildReport("TestShouldMonitorTriggering")
     
-    Set TestViewModelShouldMonitorTriggering = p_outcome
+    Set TestShouldMonitorTriggering = p_outcome
     
     On Error GoTo 0
     Exit Function

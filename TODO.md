@@ -3,15 +3,10 @@
 ## GIT:
 
 IEEE488:
-Fix test function names.
-Add reply to reset known state.
+Fix test names and report names.
 
 SCPI:
-View Model: Add reply from the reset and clear commands.
-Add restoring the GPIB-Lan interface device to its know state.
-Add recovery tests.
-
-
+Device error reader: return the number of errors queued.
 
 
 ## TODO

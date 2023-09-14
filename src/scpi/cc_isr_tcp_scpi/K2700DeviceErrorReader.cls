@@ -75,13 +75,13 @@ End Function
 '''                              the reply. Note that a comma separates the device error number and error
 '''                              description. </param>
 ''' <param name="a_decorator">   [String] the decorator around the message part of the device error. </param>
-''' <value>   [Boolean] true if errors available. </value>
+''' <value>   [Integer] the number of dequeued errors. </value>
 Private Function IDeviceErrorReader_TryDequeueDeviceErrors(ByRef a_errors As String, _
     Optional ByVal a_decorator As String = """", _
-    Optional ByVal a_delimiter As String = VBA.vbCrLf) As Boolean
+    Optional ByVal a_delimiter As String = VBA.vbCrLf) As Integer
 
     Dim p_delimiter As String
-    Dim p_errorAvailable As Boolean
+    Dim p_errorsCount As Integer
     On Error Resume Next
     
     Dim p_builder As String
@@ -104,15 +104,16 @@ Private Function IDeviceErrorReader_TryDequeueDeviceErrors(ByRef a_errors As Str
         Else
             p_builder = p_builder & p_delimiter & p_errorNumber & "," & p_errorMessage
             p_done = True
-            p_errorAvailable = True
+            p_errorsCount = p_errorsCount + 1
         End If
         
         p_delimiter = IIf(VBA.vbNullString = p_builder, VBA.vbNullString, a_delimiter)
         
+        ' enqueue a VBA Error as a device error.
         If Err.Number <> 0 Then
-            p_builder = p_builder & p_delimiter & VBA.CStr(Err.Number) & "," & Err.Description
+            p_builder = p_builder & p_delimiter & VBA.CStr(Err.Number) & ",Application error: " & Err.Description
             p_done = True
-            p_errorAvailable = True
+            p_errorsCount = p_errorsCount + 1
         End If
     
     Loop Until p_done
@@ -120,7 +121,7 @@ Private Function IDeviceErrorReader_TryDequeueDeviceErrors(ByRef a_errors As Str
     On Error GoTo 0
     
     a_errors = p_builder
-    IDeviceErrorReader_TryDequeueDeviceErrors = p_errorAvailable
+    IDeviceErrorReader_TryDequeueDeviceErrors = p_errorsCount
     
 
 End Function

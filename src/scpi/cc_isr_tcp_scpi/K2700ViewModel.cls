@@ -2786,10 +2786,23 @@ Public Function ShouldRestoreState(ByRef a_message As String) As Boolean
 End Function
 
 ''' <summary>   Restores the instrument to its known state in case the instrument power
-'''             was toggled. </summary>
+''' was toggled or a recovery from error is needed. </summary>
 ''' <remarks>   This method attempts to restore the instrument to a known state in case it is
-'''             powered off while the program is active. </remarks>
+''' powered off while the program is active as follows:
+''' - The user defined errors are cleared;
+''' - The View Model is initialized if the instrument is nothing;
+''' - The View Model is connected if it is not connected;
+''' - The GPIB-Lan device is restored to its known state;
+''' - The instrument is set to its known state if sense function needs to be restored;
+'''     - otherwise, the instrument is set to its clear known state.
+''' </remarks>
 Public Sub RestoreKnownState()
+
+    ' enumerate and report any accumulated errors.
+    Me.LastErrorMessage = This.K2700.EnumerateErrors()
+    
+    ' clear the error state
+    cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
 
     If This.K2700 Is Nothing Then Me.Initialize
     
@@ -2815,6 +2828,11 @@ Public Sub RestoreKnownState()
         
         OnInstrumentConnected
     
+    Else
+    
+        ' clear the instrument execution state to remove any lingering errors
+        Me.ClearExecutionState
+        
     End If
     
 End Sub
@@ -3698,10 +3716,10 @@ Private Sub OnInstrumentConnected()
     
     Dim p_errors As String
     If This.K2700.DeviceErrorReader.TryDequeueDeviceErrors(p_errors) Then
-        cc_isr_Core_IO.UserDefinedErrors.RaiseError _
+        Me.LastErrorMessage = cc_isr_Core_IO.UserDefinedErrors.EnqueueError( _
             cc_isr_Core_IO.UserDefinedErrors.Ieee488DeviceError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".OnInstrumentConnected", _
-            " Device error(s) occurred on session connection: " & p_errors
+            " Device error(s) occurred on session connection: " & p_errors).ToString()
     End If
     
     This.ViSession.GpibLan.SelectiveDeviceClear
@@ -3730,10 +3748,10 @@ Private Sub OnInstrumentConnected()
     ' report any errors.
     
     If This.K2700.DeviceErrorReader.TryDequeueDeviceErrors(p_errors) Then
-        cc_isr_Core_IO.UserDefinedErrors.RaiseError _
+        Me.LastErrorMessage = cc_isr_Core_IO.UserDefinedErrors.EnqueueError( _
             cc_isr_Core_IO.UserDefinedErrors.Ieee488DeviceError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".OnInstrumentConnected", _
-            " Device error(s) occurred on session initialization: " & p_errors
+            " Device error(s) occurred on session initialization: " & p_errors).ToString()
     End If
     
 End Sub
@@ -4412,6 +4430,9 @@ End Function
 ''' <returns>   [Boolean] True if the <see cref="Connectable"/> is connected. </returns>
 Private Function IConnectable_OpenConnection(ByVal a_host As String, ByVal a_port As Long, _
         Optional ByVal a_timeoutMs As Long = 500&) As Boolean
+
+    ' clear the error state
+    cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
 
     Dim p_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs
     Set p_eventArgs = cc_isr_Winsock.Factory.NewConnectionChangingEventArgs.Initialize(Me.Connected)

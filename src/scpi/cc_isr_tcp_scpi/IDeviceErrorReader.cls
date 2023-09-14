@@ -56,10 +56,10 @@ End Function
 '''                              the reply. Note that a comma separates the device error number and error
 '''                              description. </param>
 ''' <param name="a_decorator">   [String] the decorator around the message part of the device error. </param>
-''' <value>   [Boolean] true if errors available. </value>
+''' <value>   [Integer] the number of dequeued errors. </value>
 Public Function TryDequeueDeviceErrors(ByRef a_errors As String, _
     Optional ByVal a_decorator As String = """", _
-    Optional ByVal a_delimiter As String = VBA.vbCrLf) As Boolean
+    Optional ByVal a_delimiter As String = VBA.vbCrLf) As Integer
 End Function
 
 ''' <summary>   Tries to parse a device error into a number and a message. </summary>

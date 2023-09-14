@@ -172,6 +172,68 @@ End Function
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
+''' <summary>   Enumarates device, queued and archived errors. </summary>
+''' <para name="a_delimiter">   [String] a delimiter for concatenating error messages
+'''                             from the error queue. </param>
+Public Function EnumerateErrors(Optional ByVal a_delimiter As String = VBA.vbCrLf) As String
+
+    Dim p_archivedErrorCount As Integer
+    p_archivedErrorCount = cc_isr_Core_IO.UserDefinedErrors.ArchivedErrorCount
+    
+    Dim p_queuedErrorCount As Integer
+    p_queuedErrorCount = cc_isr_Core_IO.UserDefinedErrors.QueuedErrorCount
+
+    Dim p_deviceErrors As String
+    Dim p_deviceErrorsCount As Integer
+    If This.DeviceErrorReader Is Nothing Or This.ViSession Is Nothing Then
+        p_deviceErrorsCount = 0
+        p_deviceErrors = VBA.vbNullString
+    ElseIf This.ViSession.Connected Then
+        p_deviceErrorsCount = Me.DeviceErrorReader.TryDequeueDeviceErrors(p_deviceErrors)
+    End If
+    
+    ' if has device errors, enqueue the device error(s) to be asserted below.
+    If p_deviceErrorsCount > 0 Then
+        cc_isr_Core_IO.UserDefinedErrors.EnqueueError _
+            cc_isr_Core_IO.UserDefinedErrors.Ieee488DeviceError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".IErrTracer_AssertLeftoverErrors", _
+            " The 2700 instrument error(s): " & p_deviceErrors & "."
+    End If
+    
+    Dim p_outcome As String
+    p_outcome = VBA.vbNullString
+    If p_archivedErrorCount + p_queuedErrorCount + p_deviceErrorsCount > 0 Then
+        
+        ' if we have leftover errors, move the queued errors to the archive
+        Dim p_queuedErrors As String
+        p_queuedErrors = cc_isr_Core_IO.UserDefinedErrors.ArchiveQueuedErrors()
+        
+        ' build the errors to report from the archive.
+        Dim p_archivedErrors As String
+        p_archivedErrors = cc_isr_Core_IO.UserDefinedErrors.PopArchivedErrors()
+        
+        p_outcome = VBA.vbNullString
+        If p_deviceErrorsCount > 0 Then _
+            p_outcome = "Found instrument error(s) (" & VBA.CStr(p_deviceErrorsCount) & ")"
+            
+        If p_queuedErrorCount > 0 Then _
+            p_outcome = p_outcome & IIf(p_deviceErrorsCount > 0, " and ", "Found ") & _
+                "Enqueued errors (" & VBA.CStr(p_queuedErrorCount) & ")"
+
+        If p_archivedErrorCount > 0 Then _
+            p_outcome = p_outcome & IIf(p_deviceErrorsCount + p_queuedErrorCount > 0, " and ", "Found ") & _
+                "Archived errors (" & VBA.CStr(p_queuedErrorCount) & ")"
+        
+        p_outcome = p_outcome & ":" & VBA.vbCrLf & p_archivedErrors
+        
+    End If
+    
+    EnumerateErrors = p_outcome
+
+End Function
+
+
+
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 '  Take measurements
