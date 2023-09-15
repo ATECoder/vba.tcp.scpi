@@ -650,12 +650,12 @@ Public Function TestShouldRestoreKnownState() As cc_isr_Test_Fx.Assert
     
     ' proceed with test assertions.
 
-    Dim p_message As String: p_message = VBA.vbNullString
+    Dim p_details As String: p_details = VBA.vbNullString
 
     ' check if we need to restore the GPIB-Lan know state.
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreGpibLanKnownState(p_message), _
-            "The GPIB-Lan should be in its expected known state upon connecting; " & p_message)
+        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreKnownState(p_details), _
+            "The GPIB-Lan should be in its expected known state upon connecting; " & p_details)
     End If
 
     Dim p_expectedSenseFunctionName As String: p_expectedSenseFunctionName = "VOLT:DC"
@@ -681,9 +681,9 @@ Public Function TestShouldRestoreKnownState() As cc_isr_Test_Fx.Assert
     
     ' now that the function was changed, a resore should be required
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.IsTrue(This.ViewModel.ShouldRestoreSenseFunction(p_actualSenseFunctionName, p_message), _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.ShouldRestoreSenseFunction(p_actualSenseFunctionName, p_details), _
             "Restore should be required after setting the function to: '" & p_actualSenseFunctionName & "'; " & _
-            p_message)
+            p_details)
     End If
     
     ' if restore is required we should restore
@@ -693,21 +693,21 @@ Public Function TestShouldRestoreKnownState() As cc_isr_Test_Fx.Assert
         p_actualSenseFunctionName = This.ViewModel.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
         
         ' once restore, restore should no longer be required
-        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreSenseFunction(p_actualSenseFunctionName, p_message), _
+        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreSenseFunction(p_actualSenseFunctionName, p_details), _
             "Restore should not be required after restoring the function to: '" & p_actualSenseFunctionName & "'; " & _
-            p_message)
+            p_details)
         
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreGpibLanKnownState(p_message), _
-            "The GPIB-Lan should be in its expected known state after restoring state #1; " & p_message)
+        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreKnownState(p_details), _
+            "The View Model should be in its expected known state after restoring state #1; " & p_details)
     End If
     
     If p_outcome.AssertSuccessful Then
         This.ViewModel.ViSession.GpibLan.AssertTalkAfterWriteAllowed = True
-        Set p_outcome = Assert.IsTrue(This.ViewModel.ShouldRestoreGpibLanKnownState(p_message), _
-            "The GPIB-Lan should not be in its expected known state after setting allowing to assert talk after write ('" & _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.ShouldRestoreKnownState(p_details), _
+            "The View Model should not be in its expected known state after setting allowing to assert talk after write ('" & _
             VBA.CStr(This.ViewModel.ViSession.GpibLan.AssertTalkAfterWriteAllowed) & "').")
     End If
     
@@ -717,16 +717,16 @@ Public Function TestShouldRestoreKnownState() As cc_isr_Test_Fx.Assert
         This.ViewModel.RestoreKnownState
         
         ' once restored, restore should no longer be required
-        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreSenseFunction(p_actualSenseFunctionName, p_message), _
+        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreSenseFunction(p_actualSenseFunctionName, p_details), _
             "Restore should not be required after restoring the assert talk after write to: '" & _
             VBA.CStr(This.ViewModel.ViSession.GpibLan.AssertTalkAfterWriteAllowed) & "'; " & _
-            p_message)
+            p_details)
         
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreGpibLanKnownState(p_message), _
-            "The GPIB-Lan should be in its expected known state after restoring know state #2; " & p_message)
+        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreKnownState(p_details), _
+            "The View Model should be in its expected known state after restoring know state #2; " & p_details)
     End If
     
     ' Finally, verify that no error message was recorded.

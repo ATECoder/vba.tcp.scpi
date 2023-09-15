@@ -2661,43 +2661,18 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Returns true and some details if the GPIB-Lan device needs to be
-''' Restored to its known state; i.e., if the <see cref="GpibLan.AssertTalkAfterWriteAllowed"/> state
-''' is not as expected or not equal to the <see cref="GpibLan.ReadAfterWriteEnabled"/>. </summary>
-''' <param name="p_details">    [String] Details why the GPIB-Lan needs to be resored to
-'''                             its known state. </param>
-''' <returns>   [Boolean]. </returns>
-Public Function ShouldRestoreGpibLanKnownState(ByRef p_details As String) As Boolean
-
-    ShouldRestoreGpibLanKnownState = This.Device.ShouldRestoreGpibLanKnownState( _
-            This.AssertTalkAfterWriteAllowed, p_details)
-
-End Function
-
-''' <summary>   Restores the  GPIB-Lan interface device to its known state. </summary>
-''' <param name="p_details">    [String] Details why the GPIB-Lan failed to restore to
-'''                             its known state. </param>
-''' <returns>   [Boolean]. </returns>
-Public Function RestoreGpibLanKnownState(ByRef p_details As String) As Boolean
-
-    RestoreGpibLanKnownState = This.Device.RestoreGpibLanKnownState( _
-            This.AssertTalkAfterWriteAllowed, p_details)
-
-End Function
-
-
 ''' <summary>   Returns true and a message if the specified sense function matched neither
 ''' one of sense functions of the defferent measurement modes. </summary>
 ''' <param name="a_senseFunction">   [String] The actual sense function. </param>
-''' <param name="p_details">         [String] Details why the sense function needs to be restored. </param>
+''' <param name="a_details">         [String] Details why the sense function needs to be restored. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function ShouldRestoreSenseFunction(ByVal a_senseFunction As String, _
-    ByRef p_details As String) As Boolean
+    ByRef a_details As String) As Boolean
 
     If Not ((1 = InStr(1, This.ContinuousSenseFunctionName, a_senseFunction, vbTextCompare)) Or _
             (1 = InStr(1, This.ImmediateSenseFunctionName, a_senseFunction, vbTextCompare)) Or _
             (1 = InStr(1, This.ExternalSenseFunctionName, a_senseFunction, vbTextCompare))) Then
-        p_details = "The K2700 device current sense function '" & a_senseFunction & _
+        a_details = "The K2700 device current sense function '" & a_senseFunction & _
             "' is not set; it must be set to either " & _
             This.ContinuousSenseFunctionName & " or " & _
             This.ImmediateSenseFunctionName & " or " & _
@@ -2710,15 +2685,21 @@ Public Function ShouldRestoreSenseFunction(ByVal a_senseFunction As String, _
 End Function
 
 ''' <summary>   Returns true and a message if the instrument is nothing or not conneced. </summary>
-''' <param name="p_details">   [String] Details why the view model needs to connect. </param>
+''' <param name="a_details">   [String] Details why the view model needs to connect. </param>
 ''' <returns>   [Boolean]. </returns>
-Public Function ShouldConnect(ByRef p_details As String) As Boolean
+Public Function ShouldConnect(ByRef a_details As String) As Boolean
 
     If This.K2700 Is Nothing Then
-        p_details = "The K2700 device instance is nothing."
+        a_details = "The K2700 device instance is nothing."
+        ShouldConnect = True
+    ElseIf This.Device Is Nothing Then
+        a_details = "The IEEE488 device instance is nothing."
+        ShouldConnect = True
+    ElseIf This.ViSession Is Nothing Then
+        a_details = "The VI Session instance is nothing."
         ShouldConnect = True
     ElseIf Not Me.Connected Then
-        p_details = "The view model is not connected to " & This.Host & ":" & VBA.CStr(This.Port) & "."
+        a_details = "The view model is not connected to " & This.Host & ":" & VBA.CStr(This.Port) & "."
         ShouldConnect = True
     Else
         ShouldConnect = False
@@ -2729,17 +2710,19 @@ End Function
 ''' <summary>   Returns true and a message if the current state does not match the expected restore state. </summary>
 ''' <remarks>   This is the expected state for making resistance measurements. In future releases
 ''' we could define a set of states. </remarks>
-''' <param name="p_details">   [String] Details why the view model needs to be resotred to its known state. </param>
+''' <param name="a_details">   [String] Details why the view model needs to be resotred to its known state. </param>
 ''' <returns>   [Boolean]. </returns>
-Public Function ShouldRestoreState(ByRef p_details As String) As Boolean
+Public Function ShouldRestoreKnownState(ByRef a_details As String) As Boolean
 
-    If Me.ShouldConnect(p_details) Then
-        ShouldRestoreState = True
+    If Me.ShouldConnect(a_details) Then
+        ShouldRestoreKnownState = True
+    ElseIf This.Device.ShouldRestoreKnownState(This.AssertTalkAfterWriteAllowed, a_details) Then
+        ShouldRestoreKnownState = True
     Else
         ' validate the sense function
         Dim p_senseFunction As String
         p_senseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
-        ShouldRestoreState = Me.ShouldRestoreSenseFunction(p_senseFunction, p_details)
+        ShouldRestoreKnownState = Me.ShouldRestoreSenseFunction(p_senseFunction, a_details)
     End If
 
 End Function
@@ -2775,11 +2758,11 @@ Public Sub RestoreKnownState()
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".RestoreKnownState", _
             " Failed connecting to " & This.Host & ":" & VBA.CStr(This.Port) & "."
     
-    ' restore the GPIB-Lan device to its known state.
-    If Not Me.RestoreGpibLanKnownState(p_details) Then
+    ' restore the IEEE488 device state
+    If Not This.Device.ResetKnownState(p_details) Then
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".RestoreKnownState", _
-            " Failed restoring GPIB_Lan to its known state; " & p_details
+            " Failed restoring IEEE 488 device to its known state; " & p_details
     End If
     
     ' validate the sense function

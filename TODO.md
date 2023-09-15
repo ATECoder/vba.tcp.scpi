@@ -2,23 +2,19 @@
 
 ## GIT:
 
-Core:
-Add parsing methods and unit tests. 
-
-IEEE488
-Add vi session receive string to be used for clearing the instrument queue against query interrupted errors.
-Add Restore Known State to the device.
-Use string extension parsing to parse data from the instrument.
-Fix restoring GPIB Lan state.
+IEEE488:
 
 SCPI:
-Fix document typos.
-Use string extension parsing when reading device values.
-Use the IEEE 488 device for determining the restore of the gpib lan device.
-
-
+Update restoring known state.
 
 ## TODO
+
+!! it looks like we have an issue with reading device errors and that the serial poll is left handling in the queue. 
+possibly we need a longer timeout to read the serial poll from the GPIB Lan.
+
+!!! trace using device test where the leftover reading comes from.
+
+
 
 ### SCPI View Model Test:
 continue checking the restore.  See if the code that clears the queue fixes this issue.
