@@ -3,11 +3,24 @@
 ## GIT:
 
 IEEE488:
+Work in progress on restoring state.
+It looks like the GPIB Lan device is failing to return the correct value.
+We need to run more unit tests on the GPIB Lan device testing getting Read after write and serial poll consistently.
+
 
 SCPI:
 Update restoring known state.
 
 ## TODO
+
+IEEE488.
+It looks like the GPIB Lan device is failing to return the correct value.
+We need to run more unit tests on the GPIB Lan device testing getting Read after write and serial poll consistently.
+
+
+
+the instrument is left with 16/n  on the output. possible a serial pool reading.
+
 
 !! it looks like we have an issue with reading device errors and that the serial poll is left handling in the queue. 
 possibly we need a longer timeout to read the serial poll from the GPIB Lan.

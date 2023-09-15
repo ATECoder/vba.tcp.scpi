@@ -193,8 +193,15 @@ Private Sub Workbook_Open()
     ' hide this and all referenced workbooks
     Dim p_workbook As Workbook
     For Each p_workbook In Me.ProjectWorkbooks
+        
+        ' mark workbook as saved when opened.
+        p_workbook.Saved = True
+        
+        ' hide the workbook
         cc_isr_Core_IO.WorkbookExtensions.Hide p_workbook
+        
         DoEvents
+    
     Next p_workbook
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
