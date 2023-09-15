@@ -34,7 +34,7 @@ Public Enum TriggerSource
 End Enum
 
 ''' <summary>   Returns a reference to the <see cref="TriggerSystem"/>. </summary>
-''' <param name="a_session">    [<see cref="<see cref="cc_isr_IEEE488.VISession"/>"/>] A connected session. </param>
+''' <param name="a_session">    [<see cref="<see cref="cc_isr_IEEE488.VISession"/>] A connected session. </param>
 ''' <value>   [<see cref="TriggerSystem"/>]. </returns>
 Public Function Initialize(ByVal a_session As cc_isr_Ieee488.ViSession) As TriggerSystem
     Set This.ViSession = a_session
@@ -89,10 +89,10 @@ Public Function ContinuousEnabledGetter() As Boolean
 End Function
 
 ''' <summary>   Sets the continuous enabled. </summary>
-''' <param name="a_value">   [Boolean] The continuous enabled to set. </param >
-Public Function ContinuousEnabledSetter(ByVal a_value As Boolean)
-    This.ViSession.WriteLine ("CONT " & IIf(a_value, "ON", "OFF"))
-    This.ContinuousEnabled = a_value
+''' <param name="p_value">   [Boolean] The continuous enabled to set. </param >
+Public Function ContinuousEnabledSetter(ByVal p_value As Boolean)
+    This.ViSession.WriteLine ("CONT " & IIf(p_value, "ON", "OFF"))
+    This.ContinuousEnabled = p_value
 End Function
 
 ''' <summary>   Gets the last set or get sample count. </summary>
@@ -104,17 +104,24 @@ End Property
 ''' <summary>   Gets the sample count. </summary>
 ''' <returns>   [Long]. </returns>
 Public Function SampleCountGetter() As Long
-    Dim p_value As String
-    p_value = This.ViSession.QueryLine("SAMP:COUN?")
-    This.SampleCount = CLng(p_value)
+    Dim p_command As String: p_command = "SAMP:COUN?"
+    Dim p_details As String
+    Dim p_value As Long
+    If Not cc_isr_Core.StringExtensions.TryParseLong(This.ViSession.QueryLine(p_command), _
+            p_value, p_details) Then
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".SampleCountGetter", _
+            " Failed getting the sample count using '" & p_command & "'. Details: " & p_details
+    End If
+    This.SampleCount = p_value
     SampleCountGetter = This.SampleCount
 End Function
 
 ''' <summary>   Sets the sample count. </summary>
-''' <param name="a_value">   [Long] The sample count to set. </param >
-Public Function SampleCountSetter(ByVal a_value As Long)
-    This.ViSession.WriteLine ("SAMP:COUN " & VBA.CStr(a_value))
-    This.SampleCount = a_value
+''' <param name="p_value">   [Long] The sample count to set. </param >
+Public Function SampleCountSetter(ByVal p_value As Long)
+    This.ViSession.WriteLine ("SAMP:COUN " & VBA.CStr(p_value))
+    This.SampleCount = p_value
 End Function
 
 
@@ -125,23 +132,23 @@ Public Property Get Source() As cc_isr_Tcp_Scpi.TriggerSource
 End Property
 
 ''' <summary>   Sets the <see cref="TriggerSource"/>. </summary>
-''' <param name="a_value">   [<see cref="TriggerSource"/>] the trigger source. </param>
-Public Sub SourceSetter(ByVal a_value As cc_isr_Tcp_Scpi.TriggerSource)
+''' <param name="p_value">   [<see cref="TriggerSource"/>] the trigger source. </param>
+Public Sub SourceSetter(ByVal p_value As cc_isr_Tcp_Scpi.TriggerSource)
 
-    If cc_isr_Tcp_Scpi.TriggerSource.Immediate = a_value Then
+    If cc_isr_Tcp_Scpi.TriggerSource.Immediate = p_value Then
         This.ViSession.WriteLine ":TRIG:SOUR IMM"
-    ElseIf cc_isr_Tcp_Scpi.TriggerSource.External = a_value Then
+    ElseIf cc_isr_Tcp_Scpi.TriggerSource.External = p_value Then
         ' for some reason the old application had the trigger source toggled
         ' if requesting an external trigger source
         ' This.ViSession.WriteLine ":TRIG:SOUR IMM"
         This.ViSession.WriteLine ":TRIG:SOUR EXT"
     End If
-    This.Source = a_value
+    This.Source = p_value
     
 End Sub
 
 ''' <summary>   Gets the <see cref="TriggerSource"/>. </summary>
-''' <param name="a_value">   [<see cref="TriggerSource"/>] the trigger source. </param>
+''' <param name="p_value">   [<see cref="TriggerSource"/>] the trigger source. </param>
 Public Function SourceGetter() As cc_isr_Tcp_Scpi.TriggerSource
 
     Dim p_source As String
@@ -167,17 +174,27 @@ End Property
 ''' <summary>   Gets the Trigger count. </summary>
 ''' <returns>   [Long]. </returns>
 Public Function TriggerCountGetter() As Long
-    Dim p_value As String
-    p_value = This.ViSession.QueryLine("TRIG:COUN?")
-    This.TriggerCount = CLng(p_value)
+    
+    Dim p_command As String: p_command = "TRIG:COUN?"
+    Dim p_details As String
+    Dim p_value As Long
+    If Not cc_isr_Core.StringExtensions.TryParseLong(This.ViSession.QueryLine(p_command), _
+            p_value, p_details) Then
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".SampleCountGetter", _
+            " Failed getting the sample count using '" & p_command & "'. Details: " & p_details
+    End If
+    
+    This.TriggerCount = p_value
     TriggerCountGetter = This.TriggerCount
+    
 End Function
 
 ''' <summary>   Sets the Trigger count. </summary>
-''' <param name="a_value">   [Long] The Trigger count to set. </param >
-Public Function TriggerCountSetter(ByVal a_value As Long)
-    This.ViSession.WriteLine ("TRIG:COUN " & VBA.CStr(a_value))
-    This.TriggerCount = a_value
+''' <param name="p_value">   [Long] The Trigger count to set. </param >
+Public Function TriggerCountSetter(ByVal p_value As Long)
+    This.ViSession.WriteLine ("TRIG:COUN " & VBA.CStr(p_value))
+    This.TriggerCount = p_value
 End Function
 
 

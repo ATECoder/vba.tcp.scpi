@@ -22,7 +22,7 @@ End Type
 Private This As this_
 
 ''' <summary>   Returns a reference to the <see cref="ScpiSystem"/>. </summary>
-''' <param name="a_session">    [<see cref="<see cref="cc_isr_IEEE488.VISession"/>"/>] A connected session. </param>
+''' <param name="a_session">    [<see cref="<see cref="cc_isr_IEEE488.VISession"/>] A connected session. </param>
 ''' <value>   [<see cref="ScpiSystem"/>]. </returns>
 Public Function Initialize(ByVal a_session As cc_isr_Ieee488.ViSession) As ScpiSystem
     Set This.ViSession = a_session
@@ -55,7 +55,7 @@ End Sub
 ''' <summary>   Query INPUTS switch (0=rear, 1=front). </summary>
 ''' <value>   [Boolean] true if the inputs are set to the front panel. </value>
 Public Function QueryFrontSwitch() As Boolean
-    QueryFrontSwitch = 1 = This.ViSession.QueryLine(":SYST:FRSW?")
+    QueryFrontSwitch = "1" = This.ViSession.QueryLine(":SYST:FRSW?")
 End Function
 
 ''' <summary>   Return to :SYST:PRES defaults. </summary>

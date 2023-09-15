@@ -70,7 +70,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 2
+    RunTest 4
     AfterAll
 End Sub
 
@@ -716,7 +716,7 @@ Public Function TestShouldRestoreKnownState() As cc_isr_Test_Fx.Assert
         
         This.ViewModel.RestoreKnownState
         
-        ' once restore, restore should no longer be required
+        ' once restored, restore should no longer be required
         Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreSenseFunction(p_actualSenseFunctionName, p_message), _
             "Restore should not be required after restoring the assert talk after write to: '" & _
             VBA.CStr(This.ViewModel.ViSession.GpibLan.AssertTalkAfterWriteAllowed) & "'; " & _

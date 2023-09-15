@@ -23,7 +23,7 @@ End Type
 Private This As this_
 
 ''' <summary>   Returns a reference to the <see cref="SenseSystem"/>. </summary>
-''' <param name="a_session">    [<see cref="<see cref="cc_isr_IEEE488.VISession"/>"/>] A connected session. </param>
+''' <param name="a_session">    [<see cref="<see cref="cc_isr_IEEE488.VISession"/>] A connected session. </param>
 ''' <value>   [<see cref="SenseSystem"/>]. </returns>
 Public Function Initialize(ByVal a_session As cc_isr_Ieee488.ViSession) As SenseSystem
     Set This.ViSession = a_session
@@ -58,10 +58,10 @@ Public Function AutoRangeEnabledGetter() As Boolean
 End Function
 
 ''' <summary>   Sets the Auto Range enabled. </summary>
-''' <param name="a_value">   [Boolean] The AutoRange enabled to set. </param >
-Public Function AutoRangeEnabledSetter(ByVal a_value As Boolean)
-    This.ViSession.WriteLine (":" & This.SenseFunction & ":RANG:AUTO " & IIf(a_value, "1", "0"))
-    This.AutoRangeEnabled = a_value
+''' <param name="p_value">   [Boolean] The AutoRange enabled to set. </param >
+Public Function AutoRangeEnabledSetter(ByVal p_value As Boolean)
+    This.ViSession.WriteLine (":" & This.SenseFunction & ":RANG:AUTO " & IIf(p_value, "1", "0"))
+    This.AutoRangeEnabled = p_value
 End Function
 
 ''' <summary>   Gets the last set or get Power Line Cycles. </summary>
@@ -73,17 +73,27 @@ End Property
 ''' <summary>   Gets the integration rate in Power Line Cycles. </summary>
 ''' <returns>   [Double]. </returns>
 Public Function PowerLineCyclesGetter() As Double
-    Dim p_value As String
-    p_value = This.ViSession.QueryLine(":" & This.SenseFunction & ":NPLC?")
-    This.PowerLineCycles = CDbl(p_value)
+    
+    Dim p_command As String: p_command = ":" & This.SenseFunction & ":NPLC?"
+    Dim p_details As String
+    Dim p_value As Double
+    If Not cc_isr_Core.StringExtensions.TryParseDouble(This.ViSession.QueryLine(p_command), _
+            p_value, p_details) Then
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".PowerLineCyclesGetter", _
+            " Failed getting the sense system power line cycles using the '" & _
+            p_command & "'. Details: " & p_details
+    End If
+    This.PowerLineCycles = p_value
     PowerLineCyclesGetter = This.PowerLineCycles
+    
 End Function
 
 ''' <summary>   Sets the integration rate in Power Line Cycles. </summary>
-''' <param name="a_value">   [Double] The integration rate in Power Line Cyclest. </param >
-Public Function PowerLineCyclesSetter(ByVal a_value As Double)
-    This.ViSession.WriteLine (":" & This.SenseFunction & ":NPLC " & VBA.CStr(a_value))
-    This.PowerLineCycles = a_value
+''' <param name="p_value">   [Double] The integration rate in Power Line Cyclest. </param >
+Public Function PowerLineCyclesSetter(ByVal p_value As Double)
+    This.ViSession.WriteLine (":" & This.SenseFunction & ":NPLC " & VBA.CStr(p_value))
+    This.PowerLineCycles = p_value
 End Function
 
 ''' <summary>   Gets the Sense Function/ </summary>
@@ -103,12 +113,12 @@ Public Function SenseFunctionGetter(Optional ByVal a_decorator As String = """")
 End Function
 
 ''' <summary>   Sets the sense function. </summary>
-''' <param name="a_value">       [String] the sense function. </param>
+''' <param name="p_value">       [String] the sense function. </param>
 ''' <param name="a_decorator">   [String] the decorator to append before and after the function name. </param>
-Public Sub SenseFunctionSetter(ByVal a_value As String, _
+Public Sub SenseFunctionSetter(ByVal p_value As String, _
         Optional ByVal a_decorator As String = "'")
 
-    This.SenseFunction = a_value
+    This.SenseFunction = p_value
     This.ViSession.WriteLine ":SENS:FUNC " & a_decorator & This.SenseFunction & a_decorator
 
 End Sub

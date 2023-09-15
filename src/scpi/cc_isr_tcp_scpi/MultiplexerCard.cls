@@ -80,10 +80,10 @@ Public Property Get SlotNumber() As Integer
 End Property
 
 ''' <summary>   Sets the multiplexer card Slot Number. </summary>
-''' <param name="a_value">   [Integer] The Slot Number of the card. </param>
-Public Property Let SlotNumber(ByVal a_value As Integer)
+''' <param name="p_value">   [Integer] The Slot Number of the card. </param>
+Public Property Let SlotNumber(ByVal p_value As Integer)
     
-    This.SlotNumber = a_value
+    This.SlotNumber = p_value
 
 End Property
 
@@ -106,12 +106,12 @@ End Property
 
 ''' <summary>   Sets the device channel number that corresponds to the
 '''             multiplexer card first channel number. </summary>
-''' <param name="a_value">   [Integer] The device channel that corresponds to
+''' <param name="p_value">   [Integer] The device channel that corresponds to
 '''                          the first channel of this card. </param>
-Public Property Let DeviceFirstChannel(ByVal a_value As Integer)
+Public Property Let DeviceFirstChannel(ByVal p_value As Integer)
     
-    This.DeviceFirstChannel = a_value
-    This.DeviceLastChannel = a_value + Me.FunctionalCapacity - 1
+    This.DeviceFirstChannel = p_value
+    This.DeviceLastChannel = p_value + Me.FunctionalCapacity - 1
 
 End Property
 
@@ -126,11 +126,11 @@ End Property
 
 ''' <summary>   Sets the device channel number that corresponds to the
 '''             multiplexer card last channel number. </summary>
-''' <param name="a_value">   [Integer] The device channel that corresponds to
+''' <param name="p_value">   [Integer] The device channel that corresponds to
 '''                          the last channel of this card. </param>
-Public Property Let DeviceLastChannel(ByVal a_value As Integer)
+Public Property Let DeviceLastChannel(ByVal p_value As Integer)
     
-    This.DeviceLastChannel = a_value
+    This.DeviceLastChannel = p_value
 
 End Property
 

@@ -21,7 +21,7 @@ End Type
 Private This As this_
 
 ''' <summary>   Returns a reference to the <see cref="FormatSystem"/>. </summary>
-''' <param name="a_session">    [<see cref="<see cref="cc_isr_IEEE488.VISession"/>"/>] A connected session. </param>
+''' <param name="a_session">    [<see cref="<see cref="cc_isr_IEEE488.VISession"/>] A connected session. </param>
 ''' <value>   [<see cref="FormatSystem"/>]. </returns>
 Public Function Initialize(ByVal a_session As cc_isr_Ieee488.ViSession) As FormatSystem
     Set This.ViSession = a_session
@@ -58,9 +58,9 @@ Public Function ElementsGetter() As String
 End Function
 
 ''' <summary>   Sets the format elements. </summary>
-''' <param name="a_value">   [String] The format elements to set. </param >
-Public Function ElementsSetter(ByVal a_value As String)
-    This.ViSession.WriteLine ("FORM:ELEM " & a_value)
-    This.Elements = a_value
+''' <param name="p_value">   [String] The format elements to set. </param >
+Public Function ElementsSetter(ByVal p_value As String)
+    This.ViSession.WriteLine ("FORM:ELEM " & p_value)
+    This.Elements = p_value
 End Function
 

@@ -223,10 +223,10 @@ Public Property Get Host() As String
 End Property
 
 ''' <summary>   Sets the Host. </summary>
-''' <param name="a_value">   [String] the message value. </value>
-Public Property Let Host(ByVal a_value As String)
-    If This.Host <> a_value Then
-        This.Host = a_value
+''' <param name="p_value">   [String] the message value. </value>
+Public Property Let Host(ByVal p_value As String)
+    If This.Host <> p_value Then
+        This.Host = p_value
         Me.OnPropertyChanged "Host"
         Me.ConnectionExecutableSetter
     End If
@@ -239,10 +239,10 @@ Public Property Get Port() As Long
 End Property
 
 ''' <summary>   Sets the Port. </summary>
-''' <param name="a_value">   [Long] the Port. </value>
-Public Property Let Port(ByVal a_value As Long)
-    If This.Port <> a_value Then
-        This.Port = a_value
+''' <param name="p_value">   [Long] the Port. </value>
+Public Property Let Port(ByVal p_value As Long)
+    If This.Port <> p_value Then
+        This.Port = p_value
         Me.OnPropertyChanged "Port"
         Me.ConnectionExecutableSetter
     End If
@@ -255,10 +255,10 @@ Public Property Get SocketAddress() As String
 End Property
 
 ''' <summary>   Sets the Socket Address. </summary>
-''' <param name="a_value">   [String] the message value. </value>
-Friend Property Let SocketAddress(ByVal a_value As String)
-    If This.SocketAddress <> a_value Then
-        This.SocketAddress = a_value
+''' <param name="p_value">   [String] the message value. </value>
+Friend Property Let SocketAddress(ByVal p_value As String)
+    If This.SocketAddress <> p_value Then
+        This.SocketAddress = p_value
         Me.OnPropertyChanged "SocketAddress"
     End If
 End Property
@@ -270,11 +270,11 @@ Public Property Get SocketId() As Integer
 End Property
 
 ''' <summary>   Sets the socket id. </summary>
-''' <param name="a_value">   [Integer] the socket id. </value>
-Friend Property Let SocketId(ByVal a_value As Integer)
-    If This.SocketId <> a_value Then
-        This.SocketId = a_value
-        This.SocketId = a_value
+''' <param name="p_value">   [Integer] the socket id. </value>
+Friend Property Let SocketId(ByVal p_value As Integer)
+    If This.SocketId <> p_value Then
+        This.SocketId = p_value
+        This.SocketId = p_value
         Me.OnPropertyChanged "SocketId"
     End If
 End Property
@@ -286,10 +286,10 @@ Public Property Get SocketReceiveTimeout() As Integer
 End Property
 
 ''' <summary>   Sets the receive timeout in milliseconds. </summary>
-''' <param name="a_value">   [Integer] the timeout value in milliseconds. </value>
-Public Property Let SocketReceiveTimeout(ByVal a_value As Integer)
-    If This.SocketReceiveTimeout <> a_value Then
-        This.SocketReceiveTimeout = a_value
+''' <param name="p_value">   [Integer] the timeout value in milliseconds. </value>
+Public Property Let SocketReceiveTimeout(ByVal p_value As Integer)
+    If This.SocketReceiveTimeout <> p_value Then
+        This.SocketReceiveTimeout = p_value
         Me.OnPropertyChanged "SocketReceiveTimeout"
     End If
 End Property
@@ -309,10 +309,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Open Connection command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Open Connection command can be executed. </param>
-Friend Property Let OpenConnectionExecutable(ByVal a_value As Boolean)
-    If This.OpenConnectionExecutable <> a_value Then
-        This.OpenConnectionExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Open Connection command can be executed. </param>
+Friend Property Let OpenConnectionExecutable(ByVal p_value As Boolean)
+    If This.OpenConnectionExecutable <> p_value Then
+        This.OpenConnectionExecutable = p_value
         Me.OnPropertyChanged "OpenConnectionExecutable"
         Me.OnPropertyChanged "ToggleConnectionExecutable"
     End If
@@ -327,10 +327,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Close Connection command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Close Connection command can be executed. </param>
-Friend Property Let CloseConnectionExecutable(ByVal a_value As Boolean)
-    If This.CloseConnectionExecutable <> a_value Then
-        This.CloseConnectionExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Close Connection command can be executed. </param>
+Friend Property Let CloseConnectionExecutable(ByVal p_value As Boolean)
+    If This.CloseConnectionExecutable <> p_value Then
+        This.CloseConnectionExecutable = p_value
         Me.OnPropertyChanged "CloseConnectionExecutable"
         Me.OnPropertyChanged "ToggleConnectionExecutable"
     End If
@@ -461,10 +461,10 @@ Public Property Get SessionReadTimeout() As Integer
 End Property
 
 ''' <summary>   Sets the session read timeout in milliseconds. </summary>
-''' <param name="a_value">   [Integer] the timeout value in milliseconds. </value>
-Public Property Let SessionReadTimeout(ByVal a_value As Integer)
-    If This.SessionReadTimeout <> a_value Then
-        This.SessionReadTimeout = a_value
+''' <param name="p_value">   [Integer] the timeout value in milliseconds. </value>
+Public Property Let SessionReadTimeout(ByVal p_value As Integer)
+    If This.SessionReadTimeout <> p_value Then
+        This.SessionReadTimeout = p_value
         Me.OnPropertyChanged "SessionReadTimeout"
     End If
 End Property
@@ -476,10 +476,10 @@ Public Property Get MessageToSend() As String
 End Property
 
 ''' <summary>   Sets the Message to Sent. </summary>
-''' <param name="a_value">   [String] the Message to Sent. </value>
-Public Property Let MessageToSend(ByVal a_value As String)
-    If This.MessageToSend <> a_value Then
-        This.MessageToSend = a_value
+''' <param name="p_value">   [String] the Message to Sent. </value>
+Public Property Let MessageToSend(ByVal p_value As String)
+    If This.MessageToSend <> p_value Then
+        This.MessageToSend = p_value
         Me.OnPropertyChanged "MessageToSend"
     End If
 End Property
@@ -491,10 +491,10 @@ Public Property Get SentMessage() As String
 End Property
 
 ''' <summary>   Sets the Sent Message. </summary>
-''' <param name="a_value">   [String] the message value. </value>
-Public Property Let SentMessage(ByVal a_value As String)
-    If This.SentMessage <> a_value Then
-        This.SentMessage = a_value
+''' <param name="p_value">   [String] the message value. </value>
+Public Property Let SentMessage(ByVal p_value As String)
+    If This.SentMessage <> p_value Then
+        This.SentMessage = p_value
         Me.OnPropertyChanged "SentMessage"
     End If
 End Property
@@ -506,12 +506,12 @@ Public Property Get ReceivedMessage() As String
 End Property
 
 ''' <summary>   Sets the Received Message. </summary>
-''' <param name="a_value">   [String] the message value. </value>
-Public Property Let ReceivedMessage(ByVal a_value As String)
-    If This.ReceivedMessage <> a_value Then
-        This.ReceivedMessage = a_value
+''' <param name="p_value">   [String] the message value. </value>
+Public Property Let ReceivedMessage(ByVal p_value As String)
+    If This.ReceivedMessage <> p_value Then
+        This.ReceivedMessage = p_value
         Me.OnPropertyChanged "ReceivedMessage"
-        Me.ReceivedMessageLength = VBA.Len(a_value)
+        Me.ReceivedMessageLength = VBA.Len(p_value)
     End If
 End Property
 
@@ -522,10 +522,10 @@ Public Property Get ReceivedMessageLength() As Integer
 End Property
 
 ''' <summary>   Sets the Received Message Length. </summary>
-''' <param name="a_value">   [Integer] the Message Length value. </value>
-Public Property Let ReceivedMessageLength(ByVal a_value As Integer)
-    If This.ReceivedMessageLength <> a_value Then
-        This.ReceivedMessageLength = a_value
+''' <param name="p_value">   [Integer] the Message Length value. </value>
+Public Property Let ReceivedMessageLength(ByVal p_value As Integer)
+    If This.ReceivedMessageLength <> p_value Then
+        This.ReceivedMessageLength = p_value
         Me.OnPropertyChanged "ReceivedMessageLength"
     End If
 End Property
@@ -537,13 +537,13 @@ Public Property Get StatusByte() As Integer
 End Property
 
 ''' <summary>   Sets the Status Byte. </summary>
-''' <param name="a_value">   [Integer] the Status Byte value. </value>
-Public Property Let StatusByte(ByVal a_value As Integer)
-    If This.StatusByte <> a_value Then
-        This.StatusByte = a_value
+''' <param name="p_value">   [Integer] the Status Byte value. </value>
+Public Property Let StatusByte(ByVal p_value As Integer)
+    If This.StatusByte <> p_value Then
+        This.StatusByte = p_value
         Me.OnPropertyChanged "StatusByte"
         Me.ServiceRequested = cc_isr_Ieee488.ServiceRequests.RequestingService = _
-                a_value And cc_isr_Ieee488.ServiceRequests.RequestingService
+                p_value And cc_isr_Ieee488.ServiceRequests.RequestingService
     End If
 End Property
 
@@ -554,10 +554,10 @@ Public Property Get StandardByte() As Integer
 End Property
 
 ''' <summary>   Sets the Standard Byte. </summary>
-''' <param name="a_value">   [Integer] the Standard Byte value. </value>
-Public Property Let StandardByte(ByVal a_value As Integer)
-    If This.StandardByte <> a_value Then
-        This.StandardByte = a_value
+''' <param name="p_value">   [Integer] the Standard Byte value. </value>
+Public Property Let StandardByte(ByVal p_value As Integer)
+    If This.StandardByte <> p_value Then
+        This.StandardByte = p_value
         Me.OnPropertyChanged "StandardByte"
     End If
 End Property
@@ -569,10 +569,10 @@ Public Property Get ReadStatusAfterWriteEnabled() As Boolean
 End Property
 
 ''' <summary>   Sets the Auto Status Read Enabled. </summary>
-''' <param name="a_value">   [Boolean] the Auto Status Read Enabled value. </value>
-Public Property Let ReadStatusAfterWriteEnabled(ByVal a_value As Boolean)
-    If This.ReadStatusAfterWriteEnabled <> a_value Then
-        This.ReadStatusAfterWriteEnabled = a_value
+''' <param name="p_value">   [Boolean] the Auto Status Read Enabled value. </value>
+Public Property Let ReadStatusAfterWriteEnabled(ByVal p_value As Boolean)
+    If This.ReadStatusAfterWriteEnabled <> p_value Then
+        This.ReadStatusAfterWriteEnabled = p_value
         Me.OnPropertyChanged "ReadStatusAfterWriteEnabled"
     End If
 End Property
@@ -584,10 +584,10 @@ Public Property Get ScpiCommands() As Collection
 End Property
 
 ''' <summary>   Sets the Scpi Commands. </summary>
-''' <param name="a_value">   [Collection] the Scpi Commands value. </value>
-Public Property Let ScpiCommands(ByVal a_value As Collection)
-    If Not cc_isr_Core.CollectionExtensions.AreEqual(This.ScpiCommands, a_value) Then
-        Set This.ScpiCommands = a_value
+''' <param name="p_value">   [Collection] the Scpi Commands value. </value>
+Public Property Let ScpiCommands(ByVal p_value As Collection)
+    If Not cc_isr_Core.CollectionExtensions.AreEqual(This.ScpiCommands, p_value) Then
+        Set This.ScpiCommands = p_value
         Me.OnPropertyChanged "ScpiCommands"
     End If
 End Property
@@ -657,10 +657,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Reset Known State command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Reset Known State command can be executed. </param>
-Public Property Let ResetKnownStateExecutable(ByVal a_value As Boolean)
-    If This.ResetKnownStateExecutable <> a_value Then
-        This.ResetKnownStateExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Reset Known State command can be executed. </param>
+Public Property Let ResetKnownStateExecutable(ByVal p_value As Boolean)
+    If This.ResetKnownStateExecutable <> p_value Then
+        This.ResetKnownStateExecutable = p_value
         Me.OnPropertyChanged "ResetKnownStateExecutable"
     End If
 End Property
@@ -674,10 +674,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Clear Execution State Command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Clear Execution State Command can be executed. </param>
-Public Property Let ClearExecutionStateExecutable(ByVal a_value As Boolean)
-    If This.ClearExecutionStateExecutable <> a_value Then
-        This.ClearExecutionStateExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Clear Execution State Command can be executed. </param>
+Public Property Let ClearExecutionStateExecutable(ByVal p_value As Boolean)
+    If This.ClearExecutionStateExecutable <> p_value Then
+        This.ClearExecutionStateExecutable = p_value
         Me.OnPropertyChanged "ClearExecutionStateExecutable"
     End If
 End Property
@@ -691,10 +691,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Query command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Query command can be executed. </param>
-Public Property Let QueryExecutable(ByVal a_value As Boolean)
-    If This.QueryExecutable <> a_value Then
-        This.QueryExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Query command can be executed. </param>
+Public Property Let QueryExecutable(ByVal p_value As Boolean)
+    If This.QueryExecutable <> p_value Then
+        This.QueryExecutable = p_value
         Me.OnPropertyChanged "QueryExecutable"
     End If
 End Property
@@ -708,10 +708,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Read command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Read command can be executed. </param>
-Public Property Let ReadExecutable(ByVal a_value As Boolean)
-    If This.ReadExecutable <> a_value Then
-        This.ReadExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Read command can be executed. </param>
+Public Property Let ReadExecutable(ByVal p_value As Boolean)
+    If This.ReadExecutable <> p_value Then
+        This.ReadExecutable = p_value
         Me.OnPropertyChanged "ReadExecutable"
     End If
 End Property
@@ -725,10 +725,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Read Status Byte command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Read Status Byte command can be executed. </param>
-Public Property Let ReadStatusByteExecutable(ByVal a_value As Boolean)
-    If This.ReadStatusByteExecutable <> a_value Then
-        This.ReadStatusByteExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Read Status Byte command can be executed. </param>
+Public Property Let ReadStatusByteExecutable(ByVal p_value As Boolean)
+    If This.ReadStatusByteExecutable <> p_value Then
+        This.ReadStatusByteExecutable = p_value
         Me.OnPropertyChanged "ReadStatusByteExecutable"
     End If
 End Property
@@ -742,10 +742,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Read Status After Write command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Read Status After Write command can be executed. </param>
-Public Property Let ReadStatusAfterWriteExecutable(ByVal a_value As Boolean)
-    If This.ReadStatusAfterWriteExecutable <> a_value Then
-        This.ReadStatusAfterWriteExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Read Status After Write command can be executed. </param>
+Public Property Let ReadStatusAfterWriteExecutable(ByVal p_value As Boolean)
+    If This.ReadStatusAfterWriteExecutable <> p_value Then
+        This.ReadStatusAfterWriteExecutable = p_value
         Me.OnPropertyChanged "ReadStatusAfterWriteExecutable"
     End If
 End Property
@@ -759,10 +759,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Read Standard Event Status command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Read Standard Event Status command can be executed. </param>
-Public Property Let ReadStandardEventStatusExecutable(ByVal a_value As Boolean)
-    If This.ReadStandardEventStatusExecutable <> a_value Then
-        This.ReadStandardEventStatusExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Read Standard Event Status command can be executed. </param>
+Public Property Let ReadStandardEventStatusExecutable(ByVal p_value As Boolean)
+    If This.ReadStandardEventStatusExecutable <> p_value Then
+        This.ReadStandardEventStatusExecutable = p_value
         Me.OnPropertyChanged "ReadStandardEventStatusExecutable"
     End If
 End Property
@@ -775,10 +775,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Write command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Write command can be executed. </param>
-Public Property Let WriteExecutable(ByVal a_value As Boolean)
-    If This.WriteExecutable <> a_value Then
-        This.WriteExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Write command can be executed. </param>
+Public Property Let WriteExecutable(ByVal p_value As Boolean)
+    If This.WriteExecutable <> p_value Then
+        This.WriteExecutable = p_value
         Me.OnPropertyChanged "WriteExecutable"
     End If
 End Property
@@ -791,10 +791,10 @@ Public Property Get MessageToSendExecutable() As Boolean
 End Property
 
 ''' <summary>   Sets the Message to send command condition. </summary>
-''' <param name="a_value">   [Boolean] True if the Message to send command can be executed. </param>
-Public Property Let MessageToSendExecutable(ByVal a_value As Boolean)
-    If This.MessageToSendExecutable <> a_value Then
-        This.MessageToSendExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Message to send command can be executed. </param>
+Public Property Let MessageToSendExecutable(ByVal p_value As Boolean)
+    If This.MessageToSendExecutable <> p_value Then
+        This.MessageToSendExecutable = p_value
         Me.OnPropertyChanged "MessageToSendExecutable"
     End If
 End Property
@@ -1148,10 +1148,10 @@ Public Property Get AssertTalkAfterWriteAllowed() As Boolean
 End Property
 
 ''' <summary>   Sets the Assert Talk After Write Allowed. </summary>
-''' <param name="a_value">   [Boolean] the value. </value>
-Public Property Let AssertTalkAfterWriteAllowed(ByVal a_value As Boolean)
-    If This.AssertTalkAfterWriteAllowed <> a_value Then
-        This.AssertTalkAfterWriteAllowed = a_value
+''' <param name="p_value">   [Boolean] the value. </value>
+Public Property Let AssertTalkAfterWriteAllowed(ByVal p_value As Boolean)
+    If This.AssertTalkAfterWriteAllowed <> p_value Then
+        This.AssertTalkAfterWriteAllowed = p_value
         Me.OnPropertyChanged "AssertTalkAfterWriteAllowed"
     End If
 End Property
@@ -1163,13 +1163,13 @@ Public Property Get SerialPollByte() As Integer
 End Property
 
 ''' <summary>   Sets the Serial Poll Byte. </summary>
-''' <param name="a_value">   [Integer] the Serial Poll Byte value. </value>
-Public Property Let SerialPollByte(ByVal a_value As Integer)
-    If This.SerialPollByte <> a_value Then
-        This.SerialPollByte = a_value
+''' <param name="p_value">   [Integer] the Serial Poll Byte value. </value>
+Public Property Let SerialPollByte(ByVal p_value As Integer)
+    If This.SerialPollByte <> p_value Then
+        This.SerialPollByte = p_value
         Me.OnPropertyChanged "SerialPollByte"
         Me.ServiceRequested = cc_isr_Ieee488.ServiceRequests.RequestingService = _
-                a_value And cc_isr_Ieee488.ServiceRequests.RequestingService
+                p_value And cc_isr_Ieee488.ServiceRequests.RequestingService
     End If
 End Property
 
@@ -1180,10 +1180,10 @@ Public Property Get ServiceRequested() As Integer
 End Property
 
 ''' <summary>   Sets the Service Requested. </summary>
-''' <param name="a_value">   [Integer] the Service Requested value. </value>
-Public Property Let ServiceRequested(ByVal a_value As Integer)
-    If This.ServiceRequested <> a_value Then
-        This.ServiceRequested = a_value
+''' <param name="p_value">   [Integer] the Service Requested value. </value>
+Public Property Let ServiceRequested(ByVal p_value As Integer)
+    If This.ServiceRequested <> p_value Then
+        This.ServiceRequested = p_value
         Me.OnPropertyChanged "ServiceRequested"
     End If
 End Property
@@ -1195,10 +1195,10 @@ Public Property Get GpibAddress() As Integer
 End Property
 
 ''' <summary>   Sets the Gpib Address. </summary>
-''' <param name="a_value">   [Integer] the Gpib Address value. </value>
-Public Property Let GpibAddress(ByVal a_value As Integer)
-    If This.GpibAddress <> a_value Then
-        This.GpibAddress = a_value
+''' <param name="p_value">   [Integer] the Gpib Address value. </value>
+Public Property Let GpibAddress(ByVal p_value As Integer)
+    If This.GpibAddress <> p_value Then
+        This.GpibAddress = p_value
         Me.OnPropertyChanged "GpibAddress"
     End If
 End Property
@@ -1210,10 +1210,10 @@ Public Property Get ReadAfterWriteEnabled() As Boolean
 End Property
 
 ''' <summary>   Sets the Read After Write Enabled. </summary>
-''' <param name="a_value">   [Boolean] the value. </value>
-Public Property Let ReadAfterWriteEnabled(ByVal a_value As Boolean)
-    If This.ReadAfterWriteEnabled <> a_value Then
-        This.ReadAfterWriteEnabled = a_value
+''' <param name="p_value">   [Boolean] the value. </value>
+Public Property Let ReadAfterWriteEnabled(ByVal p_value As Boolean)
+    If This.ReadAfterWriteEnabled <> p_value Then
+        This.ReadAfterWriteEnabled = p_value
         Me.OnPropertyChanged "ReadAfterWriteEnabled"
     End If
 End Property
@@ -1227,10 +1227,10 @@ End Property
 
 ''' <summary>   Sets the GPIB-Lan Device timeout in milliseconds for reading from the
 '''             instrument to the Gpib-Lan device using the <c>++read</c> command. </summary>
-''' <param name="a_value">   [Integer] the timeout value in milliseconds. </value>
-Public Property Let GpibLanReadTimeout(ByVal a_value As Integer)
-    If This.GpibLanReadTimeout <> a_value Then
-        This.GpibLanReadTimeout = a_value
+''' <param name="p_value">   [Integer] the timeout value in milliseconds. </value>
+Public Property Let GpibLanReadTimeout(ByVal p_value As Integer)
+    If This.GpibLanReadTimeout <> p_value Then
+        This.GpibLanReadTimeout = p_value
         Me.OnPropertyChanged "GpibLanReadTimeout"
     End If
 End Property
@@ -1250,10 +1250,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Selective Device Clear command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Selective Device Clear command can be executed. </param>
-Public Property Let SelectiveDeviceClearExecutable(ByVal a_value As Boolean)
-    If This.SelectiveDeviceClearExecutable <> a_value Then
-        This.SelectiveDeviceClearExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Selective Device Clear command can be executed. </param>
+Public Property Let SelectiveDeviceClearExecutable(ByVal p_value As Boolean)
+    If This.SelectiveDeviceClearExecutable <> p_value Then
+        This.SelectiveDeviceClearExecutable = p_value
         Me.OnPropertyChanged "SelectiveDeviceClearExecutable"
     End If
 End Property
@@ -1267,10 +1267,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Go To Local command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Go To Local command can be executed. </param>
-Public Property Let GoToLocalExecutable(ByVal a_value As Boolean)
-    If This.GoToLocalExecutable <> a_value Then
-        This.GoToLocalExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Go To Local command can be executed. </param>
+Public Property Let GoToLocalExecutable(ByVal p_value As Boolean)
+    If This.GoToLocalExecutable <> p_value Then
+        This.GoToLocalExecutable = p_value
         Me.OnPropertyChanged "GoToLocalExecutable"
     End If
 End Property
@@ -1284,10 +1284,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Local Lockout command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Local Lockout command can be executed. </param>
-Public Property Let LocalLockoutExecutable(ByVal a_value As Boolean)
-    If This.LocalLockoutExecutable <> a_value Then
-        This.LocalLockoutExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Local Lockout command can be executed. </param>
+Public Property Let LocalLockoutExecutable(ByVal p_value As Boolean)
+    If This.LocalLockoutExecutable <> p_value Then
+        This.LocalLockoutExecutable = p_value
         Me.OnPropertyChanged "LocalLockoutExecutable"
     End If
 End Property
@@ -1301,10 +1301,10 @@ End Property
 
 ''' <summary>   Gets the condition indicating that the Read After Write Get command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Read After Write Get command can be executed. </param>
-Public Property Let ReadAfterWriteGetExecutable(ByVal a_value As Boolean)
-    If This.ReadAfterWriteGetExecutable <> a_value Then
-        This.ReadAfterWriteGetExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Read After Write Get command can be executed. </param>
+Public Property Let ReadAfterWriteGetExecutable(ByVal p_value As Boolean)
+    If This.ReadAfterWriteGetExecutable <> p_value Then
+        This.ReadAfterWriteGetExecutable = p_value
         Me.OnPropertyChanged "ReadAfterWriteGetExecutable"
     End If
 End Property
@@ -1318,10 +1318,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Read After Write Set command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Read After Write Set command can be executed. </param>
-Public Property Let ReadAfterWriteSetExecutable(ByVal a_value As Boolean)
-    If This.ReadAfterWriteSetExecutable <> a_value Then
-        This.ReadAfterWriteSetExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Read After Write Set command can be executed. </param>
+Public Property Let ReadAfterWriteSetExecutable(ByVal p_value As Boolean)
+    If This.ReadAfterWriteSetExecutable <> p_value Then
+        This.ReadAfterWriteSetExecutable = p_value
         Me.OnPropertyChanged "ReadAfterWriteSetExecutable"
     End If
 End Property
@@ -1335,10 +1335,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Serial Poll command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Serial Poll command can be executed. </param>
-Public Property Let SerialPollExecutable(ByVal a_value As Boolean)
-    If This.SerialPollExecutable <> a_value Then
-        This.SerialPollExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Serial Poll command can be executed. </param>
+Public Property Let SerialPollExecutable(ByVal p_value As Boolean)
+    If This.SerialPollExecutable <> p_value Then
+        This.SerialPollExecutable = p_value
         Me.OnPropertyChanged "SerialPollExecutable"
     End If
 End Property
@@ -1352,10 +1352,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Service Requested command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Service Requested command can be executed. </param>
-Public Property Let ServiceRequestedExecutable(ByVal a_value As Boolean)
-    If This.ServiceRequestedExecutable <> a_value Then
-        This.ServiceRequestedExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Service Requested command can be executed. </param>
+Public Property Let ServiceRequestedExecutable(ByVal p_value As Boolean)
+    If This.ServiceRequestedExecutable <> p_value Then
+        This.ServiceRequestedExecutable = p_value
         Me.OnPropertyChanged "ServiceRequestedExecutable"
     End If
 End Property
@@ -1369,10 +1369,10 @@ End Property
 
 ''' <summary>   Gets the condition indicating that the Gpib Address Get Command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Gpib Address Get Command can be executed. </param>
-Public Property Let GpibAddressGetExecutable(ByVal a_value As Boolean)
-    If This.GpibAddressGetExecutable <> a_value Then
-        This.GpibAddressGetExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Gpib Address Get Command can be executed. </param>
+Public Property Let GpibAddressGetExecutable(ByVal p_value As Boolean)
+    If This.GpibAddressGetExecutable <> p_value Then
+        This.GpibAddressGetExecutable = p_value
         Me.OnPropertyChanged "GpibAddressGetExecutable"
     End If
 End Property
@@ -1386,10 +1386,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Gpib Address Set Command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Gpib Address Set Command can be executed. </param>
-Public Property Let GpibAddressSetExecutable(ByVal a_value As Boolean)
-    If This.GpibAddressSetExecutable <> a_value Then
-        This.GpibAddressSetExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Gpib Address Set Command can be executed. </param>
+Public Property Let GpibAddressSetExecutable(ByVal p_value As Boolean)
+    If This.GpibAddressSetExecutable <> p_value Then
+        This.GpibAddressSetExecutable = p_value
         Me.OnPropertyChanged "GpibAddressSetExecutable"
     End If
 End Property
@@ -1402,10 +1402,10 @@ Public Property Get GpibLanReadTimeoutGetExecutable() As Boolean
 End Property
 
 ''' <summary>   Gets the Read Timeout Get command condition. </summary>
-''' <param name="a_value">   [Boolean] True if the Read Timeout Get command can be executed. </param>
-Public Property Let GpibLanReadTimeoutGetExecutable(ByVal a_value As Boolean)
-    If This.GpibLanReadTimeoutGetExecutable <> a_value Then
-        This.GpibLanReadTimeoutGetExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Read Timeout Get command can be executed. </param>
+Public Property Let GpibLanReadTimeoutGetExecutable(ByVal p_value As Boolean)
+    If This.GpibLanReadTimeoutGetExecutable <> p_value Then
+        This.GpibLanReadTimeoutGetExecutable = p_value
         Me.OnPropertyChanged "GpibLanReadTimeoutGetExecutable"
     End If
 End Property
@@ -1418,10 +1418,10 @@ Public Property Get GpibLanReadTimeoutSetExecutable() As Boolean
 End Property
 
 ''' <summary>   Sets the Read Timeout Set command condition. </summary>
-''' <param name="a_value">   [Boolean] True if the Read Timeout Set command can be executed. </param>
-Public Property Let GpibLanReadTimeoutSetExecutable(ByVal a_value As Boolean)
-    If This.GpibLanReadTimeoutSetExecutable <> a_value Then
-        This.GpibLanReadTimeoutSetExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Read Timeout Set command can be executed. </param>
+Public Property Let GpibLanReadTimeoutSetExecutable(ByVal p_value As Boolean)
+    If This.GpibLanReadTimeoutSetExecutable <> p_value Then
+        This.GpibLanReadTimeoutSetExecutable = p_value
         Me.OnPropertyChanged "GpibLanReadTimeoutSetExecutable"
     End If
 End Property
@@ -2015,10 +2015,10 @@ Public Property Get TopCard() As String
 End Property
 
 ''' <summary>   Sets the Top Card name. </summary>
-''' <param name="a_value">   [String] the Top Card name. </value>
-Public Property Let TopCard(ByVal a_value As String)
-    If This.TopCard <> a_value Then
-        This.TopCard = a_value
+''' <param name="p_value">   [String] the Top Card name. </value>
+Public Property Let TopCard(ByVal p_value As String)
+    If This.TopCard <> p_value Then
+        This.TopCard = p_value
         Me.OnPropertyChanged "TopCard"
     End If
 End Property
@@ -2030,10 +2030,10 @@ Public Property Get TopCardFunctionScanList() As String
 End Property
 
 ''' <summary>   Sets the Top Card Function Scan List. </summary>
-''' <param name="a_value">   [String] the Top Card function scan list. </value>
-Public Property Let TopCardFunctionScanList(ByVal a_value As String)
-    If This.TopCardFunctionScanList <> a_value Then
-        This.TopCardFunctionScanList = a_value
+''' <param name="p_value">   [String] the Top Card function scan list. </value>
+Public Property Let TopCardFunctionScanList(ByVal p_value As String)
+    If This.TopCardFunctionScanList <> p_value Then
+        This.TopCardFunctionScanList = p_value
         Me.OnPropertyChanged "TopCardFunctionScanList"
     End If
 End Property
@@ -2045,10 +2045,10 @@ Public Property Get BottomCard() As String
 End Property
 
 ''' <summary>   Sets the Bottom Card name. </summary>
-''' <param name="a_value">   [String] the Bottom Card name. </value>
-Public Property Let BottomCard(ByVal a_value As String)
-    If This.BottomCard <> a_value Then
-        This.BottomCard = a_value
+''' <param name="p_value">   [String] the Bottom Card name. </value>
+Public Property Let BottomCard(ByVal p_value As String)
+    If This.BottomCard <> p_value Then
+        This.BottomCard = p_value
         Me.OnPropertyChanged "BottomCard"
     End If
 End Property
@@ -2060,10 +2060,10 @@ Public Property Get BottomCardFunctionScanList() As String
 End Property
 
 ''' <summary>   Sets the Bottom Card Function Scan List. </summary>
-''' <param name="a_value">   [String] the Bottom Card function scan list. </value>
-Public Property Let BottomCardFunctionScanList(ByVal a_value As String)
-    If This.BottomCardFunctionScanList <> a_value Then
-        This.BottomCardFunctionScanList = a_value
+''' <param name="p_value">   [String] the Bottom Card function scan list. </value>
+Public Property Let BottomCardFunctionScanList(ByVal p_value As String)
+    If This.BottomCardFunctionScanList <> p_value Then
+        This.BottomCardFunctionScanList = p_value
         Me.OnPropertyChanged "BottomCardFunctionScanList"
     End If
 End Property
@@ -2075,11 +2075,11 @@ Public Property Get CurrentMeasurementMode() As cc_isr_Tcp_Scpi.MeasurementMode
 End Property
 
 ''' <summary>   Gets the current measurement mode. </summary>
-''' <param name=-"a_value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementMode"/>] the value. </param>
+''' <param name=-"p_value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementMode"/>] the value. </param>
 ''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementMode"/>]. </value>
-Friend Property Let CurrentMeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementMode)
-    If This.CurrentMeasurementMode <> a_value Then
-        This.CurrentMeasurementMode = a_value
+Friend Property Let CurrentMeasurementMode(ByVal p_value As cc_isr_Tcp_Scpi.MeasurementMode)
+    If This.CurrentMeasurementMode <> p_value Then
+        This.CurrentMeasurementMode = p_value
         Me.OnPropertyChanged "MeasurementMode"
     End If
 End Property
@@ -2092,10 +2092,10 @@ Public Property Get FrontInputsRequired() As Boolean
 End Property
 
 ''' <summary>   Sets the Front Inputs Required. </summary>
-''' <param name="a_value">   [Boolean] true if Front Inputs are Required. </value>
-Public Property Let FrontInputsRequired(ByVal a_value As Boolean)
-    If This.FrontInputsRequired <> a_value Then
-        This.FrontInputsRequired = a_value
+''' <param name="p_value">   [Boolean] true if Front Inputs are Required. </value>
+Public Property Let FrontInputsRequired(ByVal p_value As Boolean)
+    If This.FrontInputsRequired <> p_value Then
+        This.FrontInputsRequired = p_value
         Me.OnPropertyChanged "FrontInputsRequired"
     End If
 End Property
@@ -2108,10 +2108,10 @@ Public Property Get ReadingBeepEnabled() As Boolean
 End Property
 
 ''' <summary>   Gets the instrument beep sound on each reading is enabled. </summary>
-''' <param name="a_value">   [Boolean] instrument beep sound on each reading is enabled. </value>
-Public Property Let ReadingBeepEnabled(ByVal a_value As Boolean)
-    If This.ReadingBeepEnabled <> a_value Then
-        This.ReadingBeepEnabled = a_value
+''' <param name="p_value">   [Boolean] instrument beep sound on each reading is enabled. </value>
+Public Property Let ReadingBeepEnabled(ByVal p_value As Boolean)
+    If This.ReadingBeepEnabled <> p_value Then
+        This.ReadingBeepEnabled = p_value
         Me.OnPropertyChanged "ReadingBeepEnabled"
     End If
 End Property
@@ -2124,12 +2124,12 @@ Public Property Get FrontInputsValue() As Boolean
 End Property
 
 ''' <summary>   Sets the Front Inputs Value. </summary>
-''' <param name="a_value">   [Boolean] true if Front Inputs. </value>
-Public Property Let FrontInputsValue(ByVal a_value As Boolean)
-    If This.FrontInputsValue <> a_value Then
-        This.FrontInputsValue = a_value
+''' <param name="p_value">   [Boolean] true if Front Inputs. </value>
+Public Property Let FrontInputsValue(ByVal p_value As Boolean)
+    If This.FrontInputsValue <> p_value Then
+        This.FrontInputsValue = p_value
         Me.OnPropertyChanged "FrontInputsValue"
-        Me.FrontInputsCaption = IIf(a_value, "Front", "Rear")
+        Me.FrontInputsCaption = IIf(p_value, "Front", "Rear")
     End If
 End Property
 
@@ -2140,10 +2140,10 @@ Public Property Get FrontInputsCaption() As String
 End Property
 
 ''' <summary>   Sets the Front Inputs Caption. </summary>
-''' <param name="a_value">   [String] the Front Inputs Caption. </value>
-Public Property Let FrontInputsCaption(ByVal a_value As String)
-    If This.FrontInputsCaption <> a_value Then
-        This.FrontInputsCaption = a_value
+''' <param name="p_value">   [String] the Front Inputs Caption. </value>
+Public Property Let FrontInputsCaption(ByVal p_value As String)
+    If This.FrontInputsCaption <> p_value Then
+        This.FrontInputsCaption = p_value
         Me.OnPropertyChanged "FrontInputsCaption"
     End If
 End Property
@@ -2155,10 +2155,10 @@ Public Property Get ChannelCount() As Integer
 End Property
 
 ''' <summary>   Sets the Channel Count. </summary>
-''' <param name="a_value">   [Integer] the Channel Count value. </value>
-Public Property Let ChannelCount(ByVal a_value As Integer)
-    If This.ChannelCount <> a_value Then
-        This.ChannelCount = a_value
+''' <param name="p_value">   [Integer] the Channel Count value. </value>
+Public Property Let ChannelCount(ByVal p_value As Integer)
+    If This.ChannelCount <> p_value Then
+        This.ChannelCount = p_value
         Me.OnPropertyChanged "ChannelCount"
     End If
 End Property
@@ -2170,10 +2170,10 @@ Public Property Get SelectedChannelNumber() As Integer
 End Property
 
 ''' <summary>   Sets the Selected Channel Number. </summary>
-''' <param name="a_value">   [Integer] the Selected Channel Number value. </value>
-Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
-    If This.SelectedChannelNumber <> a_value Then
-        This.SelectedChannelNumber = a_value
+''' <param name="p_value">   [Integer] the Selected Channel Number value. </value>
+Public Property Let SelectedChannelNumber(ByVal p_value As Integer)
+    If This.SelectedChannelNumber <> p_value Then
+        This.SelectedChannelNumber = p_value
         Me.OnPropertyChanged "SelectedChannelNumber"
     End If
 End Property
@@ -2185,10 +2185,10 @@ Public Property Get CurrentChannelNumber() As Integer
 End Property
 
 ''' <summary>   Sets the Current Channel Number. </summary>
-''' <param name="a_value">   [Integer] the Current Channel Number value. </value>
-Public Property Let CurrentChannelNumber(ByVal a_value As Integer)
-    If This.CurrentChannelNumber <> a_value Then
-        This.CurrentChannelNumber = a_value
+''' <param name="p_value">   [Integer] the Current Channel Number value. </value>
+Public Property Let CurrentChannelNumber(ByVal p_value As Integer)
+    If This.CurrentChannelNumber <> p_value Then
+        This.CurrentChannelNumber = p_value
         Me.OnPropertyChanged "CurrentChannelNumber"
     End If
 End Property
@@ -2200,10 +2200,10 @@ Public Property Get MeasuredChannelNumber() As Integer
 End Property
 
 ''' <summary>   Sets the Measured Channel Number. </summary>
-''' <param name="a_value">   [Integer] the Measured Channel Number value. </value>
-Public Property Let MeasuredChannelNumber(ByVal a_value As Integer)
-    If This.MeasuredChannelNumber <> a_value Then
-        This.MeasuredChannelNumber = a_value
+''' <param name="p_value">   [Integer] the Measured Channel Number value. </value>
+Public Property Let MeasuredChannelNumber(ByVal p_value As Integer)
+    If This.MeasuredChannelNumber <> p_value Then
+        This.MeasuredChannelNumber = p_value
         Me.OnPropertyChanged "MeasuredChannelNumber"
     End If
 End Property
@@ -2215,10 +2215,10 @@ Public Property Get ContinuousSenseFunctionName() As String
 End Property
 
 ''' <summary>   Sets the Sense Function Name for continuous mode. </summary>
-''' <param name="a_value">   [String] the Sense Function Name. </value>
-Public Property Let ContinuousSenseFunctionName(ByVal a_value As String)
-    If This.ContinuousSenseFunctionName <> a_value Then
-        This.ContinuousSenseFunctionName = a_value
+''' <param name="p_value">   [String] the Sense Function Name. </value>
+Public Property Let ContinuousSenseFunctionName(ByVal p_value As String)
+    If This.ContinuousSenseFunctionName <> p_value Then
+        This.ContinuousSenseFunctionName = p_value
         Me.OnPropertyChanged "ContinuousSenseFunctionName"
     End If
 End Property
@@ -2230,10 +2230,10 @@ Public Property Get ImmediateSenseFunctionName() As String
 End Property
 
 ''' <summary>   Sets the Sense Function Name for Immediate trigger  mode. </summary>
-''' <param name="a_value">   [String] the Sense Function Name. </value>
-Public Property Let ImmediateSenseFunctionName(ByVal a_value As String)
-    If This.ImmediateSenseFunctionName <> a_value Then
-        This.ImmediateSenseFunctionName = a_value
+''' <param name="p_value">   [String] the Sense Function Name. </value>
+Public Property Let ImmediateSenseFunctionName(ByVal p_value As String)
+    If This.ImmediateSenseFunctionName <> p_value Then
+        This.ImmediateSenseFunctionName = p_value
         Me.OnPropertyChanged "ImmediateSenseFunctionName"
     End If
 End Property
@@ -2245,10 +2245,10 @@ Public Property Get ExternalSenseFunctionName() As String
 End Property
 
 ''' <summary>   Sets the Sense Function Name for External trigger mode. </summary>
-''' <param name="a_value">   [String] the Sense Function Name. </value>
-Public Property Let ExternalSenseFunctionName(ByVal a_value As String)
-    If This.ExternalSenseFunctionName <> a_value Then
-        This.ExternalSenseFunctionName = a_value
+''' <param name="p_value">   [String] the Sense Function Name. </value>
+Public Property Let ExternalSenseFunctionName(ByVal p_value As String)
+    If This.ExternalSenseFunctionName <> p_value Then
+        This.ExternalSenseFunctionName = p_value
         Me.OnPropertyChanged "ExternalSenseFunctionName"
     End If
 End Property
@@ -2260,10 +2260,10 @@ Public Property Get SenseFunctionName() As String
 End Property
 
 ''' <summary>   Internal. Sets the current Sense Function Name. </summary>
-''' <param name="a_value">   [String] the Sense Function Name. </value>
-Friend Property Let SenseFunctionName(ByVal a_value As String)
-    If This.SenseFunctionName <> a_value Then
-        This.SenseFunctionName = a_value
+''' <param name="p_value">   [String] the Sense Function Name. </value>
+Friend Property Let SenseFunctionName(ByVal p_value As String)
+    If This.SenseFunctionName <> p_value Then
+        This.SenseFunctionName = p_value
         Me.OnPropertyChanged "SenseFunctionName"
         Me.OnSenseFunctionChanged
     End If
@@ -2340,10 +2340,10 @@ Public Property Get SenseFunctionCaption() As String
 End Property
 
 ''' <summary>   Sets the  Sense Function Caption. </summary>
-''' <param name="a_value">   [String] the  Sense Function Caption. </value>
-Public Property Let SenseFunctionCaption(ByVal a_value As String)
-    If This.SenseFunctionCaption <> a_value Then
-        This.SenseFunctionCaption = a_value
+''' <param name="p_value">   [String] the  Sense Function Caption. </value>
+Public Property Let SenseFunctionCaption(ByVal p_value As String)
+    If This.SenseFunctionCaption <> p_value Then
+        This.SenseFunctionCaption = p_value
         Me.OnPropertyChanged "SenseFunctionCaption"
     End If
 End Property
@@ -2355,10 +2355,10 @@ Public Property Get SenseFunctionUnit() As String
 End Property
 
 ''' <summary>   Sets the Sense Function Unit. </summary>
-''' <param name="a_value">   [String] the Sense Function Unit value. </value>
-Public Property Let SenseFunctionUnit(ByVal a_value As String)
-    If This.SenseFunctionUnit <> a_value Then
-        This.SenseFunctionUnit = a_value
+''' <param name="p_value">   [String] the Sense Function Unit value. </value>
+Public Property Let SenseFunctionUnit(ByVal p_value As String)
+    If This.SenseFunctionUnit <> p_value Then
+        This.SenseFunctionUnit = p_value
         Me.OnPropertyChanged "SenseFunctionUnit"
     End If
 End Property
@@ -2370,12 +2370,12 @@ Public Property Get MeasuredReading() As String
 End Property
 
 ''' <summary>   Sets the Measured Reading. </summary>
-''' <param name="a_value">   [String] the Measured Reading value. </value>
-Public Property Let MeasuredReading(ByVal a_value As String)
-    If This.MeasuredReading <> a_value Then
-        This.MeasuredReading = a_value
+''' <param name="p_value">   [String] the Measured Reading value. </value>
+Public Property Let MeasuredReading(ByVal p_value As String)
+    If This.MeasuredReading <> p_value Then
+        This.MeasuredReading = p_value
         Me.OnPropertyChanged "MeasuredReading"
-        Me.MeasuredValue = CDbl(a_value)
+        Me.MeasuredValue = CDbl(p_value)
     End If
 End Property
 
@@ -2386,10 +2386,10 @@ Public Property Get MeasuredValueFormat() As String
 End Property
 
 ''' <summary>   Sets the Measured Value Format. </summary>
-''' <param name="a_value">   [String] the Measured Value Format value. </value>
-Public Property Let MeasuredValueFormat(ByVal a_value As String)
-    If This.MeasuredValueFormat <> a_value Then
-        This.MeasuredValueFormat = a_value
+''' <param name="p_value">   [String] the Measured Value Format value. </value>
+Public Property Let MeasuredValueFormat(ByVal p_value As String)
+    If This.MeasuredValueFormat <> p_value Then
+        This.MeasuredValueFormat = p_value
         Me.OnPropertyChanged "MeasuredValueFormat"
     End If
 End Property
@@ -2401,10 +2401,10 @@ Public Property Get MeasuredValue() As Double
 End Property
 
 ''' <summary>   Sets the Measured Value. </summary>
-''' <param name="a_value">   [Double] the Measured Value. </value>
-Public Property Let MeasuredValue(ByVal a_value As Double)
-    If This.MeasuredValue <> a_value Then
-        This.MeasuredValue = a_value
+''' <param name="p_value">   [Double] the Measured Value. </value>
+Public Property Let MeasuredValue(ByVal p_value As Double)
+    If This.MeasuredValue <> p_value Then
+        This.MeasuredValue = p_value
         Me.OnPropertyChanged "MeasuredValue"
     End If
 End Property
@@ -2416,10 +2416,10 @@ Public Property Get SenseFunctions() As Collection
 End Property
 
 ''' <summary>   Sets the Sense Functions. </summary>
-''' <param name="a_value">   [Collection] the Sense Functions value. </value>
-Public Property Let SenseFunctions(ByVal a_value As Collection)
-    If Not cc_isr_Core.CollectionExtensions.AreEqual(This.SenseFunctions, a_value) Then
-        Set This.SenseFunctions = a_value
+''' <param name="p_value">   [Collection] the Sense Functions value. </value>
+Public Property Let SenseFunctions(ByVal p_value As Collection)
+    If Not cc_isr_Core.CollectionExtensions.AreEqual(This.SenseFunctions, p_value) Then
+        Set This.SenseFunctions = p_value
         Me.OnPropertyChanged "SenseFunctions"
     End If
 End Property
@@ -2431,10 +2431,10 @@ Public Property Get ReadingOffset() As Double
 End Property
 
 ''' <summary>   Sets the Reading Offset. </summary>
-''' <param name="a_value">   [Double] the Reading Offset value. </value>
-Public Property Let ReadingOffset(ByVal a_value As Double)
-    If This.ReadingOffset <> a_value Then
-        This.ReadingOffset = a_value
+''' <param name="p_value">   [Double] the Reading Offset value. </value>
+Public Property Let ReadingOffset(ByVal p_value As Double)
+    If This.ReadingOffset <> p_value Then
+        This.ReadingOffset = p_value
         Me.OnPropertyChanged "ReadingOffset"
     End If
 End Property
@@ -2446,10 +2446,10 @@ Public Property Get MonitoringState() As String
 End Property
 
 ''' <summary>   Sets the Monitoring State. </summary>
-''' <param name="a_value">   [String] the Monitoring State value. </value>
-Public Property Let MonitoringState(ByVal a_value As String)
-    If This.MonitoringState <> a_value Then
-        This.MonitoringState = a_value
+''' <param name="p_value">   [String] the Monitoring State value. </value>
+Public Property Let MonitoringState(ByVal p_value As String)
+    If This.MonitoringState <> p_value Then
+        This.MonitoringState = p_value
         Me.OnPropertyChanged "MonitoringState"
     End If
 End Property
@@ -2462,10 +2462,10 @@ Public Property Get AutoIncrementChannelNoEnabled() As Boolean
 End Property
 
 ''' <summary>   Sets the Auto Increment Channel Number Enabled. </summary>
-''' <param name="a_value">   [Boolean] the Auto Increment Channel Number Enabled value. </value>
-Public Property Let AutoIncrementChannelNoEnabled(ByVal a_value As Boolean)
-    If This.AutoIncrementChannelNoEnabled <> a_value Then
-        This.AutoIncrementChannelNoEnabled = a_value
+''' <param name="p_value">   [Boolean] the Auto Increment Channel Number Enabled value. </value>
+Public Property Let AutoIncrementChannelNoEnabled(ByVal p_value As Boolean)
+    If This.AutoIncrementChannelNoEnabled <> p_value Then
+        This.AutoIncrementChannelNoEnabled = p_value
         Me.OnPropertyChanged "AutoIncrementChannelNoEnabled"
     End If
 End Property
@@ -2478,10 +2478,10 @@ Public Property Get SingleReadEnabled() As Boolean
 End Property
 
 ''' <summary>   Sets the Single Read Enabled. </summary>
-''' <param name="a_value">   [Boolean] the Single Read Enabled value. </value>
-Public Property Let SingleReadEnabled(ByVal a_value As Boolean)
-    If This.SingleReadEnabled <> a_value Then
-        This.SingleReadEnabled = a_value
+''' <param name="p_value">   [Boolean] the Single Read Enabled value. </value>
+Public Property Let SingleReadEnabled(ByVal p_value As Boolean)
+    If This.SingleReadEnabled <> p_value Then
+        This.SingleReadEnabled = p_value
         Me.OnPropertyChanged "SingleReadEnabled"
     End If
 End Property
@@ -2520,10 +2520,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Clear Readings command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Clear Readings command can be executed. </param>
-Public Property Let ClearReadingsExecutable(ByVal a_value As Boolean)
-    If This.ClearReadingsExecutable <> a_value Then
-        This.ClearReadingsExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Clear Readings command can be executed. </param>
+Public Property Let ClearReadingsExecutable(ByVal p_value As Boolean)
+    If This.ClearReadingsExecutable <> p_value Then
+        This.ClearReadingsExecutable = p_value
         Me.OnPropertyChanged "ClearReadingsExecutable"
     End If
 End Property
@@ -2537,10 +2537,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Query Inputs command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Query Inputs command can be executed. </param>
-Public Property Let QueryInputsExecutable(ByVal a_value As Boolean)
-    If This.QueryInputsExecutable <> a_value Then
-        This.QueryInputsExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Query Inputs command can be executed. </param>
+Public Property Let QueryInputsExecutable(ByVal p_value As Boolean)
+    If This.QueryInputsExecutable <> p_value Then
+        This.QueryInputsExecutable = p_value
         Me.OnPropertyChanged "QueryInputsExecutable"
     End If
 End Property
@@ -2554,10 +2554,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Measure command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Measure command can be executed. </param>
-Public Property Let MeasureExecutable(ByVal a_value As Boolean)
-    If This.MeasureExecutable <> a_value Then
-        This.MeasureExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Measure command can be executed. </param>
+Public Property Let MeasureExecutable(ByVal p_value As Boolean)
+    If This.MeasureExecutable <> p_value Then
+        This.MeasureExecutable = p_value
         Me.OnPropertyChanged "MeasureExecutable"
     End If
 End Property
@@ -2571,10 +2571,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Immediate Trigger Option command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Immediate Trigger Option command can be executed. </param>
-Public Property Let ImmediateTriggerOptionExecutable(ByVal a_value As Boolean)
-    If This.ImmediateTriggerOptionExecutable <> a_value Then
-        This.ImmediateTriggerOptionExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Immediate Trigger Option command can be executed. </param>
+Public Property Let ImmediateTriggerOptionExecutable(ByVal p_value As Boolean)
+    If This.ImmediateTriggerOptionExecutable <> p_value Then
+        This.ImmediateTriggerOptionExecutable = p_value
         Me.OnPropertyChanged "ImmediateTriggerOptionExecutable"
     End If
 End Property
@@ -2588,10 +2588,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the External Trigger Option command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the External Trigger Option command can be executed. </param>
-Public Property Let ExternalTriggerOptionExecutable(ByVal a_value As Boolean)
-    If This.ExternalTriggerOptionExecutable <> a_value Then
-        This.ExternalTriggerOptionExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the External Trigger Option command can be executed. </param>
+Public Property Let ExternalTriggerOptionExecutable(ByVal p_value As Boolean)
+    If This.ExternalTriggerOptionExecutable <> p_value Then
+        This.ExternalTriggerOptionExecutable = p_value
         Me.OnPropertyChanged "ExternalTriggerOptionExecutable"
     End If
 End Property
@@ -2604,10 +2604,10 @@ Public Property Get FunctionNameExecutable() As Boolean
 End Property
 
 ''' <summary>   Sets the function name condition. </summary>
-''' <param name="a_value">   [Boolean] True if the function name command can be executed. </param>
-Public Property Let FunctionNameExecutable(ByVal a_value As Boolean)
-    If This.FunctionNameExecutable <> a_value Then
-        This.FunctionNameExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the function name command can be executed. </param>
+Public Property Let FunctionNameExecutable(ByVal p_value As Boolean)
+    If This.FunctionNameExecutable <> p_value Then
+        This.FunctionNameExecutable = p_value
         Me.OnPropertyChanged "FunctionNameExecutable"
     End If
 End Property
@@ -2621,10 +2621,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Start Monitoring External Trigger command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Start Monitoring External Trigger command can be executed. </param>
-Public Property Let StartMonitoringExecutable(ByVal a_value As Boolean)
-    If This.StartMonitoringExecutable <> a_value Then
-        This.StartMonitoringExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Start Monitoring External Trigger command can be executed. </param>
+Public Property Let StartMonitoringExecutable(ByVal p_value As Boolean)
+    If This.StartMonitoringExecutable <> p_value Then
+        This.StartMonitoringExecutable = p_value
         Me.OnPropertyChanged "StartMonitoringExecutable"
         Me.OnPropertyChanged "ToggleMonitoringExecutable"
     End If
@@ -2639,10 +2639,10 @@ End Property
 
 ''' <summary>   Sets the condition indicating that the Stop Monitoring External Trigger command
 '''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Stop Monitoring External Trigger command can be executed. </param>
-Public Property Let StopMonitoringExecutable(ByVal a_value As Boolean)
-    If This.StopMonitoringExecutable <> a_value Then
-        This.StopMonitoringExecutable = a_value
+''' <param name="p_value">   [Boolean] True if the Stop Monitoring External Trigger command can be executed. </param>
+Public Property Let StopMonitoringExecutable(ByVal p_value As Boolean)
+    If This.StopMonitoringExecutable <> p_value Then
+        This.StopMonitoringExecutable = p_value
         Me.OnPropertyChanged "StopMonitoringExecutable"
         Me.OnPropertyChanged "ToggleMonitoringExecutable"
     End If
@@ -2661,82 +2661,43 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Returns true and a message if the GPIB-Lan device needs to be
-''' Restored to its known state; i.e., if the <see cref=""/> state is not
-''' commensurate with the <see cref=""/>.. </summary>
-''' <param name="a_message">         [String] The message for an optional exception in case the
-'''                                  the state is not as expected. </param>
+''' <summary>   Returns true and some details if the GPIB-Lan device needs to be
+''' Restored to its known state; i.e., if the <see cref="GpibLan.AssertTalkAfterWriteAllowed"/> state
+''' is not as expected or not equal to the <see cref="GpibLan.ReadAfterWriteEnabled"/>. </summary>
+''' <param name="p_details">    [String] Details why the GPIB-Lan needs to be resored to
+'''                             its known state. </param>
 ''' <returns>   [Boolean]. </returns>
-Public Function ShouldRestoreGpibLanKnownState(ByRef a_message As String) As Boolean
+Public Function ShouldRestoreGpibLanKnownState(ByRef p_details As String) As Boolean
 
-    ' assert talk after write is not allowed for the K2700 instrument
-    Dim p_assertTalkAfterWriteAllowed As Boolean
-    p_assertTalkAfterWriteAllowed = False
-    
-    If p_assertTalkAfterWriteAllowed <> This.ViSession.GpibLan.AssertTalkAfterWriteAllowed Then
-        a_message = "GPIB Lan AssertTalkAfterWriteAllowed  is '" & _
-            VBA.CStr(This.ViSession.GpibLan.AssertTalkAfterWriteAllowed) & _
-            "' where it must be set to '" & VBA.CStr(p_assertTalkAfterWriteAllowed) & _
-            "' when using the 2700 instrument to prevent the Query Unterminated (-420) errors."
-        ShouldRestoreGpibLanKnownState = True
-    Else
-        Dim p_readAfterWriteEnabled As Boolean
-        p_readAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
-        If This.ViSession.GpibLan.AssertTalkAfterWriteAllowed <> p_readAfterWriteEnabled Then
-            a_message = "GPIB Lan Read After Write is set to '" & _
-                VBA.CStr(p_readAfterWriteEnabled) & _
-                "'. Consequenctly, the 2700 instrument is asserted to talk upon receiving non-query commands causing the Query Unterminated error -420." & _
-                " The GPIB Lan Read After Write must be set to False for the 2700 instrument."
-            ShouldRestoreGpibLanKnownState = True
-        Else
-            ShouldRestoreGpibLanKnownState = False
-        End If
-    End If
-
+    ShouldRestoreGpibLanKnownState = This.Device.ShouldRestoreGpibLanKnownState( _
+            This.AssertTalkAfterWriteAllowed, p_details)
 
 End Function
 
-''' <summary>   Restores the  GPIB-Lan interfae device to its known state. </summary>
-Public Sub RestoreGpibLanKnownState()
+''' <summary>   Restores the  GPIB-Lan interface device to its known state. </summary>
+''' <param name="p_details">    [String] Details why the GPIB-Lan failed to restore to
+'''                             its known state. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function RestoreGpibLanKnownState(ByRef p_details As String) As Boolean
 
-    ' assert talk after write is not allowed for the K2700 instrument
-    Dim p_assertTalkAfterWriteAllowed As Boolean
-    p_assertTalkAfterWriteAllowed = False
-    
-    ' assert talk after write is not allowed for the 2700 instrument
-    If p_assertTalkAfterWriteAllowed <> This.ViSession.GpibLan.AssertTalkAfterWriteAllowed Then _
-        This.ViSession.GpibLan.AssertTalkAfterWriteAllowed = p_assertTalkAfterWriteAllowed
-    
-    ' get the current read after write state.
-    Dim p_readAfterWriteEnabled As Boolean
-    p_readAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
-    If This.ViSession.GpibLan.AssertTalkAfterWriteAllowed <> p_readAfterWriteEnabled Then
-        This.ViSession.GpibLan.ReadAfterWriteEnabledSetter This.ViSession.GpibLan.AssertTalkAfterWriteAllowed
-    End If
-    
-    ' raise an error if we failed to restore.
-    Dim p_message As String
-    If Me.ShouldRestoreGpibLanKnownState(p_message) Then _
-        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".RestoreGpibLanKnownState", _
-            " Failed restoring GPIB-Lan insterface device to its known state; " & p_message
-    
-End Sub
+    RestoreGpibLanKnownState = This.Device.RestoreGpibLanKnownState( _
+            This.AssertTalkAfterWriteAllowed, p_details)
+
+End Function
 
 
 ''' <summary>   Returns true and a message if the specified sense function matched neither
 ''' one of sense functions of the defferent measurement modes. </summary>
 ''' <param name="a_senseFunction">   [String] The actual sense function. </param>
-''' <param name="a_message">         [String] The message for an optional exception in case the
-'''                                  the state is not as expected. </param>
+''' <param name="p_details">         [String] Details why the sense function needs to be restored. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function ShouldRestoreSenseFunction(ByVal a_senseFunction As String, _
-    ByRef a_message As String) As Boolean
+    ByRef p_details As String) As Boolean
 
     If Not ((1 = InStr(1, This.ContinuousSenseFunctionName, a_senseFunction, vbTextCompare)) Or _
             (1 = InStr(1, This.ImmediateSenseFunctionName, a_senseFunction, vbTextCompare)) Or _
             (1 = InStr(1, This.ExternalSenseFunctionName, a_senseFunction, vbTextCompare))) Then
-        a_message = "The K2700 device current sense function '" & a_senseFunction & _
+        p_details = "The K2700 device current sense function '" & a_senseFunction & _
             "' is not set; it must be set to either " & _
             This.ContinuousSenseFunctionName & " or " & _
             This.ImmediateSenseFunctionName & " or " & _
@@ -2749,16 +2710,15 @@ Public Function ShouldRestoreSenseFunction(ByVal a_senseFunction As String, _
 End Function
 
 ''' <summary>   Returns true and a message if the instrument is nothing or not conneced. </summary>
-''' <param name="a_message">   [String] The message for an optional exception in case the
-'''                             the state is not as expected. </param>
+''' <param name="p_details">   [String] Details why the view model needs to connect. </param>
 ''' <returns>   [Boolean]. </returns>
-Public Function ShouldConnect(ByRef a_message As String) As Boolean
+Public Function ShouldConnect(ByRef p_details As String) As Boolean
 
     If This.K2700 Is Nothing Then
-        a_message = "The K2700 device instance is nothing."
+        p_details = "The K2700 device instance is nothing."
         ShouldConnect = True
     ElseIf Not Me.Connected Then
-        a_message = "The K2700 device is not connected to " & This.Host & ":" & VBA.CStr(This.Port) & "."
+        p_details = "The view model is not connected to " & This.Host & ":" & VBA.CStr(This.Port) & "."
         ShouldConnect = True
     Else
         ShouldConnect = False
@@ -2769,18 +2729,17 @@ End Function
 ''' <summary>   Returns true and a message if the current state does not match the expected restore state. </summary>
 ''' <remarks>   This is the expected state for making resistance measurements. In future releases
 ''' we could define a set of states. </remarks>
-''' <param name="a_message">   [String] The message for an optional exception in case the
-'''                             the state is not as expected. </param>
+''' <param name="p_details">   [String] Details why the view model needs to be resotred to its known state. </param>
 ''' <returns>   [Boolean]. </returns>
-Public Function ShouldRestoreState(ByRef a_message As String) As Boolean
+Public Function ShouldRestoreState(ByRef p_details As String) As Boolean
 
-    If Me.ShouldConnect(a_message) Then
+    If Me.ShouldConnect(p_details) Then
         ShouldRestoreState = True
     Else
         ' validate the sense function
         Dim p_senseFunction As String
         p_senseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
-        ShouldRestoreState = Me.ShouldRestoreSenseFunction(p_senseFunction, a_message)
+        ShouldRestoreState = Me.ShouldRestoreSenseFunction(p_senseFunction, p_details)
     End If
 
 End Function
@@ -2797,6 +2756,8 @@ End Function
 '''     - otherwise, the instrument is set to its clear known state.
 ''' </remarks>
 Public Sub RestoreKnownState()
+
+    Dim p_details As String: p_details = VBA.vbNullString
 
     ' enumerate and report any accumulated errors.
     Me.LastErrorMessage = This.Device.EnumerateErrors()
@@ -2815,24 +2776,33 @@ Public Sub RestoreKnownState()
             " Failed connecting to " & This.Host & ":" & VBA.CStr(This.Port) & "."
     
     ' restore the GPIB-Lan device to its known state.
-    Me.RestoreGpibLanKnownState
+    If Not Me.RestoreGpibLanKnownState(p_details) Then
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".RestoreKnownState", _
+            " Failed restoring GPIB_Lan to its known state; " & p_details
+    End If
     
     ' validate the sense function
     Dim p_senseFunction As String
     p_senseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
-    Dim a_message As String: a_message = VBA.vbNullString
-    If Me.ShouldRestoreSenseFunction(p_senseFunction, a_message) Then
+    If Me.ShouldRestoreSenseFunction(p_senseFunction, p_details) Then
         
         ' if the sense function does not match, initialize the instrument
         ' connection state.
-        
-        OnInstrumentConnected
-    
+        Dim a_errors As String
+        Dim a_methodErrors As String
+        If Not OnInstrumentConnected(a_errors, a_methodErrors) Then
+            If VBA.vbNullString = a_errors Then
+                Me.LastErrorMessage = a_methodErrors
+            ElseIf VBA.vbNullString = a_methodErrors Then
+                Me.LastErrorMessage = a_errors
+            Else
+                Me.LastErrorMessage = a_errors & VBA.vbCrLf & a_methodErrors
+            End If
+        End If
     Else
-    
         ' clear the instrument execution state to remove any lingering errors
         Me.ClearExecutionState
-        
     End If
     
 End Sub
@@ -2878,11 +2848,11 @@ Friend Sub ConfigureContinuousMode()
     On Error GoTo err_Handler
 
     ' throw an error if the state was not restored before this method.
-    Dim a_message As String: a_message = VBA.vbNullString
-    If Me.ShouldConnect(a_message) Then _
+    Dim p_details As String: p_details = VBA.vbNullString
+    If Me.ShouldConnect(p_details) Then _
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " The instrument is not ready;" & VBA.vbCrLf & a_message
+            " The instrument is not ready;" & VBA.vbCrLf & p_details
 
     ' reset if changing modes.
     If cc_isr_Tcp_Scpi.MeasurementMode.Continuous <> This.CurrentMeasurementMode Then
@@ -2988,11 +2958,11 @@ Friend Sub ConfigureExternalTriggerReading()
     On Error GoTo err_Handler
     
     ' throw an error if the state was not restored before this method.
-    Dim a_message As String: a_message = VBA.vbNullString
-    If Me.ShouldConnect(a_message) Then _
+    Dim p_details As String: p_details = VBA.vbNullString
+    If Me.ShouldConnect(p_details) Then _
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " The instrument not ready;" & VBA.vbCrLf & a_message
+            " The instrument not ready;" & VBA.vbCrLf & p_details
     
     ' reset if changing modes.
     If cc_isr_Tcp_Scpi.MeasurementMode.External <> This.CurrentMeasurementMode Then
@@ -3127,11 +3097,11 @@ Friend Sub ConfigureImmediateTriggerReadings()
     On Error GoTo err_Handler
 
     ' throw an error if the state was not restored before this method.
-    Dim a_message As String: a_message = VBA.vbNullString
-    If Me.ShouldConnect(a_message) Then _
+    Dim p_details As String: p_details = VBA.vbNullString
+    If Me.ShouldConnect(p_details) Then _
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " The instrument not ready;" & VBA.vbCrLf & a_message
+            " The instrument not ready;" & VBA.vbCrLf & p_details
 
     ' reset if changing modes.
     If cc_isr_Tcp_Scpi.MeasurementMode.Immediate <> This.CurrentMeasurementMode Then
@@ -3439,10 +3409,10 @@ Public Property Get StopRequested() As Boolean
 End Property
 
 ''' <summary>   Sets the Stop Requested condition. </summary>
-''' <param name="a_value">   [Boolean] the Stop Requested value. </value>
-Friend Property Let StopRequested(ByVal a_value As Boolean)
-    If This.StopRequested <> a_value Then
-        This.StopRequested = a_value
+''' <param name="p_value">   [Boolean] the Stop Requested value. </value>
+Friend Property Let StopRequested(ByVal p_value As Boolean)
+    If This.StopRequested <> p_value Then
+        This.StopRequested = p_value
         Me.OnPropertyChanged "StopRequested"
     End If
 End Property
@@ -3455,10 +3425,10 @@ Public Property Get ExternalTrigMonitoringEnabled() As Boolean
 End Property
 
 ''' <summary>   Sets the External Trigger Monitoring Enabled condition. </summary>
-''' <param name="a_value">   [Boolean] the External Trigger Monitoring Enabled value. </value>
-Friend Property Let ExternalTrigMonitoringEnabled(ByVal a_value As Boolean)
-    If This.ExternalTrigMonitoringEnabled <> a_value Then
-        This.ExternalTrigMonitoringEnabled = a_value
+''' <param name="p_value">   [Boolean] the External Trigger Monitoring Enabled value. </value>
+Friend Property Let ExternalTrigMonitoringEnabled(ByVal p_value As Boolean)
+    If This.ExternalTrigMonitoringEnabled <> p_value Then
+        This.ExternalTrigMonitoringEnabled = p_value
         Me.OnPropertyChanged "ExternalTrigMonitoringEnabled"
     End If
 End Property
@@ -3706,7 +3676,11 @@ err_Handler:
 End Sub
 
 ''' <summary>   Process the initial connection instrument actions. </summary>
-Private Sub OnInstrumentConnected()
+''' <param name="a_errors">         [Out, String] contains any error information that existed before this
+'''                                 method. </param>
+''' <param name="a_methoderrors">   [Out, String] contains any error due to this method. </param>
+''' <returns>   [Boolean] true if no errors are reported. </returns>
+Private Function OnInstrumentConnected(ByRef a_errors As String, ByRef a_methodErrors As String) As Boolean
 
     ' report the socket number
     Me.SocketAddress = This.ViSession.SocketAddress
@@ -3714,14 +3688,12 @@ Private Sub OnInstrumentConnected()
     
     ' report device errors if any before clearing states.
     
-    Dim p_errors As String
-    If This.Device.DeviceErrorReader.TryDequeueErrors(p_errors) Then
-        Me.LastErrorMessage = cc_isr_Core_IO.UserDefinedErrors.EnqueueError( _
-            cc_isr_Core_IO.UserDefinedErrors.Ieee488DeviceError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".OnInstrumentConnected", _
-            " Device error(s) occurred on session connection: " & p_errors).ToString()
-    End If
-    
+    Dim p_hasErrors As Boolean
+    a_errors = This.Device.EnumerateErrors()
+    p_hasErrors = VBA.vbNullString <> a_errors
+    If p_hasErrors Then _
+        a_errors = "Error(s) occurred on session connection: " & VBA.vbCrLf & a_errors
+
     This.ViSession.GpibLan.SelectiveDeviceClear
     This.Device.ResetKnownState
     This.Device.ClearExecutionState
@@ -3745,16 +3717,17 @@ Private Sub OnInstrumentConnected()
     
     Me.ConfigureContinuousMode
     
-    ' report any errors.
+    ' report any method errors.
     
-    If This.Device.DeviceErrorReader.TryDequeueErrors(p_errors) Then
-        Me.LastErrorMessage = cc_isr_Core_IO.UserDefinedErrors.EnqueueError( _
-            cc_isr_Core_IO.UserDefinedErrors.Ieee488DeviceError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".OnInstrumentConnected", _
-            " Device error(s) occurred on session initialization: " & p_errors).ToString()
-    End If
+    Dim p_hasMethodErrors As Boolean
+    a_methodErrors = This.Device.EnumerateErrors()
+    p_hasMethodErrors = VBA.vbNullString <> a_methodErrors
+    If p_hasMethodErrors Then _
+        a_methodErrors = "Error(s) occurred on instrument connection: " & VBA.vbCrLf & a_methodErrors
     
-End Sub
+    OnInstrumentConnected = Not (p_hasMethodErrors Or p_hasErrors)
+    
+End Function
 
 ''' <summary>   Process the initial view model connection actions.
 '''             This sets the executable action.  </summary>
@@ -3816,7 +3789,17 @@ Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Connec
     
     If a_eventArgs.Connected Then
 
-        OnInstrumentConnected
+        Dim a_errors As String
+        Dim a_methodErrors As String
+        If Not OnInstrumentConnected(a_errors, a_methodErrors) Then
+            If VBA.vbNullString = a_errors Then
+                Me.LastErrorMessage = a_methodErrors
+            ElseIf VBA.vbNullString = a_methodErrors Then
+                Me.LastErrorMessage = a_errors
+            Else
+                Me.LastErrorMessage = a_errors & VBA.vbCrLf & a_methodErrors
+            End If
+        End If
 
     Else
 
@@ -3901,10 +3884,10 @@ Public Property Get PauseRequested() As Boolean
 End Property
 
 ''' <summary>   Sets the Pause Requested condition. </summary>
-''' <param name="a_value">   [Boolean] the Pause Requested value. </value>
-Friend Property Let PauseRequested(ByVal a_value As Boolean)
-    If This.PauseRequested <> a_value Then
-        This.PauseRequested = a_value
+''' <param name="p_value">   [Boolean] the Pause Requested value. </value>
+Friend Property Let PauseRequested(ByVal p_value As Boolean)
+    If This.PauseRequested <> p_value Then
+        This.PauseRequested = p_value
         Me.OnPropertyChanged "PauseRequested"
     End If
 End Property
@@ -3916,10 +3899,10 @@ Public Property Get TimerInterval() As Integer
 End Property
 
 ''' <summary>   Sets the Timer Interval in milliseconds. </summary>
-''' <param name="a_value">   [Integer] the Timer Interval in milliseconds value. </value>
-Public Property Let TimerInterval(ByVal a_value As Integer)
-    If This.TimerInterval <> a_value Then
-        This.TimerInterval = a_value
+''' <param name="p_value">   [Integer] the Timer Interval in milliseconds value. </value>
+Public Property Let TimerInterval(ByVal p_value As Integer)
+    If This.TimerInterval <> p_value Then
+        This.TimerInterval = p_value
         Me.OnPropertyChanged "TimerInterval"
     End If
 End Property
@@ -3931,12 +3914,12 @@ Public Property Get ElapsedTime() As Double
 End Property
 
 ''' <summary>   Sets the Elapsed Time in milliseconds. </summary>
-''' <param name="a_value">   [Double] the Elapsed Time in milliseconds. </value>
-Public Property Let ElapsedTime(ByVal a_value As Double)
-    If This.ElapsedTime <> a_value Then
-        This.ElapsedTime = a_value
+''' <param name="p_value">   [Double] the Elapsed Time in milliseconds. </value>
+Public Property Let ElapsedTime(ByVal p_value As Double)
+    If This.ElapsedTime <> p_value Then
+        This.ElapsedTime = p_value
         Me.OnPropertyChanged "ElapsedTime"
-        Me.ElapsedTimeCaption = VBA.Format$(a_value, This.ElapsedTimeFormat)
+        Me.ElapsedTimeCaption = VBA.Format$(p_value, This.ElapsedTimeFormat)
     End If
 End Property
 
@@ -3947,10 +3930,10 @@ Public Property Get ElapsedTimeFormat() As String
 End Property
 
 ''' <summary>   Sets the Elapsed Time Format. </summary>
-''' <param name="a_value">   [String] the elapsed time format. </value>
-Public Property Let ElapsedTimeFormat(ByVal a_value As String)
-    If This.ElapsedTimeFormat <> a_value Then
-        This.ElapsedTimeFormat = a_value
+''' <param name="p_value">   [String] the elapsed time format. </value>
+Public Property Let ElapsedTimeFormat(ByVal p_value As String)
+    If This.ElapsedTimeFormat <> p_value Then
+        This.ElapsedTimeFormat = p_value
         Me.OnPropertyChanged "ElapsedTimeFormat"
     End If
 End Property
@@ -3962,10 +3945,10 @@ Public Property Get ElapsedTimeCaption() As String
 End Property
 
 ''' <summary>   Sets the Elapsed Time Caption. </summary>
-''' <param name="a_value">   [String] the elapsed time Caption. </value>
-Public Property Let ElapsedTimeCaption(ByVal a_value As String)
-    If This.ElapsedTimeCaption <> a_value Then
-        This.ElapsedTimeCaption = a_value
+''' <param name="p_value">   [String] the elapsed time Caption. </value>
+Public Property Let ElapsedTimeCaption(ByVal p_value As String)
+    If This.ElapsedTimeCaption <> p_value Then
+        This.ElapsedTimeCaption = p_value
         Me.OnPropertyChanged "ElapsedTimeCaption"
     End If
 End Property
@@ -3977,10 +3960,10 @@ Public Property Get LastErrorMessage() As String
 End Property
 
 ''' <summary>   Sets the Last Error Message. </summary>
-''' <param name="a_value">   [String] the last error message value. </value>
-Public Property Let LastErrorMessage(ByVal a_value As String)
-    If This.LastErrorMessage <> a_value Then
-        This.LastErrorMessage = a_value
+''' <param name="p_value">   [String] the last error message value. </value>
+Public Property Let LastErrorMessage(ByVal p_value As String)
+    If This.LastErrorMessage <> p_value Then
+        This.LastErrorMessage = p_value
         Me.OnPropertyChanged "LastErrorMessage"
     End If
 End Property
@@ -3992,10 +3975,10 @@ Public Property Get LastMessage() As String
 End Property
 
 ''' <summary>   Sets the Last Message. </summary>
-''' <param name="a_value">   [String] the last message value. </value>
-Public Property Let LastMessage(ByVal a_value As String)
-    If This.LastMessage <> a_value Then
-        This.LastMessage = a_value
+''' <param name="p_value">   [String] the last message value. </value>
+Public Property Let LastMessage(ByVal p_value As String)
+    If This.LastMessage <> p_value Then
+        This.LastMessage = p_value
         Me.OnPropertyChanged "LastMessage"
     End If
 End Property

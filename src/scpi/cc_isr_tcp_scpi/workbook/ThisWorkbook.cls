@@ -52,16 +52,16 @@ End Property
 
 ''' <summary>   Sets the deployed status. </summary>
 ''' <para name="value">   True to set the deployed status. </param>
-Public Property Let Deployed(ByVal a_value As Boolean)
+Public Property Let Deployed(ByVal p_value As Boolean)
 
     On Error Resume Next
 
     ' toggle deploy mode on all workbooks.
-    This.Deployed = a_value
+    This.Deployed = p_value
     Dim p_workbook As Workbook
     For Each p_workbook In Me.ProjectWorkbooks
         If p_workbook.Name <> ThisWorkbook.Name Then _
-            p_workbook.Deployed = a_value
+            p_workbook.Deployed = p_value
         DoEvents
     Next p_workbook
 
