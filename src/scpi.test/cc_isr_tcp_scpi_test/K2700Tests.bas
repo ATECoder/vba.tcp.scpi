@@ -41,7 +41,7 @@ Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
         Case 2
             Set p_outcome = TestRecoveryFromSyntaxFromError
         Case 3
-            Set p_outcome = TestShouldRecoverFromAutoAssertTalk
+            Set p_outcome = TestShouldRestoreFromClosedConnection
         Case Else
     End Select
     AfterEach
@@ -51,7 +51,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 1
+    RunTest 3
     AfterAll
 End Sub
 
@@ -544,7 +544,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestQueryOperationCompletion") & _
+    Debug.Print p_outcome.BuildReport("TestRecoveryFromSyntaxFromError") & _
         " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestRecoveryFromSyntaxFromError = p_outcome
@@ -567,7 +567,7 @@ err_Handler:
 
 End Function
 
-''' <summary>   Unit test. Asserts recovery from auto assert Talk condition. </summary>
+''' <summary>   Unit test. Asserts K2700 should restore initial state from a closed connection. </summary>
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
@@ -575,9 +575,9 @@ End Function
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestShouldRecoverFromAutoAssertTalk() As cc_isr_Test_Fx.Assert
+Public Function TestShouldRestoreFromClosedConnection() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestShouldRecoverFromAutoAssertTalk"
+    Const p_procedureName As String = "TestShouldRestoreFromClosedConnection"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -593,31 +593,24 @@ Public Function TestShouldRecoverFromAutoAssertTalk() As cc_isr_Test_Fx.Assert
     Dim p_actualReply As String
     Dim p_expectedReply As String
     
-    If p_outcome.AssertSuccessful And This.K2700.Session.GpibLanControllerAttached Then
-        ' turn on Auto Assert TALK condition.
-        This.K2700.Session.AutoAssertTalkSetter True
-        Set p_outcome = Assert.Istrue(This.K2700.Session.AutoAssertTalkGetter, _
-            "Auto Assert TALK should be true.")
-    End If
-    
     Dim p_details As String
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.Istrue(This.K2700.Session.Socket.TryCloseConnection(p_details), _
+        Set p_outcome = Assert.isTrue(This.K2700.Session.Socket.TryCloseConnection(p_details), _
             "K2700 Device should be disconnect; " & p_details)
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.IsFalse(This.K2700.Connected, _
+        Set p_outcome = Assert.isFalse(This.K2700.Connected, _
             "K2700 Device should be disconnected.")
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.Istrue(This.K2700.TryRestoreInitialState(p_details), _
+        Set p_outcome = Assert.isTrue(This.K2700.TryRestoreInitialState(p_details), _
             "K2700 Device should restore its initial state; " & p_details)
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.Istrue(This.K2700.Connected, _
+        Set p_outcome = Assert.isTrue(This.K2700.Connected, _
             "K2700 Device should be connected.")
     End If
     
@@ -634,10 +627,10 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestShouldRecoverFromAutoAssertTalk") & _
+    Debug.Print p_outcome.BuildReport("TestShouldRestoreFromClosedConnection") & _
         " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
-    Set TestShouldRecoverFromAutoAssertTalk = p_outcome
+    Set TestShouldRestoreFromClosedConnection = p_outcome
     
     On Error GoTo 0
     Exit Function

@@ -167,7 +167,6 @@ Private Type this_
     GpibLanReadTimeoutGetExecutable As Boolean
     GpibLanReadTimeoutSetExecutable As Boolean
 
-
 End Type
 
 Private This As this_
@@ -4159,6 +4158,21 @@ Public Function TryRestoreInitialState(ByRef a_details As String)
     If Me.Device Is Nothing Or Me.Session Is Nothing Or Me.Session.Socket Is Nothing Then
         a_details = "Unable to restore the view model to its initial state because the view model failed to initialize the K2700 instance. Please restart the program."
         p_success = False
+    End If
+    
+    If p_success And Not (Me.Connected Or This.Session.Socket.CanConnect) Then
+        
+        ' if not connected and not 'can connect' it means that the
+        ' socket was disposed and needs to be rebuilt.
+        Me.Initialize
+            
+        p_success = This.Session.Socket.CanConnect
+        
+        If Not p_success Then
+            a_details = "Failed initializing the socket; the socket id is invalid ('" & _
+                VBA.CStr(cc_isr_Winsock.ws32_INVALID_SOCKET) & "')."
+        End If
+    
     End If
     
     If p_success Then

@@ -687,6 +687,21 @@ Public Function TryRestoreInitialState(ByRef a_details As String) As Boolean
         
     End If
     
+    If p_success And Not (Me.Connected Or This.Session.Socket.CanConnect) Then
+        
+        ' if not connected and not 'can connect' it means that the
+        ' socket was disposed and needs to be rebuilt.
+        Me.Initialize
+            
+        p_success = This.Session.Socket.CanConnect
+        
+        If Not p_success Then
+            a_details = "Failed initializing the socket; the socket id is invalid ('" & _
+                VBA.CStr(cc_isr_Winsock.ws32_INVALID_SOCKET) & "')."
+        End If
+    
+    End If
+    
     If p_success Then
     
         p_success = This.Device.TryRestoreInitialState(a_details)

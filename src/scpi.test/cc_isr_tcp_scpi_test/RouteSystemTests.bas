@@ -55,7 +55,20 @@ End Sub
 ''' <summary>   Runs all tests. </summary>
 ''' <remarks>
 ''' <code>
-''' With 1ms read after write delay.
+''' Test7700CardsShouldBePopulated passed. in 10.4 ms.
+'''
+''' Test7700CardsShouldBePopulated passed. in 0.1 ms.
+''' Test7700CardsShouldSelected passed. in 4.2 ms.
+''' Test7700CardsShouldBuildScanLists passed. in 3.5 ms.
+''' Test7700CardsShouldBuild4WireScanLists passed. in 0.4 ms.
+''' Ran 4 out of 4 tests.
+''' Passed: 4; Failed: 0; Inconclusive: 0.
+''' Test7700CardsShouldBePopulated passed. in 0.1 ms.
+''' Test7700CardsShouldSelected passed. in 0.1 ms.
+''' Test7700CardsShouldBuildScanLists passed. in 0.2 ms.
+''' Test7700CardsShouldBuild4WireScanLists passed. in 0.1 ms.
+''' Ran 4 out of 4 tests.
+''' Passed: 4; Failed: 0; Inconclusive: 0.
 ''' </code>
 ''' </remarks>
 Public Sub RunAllTests()
