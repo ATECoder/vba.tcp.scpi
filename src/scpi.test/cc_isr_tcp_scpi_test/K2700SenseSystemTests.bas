@@ -130,7 +130,6 @@ Public Sub BeforeAll()
     
     This.Device.GpibLanControllerPort = 1234
     This.Device.ReadAfterWriteDelay = 1
-    This.Device.SessionTimeout = This.SessionTimeout
     This.Device.Termination = VBA.vbLf
     
     ' this also initializes the IEEE488 device and session

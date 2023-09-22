@@ -2097,11 +2097,10 @@ Friend Function Initialize(ByVal a_viewModel As K2700ViewModel) As K2700Observer
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
+    Set This.ViewModel = a_viewModel
+    Set m_viewModel = a_viewModel
+    
     If Not This.Initialized Then
-    
-        Set This.ViewModel = a_viewModel
-        Set m_viewModel = a_viewModel
-    
     End If
     
     Me.MeasurementTopRow = m_measurementTopRow

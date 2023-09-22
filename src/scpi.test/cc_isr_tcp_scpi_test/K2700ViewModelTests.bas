@@ -15,8 +15,6 @@ Private Type this_
     BeforeEachAssert As cc_isr_Test_Fx.Assert
     ViewModel As cc_isr_Tcp_Scpi.K2700ViewModel
     Observer As K2700Observer
-    Device As cc_isr_Ieee488.Device
-    Session As cc_isr_Ieee488.TcpSession
     Address As String
     SessionTimeout As Integer
     TestStopper As cc_isr_Core_IO.Stopwatch
@@ -73,7 +71,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 1
+    RunTest 2
     AfterAll
 End Sub
 
@@ -137,7 +135,8 @@ Public Sub BeforeAll()
     Set This.TestStopper = cc_isr_Core_IO.Factory.NewStopwatch
     
     ' set a temporary error tracer
-    Set This.ErrTracer = New DeviceErrorsTracer
+    Dim p_errTrace As New DeviceErrorsTracer
+    Set This.ErrTracer = p_errTrace
     
     ' clear the error state.
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
@@ -154,8 +153,9 @@ Public Sub BeforeAll()
     This.TopCardFunctionScanList = ":FUNC 'RES',(@101,120)"
     This.BottomCardFunctionScanList = VBA.vbNullString
     
-    Set This.ViewModel = cc_isr_Tcp_Scpi.K2700ViewModel
+    Set This.ViewModel = cc_isr_Tcp_Scpi.Factory.NewK2700ViewModel
     
+    Set This.ErrTracer = p_errTrace.Initialize(This.ViewModel.Device)
     Set This.Observer = K2700Observer.Initialize(This.ViewModel)
     
     This.ViewModel.SocketAddress = This.Address
@@ -164,8 +164,6 @@ Public Sub BeforeAll()
     This.ViewModel.ReadAfterWriteDelay = 1
     This.ViewModel.SessionTimeout = This.SessionTimeout
     This.ViewModel.Termination = VBA.vbLf
-    
-    This.ErrTracer.Initialize This.ViewModel.Device
     
     ' connect
     This.ViewModel.OpenConnectionCommand
@@ -249,7 +247,7 @@ Public Sub BeforeEach()
         
         Dim p_command As String
         p_command = "*CLS;*WAI;*OPC?"
-        If 0 >= This.Session.TryWriteLine(p_command, p_details) Then
+        If 0 >= This.ViewModel.Session.TryWriteLine(p_command, p_details) Then
             Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
         End If
         
@@ -257,7 +255,7 @@ Public Sub BeforeEach()
     
     Dim p_reply As String
     If p_outcome.AssertSuccessful Then
-        If 0 > This.Session.TryRead(p_reply, p_details) Then
+        If 0 > This.ViewModel.Session.TryRead(p_reply, p_details) Then
             Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
         End If
     End If
@@ -340,11 +338,11 @@ Public Sub AfterEach()
     
         ' clear errors if any so as to leave the instrument without errors.
         p_command = "*CLS;*WAI;*OPC?"
-        If 0 >= This.ViewModel.Device.Session.TryWriteLine(p_command, p_details) Then
+        If 0 >= This.ViewModel.Session.TryWriteLine(p_command, p_details) Then
             Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
         End If
         
-        If 0 > This.ViewModel.Device.Session.TryRead(p_reply, p_details) Then
+        If 0 > This.ViewModel.Session.TryRead(p_reply, p_details) Then
             Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
         End If
         
@@ -409,8 +407,6 @@ Public Sub AfterAll()
         This.ViewModel.Dispose
 
     Set This.ViewModel = Nothing
-    Set This.Session = Nothing
-    Set This.Device = Nothing
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -479,6 +475,18 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.isTrue(This.ViewModel.ToggleConnectionExecutable, _
             "Toggle connection should be executable after initializing the View Model.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.AreEqual(This.ViewModel.Host, This.Observer.Host, _
+            "Observer and view model 'Host' setting should equal.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.AreEqual(This.ViewModel.Port, This.Observer.Port, _
+            "Observer and view model 'Port' setting should equal.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.AreEqual(This.ViewModel.SocketAddress, This.Observer.SocketAddress, _
+            "Observer and view model 'SocketAddress' setting should equal.")
 
     ' Finally, verify that no error message was recorded.
     If p_outcome.AssertSuccessful Then _

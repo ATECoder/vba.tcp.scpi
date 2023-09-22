@@ -188,7 +188,7 @@ Public Function Initialize() As K2700ViewModel
     ' populate the function box commands
     PopulateSenseFunctions
 
-    This.K2700 = This.GpibLanControllerPort
+    This.K2700.GpibLanControllerPort = This.GpibLanControllerPort
     This.K2700.ReadAfterWriteDelay = This.ReadAfterWriteDelay
     This.K2700.Termination = This.Termination
     
@@ -393,8 +393,8 @@ Friend Sub ConnectionExecutableSetter()
         p_canExecute = VBA.vbNullString <> This.Host _
             And (5025 = This.Port Or 1234 = This.Port) _
             And 0 < This.SessionTimeout
-    This.OpenConnectionExecutable = p_canExecute And Not Me.Connected
-    This.CloseConnectionExecutable = p_canExecute And Me.Connected
+    Me.OpenConnectionExecutable = p_canExecute And Not Me.Connected
+    Me.CloseConnectionExecutable = p_canExecute And Me.Connected
 End Sub
 
 ''' <summary>   Gets the condition indicating that the toggle Connection command
@@ -2877,6 +2877,65 @@ Public Function ValidateInputs() As Boolean
 
 End Function
 
+''' <summary>   Internal. Configures the intial trigger mode to continuous trigger mode. </summary>
+Friend Sub ConfigureIntitialTriggerMode()
+
+    Const p_procedureName = "ConfigureIntitialTriggerMode"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    ' reset if changing modes.
+    If cc_isr_Tcp_Scpi.MeasurementMode.Continuous <> This.CurrentMeasurementMode Then
+        This.K2700.Device.ResetKnownState
+    End If
+    
+    ' clear execution state
+
+    This.K2700.Device.ClearExecutionState
+
+    Me.SenseFunctionName = This.ContinuousSenseFunctionName
+
+    ' configure measuring a single value on each read.
+    This.K2700.ConfigureContinuousFunctionAutoRange Me.SenseFunctionName
+    
+    ' validate the sense function.
+    Dim p_senseFunction As String
+    p_senseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
+    If 1 <> VBA.InStr(1, This.SenseFunctionName, p_senseFunction, vbTextCompare) Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " Failed setting sense function from '" & p_senseFunction & _
+            "' to '" & This.SenseFunctionName & "'."
+            
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    ' enable the mode executables and conditions.
+    Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementMode.Continuous, "continuous"
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+
 ''' <summary>   Internal. Configures continuous trigger mode. </summary>
 ''' <remarks>   This method requires that the instrument be connected as per
 ''' <see cref=TryRestoreInitialState"/>. This method disables both the trigger
@@ -4198,7 +4257,7 @@ Friend Function TryConfigureInstrumentInitialState(ByRef a_errors As String, _
 
     ' configure the instrument for continuous mode.
     
-    Me.ConfigureContinuousMode
+    Me.ConfigureIntitialTriggerMode
     
     ' report any method errors.
     
@@ -4256,7 +4315,7 @@ Public Function ShouldRestoreSenseFunction(ByVal a_senseFunction As String, _
             (1 = InStr(1, This.ImmediateSenseFunctionName, a_senseFunction, vbTextCompare)) Or _
             (1 = InStr(1, This.ExternalSenseFunctionName, a_senseFunction, vbTextCompare))) Then
         a_details = "The K2700 device current sense function '" & a_senseFunction & _
-            "' is not set; it must be set to either " & _
+            "' is not expected; it must be either " & _
             This.ContinuousSenseFunctionName & " or " & _
             This.ImmediateSenseFunctionName & " or " & _
             This.ExternalSenseFunctionName & "."

@@ -39,4 +39,9 @@ Public Function NewRouteSystem() As RouteSystem
     Set NewRouteSystem = New RouteSystem
 End Function
 
+''' <summary>   Instantiates the <see cref="K2700ViewModel"/> object. </summary>
+''' <returns>   [<see cref="K2700ViewModel"/>]. </returns>
+Public Function NewK2700ViewModel() As K2700ViewModel
+    Set NewK2700ViewModel = New K2700ViewModel
+End Function
 
