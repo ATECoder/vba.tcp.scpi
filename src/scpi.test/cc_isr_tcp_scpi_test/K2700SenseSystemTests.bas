@@ -57,6 +57,10 @@ End Sub
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' TestInitialSenseFunctionShouldGet passed. in 22.3 ms.
+''' TestSenseFunctionShouldSet passed. in 294.5 ms.
+''' Ran 2 out of 2 tests.
+''' Passed: 2; Failed: 0; Inconclusive: 0.
 ''' </code>
 ''' </remarks>
 Public Sub RunAllTests()
@@ -440,6 +444,7 @@ End Sub
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' TestInitialSenseFunctionShouldGet passed. in 22.3 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -504,6 +509,7 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' TestSenseFunctionShouldSet passed. in 294.5 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where

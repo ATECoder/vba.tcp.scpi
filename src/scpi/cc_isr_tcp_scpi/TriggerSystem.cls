@@ -89,10 +89,10 @@ Public Function ContinuousEnabledGetter() As Boolean
 End Function
 
 ''' <summary>   Sets the continuous enabled. </summary>
-''' <param name="p_value">   [Boolean] The continuous enabled to set. </param >
-Public Sub ContinuousEnabledSetter(ByVal p_value As Boolean)
-    This.Session.WriteLine "CONT " & IIf(p_value, "ON", "OFF")
-    This.ContinuousEnabled = p_value
+''' <param name="a_value">   [Boolean] The continuous enabled to set. </param >
+Public Sub ContinuousEnabledSetter(ByVal a_value As Boolean)
+    This.Session.WriteLine "CONT " & IIf(a_value, "ON", "OFF")
+    This.ContinuousEnabled = a_value
 End Sub
 
 ''' <summary>   Gets the last set or get sample count. </summary>
@@ -118,10 +118,10 @@ Public Function SampleCountGetter() As Long
 End Function
 
 ''' <summary>   Sets the sample count. </summary>
-''' <param name="p_value">   [Long] The sample count to set. </param >
-Public Sub SampleCountSetter(ByVal p_value As Long)
-    This.Session.WriteLine "SAMP:COUN " & VBA.CStr(p_value)
-    This.SampleCount = p_value
+''' <param name="a_value">   [Long] The sample count to set. </param >
+Public Sub SampleCountSetter(ByVal a_value As Long)
+    This.Session.WriteLine "SAMP:COUN " & VBA.CStr(a_value)
+    This.SampleCount = a_value
 End Sub
 
 
@@ -132,23 +132,23 @@ Public Property Get Source() As cc_isr_Tcp_Scpi.TriggerSource
 End Property
 
 ''' <summary>   Sets the <see cref="TriggerSource"/>. </summary>
-''' <param name="p_value">   [<see cref="TriggerSource"/>] the trigger source. </param>
-Public Sub SourceSetter(ByVal p_value As cc_isr_Tcp_Scpi.TriggerSource)
+''' <param name="a_value">   [<see cref="TriggerSource"/>] the trigger source. </param>
+Public Sub SourceSetter(ByVal a_value As cc_isr_Tcp_Scpi.TriggerSource)
 
-    If cc_isr_Tcp_Scpi.TriggerSource.Immediate = p_value Then
+    If cc_isr_Tcp_Scpi.TriggerSource.Immediate = a_value Then
         This.Session.WriteLine ":TRIG:SOUR IMM"
-    ElseIf cc_isr_Tcp_Scpi.TriggerSource.External = p_value Then
+    ElseIf cc_isr_Tcp_Scpi.TriggerSource.External = a_value Then
         ' for some reason the old application had the trigger source toggled
         ' if requesting an external trigger source
         ' This.Session.WriteLine ":TRIG:SOUR IMM"
         This.Session.WriteLine ":TRIG:SOUR EXT"
     End If
-    This.Source = p_value
+    This.Source = a_value
     
 End Sub
 
 ''' <summary>   Gets the <see cref="TriggerSource"/>. </summary>
-''' <param name="p_value">   [<see cref="TriggerSource"/>] the trigger source. </param>
+''' <param name="a_value">   [<see cref="TriggerSource"/>] the trigger source. </param>
 Public Function SourceGetter() As cc_isr_Tcp_Scpi.TriggerSource
 
     Dim p_source As String
@@ -191,10 +191,10 @@ Public Function TriggerCountGetter() As Long
 End Function
 
 ''' <summary>   Sets the Trigger count. </summary>
-''' <param name="p_value">   [Long] The Trigger count to set. </param >
-Public Sub TriggerCountSetter(ByVal p_value As Long)
-    This.Session.WriteLine "TRIG:COUN " & VBA.CStr(p_value)
-    This.TriggerCount = p_value
+''' <param name="a_value">   [Long] The Trigger count to set. </param >
+Public Sub TriggerCountSetter(ByVal a_value As Long)
+    This.Session.WriteLine "TRIG:COUN " & VBA.CStr(a_value)
+    This.TriggerCount = a_value
 End Sub
 
 

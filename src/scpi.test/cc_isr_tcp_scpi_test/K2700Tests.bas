@@ -37,9 +37,9 @@ Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
     BeforeEach
     Select Case a_testNumber
         Case 1
-            Set p_outcome = TestQueryOperationCompletion
+            Set p_outcome = TestOperationCompletionShouldQuery
         Case 2
-            Set p_outcome = TestRecoveryFromSyntaxFromError
+            Set p_outcome = TestShouldRecoverFromSyntaxFromError
         Case 3
             Set p_outcome = TestShouldRestoreFromClosedConnection
         Case Else
@@ -51,7 +51,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 3
+    RunTest 1
     AfterAll
 End Sub
 
@@ -59,6 +59,11 @@ End Sub
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' TestOperationCompletionShouldQuery passed. in 18.2 ms.
+''' TestShouldRecoverFromSyntaxFromError passed. in 136.4 ms.
+''' TestShouldRestoreFromClosedConnection passed. in 148.8 ms.
+''' Ran 3 out of 3 tests.
+''' Passed: 3; Failed: 0; Inconclusive: 0.
 ''' </code>
 ''' </remarks>
 Public Sub RunAllTests()
@@ -121,15 +126,14 @@ Public Sub BeforeAll()
 
     ' Prime all tests
     
-    Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize()
+    Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700()
     Set This.Device = This.K2700.Device
     Set This.Session = This.Device.Session
     Set This.ErrTracer = p_errTracer.Initialize(This.Device)
     
-    This.Device.GpibLanControllerPort = 1234
-    This.Device.ReadAfterWriteDelay = 1
-    This.Device.SessionTimeout = This.SessionTimeout
-    This.Device.Termination = VBA.vbLf
+    This.K2700.GpibLanControllerPort = 1234
+    This.K2700.ReadAfterWriteDelay = 1
+    This.K2700.Termination = VBA.vbLf
     
     ' this also initializes the IEEE488 device and session
     This.K2700.Initialize
@@ -423,17 +427,18 @@ End Sub
 '  Tests
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Unit test. Asserts querying operation completion. </summary>
+''' <summary>   Unit test. Asserts that operation completion should query. </summary>
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' TestOperationCompletionShouldQuery passed. in 18.2 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestQueryOperationCompletion() As cc_isr_Test_Fx.Assert
+Public Function TestOperationCompletionShouldQuery() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestQueryOperationCompletion"
+    Const p_procedureName As String = "TestOperationCompletionShouldQuery"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -463,10 +468,10 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestQueryOperationCompletion") & _
+    Debug.Print p_outcome.BuildReport("TestOperationCompletionShouldQuery") & _
         " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
-    Set TestQueryOperationCompletion = p_outcome
+    Set TestOperationCompletionShouldQuery = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -486,17 +491,18 @@ err_Handler:
 
 End Function
 
-''' <summary>   Unit test. Asserts recovery from Syntax error. </summary>
+''' <summary>   Unit test. Asserts that the K2700 should recover from a Syntax error. </summary>
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' TestShouldRecoverFromSyntaxFromError passed. in 136.4 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestRecoveryFromSyntaxFromError() As cc_isr_Test_Fx.Assert
+Public Function TestShouldRecoverFromSyntaxFromError() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestRecoveryFromSyntaxFromError"
+    Const p_procedureName As String = "TestShouldRecoverFromSyntaxFromError"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -544,10 +550,10 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestRecoveryFromSyntaxFromError") & _
+    Debug.Print p_outcome.BuildReport("TestShouldRecoverFromSyntaxFromError") & _
         " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
-    Set TestRecoveryFromSyntaxFromError = p_outcome
+    Set TestShouldRecoverFromSyntaxFromError = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -571,6 +577,7 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' TestShouldRestoreFromClosedConnection passed. in 148.8 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where

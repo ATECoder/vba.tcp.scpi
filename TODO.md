@@ -6,7 +6,23 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
+IEEE4888:
+Tcp Session: Remove session timeout. Set read timeout to the socket timeout. 
+Add session properties to the Device.
+
+SCPI:
+Add session properties to the K2700 and view model.
+Add open and close connection methods to the view model.
+Initialize the view model when opening the connection.
+
 ## TODO
+
+
+
+
+
+so 
+(2) document how these three 
 
 
 SCPI:

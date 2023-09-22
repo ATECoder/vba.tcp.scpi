@@ -58,10 +58,10 @@ Public Function AutoRangeEnabledGetter() As Boolean
 End Function
 
 ''' <summary>   Sets the Auto Range enabled. </summary>
-''' <param name="p_value">   [Boolean] The AutoRange enabled to set. </param >
-Public Sub AutoRangeEnabledSetter(ByVal p_value As Boolean)
-    This.Session.WriteLine ":" & This.SenseFunction & ":RANG:AUTO " & IIf(p_value, "1", "0")
-    This.AutoRangeEnabled = p_value
+''' <param name="a_value">   [Boolean] The AutoRange enabled to set. </param >
+Public Sub AutoRangeEnabledSetter(ByVal a_value As Boolean)
+    This.Session.WriteLine ":" & This.SenseFunction & ":RANG:AUTO " & IIf(a_value, "1", "0")
+    This.AutoRangeEnabled = a_value
 End Sub
 
 ''' <summary>   Gets the last set or get Power Line Cycles. </summary>
@@ -90,10 +90,10 @@ Public Function PowerLineCyclesGetter() As Double
 End Function
 
 ''' <summary>   Sets the integration rate in Power Line Cycles. </summary>
-''' <param name="p_value">   [Double] The integration rate in Power Line Cyclest. </param >
-Public Sub PowerLineCyclesSetter(ByVal p_value As Double)
-    This.Session.WriteLine ":" & This.SenseFunction & ":NPLC " & VBA.CStr(p_value)
-    This.PowerLineCycles = p_value
+''' <param name="a_value">   [Double] The integration rate in Power Line Cyclest. </param >
+Public Sub PowerLineCyclesSetter(ByVal a_value As Double)
+    This.Session.WriteLine ":" & This.SenseFunction & ":NPLC " & VBA.CStr(a_value)
+    This.PowerLineCycles = a_value
 End Sub
 
 ''' <summary>   Gets the Sense Function/ </summary>
@@ -113,12 +113,12 @@ Public Function SenseFunctionGetter(Optional ByVal a_decorator As String = """")
 End Function
 
 ''' <summary>   Sets the sense function. </summary>
-''' <param name="p_value">       [String] the sense function. </param>
+''' <param name="a_value">       [String] the sense function. </param>
 ''' <param name="a_decorator">   [String] the decorator to append before and after the function name. </param>
-Public Sub SenseFunctionSetter(ByVal p_value As String, _
+Public Sub SenseFunctionSetter(ByVal a_value As String, _
         Optional ByVal a_decorator As String = "'")
 
-    This.SenseFunction = p_value
+    This.SenseFunction = a_value
     This.Session.WriteLine ":SENS:FUNC " & a_decorator & This.SenseFunction & a_decorator
 
 End Sub

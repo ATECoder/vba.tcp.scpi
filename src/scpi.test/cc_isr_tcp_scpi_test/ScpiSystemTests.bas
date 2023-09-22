@@ -55,7 +55,9 @@ End Sub
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' </code>
+''' TestInputsShouldBeFront passed. in 32.5 ms.
+''' Ran 1 out of 1 tests.
+''' Passed: 1; Failed: 0; Inconclusive: 0.''' </code>
 ''' </remarks>
 Public Sub RunAllTests()
     BeforeAll
@@ -428,6 +430,7 @@ End Sub
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' TestInputsShouldBeFront passed. in 32.5 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where

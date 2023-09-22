@@ -58,9 +58,9 @@ Public Function ElementsGetter() As String
 End Function
 
 ''' <summary>   Sets the format elements. </summary>
-''' <param name="p_value">   [String] The format elements to set. </param >
-Public Sub ElementsSetter(ByVal p_value As String)
-    This.Session.WriteLine "FORM:ELEM " & p_value
-    This.Elements = p_value
+''' <param name="a_value">   [String] The format elements to set. </param >
+Public Sub ElementsSetter(ByVal a_value As String)
+    This.Session.WriteLine "FORM:ELEM " & a_value
+    This.Elements = a_value
 End Sub
 

@@ -73,7 +73,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 4
+    RunTest 1
     AfterAll
 End Sub
 
@@ -160,18 +160,12 @@ Public Sub BeforeAll()
     
     This.ViewModel.SocketAddress = This.Address
     This.ViewModel.SessionTimeout = This.SessionTimeout
+    This.ViewModel.GpibLanControllerPort = 1234
+    This.ViewModel.ReadAfterWriteDelay = 1
+    This.ViewModel.SessionTimeout = This.SessionTimeout
+    This.ViewModel.Termination = VBA.vbLf
     
-    This.ViewModel.Device.GpibLanControllerPort = 1234
-    This.ViewModel.Device.ReadAfterWriteDelay = 1
-    This.ViewModel.Device.SessionTimeout = This.SessionTimeout
-    This.ViewModel.Device.Termination = VBA.vbLf
-    
-    ' initialize the view model.
-    This.ViewModel.Initialize
-
-    ' set the final error tracer capable of reporting device errors.
-    Dim p_errTracer As New DeviceErrorsTracer
-    Set This.ErrTracer = p_errTracer.Initialize(This.ViewModel.Device)
+    This.ErrTracer.Initialize This.ViewModel.Device
     
     ' connect
     This.ViewModel.OpenConnectionCommand

@@ -14,8 +14,15 @@ Private WithEvents m_socket As IPv4StreamSocket
 Attribute m_socket.VB_VarHelpID = -1
 
 Private Type this_
-    Device As cc_isr_Ieee488.Device
+
+    ' session settings
     Session As cc_isr_Ieee488.TcpSession
+    GpibLanControllerPort As Long
+    ReadAfterWriteDelay As Long
+    Termination As String
+    
+    ' device settings
+    Device As cc_isr_Ieee488.Device
     FormatSystem As FormatSystem
     RouteSystem As RouteSystem
     ScpiSystem As ScpiSystem
@@ -33,6 +40,10 @@ Public Event ChannelMeasured(ByVal a_eventArgs As ChannelReadingEventArgs)
 ''' <summary>   Initializes the k2700 . </summary>
 Private Sub Class_Initialize()
 
+    This.GpibLanControllerPort = 1234
+    This.ReadAfterWriteDelay = 1
+    This.Termination = VBA.vbLf
+    
     Set This.Device = cc_isr_Ieee488.Factory.NewDevice()
     Set This.Session = This.Device.Session
     
@@ -48,6 +59,10 @@ End Sub
 ''' <summary>   Initializes and returns the <see cref="Ieee488Session"/>. </summary>
 ''' <returns>   [<see cref="K2700"/>]. </returns>
 Public Function Initialize() As K2700
+   
+    This.Device.ReadAfterWriteDelay = This.ReadAfterWriteDelay
+    This.Device.GpibLanControllerPort = This.GpibLanControllerPort
+    This.Device.Termination = This.Termination
    
     ' this also initializes the session.
     This.Device.Initialize
@@ -74,11 +89,60 @@ Public Function Initialize() As K2700
    
 End Function
 
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+'  Session Settings
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
 ''' <summary>   Returns a reference to the <see cref="cc_isr_Ieee488.TcpSession"/>. </summary>
 ''' <value>   An <see cref="cc_isr_Ieee488.TcpSession"/>. </returns>
 Public Property Get Session() As cc_isr_Ieee488.TcpSession
-    Set Session = This.Device.Session
+    Set Session = This.Session
 End Property
+
+''' <summary>   Gets the port number of the GPIB Lan controller. </summary>
+''' <value>   [Long]. </value>
+Public Property Get GpibLanControllerPort() As Long
+    GpibLanControllerPort = This.GpibLanControllerPort
+End Property
+
+''' <summary>   Sets the port number of the GPIB Lan controller. </summary>
+''' <param name="a_value">   [Long] the GPIB Lan controller port. </param>
+Public Property Let GpibLanControllerPort(ByVal a_value As Long)
+    This.GpibLanControllerPort = a_value
+End Property
+
+''' <summary>   Gets the Read After Write Delay in milliseconds. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get ReadAfterWriteDelay() As Integer
+    ReadAfterWriteDelay = This.ReadAfterWriteDelay
+End Property
+
+''' <summary>   Sets the Read After Write Delay Delay in milliseconds. </summary>
+''' <param name="a_value">   [Integer] the Read After Write Delay Delay in milliseconds. </param>
+Public Property Let ReadAfterWriteDelay(ByVal a_value As Integer)
+    This.ReadAfterWriteDelay = a_value
+End Property
+
+''' <summary>   Gets the termination to append to output messages. </summary>
+''' <value>   [String]. </value>
+Public Property Get Termination() As String
+    Termination = This.Termination
+End Property
+
+''' <summary>   Sets the termination to append to output messages. </summary>
+''' <param name="a_value">   [String] the termination. </param>
+Public Property Let Termination(ByVal a_value As String)
+    This.Termination = a_value
+End Property
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+'  Device Settings
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
 
 ''' <summary>   Returns a reference to the <see cref="cc_isr_Ieee488.Device"/>. </summary>
 ''' <value>   An <see cref="cc_isr_Ieee488.Device"/>. </returns>
@@ -128,9 +192,6 @@ Public Function InitializeLegacy(ByVal a_address As String, _
         Optional ByVal a_function As String = "RES", _
         Optional ByVal a_timeout As Long = 3000) As Boolean
 
-    ' this will get applied upon connecting.
-    This.Session.SessionTimeout = a_timeout
-    
     If This.Session.Socket.TryOpenConnection(a_address, a_timeout, a_details) Then
     
         ' reset clear the device.
