@@ -158,8 +158,8 @@ Public Function BuildFunctionScanList(ByVal a_senseFunction As String) As String
     p_lastChannelNumber = p_firstChannelNumber + This.FunctionalCapacity - 1
     
     This.FunctionScanList = ":FUNC '" & a_senseFunction & _
-            "',(@" & CStr(p_firstChannelNumber) & _
-            "," & CStr(p_lastChannelNumber) & ")"
+            "',(@" & VBA.CStr(p_firstChannelNumber) & _
+            "," & VBA.CStr(p_lastChannelNumber) & ")"
             
     BuildFunctionScanList = This.FunctionScanList
     
@@ -171,8 +171,8 @@ End Function
 Public Property Get RouteMultipleCloseCommand() As String
         
     RouteMultipleCloseCommand = ":ROUT:MULT:CLOS (@" & _
-            CStr(This.SlotNumber * This.SlotCapacity + This.Capacity + 4) & "," & _
-            CStr(This.SlotNumber * This.SlotCapacity + This.Capacity + 5) & ")"
+            VBA.CStr(This.SlotNumber * This.SlotCapacity + This.Capacity + 4) & "," & _
+            VBA.CStr(This.SlotNumber * This.SlotCapacity + This.Capacity + 5) & ")"
 
 End Property
 
@@ -188,7 +188,7 @@ Public Function GetSlotScanChannel(ByVal a_slotNumber As Integer, ByVal a_slotCa
 
     Dim p_channelNumber As Integer
     p_channelNumber = a_slotNumber * a_slotCapacity + a_channelNumber
-    GetSlotScanChannel = CStr(p_channelNumber)
+    GetSlotScanChannel = VBA.CStr(p_channelNumber)
     
 End Function
 
@@ -204,14 +204,14 @@ Public Function BuildScanChannel(ByVal a_deviceChannelNumber As Integer) As Stri
         a_deviceChannelNumber > This.DeviceLastChannel Then
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidArgumentError, _
             ThisWorkbook.VBProject.Name & "." & VBA.Information.TypeName(Me) & ".BuildScanChannel", _
-            "Argument: 'a_ChannelNumber' = " & CStr(a_deviceChannelNumber) & _
+            "Argument: 'a_ChannelNumber' = " & VBA.CStr(a_deviceChannelNumber) & _
             " is out of range for this '" & This.Name & _
-            "' with channels in the range [" & CStr(This.DeviceFirstChannel) & _
-            "," & CStr(This.DeviceLastChannel) & "]."
+            "' with channels in the range [" & VBA.CStr(This.DeviceFirstChannel) & _
+            "," & VBA.CStr(This.DeviceLastChannel) & "]."
     End If
     Dim p_channelNumber As Integer
     p_channelNumber = This.SlotNumber * This.SlotCapacity + a_deviceChannelNumber - This.DeviceFirstChannel + 1
-    BuildScanChannel = CStr(p_channelNumber)
+    BuildScanChannel = VBA.CStr(p_channelNumber)
     
 End Function
 

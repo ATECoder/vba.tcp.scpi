@@ -14,7 +14,7 @@ Attribute VB_Exposed = True
 Option Explicit
 
 Private Type this_
-    ViSession As cc_isr_Ieee488.ViSession
+    Session As cc_isr_Ieee488.TcpSession
     InstrumentFamilyCards As Collection
     InstalledCards As Collection
     ChannelCount As Integer
@@ -23,23 +23,23 @@ End Type
 Private This As this_
 
 ''' <summary>   Returns a reference to the <see cref="RouteSystem"/>. </summary>
-''' <param name="a_session">    [<see cref="<see cref="cc_isr_IEEE488.VISession"/>] A connected session. </param>
+''' <param name="a_session">    [<see cref="<see cref="cc_isr_Ieee488.TcpSession"/>] A connected session. </param>
 ''' <value>   [<see cref="RouteSystem"/>]. </returns>
-Public Function Initialize(ByVal a_session As cc_isr_Ieee488.ViSession) As RouteSystem
-    Set This.ViSession = a_session
+Public Function Initialize(ByVal a_session As cc_isr_Ieee488.TcpSession) As RouteSystem
+    Set This.Session = a_session
     Set This.InstrumentFamilyCards = New Collection
     Set This.InstalledCards = New Collection
     Set Initialize = Me
 End Function
 
 ''' <summary>   Returns the connection state of the client. </summary>
-''' <returns>   True if the <see cref="cc_isr_IEEE488.VISession"/>  is connected; otherwise, False. </returns>
+''' <returns>   True if the <see cref="cc_isr_Ieee488.TcpSession"/>  is connected; otherwise, False. </returns>
 Public Property Get Connected() As Boolean
     
-    If This.ViSession Is Nothing Then
+    If This.Session Is Nothing Then
         Connected = False
     Else
-        Connected = This.ViSession.Connected
+        Connected = This.Session.Connected
     End If
 
 End Property
@@ -112,7 +112,7 @@ Public Function PopulateCards(ByVal a_cards As String) As Integer
         If Not p_multiplexerCard Is Nothing Then
             p_multiplexerCard.SlotNumber = p_slotNumber
             p_multiplexerCard.DeviceFirstChannel = p_firstChannelNumber
-            p_cards.Add p_multiplexerCard.Clone(), CStr(p_slotNumber)
+            p_cards.Add p_multiplexerCard.Clone(), VBA.CStr(p_slotNumber)
             p_firstChannelNumber = p_firstChannelNumber + p_multiplexerCard.FunctionalCapacity
             This.ChannelCount = This.ChannelCount + p_multiplexerCard.FunctionalCapacity
         End If
@@ -175,7 +175,7 @@ Public Sub DefineFunctionScanLists(ByVal a_function As String)
     
     Dim p_multiplexerCard As MultiplexerCard
     For Each p_multiplexerCard In Me.InstalledCards
-        This.ViSession.WriteLine p_multiplexerCard.FunctionScanList
+        This.Session.WriteLine p_multiplexerCard.FunctionScanList
     Next
 
 End Sub
@@ -233,7 +233,7 @@ Public Function SelectMultiplexerCard(ByVal a_channelNumber As Integer) As Multi
     If p_multiplexerCard Is Nothing Then
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidArgumentError, _
             ThisWorkbook.VBProject.Name & "." & VBA.Information.TypeName(Me) & ".SelectMultiplexerCard", _
-            "Argument: 'a_ChannelNumber' = " & CStr(a_channelNumber) & " is out of range for the installed multiplexer cards in this instrument."
+            "Argument: 'a_ChannelNumber' = " & VBA.CStr(a_channelNumber) & " is out of range for the installed multiplexer cards in this instrument."
     End If
     Set SelectMultiplexerCard = p_multiplexerCard
 End Function

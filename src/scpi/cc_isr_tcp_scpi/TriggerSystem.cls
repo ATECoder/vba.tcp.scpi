@@ -14,7 +14,7 @@ Attribute VB_Exposed = True
 Option Explicit
 
 Private Type this_
-    ViSession As cc_isr_Ieee488.ViSession
+    Session As cc_isr_Ieee488.TcpSession
     ContinuousEnabled As Boolean
     SampleCount As Long
     Source As cc_isr_Tcp_Scpi.TriggerSource
@@ -34,21 +34,21 @@ Public Enum TriggerSource
 End Enum
 
 ''' <summary>   Returns a reference to the <see cref="TriggerSystem"/>. </summary>
-''' <param name="a_session">    [<see cref="<see cref="cc_isr_IEEE488.VISession"/>] A connected session. </param>
+''' <param name="a_session">    [<see cref="<see cref="cc_isr_Ieee488.TcpSession"/>] A connected session. </param>
 ''' <value>   [<see cref="TriggerSystem"/>]. </returns>
-Public Function Initialize(ByVal a_session As cc_isr_Ieee488.ViSession) As TriggerSystem
-    Set This.ViSession = a_session
+Public Function Initialize(ByVal a_session As cc_isr_Ieee488.TcpSession) As TriggerSystem
+    Set This.Session = a_session
     Set Initialize = Me
 End Function
 
 ''' <summary>   Returns the connection state of the client. </summary>
-''' <returns>   True if the <see cref="cc_isr_IEEE488.VISession"/>  is connected; otherwise, False. </returns>
+''' <returns>   True if the <see cref="cc_isr_Ieee488.TcpSession"/>  is connected; otherwise, False. </returns>
 Public Property Get Connected() As Boolean
     
-    If This.ViSession Is Nothing Then
+    If This.Session Is Nothing Then
         Connected = False
     Else
-        Connected = This.ViSession.Connected
+        Connected = This.Session.Connected
     End If
 
 End Property
@@ -59,13 +59,13 @@ End Property
 
 ''' <summary>   Aborts triggering. </summary>
 Public Sub Abort()
-    This.ViSession.WriteLine ("ABORT")
+    This.Session.WriteLine "ABORT"
 End Sub
 
 
 ''' <summary>   Initiates an immediate trigger. </summary>
 Public Sub Initiate()
-    This.ViSession.WriteLine ("INIT:IMM")
+    This.Session.WriteLine "INIT:IMM"
 End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -83,17 +83,17 @@ End Property
 ''' <returns>   [Boolean]. </returns>
 Public Function ContinuousEnabledGetter() As Boolean
     Dim p_value As String
-    p_value = This.ViSession.QueryLine("INIT:CONT?")
+    p_value = This.Session.QueryLine("INIT:CONT?")
     This.ContinuousEnabled = IIf(p_value = "ON", True, False)
     ContinuousEnabledGetter = This.ContinuousEnabled
 End Function
 
 ''' <summary>   Sets the continuous enabled. </summary>
 ''' <param name="p_value">   [Boolean] The continuous enabled to set. </param >
-Public Function ContinuousEnabledSetter(ByVal p_value As Boolean)
-    This.ViSession.WriteLine ("CONT " & IIf(p_value, "ON", "OFF"))
+Public Sub ContinuousEnabledSetter(ByVal p_value As Boolean)
+    This.Session.WriteLine "CONT " & IIf(p_value, "ON", "OFF")
     This.ContinuousEnabled = p_value
-End Function
+End Sub
 
 ''' <summary>   Gets the last set or get sample count. </summary>
 ''' <value>   [Long]. </value>
@@ -107,7 +107,7 @@ Public Function SampleCountGetter() As Long
     Dim p_command As String: p_command = "SAMP:COUN?"
     Dim p_details As String
     Dim p_value As Long
-    If Not cc_isr_Core.StringExtensions.TryParseLong(This.ViSession.QueryLine(p_command), _
+    If Not cc_isr_Core.StringExtensions.TryParseLong(This.Session.QueryLine(p_command), _
             p_value, p_details) Then
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".SampleCountGetter", _
@@ -119,10 +119,10 @@ End Function
 
 ''' <summary>   Sets the sample count. </summary>
 ''' <param name="p_value">   [Long] The sample count to set. </param >
-Public Function SampleCountSetter(ByVal p_value As Long)
-    This.ViSession.WriteLine ("SAMP:COUN " & VBA.CStr(p_value))
+Public Sub SampleCountSetter(ByVal p_value As Long)
+    This.Session.WriteLine "SAMP:COUN " & VBA.CStr(p_value)
     This.SampleCount = p_value
-End Function
+End Sub
 
 
 ''' <summary>   Gets the <see cref="TriggerSource"/>. </summary>
@@ -136,12 +136,12 @@ End Property
 Public Sub SourceSetter(ByVal p_value As cc_isr_Tcp_Scpi.TriggerSource)
 
     If cc_isr_Tcp_Scpi.TriggerSource.Immediate = p_value Then
-        This.ViSession.WriteLine ":TRIG:SOUR IMM"
+        This.Session.WriteLine ":TRIG:SOUR IMM"
     ElseIf cc_isr_Tcp_Scpi.TriggerSource.External = p_value Then
         ' for some reason the old application had the trigger source toggled
         ' if requesting an external trigger source
-        ' This.ViSession.WriteLine ":TRIG:SOUR IMM"
-        This.ViSession.WriteLine ":TRIG:SOUR EXT"
+        ' This.Session.WriteLine ":TRIG:SOUR IMM"
+        This.Session.WriteLine ":TRIG:SOUR EXT"
     End If
     This.Source = p_value
     
@@ -152,7 +152,7 @@ End Sub
 Public Function SourceGetter() As cc_isr_Tcp_Scpi.TriggerSource
 
     Dim p_source As String
-    p_source = This.ViSession.QueryLine(":TRIG:SOUR?")
+    p_source = This.Session.QueryLine(":TRIG:SOUR?")
     Select Case p_source
         Case "IMM"
             This.Source = TriggerSource.Immediate
@@ -178,7 +178,7 @@ Public Function TriggerCountGetter() As Long
     Dim p_command As String: p_command = "TRIG:COUN?"
     Dim p_details As String
     Dim p_value As Long
-    If Not cc_isr_Core.StringExtensions.TryParseLong(This.ViSession.QueryLine(p_command), _
+    If Not cc_isr_Core.StringExtensions.TryParseLong(This.Session.QueryLine(p_command), _
             p_value, p_details) Then
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".SampleCountGetter", _
@@ -192,10 +192,10 @@ End Function
 
 ''' <summary>   Sets the Trigger count. </summary>
 ''' <param name="p_value">   [Long] The Trigger count to set. </param >
-Public Function TriggerCountSetter(ByVal p_value As Long)
-    This.ViSession.WriteLine ("TRIG:COUN " & VBA.CStr(p_value))
+Public Sub TriggerCountSetter(ByVal p_value As Long)
+    This.Session.WriteLine "TRIG:COUN " & VBA.CStr(p_value)
     This.TriggerCount = p_value
-End Function
+End Sub
 
 
 

@@ -14,7 +14,7 @@ Attribute VB_Exposed = True
 Option Explicit
 
 Private Type this_
-    ViSession As cc_isr_Ieee488.ViSession
+    Session As cc_isr_Ieee488.TcpSession
     AutoRangeEnabled  As Boolean
     PowerLineCycles As Double
     SenseFunction As String
@@ -23,21 +23,21 @@ End Type
 Private This As this_
 
 ''' <summary>   Returns a reference to the <see cref="SenseSystem"/>. </summary>
-''' <param name="a_session">    [<see cref="<see cref="cc_isr_IEEE488.VISession"/>] A connected session. </param>
+''' <param name="a_session">    [<see cref="<see cref="cc_isr_Ieee488.TcpSession"/>] A connected session. </param>
 ''' <value>   [<see cref="SenseSystem"/>]. </returns>
-Public Function Initialize(ByVal a_session As cc_isr_Ieee488.ViSession) As SenseSystem
-    Set This.ViSession = a_session
+Public Function Initialize(ByVal a_session As cc_isr_Ieee488.TcpSession) As SenseSystem
+    Set This.Session = a_session
     Set Initialize = Me
 End Function
 
 ''' <summary>   Returns the connection state of the client. </summary>
-''' <returns>   True if the <see cref="cc_isr_IEEE488.VISession"/>  is connected; otherwise, False. </returns>
+''' <returns>   True if the <see cref="cc_isr_Ieee488.TcpSession"/>  is connected; otherwise, False. </returns>
 Public Property Get Connected() As Boolean
     
-    If This.ViSession Is Nothing Then
+    If This.Session Is Nothing Then
         Connected = False
     Else
-        Connected = This.ViSession.Connected
+        Connected = This.Session.Connected
     End If
 
 End Property
@@ -52,17 +52,17 @@ End Property
 ''' <returns>   [Boolean]. </returns>
 Public Function AutoRangeEnabledGetter() As Boolean
     Dim p_value As String
-    p_value = This.ViSession.QueryLine(":" & This.SenseFunction & ":RANG:AUTO?")
+    p_value = This.Session.QueryLine(":" & This.SenseFunction & ":RANG:AUTO?")
     This.AutoRangeEnabled = IIf(p_value = "1", True, False)
     AutoRangeEnabledGetter = This.AutoRangeEnabled
 End Function
 
 ''' <summary>   Sets the Auto Range enabled. </summary>
 ''' <param name="p_value">   [Boolean] The AutoRange enabled to set. </param >
-Public Function AutoRangeEnabledSetter(ByVal p_value As Boolean)
-    This.ViSession.WriteLine (":" & This.SenseFunction & ":RANG:AUTO " & IIf(p_value, "1", "0"))
+Public Sub AutoRangeEnabledSetter(ByVal p_value As Boolean)
+    This.Session.WriteLine ":" & This.SenseFunction & ":RANG:AUTO " & IIf(p_value, "1", "0")
     This.AutoRangeEnabled = p_value
-End Function
+End Sub
 
 ''' <summary>   Gets the last set or get Power Line Cycles. </summary>
 ''' <value>   [Double]. </value>
@@ -77,7 +77,7 @@ Public Function PowerLineCyclesGetter() As Double
     Dim p_command As String: p_command = ":" & This.SenseFunction & ":NPLC?"
     Dim p_details As String
     Dim p_value As Double
-    If Not cc_isr_Core.StringExtensions.TryParseDouble(This.ViSession.QueryLine(p_command), _
+    If Not cc_isr_Core.StringExtensions.TryParseDouble(This.Session.QueryLine(p_command), _
             p_value, p_details) Then
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".PowerLineCyclesGetter", _
@@ -91,10 +91,10 @@ End Function
 
 ''' <summary>   Sets the integration rate in Power Line Cycles. </summary>
 ''' <param name="p_value">   [Double] The integration rate in Power Line Cyclest. </param >
-Public Function PowerLineCyclesSetter(ByVal p_value As Double)
-    This.ViSession.WriteLine (":" & This.SenseFunction & ":NPLC " & VBA.CStr(p_value))
+Public Sub PowerLineCyclesSetter(ByVal p_value As Double)
+    This.Session.WriteLine ":" & This.SenseFunction & ":NPLC " & VBA.CStr(p_value)
     This.PowerLineCycles = p_value
-End Function
+End Sub
 
 ''' <summary>   Gets the Sense Function/ </summary>
 Public Property Get SenseFunction() As String
@@ -105,7 +105,7 @@ End Property
 ''' <param name="a_decorator">   [String] the decorator to trigger from the function name. </param>
 Public Function SenseFunctionGetter(Optional ByVal a_decorator As String = """") As String
 
-    This.SenseFunction = This.ViSession.QueryLine(":SENS:FUNC?")
+    This.SenseFunction = This.Session.QueryLine(":SENS:FUNC?")
     This.SenseFunction = cc_isr_Core.StringExtensions.TrimLeft(This.SenseFunction, a_decorator)
     This.SenseFunction = cc_isr_Core.StringExtensions.TrimRight(This.SenseFunction, a_decorator)
     SenseFunctionGetter = This.SenseFunction
@@ -119,7 +119,7 @@ Public Sub SenseFunctionSetter(ByVal p_value As String, _
         Optional ByVal a_decorator As String = "'")
 
     This.SenseFunction = p_value
-    This.ViSession.WriteLine ":SENS:FUNC " & a_decorator & This.SenseFunction & a_decorator
+    This.Session.WriteLine ":SENS:FUNC " & a_decorator & This.SenseFunction & a_decorator
 
 End Sub
 

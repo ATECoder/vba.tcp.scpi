@@ -9,15 +9,13 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-Implements cc_isr_Winsock.IConnectable
-
-' references the event handler of the VI session
-Private WithEvents m_viSession As cc_isr_Ieee488.ViSession
-Attribute m_viSession.VB_VarHelpID = -1
+' references the event handler of the Socket
+Private WithEvents m_socket As IPv4StreamSocket
+Attribute m_socket.VB_VarHelpID = -1
 
 Private Type this_
     Device As cc_isr_Ieee488.Device
-    ViSession As cc_isr_Ieee488.ViSession
+    Session As cc_isr_Ieee488.TcpSession
     FormatSystem As FormatSystem
     RouteSystem As RouteSystem
     ScpiSystem As ScpiSystem
@@ -32,59 +30,54 @@ Private This As this_
 ''' <param name="a_eventArgs">   An <see cref="ChannelReadingEventArgs"/> event args. </param>
 Public Event ChannelMeasured(ByVal a_eventArgs As ChannelReadingEventArgs)
 
-''' <summary>   The event that is raised upon change of connection. </summary>
-''' <param name="a_eventArgs">   An <see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/> event args. </param>
-Public Event ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
-
-''' <summary>   The event that is raised before change of connection. </summary>
-''' <param name="a_eventArgs">   An <see cref="cc_isr_Winsock.ConnectionChangingEventArgs"/> event args. </param>
-Public Event ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
-
 ''' <summary>   Initializes the k2700 . </summary>
 Private Sub Class_Initialize()
 
     Set This.Device = cc_isr_Ieee488.Factory.NewDevice()
-    Set This.ViSession = This.Device.ViSession
+    Set This.Session = This.Device.Session
     
-    ' make sure to turn off assering talk after write.
-    This.ViSession.GpibLan.AssertTalkAfterWriteAllowed = False
-    
+    ' construct the subsystems
     Set This.FormatSystem = New FormatSystem
-    This.FormatSystem.Initialize This.ViSession
-
     Set This.RouteSystem = New RouteSystem
-    This.RouteSystem.Initialize This.ViSession
-
     Set This.ScpiSystem = New ScpiSystem
-    This.ScpiSystem.Initialize This.ViSession
-    
-    Dim p_senseSystem As SenseSystem
-    Set p_senseSystem = New SenseSystem
-    p_senseSystem.Initialize This.ViSession
     Set This.SenseSystem = New K2700SenseSystem
-    This.SenseSystem.Initialize p_senseSystem
-    
     Set This.TriggerSystem = New TriggerSystem
-    This.TriggerSystem.Initialize This.ViSession
-   
+    
 End Sub
 
 ''' <summary>   Initializes and returns the <see cref="Ieee488Session"/>. </summary>
 ''' <returns>   [<see cref="K2700"/>]. </returns>
 Public Function Initialize() As K2700
    
+    ' this also initializes the session.
     This.Device.Initialize
     
-    Set m_viSession = This.Device.ViSession
+    ' Set the event handler after initializing the device, which initializes the Session.
+    ' This ensures that the connection events are handled in order: Session, Device, 2700.
+    Set m_socket = This.Session.Socket
+    
+    ' initialize the subsystems.
+    This.FormatSystem.Initialize This.Session
+    
+    This.RouteSystem.Initialize This.Session
+    
+    This.ScpiSystem.Initialize This.Session
+    
+    Dim p_senseSystem As SenseSystem
+    Set p_senseSystem = New SenseSystem
+    p_senseSystem.Initialize This.Session
+    This.SenseSystem.Initialize p_senseSystem
+    
+    This.TriggerSystem.Initialize This.Session
     
     Set Initialize = Me
    
 End Function
 
-''' <summary>   Returns a reference to the <see cref="cc_isr_Ieee488.ViSession"/>. </summary>
-''' <value>   An <see cref="cc_isr_Ieee488.ViSession"/>. </returns>
-Public Property Get ViSession() As cc_isr_Ieee488.ViSession
-    Set ViSession = This.Device.ViSession
+''' <summary>   Returns a reference to the <see cref="cc_isr_Ieee488.TcpSession"/>. </summary>
+''' <value>   An <see cref="cc_isr_Ieee488.TcpSession"/>. </returns>
+Public Property Get Session() As cc_isr_Ieee488.TcpSession
+    Set Session = This.Device.Session
 End Property
 
 ''' <summary>   Returns a reference to the <see cref="cc_isr_Ieee488.Device"/>. </summary>
@@ -124,37 +117,76 @@ Public Property Get TriggerSystem() As TriggerSystem
 End Property
 
 ''' <summary>   Initializes the k2700 legacy mode. </summary>
-''' <param name="a_host">        [String] An IPv4 dotted-decimal host address. </param>
-''' <param name="a_port">        [Long] The port that the server is listening on. </param>
-''' <param name="a_function">    [Optional, 'FRES'] The measurement function. </param>
-''' <param name="a_timeoutMs">   [Optional, 3000] The session read timeout in milliseconds. </param>
+''' <param name="a_address">    [String] An IPv4 dotted-decimal host address and post. </param>
+''' <param name="a_details">    [Out, String] Details the information of why the instrument
+'''                             failed to restore state. </param>
+''' <param name="a_function">   [Optional, String, 'RES'] The measurement function. </param>
+''' <param name="a_timeout">    [Optional, Long, 3000] The session read timeout in milliseconds. </param>
 ''' <returns>   True if the device was initialized. </returns>
-Public Function InitializeLegacy(ByVal a_host As String, ByVal a_port As Long, _
+Public Function InitializeLegacy(ByVal a_address As String, _
+        ByRef a_details As String, _
         Optional ByVal a_function As String = "RES", _
-        Optional ByVal a_timeoutMs As Long = 3000) As Boolean
+        Optional ByVal a_timeout As Long = 3000) As Boolean
 
-    Me.OpenConnection a_host, a_port
+    ' this will get applied upon connecting.
+    This.Session.SessionTimeout = a_timeout
+    
+    If This.Session.Socket.TryOpenConnection(a_address, a_timeout, a_details) Then
+    
+        ' reset clear the device.
+        This.Session.SelectiveDeviceClear
+        This.Device.ResetKnownState
+        This.Device.ClearExecutionState
+        
+        ' read the instrument options and parse the card names and types.
+        
+        Me.RouteSystem.Read7700Cards This.Device.QueryOptions
+        
+        ' define function scan list for measurements on all cards.
+        
+        Me.RouteSystem.DefineFunctionScanLists a_function
+        
+        ' turn on continuous auto range
+        Me.ConfigureContinuousFunctionAutoRange a_function
+        
+        InitializeLegacy = True
+        
+    Else
+    
+        InitializeLegacy = False
+    
+    End If
 
-    ' reset clear the device.
-    If This.ViSession.UsingGpibLan Then This.ViSession.GpibLan.SelectiveDeviceClear
-    This.ViSession.SessionReadTimeout = a_timeoutMs
-    This.Device.ResetKnownState
-    This.Device.ClearExecutionState
-    
-    ' read the instrument options and parse the card names and types.
-    
-    Me.RouteSystem.Read7700Cards This.Device.QueryOptions
-    
-    ' define function scan list for measurements on all cards.
-   
-    Me.RouteSystem.DefineFunctionScanLists a_function
-   
-    ' turn on continuous auto range
-    Me.ConfigureContinuousFunctionAutoRange a_function
-    
-    InitializeLegacy = True
     
 End Function
+
+''' <summary>   Closes the connection and releases the <see cref="Ieee488Session">Session</see>. </summary>
+Public Sub Dispose()
+    
+    If Not Me.Connectable Is Nothing Then
+        If Me.Connectable.Connected Then
+            Me.Connectable.CloseConnection
+        End If
+    End If
+
+    If Not Me.Connectable Is Nothing Then
+        Me.Connectable.Dispose
+    End If
+    
+    Set m_socket = Nothing
+    Set This.FormatSystem = Nothing
+    Set This.RouteSystem = Nothing
+    Set This.ScpiSystem = Nothing
+    Set This.SenseSystem = Nothing
+    Set This.TriggerSystem = Nothing
+    Set This.Session = Nothing
+    
+    If Not This.Device Is Nothing Then
+        This.Device.Dispose
+    End If
+    Set This.Device = Nothing
+    
+End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
@@ -173,10 +205,10 @@ End Function
 ''' <returns>   [String] the reading. </returns>
 Public Function TakeFrontReading(Optional a_channelNumber As Integer = 0) As String
 
-    This.ViSession.WriteLine ":INIT"
-    This.ViSession.WriteLine ":READ?"
+    This.Session.WriteLine ":INIT"
+    This.Session.WriteLine ":READ?"
     
-    Dim p_reading As String: p_reading = This.ViSession.Read
+    Dim p_reading As String: p_reading = This.Session.Read
     
     OnChannelMeasured a_channelNumber, p_reading
 
@@ -205,11 +237,11 @@ Public Function TakeRearReading(ByVal a_channelNumber As Integer) As String
     If VBA.Len(p_routeCloseCommand) > 0 Then
     
         ' close the rear channel
-        This.ViSession.WriteLine p_routeCloseCommand
-        This.ViSession.WriteLine ":INIT"
-        This.ViSession.WriteLine ":READ?"
+        This.Session.WriteLine p_routeCloseCommand
+        This.Session.WriteLine ":INIT"
+        This.Session.WriteLine ":READ?"
         
-        p_reading = This.ViSession.Read
+        p_reading = This.Session.Read
         
         OnChannelMeasured a_channelNumber, p_reading
     
@@ -230,20 +262,20 @@ End Function
 Public Sub ConfigureContinuousFunctionAutoRange(ByVal a_function As String)
 
     ' set function defaults
-    ' This.ViSession.WriteLine ":RES:RANG:AUTO ON"
-    ' This.ViSession.WriteLine ":RES:NPLC 1"
+    ' This.Session.WriteLine ":RES:RANG:AUTO ON"
+    ' This.Session.WriteLine ":RES:NPLC 1"
     
     ' set reading format
-    This.ViSession.WriteLine ":FORM:ELEM READ"
+    This.Session.WriteLine ":FORM:ELEM READ"
     
     ' set the sense function
     This.SenseSystem.SenseSystem.SenseFunctionSetter a_function
-    ' This.ViSession.WriteLine ":FUNC '" & a_function & "'"
+    ' This.Session.WriteLine ":FUNC '" & a_function & "'"
     
     ' turn on continuous mode
-    This.ViSession.WriteLine ":" & a_function & ":RANG:AUTO ON"
-    This.ViSession.WriteLine ":" & a_function & ":NPLC 1"
-    This.ViSession.WriteLine ":INIT:CONT ON"
+    This.Session.WriteLine ":" & a_function & ":RANG:AUTO ON"
+    This.Session.WriteLine ":" & a_function & ":NPLC 1"
+    This.Session.WriteLine ":INIT:CONT ON"
 
 End Sub
 
@@ -252,12 +284,12 @@ End Sub
 '''             chaning the function mode. </remarks>
 Public Sub RestoreContinuousReading()
 
-    This.ViSession.WriteLine ":INIT:CONT OFF"
+    This.Session.WriteLine ":INIT:CONT OFF"
     
     ' set the trigger source to immediate.
     This.TriggerSystem.SourceSetter TriggerSource.Immediate
 
-    This.ViSession.WriteLine ":INIT:CONT ON"
+    This.Session.WriteLine ":INIT:CONT ON"
 
 End Sub
 
@@ -266,21 +298,21 @@ End Sub
 Public Sub ConfigureSingleFunctionReading(ByVal a_function As String)
 
     ' reset is not applied on each configuration because it takes too long to complete.
-    ' This.ViSession.WriteLine "*RST"
+    ' This.Session.WriteLine "*RST"
     
     ' set the trigger source to immediate.
-    ' This.ViSession.WriteLine ":TRIG:SOUR IMM"
+    ' This.Session.WriteLine ":TRIG:SOUR IMM"
     This.TriggerSystem.SourceSetter cc_isr_Tcp_Scpi.TriggerSource.Immediate
-    This.ViSession.WriteLine ":INIT:CONT OFF"
-    This.ViSession.WriteLine ":SAMP:COUN 1"
-    This.ViSession.WriteLine ":TRIG:COUN 1"
+    This.Session.WriteLine ":INIT:CONT OFF"
+    This.Session.WriteLine ":SAMP:COUN 1"
+    This.Session.WriteLine ":TRIG:COUN 1"
     
     ' set the sense function
     This.SenseSystem.SenseSystem.SenseFunctionSetter a_function
-    ' This.ViSession.WriteLine ":FUNC '" & a_function & "'"
+    ' This.Session.WriteLine ":FUNC '" & a_function & "'"
     
     ' set reading format
-    This.ViSession.WriteLine ":FORM:ELEM READ"
+    This.Session.WriteLine ":FORM:ELEM READ"
 
 End Sub
 
@@ -304,16 +336,16 @@ Public Sub EnableMeasurementAvailableMonitoring()
     ' setup the status register so that we get a RQS
     ' on measurement available
     
-    This.ViSession.WriteLine "*ESE 0"
-    This.ViSession.WriteLine "*SRE 63"
+    This.Session.WriteLine "*ESE 0"
+    This.Session.WriteLine "*SRE 63"
     
     ' clear the measurement event enable register
     
-    This.ViSession.WriteLine "STAT:PRES"
+    This.Session.WriteLine "STAT:PRES"
     
     ' enable the reading available bit of the measurement event register.
     
-    This.ViSession.WriteLine "STAT:MEAS:ENAB 32"
+    This.Session.WriteLine "STAT:MEAS:ENAB 32"
     
 #If False Then
     ' legacy code used the operation register going to idle to indicate that
@@ -321,8 +353,8 @@ Public Sub EnableMeasurementAvailableMonitoring()
     ' the VI code.
     
     ' enable idle operation SRQ
-    This.ViSession.WriteLine ":STAT:OPER:ENAB 1024"
-    This.ViSession.WriteLine "*CLS; *SRE 128"
+    This.Session.WriteLine ":STAT:OPER:ENAB 1024"
+    This.Session.WriteLine "*CLS; *SRE 128"
 #End If
 
     ' clear the service registered bit
@@ -342,23 +374,23 @@ End Sub
 Public Sub ConfigureExternalTriggerReading(ByVal a_function As String)
 
     ' set reading format
-    This.ViSession.WriteLine ":FORM:ELEM READ"
+    This.Session.WriteLine ":FORM:ELEM READ"
     
     ' set external triggering
-    This.ViSession.WriteLine ":INIT:CONT OFF"
+    This.Session.WriteLine ":INIT:CONT OFF"
     
     ' set the sense function
     This.SenseSystem.SenseSystem.SenseFunctionSetter a_function
-    ' This.ViSession.WriteLine ":FUNC '" & a_function & "'"
+    ' This.Session.WriteLine ":FUNC '" & a_function & "'"
     
-    This.ViSession.WriteLine ":" & a_function & ":RANG:AUTO ON"
-    This.ViSession.WriteLine ":" & a_function & ":NPLC 1"
-    This.ViSession.WriteLine ":SAMP:COUN 1"
-    This.ViSession.WriteLine ":TRIG:COUN 1"
+    This.Session.WriteLine ":" & a_function & ":RANG:AUTO ON"
+    This.Session.WriteLine ":" & a_function & ":NPLC 1"
+    This.Session.WriteLine ":SAMP:COUN 1"
+    This.Session.WriteLine ":TRIG:COUN 1"
     
     ' set the trigger source to external
     This.TriggerSystem.SourceSetter TriggerSource.External
-    ' This.ViSession.WriteLine ":TRIG:SOUR EXT"
+    ' This.Session.WriteLine ":TRIG:SOUR EXT"
     
     ' enable the detection of externally triggered measurement available.
     
@@ -392,10 +424,10 @@ Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDo
             This.Device.ReadStatusByte True
             
             ' fetch the data
-            This.ViSession.WriteLine ":FETCH?"
+            This.Session.WriteLine ":FETCH?"
           
             ' read the data
-            Dim p_reading As String: p_reading = This.ViSession.Read()
+            Dim p_reading As String: p_reading = This.Session.Read()
 
             ' raise the channel measured event.
             OnChannelMeasured a_channelNumber, p_reading
@@ -409,9 +441,9 @@ Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDo
         ' toggle external trigger source.
         
         ' These commands are already set when the instrument is confitured.
-        ' This.ViSession.WriteLine ":TRIG:SOUR IMM"
-        ' This.ViSession.WriteLine ":TRIG:SOUR EXT"
-        ' This.ViSession.WriteLine ":FRES:NPLC 1"
+        ' This.Session.WriteLine ":TRIG:SOUR IMM"
+        ' This.Session.WriteLine ":TRIG:SOUR EXT"
+        ' This.Session.WriteLine ":FRES:NPLC 1"
           
         ' clear the serial poll register
         
@@ -419,7 +451,7 @@ Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDo
         
         ' initiate awaiting for the external trigger
         
-        This.ViSession.WriteLine ":INIT;*WAI;*CLS"
+        This.Session.WriteLine ":INIT;*WAI;*CLS"
         
         ' and indicate that external triggering was initiated
         
@@ -436,7 +468,7 @@ Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDo
           
         ' abort triggering
         
-        If This.ViSession.UsingGpibLan Then This.ViSession.GpibLan.SelectiveDeviceClear
+        This.Session.SelectiveDeviceClear
         
         ' should we do system:preset here?
         
@@ -446,10 +478,10 @@ Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDo
         
         ' these were replaced with restoration of
         ' Continuous reading method above.
-        ' This.ViSession.WriteLine ":INIT:CONT OFF"
-        ' This.ViSession.WriteLine ":FUNC 'FRES'"
-        ' This.ViSession.WriteLine ":TRIG:SOUR IMM"
-        ' This.ViSession.WriteLine ":INIT:CONT ON"
+        ' This.Session.WriteLine ":INIT:CONT OFF"
+        ' This.Session.WriteLine ":FUNC 'FRES'"
+        ' This.Session.WriteLine ":TRIG:SOUR IMM"
+        ' This.Session.WriteLine ":INIT:CONT ON"
         
         ' clear execution state and wait for operation completion.
         
@@ -528,32 +560,26 @@ End Sub
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Gets a reference to the <see cref="cc_isr_Winsock.IConnectable"/>
-''' <see cref="cc_isr_Ieee488.Ieee488Session"/> object . </summary>
+''' <see cref="Session"/see>.<see cref="TcpSession.Socket"/see>. </summary>
 ''' <value>   [<see cref="cc_isr_Winsock.IConnectable"/>]. </value>
 Public Property Get Connectable() As cc_isr_Winsock.IConnectable
-    If This.Device Is Nothing Then
+    If This.Session Is Nothing Then
+        Set Connectable = Nothing
+    ElseIf This.Session.Connectable Is Nothing Then
         Set Connectable = Nothing
     Else
-        Set Connectable = This.Device.ViSession
+        Set Connectable = This.Session.Connectable
     End If
 End Property
 
-''' <summary>   Returns the connection state of the client. </summary>
-''' <value>   [Boolean] True if the IEEE488 Session is connected; otherwise, False. </value>
+''' <summary>   Returns the connection state of the <see cref="Session">Tcp Session</see>. </summary>
+''' <value>   [Boolean] True if the <see cref="Session">Tcp Session</see> is connected; otherwise, False. </value>
 Public Property Get Connected() As Boolean
-    
-    Connected = IConnectable_Connected
-
-End Property
-
-''' <summary>   Returns the connection state of the <see cref="cc_isr_Winsock.IConnectable"/>. </summary>
-''' <value>   [Boolean] True if the <see cref="cc_isr_Winsock.IConnectable"/> is connected; otherwise, False. </value>
-Private Property Get IConnectable_Connected() As Boolean
-    
+        
     If Me.Connectable Is Nothing Then
-        IConnectable_Connected = False
+        Connected = False
     Else
-        IConnectable_Connected = Me.Connectable.Connected
+        Connected = Me.Connectable.Connected
     End If
 
 End Property
@@ -562,168 +588,150 @@ End Property
 ''' <value>   [Boolean] True if a connection can be made. </value>
 Public Property Get CanConnect() As Boolean
     
-    CanConnect = IConnectable_CanConnect
-
-End Property
-
-''' <summary>   Returns true if a connection can be made. </summary>
-''' <value>   [Boolean] True if a connection can be made. </value>
-Private Property Get IConnectable_CanConnect() As Boolean
-
     If Me.Connectable Is Nothing Then
-        IConnectable_CanConnect = False
+        CanConnect = False
     Else
-        IConnectable_CanConnect = Me.Connectable.CanConnect
+        CanConnect = Me.Connectable.CanConnect
     End If
 
 End Property
 
-''' <summary>   Closes the connection and releases the <see cref="Ieee488Session">Session</see>. </summary>
-Public Sub Dispose()
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+'  Restore Initial State
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Configures the 2700 Multimeter scanner initial state. </summary>
+''' <remarks>   Call this method upon connecting and restoring Initial State. </remarks>
+''' <param name="a_details">   [Out, String] Details the information of why the instrument
+'''                            failed to restore state. </param>
+Public Function TryConfigureInitialState(ByRef a_details As String) As Boolean
+
+    Const p_procedureName As String = "TryConfigureInitialState"
+
+    Dim p_success As Boolean: p_success = True
     
-    IConnectable_Dispose
-
-End Sub
-
-''' <summary>   Closes the connection and releases the <see cref="cc_isr_Winsock.IConnectable">Session</see>. </summary>
-Private Sub IConnectable_Dispose()
-
-    If Not Me.Connectable Is Nothing Then
-        If Me.Connectable.Connected Then
-            Me.Connectable.CloseConnection
-        End If
+    If p_success Then
+    
+        Me.RouteSystem.Read7700Cards This.Device.QueryOptions
+    
     End If
-
-    If Not Me.Connectable Is Nothing Then
-        Me.Connectable.Dispose
-    End If
     
-    Set m_viSession = Nothing
-    Set This.FormatSystem = Nothing
-    Set This.RouteSystem = Nothing
-    Set This.ScpiSystem = Nothing
-    Set This.SenseSystem = Nothing
-    Set This.TriggerSystem = Nothing
-    Set This.ViSession = Nothing
-    
-    If Not This.Device Is Nothing Then
-        This.Device.Dispose
-    End If
-    Set This.Device = Nothing
-    
-End Sub
-
-''' <summary>   Opens a VI Session connection to the specified host at the specified port
-''' as sets the connection timeout. </summary>
-''' <param name="a_host">        [String] An IPv4 dotted-decimal host address. </param>
-''' <param name="a_port">        [Long] The port that the server is listening on. </param>
-''' <param name=a_"timeoutMs">   [Optional, Long, 500] The receive timeout in milliseconds. </param>
-''' <returns>   [Boolean] True if the VI Session is connected. </returns>
-Public Function OpenConnection(ByVal a_host As String, ByVal a_port As Long, _
-        Optional ByVal a_timeoutMs As Long = 500) As Boolean
-    
-    IConnectable_OpenConnection a_host, a_port, a_timeoutMs
+    TryConfigureInitialState = p_success
 
 End Function
 
-''' <summary>   Opens an <see cref="cc_isr_Winsock.IConnectable"/> connection to the
-''' specified host at the specified port as sets the socket receive timeout. </summary>
-''' <param name="a_host">        [String] An IPv4 dotted-decimal host address. </param>
-''' <param name="a_port">        [Long] The port that the server is listening on. </param>
-''' <param name="a_timeoutMs">   [Optional, Long, 500] The receive timeout in milliseconds. </param>
-''' <returns>   [Boolean] True if the <see cref="Connectable"/> is connected. </returns>
-Private Function IConnectable_OpenConnection(ByVal a_host As String, ByVal a_port As Long, _
-        Optional ByVal a_timeoutMs As Long = 500&) As Boolean
+''' <summary>   Checks if the 2700 needs to restore to ites Initial State. </summary>
+''' <param name="a_details">   [Out, String] Details the information of why the instrument
+'''                            should restore state. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function ShouldRestoreInitialState(ByRef a_details As String) As Boolean
 
-    Dim p_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs
-    Set p_eventArgs = cc_isr_Winsock.Factory.NewConnectionChangingEventArgs.Initialize(Me.Connected)
-    IConnectable_OnConnectionChanging p_eventArgs
+    If This.Device Is Nothing Then
+        a_details = "The IEEE 488 device instance is nothing."
+        ShouldRestoreInitialState = True
+    ElseIf This.Device.Session Is Nothing Then
+        a_details = "The Tcp Session instance is nothing."
+        ShouldRestoreInitialState = True
+    Else
+        ShouldRestoreInitialState = This.Session.ShouldRestoreInitialState(a_details)
+    End If
+
+End Function
+
+''' <summary>   Restores the instrument to its initial state in case the instrument power
+''' was toggled or a recovery from error is needed. </summary>
+''' <remarks>   This method attempts to restore the instrument to a initial state in case it is
+''' powered off while the program is active as follows:
+''' - The user defined errors are cleared;
+''' - The class is initialized if the session is nothing;
+''' - The device is connected if it is not connected;
+''' - The GPIB-Lan device is restored to its initial state;
+''' - Execution state is cleared.
+''' - the cards are read.
+''' </remarks>
+''' <param name="a_details">   [Out, String] Details the information of why the instrument
+'''                            failed to restore state. </param>
+''' <returns>   [Boolean] true if restored. </returns>
+Public Function TryRestoreInitialState(ByRef a_details As String) As Boolean
+
+    Dim p_success As Boolean: p_success = True
     
-    If Not p_eventArgs.Cancel Then
+    If p_success And This.Device Is Nothing Then
     
-        Connectable.OpenConnection a_host, a_port, a_timeoutMs
+        a_details = "Unable to restore state because the IEEE 488 device was disposed. Please restart the program."
+        p_success = False
+    
+    End If
+    
+    If p_success And This.Session Is Nothing Then
+    
+        a_details = "Unable to restore state because the Tcp Session was disposed. Please restart the program."
+        p_success = False
+    
+    End If
+    
+    If p_success Then
+    
+        If This.Session Is Nothing Then
+            a_details = "Unable to restore state because the Tcp Session was disposed. Please restart the program."
+            p_success = False
+        End If
+    
+    End If
+    
+    If p_success And m_socket Is Nothing Then
+    
+        Me.Initialize
         
     End If
-
-    IConnectable_OpenConnection = Connectable.Connected
     
-End Function
-
-''' <summary>   Closes the <see cref="cc_isr_Ieee488.Ieee488Session">IEEE488 Session</see> connection. </summary>
-''' <returns>   [Boolean] True if disconnection succeeded; otherwise, false. </returns>
-Public Function CloseConnection() As Boolean
+    If p_success Then
     
-    CloseConnection = IConnectable_CloseConnection
-    
-End Function
-
-''' <summary>   Closes the <see cref="cc_isr_Winsock.IConnectable"/> connection. </summary>
-''' <returns>   [Boolean] True if disconnection succeeded; otherwise, false. </returns>
-Private Function IConnectable_CloseConnection() As Boolean
-
-    Dim p_args As cc_isr_Winsock.ConnectionChangingEventArgs
-    Set p_args = cc_isr_Winsock.Factory.NewConnectionChangingEventArgs.Initialize(Me.Connected)
-    IConnectable_OnConnectionChanging p_args
-   
-    If Not p_args.Cancel Then
-    
-        IConnectable_CloseConnection = Connectable.CloseConnection
+        p_success = This.Device.TryRestoreInitialState(a_details)
     
     End If
     
-    IConnectable_CloseConnection = Not Connectable.Connected
+    If p_success Then
+    
+        ' configure the initial state
+        p_success = Me.TryConfigureInitialState(a_details)
+    
+    End If
+
+    TryRestoreInitialState = p_success
 
 End Function
 
-''' <summary>   Raises the <see cref="ConnectionChanged"/> event after the
-''' connection was established and ended. </summary>
-''' <para name="a_isConnected">   [Boolean] The connection state. </param>
-Private Sub OnConnectionChanged(ByVal a_isConnected As Boolean)
-    
-    IConnectable_OnConnectionChanged cc_isr_Winsock.Factory.NewConnectionChangedEventArgs.Initialize(a_isConnected)
-
-End Sub
-
-''' <summary>   Raises the <see cref="ConnectionChanged"/> event after the
-''' connection was established and ended. </summary>
-''' <para name="a_eventArgs">   [<<see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/>]. </param>
-Private Sub IConnectable_OnConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
-    
-    RaiseEvent ConnectionChanged(a_eventArgs)
-
-End Sub
-
-''' <summary>   Raises the <see cref="ConnectionChanging"/> event. </summary>
-''' <para name="a_eventArgs">   [<<see cref="cc_isr_Winsock.ConnectionChangingEventArgs"/>]. </param>
-Private Sub IConnectable_OnConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
-    
-    RaiseEvent ConnectionChanging(a_eventArgs)
-
-End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
-'  IEEE 488 Session Event Handlers
+'  IPV4 Socket Event Handlers
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Handles the <see cref="cc_isr_Ieee488.ViSession.ConnectionChanged"/> event. </summary>
+''' <summary>   Handles the <see cref="cc_isr_Winsock.IPv4StreamSocket.ConnectionChanged"/> event. </summary>
 ''' <param name="a_eventArgs">   Reference to the <see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/> event arguments. </param>
-Private Sub m_viSession_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
+Private Sub m_socket_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
     
-    Const p_procedureName = "m_viSession_ConnectionChanged"
+    Const p_procedureName = "m_socket_ConnectionChanged"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
     If a_eventArgs.Connected Then
     
-        Me.RouteSystem.Read7700Cards This.Device.QueryOptions
+        Dim p_details As String
+         
+        ' configure the initial state
+        If Not Me.TryConfigureInitialState(p_details) Then _
+            cc_isr_Core_IO.UserDefinedErrors.EnqueueError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " Failed configuring the initial state; " & p_details
     
     End If
        
-    OnConnectionChanged Me.Connected
-    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
@@ -745,10 +753,9 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Handles the <see cref="cc_isr_Ieee488.ViSession.ConnectionChanging"/> event. </summary>
+''' <summary>   Handles the <see cref="cc_isr_Winsock.IPv4StreamSocket.ConnectionChanging"/> event. </summary>
 ''' <param name="a_eventArgs">   Reference to the <see cref="cc_isr_Winsock.ConnectionChangingEventArgs"/> event arguments. </param>
-Private Sub m_viSession_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
-    IConnectable_OnConnectionChanging a_eventArgs
+Private Sub m_socket_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
 End Sub
 
 

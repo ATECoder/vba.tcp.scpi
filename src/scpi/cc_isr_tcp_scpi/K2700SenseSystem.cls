@@ -38,7 +38,7 @@ Public Enum K2700SenseFunction
 End Enum
 
 ''' <summary>   Returns a reference to the <see cref="SenseSystem"/>. </summary>
-''' <param name="a_session">    [<see cref="<see cref="cc_isr_IEEE488.VISession"/>] A connected session. </param>
+''' <param name="a_session">    [<see cref="<see cref="cc_isr_Ieee488.TcpSession"/>] A connected session. </param>
 ''' <value>   [<see cref="SenseSystem"/>]. </returns>
 Public Function Initialize(ByVal a_system As SenseSystem) As K2700SenseSystem
     Set This.SenseSystem = a_system

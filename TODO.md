@@ -1,19 +1,35 @@
 # TODO
+=IF(LEN(C4)>0,"ERR                               ","Module")
+
+
+https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
-IEEE488:
-Work in progress on restoring state.
-It looks like the GPIB Lan device is failing to return the correct value.
-We need to run more unit tests on the GPIB Lan device testing getting Read after write and serial poll consistently.
-
-
-SCPI:
-Update restoring known state.
-
 ## TODO
 
-IEEE488.
+? Add tests for resetting the gpib-lan controller.
+
+SCPI:
+Update the code and ran all tests.
+
+Flying
+Power on reset the GPIB Lan device once each session.
+-- Store the Gpib Lan power on reset condition at the IEEE488 workbook level, e.g., in a Project Singleton Settings Class.
+
+
+Must use +AUTO MODE at 0 otherwise serial poll does not work. 
+Change await reading to await device reading
+Add Await Controller Reading.
+Set gpib-lan timeout to session timeout. 
+Set the limits to the GPIB-Lan timeout (1, 3000)
+Reset the controller on connection changed. 
+After reset test toggling timeout to see that we are getting the correct values.
+
+
+
+
+
 It looks like the GPIB Lan device is failing to return the correct value.
 We need to run more unit tests on the GPIB Lan device testing getting Read after write and serial poll consistently.
 

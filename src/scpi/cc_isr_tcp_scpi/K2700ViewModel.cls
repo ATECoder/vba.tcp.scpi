@@ -30,26 +30,19 @@ Public Event PropertyChanged(ByVal a_eventArgs As cc_isr_Core.PropertyChangedEve
 ''' <param name="a_eventArgs">   An <see cref="ChannelReadingEventArgs"/> event args. </param>
 Public Event ChannelMeasured(ByVal a_eventArgs As ChannelReadingEventArgs)
 
-''' <summary>   The event that is raised upon change of connection. </summary>
-''' <param name="a_eventArgs">   An <see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/> event args. </param>
-Public Event ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
-
-''' <summary>   The event that is raised before change of connection. </summary>
-''' <param name="a_eventArgs">   An <see cref="cc_isr_Winsock.ConnectionChangingEventArgs"/> event args. </param>
-Public Event ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
-
 ' defines the standard event timer.
 Private WithEvents m_eventTimer As cc_isr_Core.EventTimer
 Attribute m_eventTimer.VB_VarHelpID = -1
 
 ''' <summary>   Represents an observer pattern subject that can notify observers
-'''             when a connection is changing and was changed. </summary>
-Implements cc_isr_Winsock.IConnectable
-
-''' <summary>   Represents an observer pattern subject that can notify observers
 '''             when a measurements are completed. </summary>
 Private WithEvents m_k2700 As K2700
 Attribute m_k2700.VB_VarHelpID = -1
+
+''' <summary>   Represents an connectable pattern subject that can notify observers
+'''             when a connection is changing or changed. </summary>
+Private WithEvents m_socket As cc_isr_Winsock.IPv4StreamSocket
+Attribute m_socket.VB_VarHelpID = -1
 
 Private Type this_
 
@@ -59,7 +52,7 @@ Private Type this_
 
     Device As cc_isr_Ieee488.Device
 
-    ViSession As cc_isr_Ieee488.ViSession
+    Session As cc_isr_Ieee488.TcpSession
 
     ' view model properties
     ElapsedTime As Double
@@ -74,10 +67,9 @@ Private Type this_
     Port As Long
     SocketAddress As String
     SocketId As Integer
-    SocketReceiveTimeout As Integer
+    SessionTimeout As Integer
 
     ' ieee488 control properties
-    SessionReadTimeout As Integer
     MessageToSend As String
     SentMessage As String
     ReceivedMessage As String
@@ -92,7 +84,7 @@ Private Type this_
     SerialPollByte As Integer
     GpibAddress As Integer
     AssertTalkAfterWriteAllowed As Boolean
-    ReadAfterWriteEnabled As Boolean
+    AutoAssertTalk As Boolean
     GpibLanReadTimeout As Integer
     
     ' 2700 properties
@@ -167,8 +159,8 @@ Private Type this_
     SelectiveDeviceClearExecutable As Boolean
     GoToLocalExecutable As Boolean
     LocalLockoutExecutable As Boolean
-    ReadAfterWriteSetExecutable As Boolean
-    ReadAfterWriteGetExecutable As Boolean
+    AutoAssertTalkSetExecutable As Boolean
+    AutoAssertTalkGetExecutable As Boolean
     SerialPollExecutable As Boolean
     GpibAddressGetExecutable As Boolean
     GpibAddressSetExecutable As Boolean
@@ -196,19 +188,89 @@ Public Function Initialize() As K2700ViewModel
     Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize()
     Set m_k2700 = This.K2700
     Set This.Device = This.K2700.Device
-    Set This.ViSession = This.Device.ViSession
+    Set This.Session = This.Device.Session
+    Set m_socket = This.Session.Socket
+    
     Set This.Stopwatch = cc_isr_Core_IO.Factory.NewStopwatch()
     
-    Me.AssertTalkAfterWriteAllowed = This.ViSession.GpibLan.AssertTalkAfterWriteAllowed
     Me.CurrentMeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.Continuous
     
-    m_k2700_ConnectionChanged cc_isr_Winsock.Factory.NewConnectionChangedEventArgs.Initialize()
+    ' update the executable settings
+    Me.InitializeExecutablesState
 
+    ' enable connection if all values are set
     Me.ConnectionExecutableSetter
     
     Set Initialize = Me
 
 End Function
+
+''' <summary>   Closes the connection and releases the <see cref="Ieee488Session">Session</see>. </summary>
+Public Sub Dispose()
+
+    Const p_procedureName As String = "Dispose"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    ' clear the last error message
+    Me.LastErrorMessage = VBA.vbNullString
+
+    Set This.Stopwatch = Nothing
+
+    If Not m_eventTimer Is Nothing Then
+
+        m_eventTimer.StopTimer
+  
+        ' allow the timer to stop.
+        cc_isr_Core_IO.CoreExtensions.Wait 0.0015 * This.TimerInterval
+    
+        Set m_eventTimer = Nothing
+    
+    End If
+
+    If Not Me.Connectable Is Nothing Then
+        If Me.Connectable.Connected Then
+            Me.Connectable.CloseConnection
+        End If
+    End If
+
+    If Not Me.Connectable Is Nothing Then
+        Me.Connectable.Dispose
+    End If
+
+    Set m_k2700 = Nothing
+    If Not This.K2700 Is Nothing Then This.K2700.Dispose
+    Set This.K2700 = Nothing
+
+    Set This.Device = Nothing
+    Set This.Session = Nothing
+    Set m_socket = Nothing
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
@@ -222,30 +284,10 @@ Public Property Get Host() As String
     Host = This.Host
 End Property
 
-''' <summary>   Sets the Host. </summary>
-''' <param name="p_value">   [String] the message value. </value>
-Public Property Let Host(ByVal p_value As String)
-    If This.Host <> p_value Then
-        This.Host = p_value
-        Me.OnPropertyChanged "Host"
-        Me.ConnectionExecutableSetter
-    End If
-End Property
-
 ''' <summary>   Gets the port number. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get Port() As Long
     Port = This.Port
-End Property
-
-''' <summary>   Sets the Port. </summary>
-''' <param name="p_value">   [Long] the Port. </value>
-Public Property Let Port(ByVal p_value As Long)
-    If This.Port <> p_value Then
-        This.Port = p_value
-        Me.OnPropertyChanged "Port"
-        Me.ConnectionExecutableSetter
-    End If
 End Property
 
 ''' <summary>   Gets the Socket Address. </summary>
@@ -260,6 +302,9 @@ Friend Property Let SocketAddress(ByVal p_value As String)
     If This.SocketAddress <> p_value Then
         This.SocketAddress = p_value
         Me.OnPropertyChanged "SocketAddress"
+        Me.ConnectionExecutableSetter
+        Me.OnPropertyChanged "Port"
+        Me.OnPropertyChanged "Host"
     End If
 End Property
 
@@ -274,23 +319,23 @@ End Property
 Friend Property Let SocketId(ByVal p_value As Integer)
     If This.SocketId <> p_value Then
         This.SocketId = p_value
-        This.SocketId = p_value
         Me.OnPropertyChanged "SocketId"
     End If
 End Property
 
 ''' <summary>   Gets the socket receive timeout in milliseconds. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get SocketReceiveTimeout() As Integer
-    SocketReceiveTimeout = This.SocketReceiveTimeout
+Public Property Get SessionTimeout() As Integer
+    SessionTimeout = This.SessionTimeout
 End Property
 
 ''' <summary>   Sets the receive timeout in milliseconds. </summary>
 ''' <param name="p_value">   [Integer] the timeout value in milliseconds. </value>
-Public Property Let SocketReceiveTimeout(ByVal p_value As Integer)
-    If This.SocketReceiveTimeout <> p_value Then
-        This.SocketReceiveTimeout = p_value
-        Me.OnPropertyChanged "SocketReceiveTimeout"
+Public Property Let SessionTimeout(ByVal p_value As Integer)
+    If This.SessionTimeout <> p_value Then
+        This.SessionTimeout = p_value
+        Me.OnPropertyChanged "SessionTimeout"
+        Me.ConnectionExecutableSetter
     End If
 End Property
 
@@ -340,9 +385,10 @@ End Property
 '''             can be executed. </summary>
 Friend Sub ConnectionExecutableSetter()
     Dim p_canExecute As Boolean
-    p_canExecute = VBA.vbNullString <> Me.Host _
-        And (5025 = This.Port Or 1234 = This.Port) _
-        And 0 < This.SocketReceiveTimeout
+    If cc_isr_Winsock.Winsock.TryParseAddress(This.SocketAddress, This.Host, This.Port, Me.LastErrorMessage) Then _
+        p_canExecute = VBA.vbNullString <> This.Host _
+            And (5025 = This.Port Or 1234 = This.Port) _
+            And 0 < This.SessionTimeout
     This.OpenConnectionExecutable = p_canExecute And Not Me.Connected
     This.CloseConnectionExecutable = p_canExecute And Me.Connected
 End Sub
@@ -369,9 +415,13 @@ Public Sub OpenConnectionCommand()
     On Error GoTo err_Handler
 
     Me.RestartStopwatch
+    
+    Dim p_details As String
+    If Not Me.Connectable.TryOpenConnection(This.SocketAddress, This.SessionTimeout, p_details) Then _
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.SocketConnectionError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " Failed opening the connection; " & p_details
 
-    Me.OpenConnection This.Host, This.Port, This.SocketReceiveTimeout
-        
     Me.ReadStopwatch
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -408,7 +458,11 @@ Public Sub CloseConnectionCommand()
 
     Me.RestartStopwatch
 
-    Me.CloseConnection
+    Dim p_details As String
+    If Not Me.Connectable.TryCloseConnection(p_details) Then _
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.SocketConnectionError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " Failed closing the connection; " & p_details
         
     Me.ReadStopwatch
 
@@ -448,25 +502,10 @@ Public Property Get Device() As cc_isr_Ieee488.Device
     Set Device = This.Device
 End Property
 
-''' <summary>   Returns a reference to the <see cref="cc_isr_Ieee488.ViSession"/>. </summary>
-''' <value>   An <see cref="cc_isr_Ieee488.ViSession"/>. </value>
-Public Property Get ViSession() As cc_isr_Ieee488.ViSession
-    Set ViSession = This.ViSession
-End Property
-
-''' <summary>   Gets the session read timeout in milliseconds. </summary>
-''' <value>   [Integer]. </value>
-Public Property Get SessionReadTimeout() As Integer
-    SessionReadTimeout = This.SessionReadTimeout
-End Property
-
-''' <summary>   Sets the session read timeout in milliseconds. </summary>
-''' <param name="p_value">   [Integer] the timeout value in milliseconds. </value>
-Public Property Let SessionReadTimeout(ByVal p_value As Integer)
-    If This.SessionReadTimeout <> p_value Then
-        This.SessionReadTimeout = p_value
-        Me.OnPropertyChanged "SessionReadTimeout"
-    End If
+''' <summary>   Returns a reference to the <see cref="cc_isr_Ieee488.TcpSession"/>. </summary>
+''' <value>   An <see cref="cc_isr_Ieee488.TcpSession"/>. </value>
+Public Property Get Session() As cc_isr_Ieee488.TcpSession
+    Set Session = This.Session
 End Property
 
 ''' <summary>   Gets the Message to Sent. </summary>
@@ -805,7 +844,7 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Internal. Sends the instrument to is Clear Known State and returns
+''' <summary>   Internal. Sends the instrument to is Clear Executiopn State and returns
 ''' the operation completion reply of '1'. </summary>
 Friend Function ClearExecutionState() As String
 
@@ -852,7 +891,7 @@ err_Handler:
 
 End Function
 
-''' <summary>   Handles the Clear Known State button click event; returns the
+''' <summary>   Handles the Clear Execution State button click event; returns the
 ''' opertation completion reply. </summary>
 Public Function ClearExecutionStateCommand() As String
 
@@ -897,7 +936,7 @@ Public Sub WriteCommand()
 
     Me.RestartStopwatch
 
-    This.ViSession.WriteLine This.MessageToSend
+    This.Session.WriteLine This.MessageToSend
 
     Me.ReadStopwatch
 
@@ -905,12 +944,10 @@ Public Sub WriteCommand()
 
     If Me.ReadStatusAfterWriteEnabled Then
 
-        If This.ViSession.UsingGpibLan Then _
-            Me.SerialPollByte = This.ViSession.GpibLan.SerialPoll
+        If This.Session.GpibLanControllerAttached Then _
+            Me.SerialPollByte = This.Session.SerialPoll
 
-        Dim p_isQuery As Boolean
-        p_isQuery = cc_isr_Core.StringExtensions.EndsWith(This.MessageToSend, "?")
-        If Not p_isQuery Then
+        If Not cc_isr_Ieee488.Scpi.IsQuery(This.MessageToSend) Then
             Me.StatusByte = This.Device.QueryServiceRequestStatus
             Me.StandardByte = This.Device.QueryStandardEventsStatus
         End If
@@ -952,7 +989,7 @@ Public Sub QueryCommand()
 
     Me.RestartStopwatch
 
-    Me.ReceivedMessage = This.ViSession.QueryLine(Me.MessageToSend)
+    Me.ReceivedMessage = This.Session.QueryLine(Me.MessageToSend)
 
     Me.ReadStopwatch
 
@@ -992,7 +1029,7 @@ Public Sub ReadCommand()
 
     Me.RestartStopwatch
 
-    Me.ReceivedMessage = This.ViSession.Read()
+    Me.ReceivedMessage = This.Session.Read()
 
     Me.ReadStopwatch
 
@@ -1141,21 +1178,6 @@ End Sub
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Gets the Assert Talk After Write Allowed. </summary>
-''' <value>   [Boolean]. </value>
-Public Property Get AssertTalkAfterWriteAllowed() As Boolean
-    AssertTalkAfterWriteAllowed = This.AssertTalkAfterWriteAllowed
-End Property
-
-''' <summary>   Sets the Assert Talk After Write Allowed. </summary>
-''' <param name="p_value">   [Boolean] the value. </value>
-Public Property Let AssertTalkAfterWriteAllowed(ByVal p_value As Boolean)
-    If This.AssertTalkAfterWriteAllowed <> p_value Then
-        This.AssertTalkAfterWriteAllowed = p_value
-        Me.OnPropertyChanged "AssertTalkAfterWriteAllowed"
-    End If
-End Property
-
 ''' <summary>   Gets the Serial Poll Byte. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get SerialPollByte() As Integer
@@ -1205,16 +1227,16 @@ End Property
 
 ''' <summary>   Gets the Read After Write Enabled. </summary>
 ''' <value>   [Boolean]. </value>
-Public Property Get ReadAfterWriteEnabled() As Boolean
-    ReadAfterWriteEnabled = This.ReadAfterWriteEnabled
+Public Property Get AutoAssertTalk() As Boolean
+    AutoAssertTalk = This.AutoAssertTalk
 End Property
 
 ''' <summary>   Sets the Read After Write Enabled. </summary>
 ''' <param name="p_value">   [Boolean] the value. </value>
-Public Property Let ReadAfterWriteEnabled(ByVal p_value As Boolean)
-    If This.ReadAfterWriteEnabled <> p_value Then
-        This.ReadAfterWriteEnabled = p_value
-        Me.OnPropertyChanged "ReadAfterWriteEnabled"
+Public Property Let AutoAssertTalk(ByVal p_value As Boolean)
+    If This.AutoAssertTalk <> p_value Then
+        This.AutoAssertTalk = p_value
+        Me.OnPropertyChanged "AutoAssertTalk"
     End If
 End Property
 
@@ -1292,37 +1314,37 @@ Public Property Let LocalLockoutExecutable(ByVal p_value As Boolean)
     End If
 End Property
 
-''' <summary>   Gets the condition indicating that the Read After Write Get command
+''' <summary>   Gets the condition indicating that the auto assert TALK get command
 '''             can be executed. </summary>
-''' <value>   [Boolean] True if the Read After Write Get command can be executed. </value>
-Public Property Get ReadAfterWriteGetExecutable() As Boolean
-    ReadAfterWriteGetExecutable = This.ReadAfterWriteGetExecutable
+''' <value>   [Boolean] True if the auto assert TALK get command can be executed. </value>
+Public Property Get AutoAssertTalkGetExecutable() As Boolean
+    AutoAssertTalkGetExecutable = This.AutoAssertTalkGetExecutable
 End Property
 
-''' <summary>   Gets the condition indicating that the Read After Write Get command
+''' <summary>   Gets the condition indicating that the auto assert TALK get command
 '''             can be executed. </summary>
-''' <param name="p_value">   [Boolean] True if the Read After Write Get command can be executed. </param>
-Public Property Let ReadAfterWriteGetExecutable(ByVal p_value As Boolean)
-    If This.ReadAfterWriteGetExecutable <> p_value Then
-        This.ReadAfterWriteGetExecutable = p_value
-        Me.OnPropertyChanged "ReadAfterWriteGetExecutable"
+''' <param name="p_value">   [Boolean] True if the auto assert TALK get command can be executed. </param>
+Public Property Let AutoAssertTalkGetExecutable(ByVal p_value As Boolean)
+    If This.AutoAssertTalkGetExecutable <> p_value Then
+        This.AutoAssertTalkGetExecutable = p_value
+        Me.OnPropertyChanged "AutoAssertTalkGetExecutable"
     End If
 End Property
 
-''' <summary>   Gets the condition indicating that the Read After Write Set command
+''' <summary>   Gets the condition indicating that the auto assert TALK set command
 '''             can be executed. </summary>
-''' <value>   [Boolean] True if the Read After Write Set command can be executed. </value>
-Public Property Get ReadAfterWriteSetExecutable() As Boolean
-    ReadAfterWriteSetExecutable = This.ReadAfterWriteSetExecutable
+''' <value>   [Boolean] True if the auto assert TALK set command can be executed. </value>
+Public Property Get AutoAssertTalkSetExecutable() As Boolean
+    AutoAssertTalkSetExecutable = This.AutoAssertTalkSetExecutable
 End Property
 
-''' <summary>   Sets the condition indicating that the Read After Write Set command
+''' <summary>   Sets the condition indicating that the auto assert TALK set command
 '''             can be executed. </summary>
-''' <param name="p_value">   [Boolean] True if the Read After Write Set command can be executed. </param>
-Public Property Let ReadAfterWriteSetExecutable(ByVal p_value As Boolean)
-    If This.ReadAfterWriteSetExecutable <> p_value Then
-        This.ReadAfterWriteSetExecutable = p_value
-        Me.OnPropertyChanged "ReadAfterWriteSetExecutable"
+''' <param name="p_value">   [Boolean] True if the auto assert TALK set command can be executed. </param>
+Public Property Let AutoAssertTalkSetExecutable(ByVal p_value As Boolean)
+    If This.AutoAssertTalkSetExecutable <> p_value Then
+        This.AutoAssertTalkSetExecutable = p_value
+        Me.OnPropertyChanged "AutoAssertTalkSetExecutable"
     End If
 End Property
 
@@ -1442,7 +1464,7 @@ Public Sub SelectiveDeviceClearCommand()
 
     Me.RestartStopwatch
 
-    This.ViSession.GpibLan.SelectiveDeviceClear
+    This.Session.SelectiveDeviceClear
 
     Me.ReadStopwatch
 
@@ -1543,20 +1565,22 @@ err_Handler:
 End Sub
 
 
-''' <summary>   Write a message to the device via the GPIB Lan. </summary>
-Public Sub QueryGpibLanCommand()
+''' <summary>   Query the INET Socket. </summary>
+Public Sub QuerySocketCommand()
 
-    Const p_procedureName = "QueryGpibLanCommand"
+    Const p_procedureName = "QuerySocketCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
     Me.RestartStopwatch
 
-    If 0 < This.ViSession.GpibLan.SendToController(Me.MessageToSend) Then
-        Me.ReceivedMessage = This.ViSession.GpibLan.ReceiveFromDevice()
+    Dim p_details As String
+    If 0 > This.Session.Socket.TryQuery(Me.MessageToSend & This.Session.Termination, _
+        Me.ReceivedMessage, p_details, This.Session.ReadAfterWriteDelay) Then
+        Me.LastErrorMessage = p_details
     End If
-
+    
     Me.ReadStopwatch
 
     Me.SentMessage = This.MessageToSend
@@ -1585,17 +1609,20 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Read from the device using the GPIB LAN. </summary>
-Public Sub ReadGpibLanCommand()
+''' <summary>   Read from the INET socket. </summary>
+Public Sub ReadSocketCommand()
 
-    Const p_procedureName = "ReadGpibLanCommand"
+    Const p_procedureName = "ReadSocketCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
     Me.RestartStopwatch
 
-    Me.ReceivedMessage = This.ViSession.GpibLan.ReceiveFromDevice()
+    Dim p_details As String
+    If 0 > This.Session.Socket.TryReceive(Me.ReceivedMessage, p_details) Then
+        Me.LastErrorMessage = p_details
+    End If
 
     Me.ReadStopwatch
 
@@ -1623,29 +1650,37 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Write a message to the device via the GPIB Lan. </summary>
-Public Sub WriteGpibLanCommand()
+''' <summary>   Write a message to the INET socket. </summary>
+Public Sub WriteSocketCommand()
 
-    Const p_procedureName = "WriteGpibLanCommand"
+    Const p_procedureName = "WriteSocketCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
     Me.RestartStopwatch
 
-    This.ViSession.GpibLan.SendToController (Me.MessageToSend)
+    Dim p_success As Boolean
+    Dim p_details As String
+    p_success = 0 <= This.Session.Socket.TrySendMessage(Me.MessageToSend & This.Session.Termination, p_details, _
+        This.Session.ReadAfterWriteDelay)
 
     Me.ReadStopwatch
 
-    Me.SentMessage = This.MessageToSend
-
-    If Me.ReadStatusAfterWriteEnabled Then
-
-        If This.ViSession.UsingGpibLan Then _
-            Me.SerialPollByte = This.ViSession.GpibLan.SerialPoll
-
+    If p_success Then
+    
+        Me.SentMessage = This.MessageToSend
+    
+        If Me.ReadStatusAfterWriteEnabled And _
+            Not cc_isr_Ieee488.Scpi.IsQuery(Me.MessageToSend) Then
+            Me.SerialPollByte = This.Session.TrySerialPoll(p_details)
+            p_success = 0 <= Me.SerialPollByte
+        End If
+    
     End If
 
+    If Not p_success Then _
+        Me.LastErrorMessage = p_details
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1681,7 +1716,7 @@ Public Sub GoToLocalCommand()
 
     Me.RestartStopwatch
 
-    This.ViSession.GpibLan.GoToLocal
+    This.Session.GoToLocal
 
     Me.ReadStopwatch
 
@@ -1719,7 +1754,7 @@ Public Sub LocalLockoutCommand()
 
     Me.RestartStopwatch
 
-    This.ViSession.GpibLan.LocalLockout
+    This.Session.LocalLockout
 
     Me.ReadStopwatch
 
@@ -1747,25 +1782,24 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Handles the read after write set button click event. </summary>
-Public Sub ReadAfterWriteSetCommand()
+''' <summary>   Handles the Auto Assert Talk Set button click event. </summary>
+Public Sub AutoAssertTalkSetCommand()
 
-    Const p_procedureName = "ReadAfterWriteSetCommand"
+    Const p_procedureName = "AutoAssertTalkSetCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
     Me.RestartStopwatch
     
-    If This.ReadAfterWriteEnabled = Me.AssertTalkAfterWriteAllowed Then
-        This.ViSession.GpibLan.ReadAfterWriteEnabledSetter Me.ReadAfterWriteEnabled
+    If Not This.AutoAssertTalk Then
+        This.Session.AutoAssertTalkSetter Me.AutoAssertTalk
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError _
             cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            "Setting read after write to '" & VBA.CStr(This.ReadAfterWriteEnabled) & _
-            "' is not allowed because the AssertTalkAfterWriteAllowed setting is '" & _
-            VBA.CStr(This.AssertTalkAfterWriteAllowed) & "'."
+            "Setting Auto Assert Talk to '" & VBA.CStr(This.AutoAssertTalk) & _
+            "' is not allowed."
     End If
 
     Me.ReadStopwatch
@@ -1794,17 +1828,17 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Handles the read after write get button click event. </summary>
-Public Sub ReadAfterWriteGetCommand()
+''' <summary>   Handles the auto assert TALK get button click event. </summary>
+Public Sub AutoAssertTalkGetCommand()
 
-    Const p_procedureName = "ReadAfterWriteGetCommand"
+    Const p_procedureName = "AutoAssertTalkGetCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
     Me.RestartStopwatch
 
-    Me.ReadAfterWriteEnabled = This.ViSession.GpibLan.ReadAfterWriteEnabledGetter
+    Me.AutoAssertTalk = This.Session.AutoAssertTalkGetter
 
     Me.ReadStopwatch
 
@@ -1836,7 +1870,7 @@ End Sub
 Public Sub ServiceRequestedQueryCommand()
 
     ' this does nothing
-    ' Me.ServiceRequested = This.VISession.GpibLan.ServiceRequested
+    ' Me.ServiceRequested = This.Session.ServiceRequested
 
     ' do this instead.
     Me.SerialPoll
@@ -1853,7 +1887,7 @@ Public Sub GpibAddressGetCommand()
 
     Me.RestartStopwatch
 
-    Me.GpibAddress = This.ViSession.GpibLan.GpibAddressGetter
+    Me.GpibAddress = This.Session.GpibAddressGetter
 
     Me.ReadStopwatch
 
@@ -1891,7 +1925,7 @@ Public Sub GpibAddressSetCommand()
 
     Me.RestartStopwatch
 
-    This.ViSession.GpibLan.GpibAddressSetter Me.GpibAddress
+    This.Session.GpibAddressSetter Me.GpibAddress
 
     Me.ReadStopwatch
 
@@ -1929,7 +1963,7 @@ Public Sub GpibLanReadTimeoutGetCommand()
 
     Me.RestartStopwatch
 
-    Me.GpibLanReadTimeout = This.ViSession.GpibLan.ReadTimeoutGetter
+    Me.GpibLanReadTimeout = This.Session.ReadTimeoutGetter
 
     Me.ReadStopwatch
 
@@ -1967,7 +2001,7 @@ Public Sub GpibLanReadTimeoutSetCommand()
 
     Me.RestartStopwatch
 
-    This.ViSession.GpibLan.ReadTimeoutSetter Me.GpibLanReadTimeout
+    This.Session.ReadTimeoutSetter Me.GpibLanReadTimeout
 
     Me.ReadStopwatch
 
@@ -2661,135 +2695,6 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Returns true and a message if the specified sense function matched neither
-''' one of sense functions of the defferent measurement modes. </summary>
-''' <param name="a_senseFunction">   [String] The actual sense function. </param>
-''' <param name="a_details">         [String] Details why the sense function needs to be restored. </param>
-''' <returns>   [Boolean]. </returns>
-Public Function ShouldRestoreSenseFunction(ByVal a_senseFunction As String, _
-    ByRef a_details As String) As Boolean
-
-    If Not ((1 = InStr(1, This.ContinuousSenseFunctionName, a_senseFunction, vbTextCompare)) Or _
-            (1 = InStr(1, This.ImmediateSenseFunctionName, a_senseFunction, vbTextCompare)) Or _
-            (1 = InStr(1, This.ExternalSenseFunctionName, a_senseFunction, vbTextCompare))) Then
-        a_details = "The K2700 device current sense function '" & a_senseFunction & _
-            "' is not set; it must be set to either " & _
-            This.ContinuousSenseFunctionName & " or " & _
-            This.ImmediateSenseFunctionName & " or " & _
-            This.ExternalSenseFunctionName & "."
-        ShouldRestoreSenseFunction = True
-    Else
-        ShouldRestoreSenseFunction = False
-    End If
-
-End Function
-
-''' <summary>   Returns true and a message if the instrument is nothing or not conneced. </summary>
-''' <param name="a_details">   [String] Details why the view model needs to connect. </param>
-''' <returns>   [Boolean]. </returns>
-Public Function ShouldConnect(ByRef a_details As String) As Boolean
-
-    If This.K2700 Is Nothing Then
-        a_details = "The K2700 device instance is nothing."
-        ShouldConnect = True
-    ElseIf This.Device Is Nothing Then
-        a_details = "The IEEE488 device instance is nothing."
-        ShouldConnect = True
-    ElseIf This.ViSession Is Nothing Then
-        a_details = "The VI Session instance is nothing."
-        ShouldConnect = True
-    ElseIf Not Me.Connected Then
-        a_details = "The view model is not connected to " & This.Host & ":" & VBA.CStr(This.Port) & "."
-        ShouldConnect = True
-    Else
-        ShouldConnect = False
-    End If
-    
-End Function
-
-''' <summary>   Returns true and a message if the current state does not match the expected restore state. </summary>
-''' <remarks>   This is the expected state for making resistance measurements. In future releases
-''' we could define a set of states. </remarks>
-''' <param name="a_details">   [String] Details why the view model needs to be resotred to its known state. </param>
-''' <returns>   [Boolean]. </returns>
-Public Function ShouldRestoreKnownState(ByRef a_details As String) As Boolean
-
-    If Me.ShouldConnect(a_details) Then
-        ShouldRestoreKnownState = True
-    ElseIf This.Device.ShouldRestoreKnownState(This.AssertTalkAfterWriteAllowed, a_details) Then
-        ShouldRestoreKnownState = True
-    Else
-        ' validate the sense function
-        Dim p_senseFunction As String
-        p_senseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
-        ShouldRestoreKnownState = Me.ShouldRestoreSenseFunction(p_senseFunction, a_details)
-    End If
-
-End Function
-
-''' <summary>   Restores the instrument to its known state in case the instrument power
-''' was toggled or a recovery from error is needed. </summary>
-''' <remarks>   This method attempts to restore the instrument to a known state in case it is
-''' powered off while the program is active as follows:
-''' - The user defined errors are cleared;
-''' - The View Model is initialized if the instrument is nothing;
-''' - The View Model is connected if it is not connected;
-''' - The GPIB-Lan device is restored to its known state;
-''' - The instrument is set to its known state if sense function needs to be restored;
-'''     - otherwise, the instrument is set to its clear known state.
-''' </remarks>
-Public Sub RestoreKnownState()
-
-    Dim p_details As String: p_details = VBA.vbNullString
-
-    ' enumerate and report any accumulated errors.
-    Me.LastErrorMessage = This.Device.EnumerateErrors()
-    
-    ' clear the error state
-    cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
-
-    If This.K2700 Is Nothing Then Me.Initialize
-    
-    If Not Me.Connected Then _
-        Me.OpenConnection This.Host, This.Port, This.SocketReceiveTimeout
-    
-    If Not Me.Connected Then _
-        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".RestoreKnownState", _
-            " Failed connecting to " & This.Host & ":" & VBA.CStr(This.Port) & "."
-    
-    ' restore the IEEE488 device state
-    If Not This.Device.ResetKnownState(p_details) Then
-        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".RestoreKnownState", _
-            " Failed restoring IEEE 488 device to its known state; " & p_details
-    End If
-    
-    ' validate the sense function
-    Dim p_senseFunction As String
-    p_senseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
-    If Me.ShouldRestoreSenseFunction(p_senseFunction, p_details) Then
-        
-        ' if the sense function does not match, initialize the instrument
-        ' connection state.
-        Dim a_errors As String
-        Dim a_methodErrors As String
-        If Not OnInstrumentConnected(a_errors, a_methodErrors) Then
-            If VBA.vbNullString = a_errors Then
-                Me.LastErrorMessage = a_methodErrors
-            ElseIf VBA.vbNullString = a_methodErrors Then
-                Me.LastErrorMessage = a_errors
-            Else
-                Me.LastErrorMessage = a_errors & VBA.vbCrLf & a_methodErrors
-            End If
-        End If
-    Else
-        ' clear the instrument execution state to remove any lingering errors
-        Me.ClearExecutionState
-    End If
-    
-End Sub
-
 ''' <summary>   Returns true if the inputs are valid for front or rear settings. </summary>
 Public Function ValidateInputs() As Boolean
 
@@ -2821,7 +2726,7 @@ End Function
 
 ''' <summary>   Internal. Configures continuous trigger mode. </summary>
 ''' <remarks>   This method requires that the instrument be connected as per
-''' <see cref=RestoreKnownState"/>. This method disables both the trigger
+''' <see cref=TryRestoreInitialState"/>. This method disables both the trigger
 ''' monitoring executable and disable the immediate reading executable (Measure). </remarks>
 Friend Sub ConfigureContinuousMode()
 
@@ -2832,7 +2737,7 @@ Friend Sub ConfigureContinuousMode()
 
     ' throw an error if the state was not restored before this method.
     Dim p_details As String: p_details = VBA.vbNullString
-    If Me.ShouldConnect(p_details) Then _
+    If Me.ShouldRestoreInitialState(p_details) Then _
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
             " The instrument is not ready;" & VBA.vbCrLf & p_details
@@ -2897,7 +2802,11 @@ Public Sub ConfigureContinuousModeCommand()
 
     ' restore the instrument state if it had a power toggle.
     
-    Me.RestoreKnownState
+    Dim p_details As String
+    If Not Me.TryRestoreInitialState(p_details) Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " Failed restoring initial state; " & p_details
 
     ' executed the specific actions for configuring conditinuous mode.
     
@@ -2929,7 +2838,7 @@ End Sub
 
 ''' <summary>   Internal. Configures external trigger reading mode. </summary>
 ''' <remarks>   This method requires that instrument be connected as per
-''' <see cref=RestoreKnownState"/> and inputs are set as required.
+''' <see cref=TryRestoreInitialState"/> and inputs are set as required.
 ''' This method enables the trigger monitoring executable and disables the
 ''' immediate reading executable (Measure). </remarks>
 Friend Sub ConfigureExternalTriggerReading()
@@ -2942,7 +2851,7 @@ Friend Sub ConfigureExternalTriggerReading()
     
     ' throw an error if the state was not restored before this method.
     Dim p_details As String: p_details = VBA.vbNullString
-    If Me.ShouldConnect(p_details) Then _
+    If Me.ShouldRestoreInitialState(p_details) Then _
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
             " The instrument not ready;" & VBA.vbCrLf & p_details
@@ -2963,25 +2872,25 @@ Friend Sub ConfigureExternalTriggerReading()
     This.K2700.ConfigureExternalTriggerReading This.SenseFunctionName
     
     ' this is done in the previous command.
-    ' This.VISession.WriteLine ":TRIG:SOUR IMM"
-    ' This.VISession.WriteLine ":TRIG:SOUR EXT"
+    ' This.Session.WriteLine ":TRIG:SOUR IMM"
+    ' This.Session.WriteLine ":TRIG:SOUR EXT"
     
     ' clear the serial poll register
     ' these are also part of the previous command.
-    ' This.VISession.WriteLine "*ESE 0"
-    ' This.VISession.WriteLine "*SRE 63"
+    ' This.Session.WriteLine "*ESE 0"
+    ' This.Session.WriteLine "*SRE 63"
     
     ' clear the measurement event enable register
-    ' This.VISession.WriteLine "STAT:PRES"
+    ' This.Session.WriteLine "STAT:PRES"
     
     ' enable the reading available bit of the measurement event register.
-    ' This.VISession.WriteLine "STAT:MEAS:ENAB 32"
+    ' This.Session.WriteLine "STAT:MEAS:ENAB 32"
     
     ' This.Device.QueryServiceRequestStatus
     
     ' move this to starting the monitoring.
     ' initiate awaiting for the external trigger
-    ' This.VISession.WriteLine ":INIT;*CLS"
+    ' This.Session.WriteLine ":INIT;*CLS"
 
     ' validate the sense function.
     Dim p_senseFunction As String
@@ -3032,7 +2941,11 @@ Public Sub ConfigureExternalTriggerReadingCommand()
 
     ' restore the instrument state if it had a power toggle.
     
-    Me.RestoreKnownState
+    Dim p_details As String
+    If Not Me.TryRestoreInitialState(p_details) Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " Failed restoring initial state; " & p_details
     
     ' exit if inputs are not in the correct settings
 
@@ -3069,7 +2982,7 @@ End Sub
 
 ''' <summary>   Internal. Configures immediate trigger redading mode. </summary>
 ''' <remarks>   This method requires that instrument be connected as per
-''' <see cref=RestoreKnownState"/> and inputs are set as required.
+''' <see cref=TryRestoreInitialState"/> and inputs are set as required.
 ''' This method enables the immediate reading executable (Measure) and
 ''' disables trigger monitoring executable. </remarks>
 Friend Sub ConfigureImmediateTriggerReadings()
@@ -3081,7 +2994,7 @@ Friend Sub ConfigureImmediateTriggerReadings()
 
     ' throw an error if the state was not restored before this method.
     Dim p_details As String: p_details = VBA.vbNullString
-    If Me.ShouldConnect(p_details) Then _
+    If Me.ShouldRestoreInitialState(p_details) Then _
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
             " The instrument not ready;" & VBA.vbCrLf & p_details
@@ -3146,7 +3059,11 @@ Public Sub ConfigureImmediateTriggerReadingsCommand()
 
     ' restore the instrument state if it had a power toggle.
     
-    Me.RestoreKnownState
+    Dim p_details As String
+    If Not Me.TryRestoreInitialState(p_details) Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " Failed restoring initial state; " & p_details
 
     ' exit if inputs are not in the correct settings
 
@@ -3230,7 +3147,7 @@ Public Sub MeasureImmediatelyCommand()
 
     ' reinitialize if device not defined
     If Not This.K2700.Connected Then
-        ' This.K2700.InitializeLegacy Me.host, Me.port, Me.SocketReceiveTimeout
+        ' This.K2700.InitializeLegacy Me.host, Me.port, Me.SessionTimeout
     End If
 
     ' exit if inputs are not in the correct settings
@@ -3448,7 +3365,7 @@ Friend Sub StartMonitoringExternalTriggers()
    
     ' initiate awaiting for the external trigger
     ' this is handled by the K2700.MonitorExternalTrigger method.
-    ' This.ViSession.WriteLine ":INIT;*CLS"
+    ' This.Session.WriteLine ":INIT;*CLS"
 
     ' start the timer
     Me.StartTimer Me.TimerInterval
@@ -3599,257 +3516,6 @@ err_Handler:
     On Error Resume Next
     GoTo exit_Handler
     
-End Sub
-
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
-' K2700 Events
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
-''' <summary>   Handles the K2700 <see cref="cc_isr_Tcp_Scpi.ChannelMeasured"/> event. </summary>
-''' <param name="a_eventArgs">   [<see cref="cc_isr_Tcp_Scpi.ChannelReadingEventArgs"/>] event arguments. </param>
-Private Sub m_k2700_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.ChannelReadingEventArgs)
-
-    Const p_procedureName = "m_k2700_ChannelMeasured"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    If Me.ReadingBeepEnabled Then This.K2700.ScpiSystem.Beep
-
-    ' notify the observer of a channel measurements
-    If VBA.vbNullString = a_eventArgs.Reading Then
-        OnChannelMeasured a_eventArgs.ChannelNumber, -1#
-    Else
-        OnChannelMeasured a_eventArgs.ChannelNumber, CDbl(a_eventArgs.Reading)
-    End If
-
-    If Me.AutoIncrementChannelNoEnabled Then
-
-        ' increment the resistance for the next reading
-        
-        This.CurrentChannelNumber = IIf(a_eventArgs.ChannelNumber < Me.ChannelCount, _
-            a_eventArgs.ChannelNumber + 1, 1)
-
-    End If
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' enqueue the error or append its source to the last error.
-    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-''' <summary>   Process the initial connection instrument actions. </summary>
-''' <param name="a_errors">         [Out, String] contains any error information that existed before this
-'''                                 method. </param>
-''' <param name="a_methoderrors">   [Out, String] contains any error due to this method. </param>
-''' <returns>   [Boolean] true if no errors are reported. </returns>
-Private Function OnInstrumentConnected(ByRef a_errors As String, ByRef a_methodErrors As String) As Boolean
-
-    ' report the socket number
-    Me.SocketAddress = This.ViSession.SocketAddress
-    Me.SocketId = This.ViSession.SocketId
-    
-    ' report device errors if any before clearing states.
-    
-    Dim p_hasErrors As Boolean
-    a_errors = This.Device.EnumerateErrors()
-    p_hasErrors = VBA.vbNullString <> a_errors
-    If p_hasErrors Then _
-        a_errors = "Error(s) occurred on session connection: " & VBA.vbCrLf & a_errors
-
-    This.ViSession.GpibLan.SelectiveDeviceClear
-    This.Device.ResetKnownState
-    This.Device.ClearExecutionState
-    
-    Me.TopCard = This.K2700.RouteSystem.CardName(1)
-    Me.BottomCard = This.K2700.RouteSystem.CardName(2)
-    
-    ' initialize the scan list for immediate trigger.
-    If VBA.vbNullString <> This.ImmediateSenseFunctionName Then
-    
-        ' set the instrument function scan list
-        This.K2700.RouteSystem.DefineFunctionScanLists This.ImmediateSenseFunctionName
-    
-        ' show the results.
-        Me.TopCardFunctionScanList = This.K2700.RouteSystem.FunctionScanList(1)
-        Me.BottomCardFunctionScanList = This.K2700.RouteSystem.FunctionScanList(2)
-        
-    End If
-
-    ' configure the instrument for continuous mode.
-    
-    Me.ConfigureContinuousMode
-    
-    ' report any method errors.
-    
-    Dim p_hasMethodErrors As Boolean
-    a_methodErrors = This.Device.EnumerateErrors()
-    p_hasMethodErrors = VBA.vbNullString <> a_methodErrors
-    If p_hasMethodErrors Then _
-        a_methodErrors = "Error(s) occurred on instrument connection: " & VBA.vbCrLf & a_methodErrors
-    
-    OnInstrumentConnected = Not (p_hasMethodErrors Or p_hasErrors)
-    
-End Function
-
-''' <summary>   Process the initial view model connection actions.
-'''             This sets the executable action.  </summary>
-Private Sub OnViewModelConnected()
-
-    Me.OpenConnectionExecutable = Not Me.Connected
-    Me.CloseConnectionExecutable = Me.Connected
-    
-    Me.ClearReadingsExecutable = True
-
-    Me.ResetKnownStateExecutable = Me.Connected
-    Me.ClearExecutionStateExecutable = Me.Connected
-    Me.QueryExecutable = Me.Connected
-    Me.ReadExecutable = Me.Connected
-    Me.WriteExecutable = Me.Connected
-    Me.ReadStatusByteExecutable = Me.Connected
-    Me.ReadStandardEventStatusExecutable = Me.Connected
-    Me.QueryInputsExecutable = Me.Connected
-    Me.ImmediateTriggerOptionExecutable = Me.Connected
-    Me.ExternalTriggerOptionExecutable = Me.Connected
-
-    ' this gets enabled when entering the immediate mode
-    Me.MeasureExecutable = False
-    
-    ' this gets enabled when entering the external trigger mode
-    Me.StartMonitoringExecutable = False
-    Me.StopMonitoringExecutable = False
-
-    Dim p_GpibLanConnected As Boolean
-    p_GpibLanConnected = Me.Connected And This.ViSession.UsingGpibLan
-
-    Me.SelectiveDeviceClearExecutable = p_GpibLanConnected
-    Me.GoToLocalExecutable = p_GpibLanConnected
-    Me.LocalLockoutExecutable = p_GpibLanConnected
-    Me.ReadAfterWriteSetExecutable = p_GpibLanConnected
-    Me.ReadAfterWriteGetExecutable = p_GpibLanConnected
-    Me.SerialPollExecutable = p_GpibLanConnected
-    Me.ServiceRequestedExecutable = p_GpibLanConnected
-    Me.GpibAddressGetExecutable = p_GpibLanConnected
-    Me.GpibAddressSetExecutable = p_GpibLanConnected
-    Me.GpibLanReadTimeoutGetExecutable = p_GpibLanConnected
-    Me.GpibLanReadTimeoutSetExecutable = p_GpibLanConnected
-    Me.ConnectionExecutableSetter
-
-End Sub
-
-''' <summary>   Handles the K2700 <see cref="cc_isr_Tcp_Scpi.K2700.ConnectionChanged"/> event. </summary>
-''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/>] event arguments. </param>
-Private Sub m_k2700_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
-
-    Const p_procedureName = "m_k2700_ConnectionChanged"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    ' set the executable condition first, which might
-    ' change depending on how the instrument connected methods affects the executable commands.
-    OnViewModelConnected
-    
-    If a_eventArgs.Connected Then
-
-        Dim a_errors As String
-        Dim a_methodErrors As String
-        If Not OnInstrumentConnected(a_errors, a_methodErrors) Then
-            If VBA.vbNullString = a_errors Then
-                Me.LastErrorMessage = a_methodErrors
-            ElseIf VBA.vbNullString = a_methodErrors Then
-                Me.LastErrorMessage = a_errors
-            Else
-                Me.LastErrorMessage = a_errors & VBA.vbCrLf & a_methodErrors
-            End If
-        End If
-
-    Else
-
-        Me.SocketAddress = vbNullString
-        Me.SocketId = 0
-    
-    End If
-
-    OnConnectionChanged Me.Connected
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' enqueue the error or append its source to the last error.
-    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-''' <summary>   Handles the <see cref="cc_isr_Tcp_Scpi.K2700.ConnectionChanging"/> event. </summary>
-''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangingEventArgs"/>] event arguments. </param>
-Private Sub m_k2700_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
-    
-    Const p_procedureName = "m_k2700_ConnectionChanging"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    IConnectable_OnConnectionChanging a_eventArgs
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' enqueue the error or append its source to the last error.
-    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
 End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -4065,7 +3731,7 @@ End Sub
 ''' <summary>   Internal. Restarts the stop watch and clears the elapsed time cell. </summary>
 Friend Sub RestartStopwatch()
 
-    Me.ElapsedTimeCaption = vbNullString
+    Me.ElapsedTimeCaption = VBA.vbNullString
     This.Stopwatch.Restart
 
 End Sub
@@ -4260,25 +3926,17 @@ End Sub
 ''' <see cref="cc_isr_Ieee488.Ieee488Session"/> object . </summary>
 ''' <value>   [<see cref="cc_isr_Winsock.IConnectable"/>]. </value>
 Public Property Get Connectable() As cc_isr_Winsock.IConnectable
-    Set Connectable = This.ViSession
-End Property
-
-''' <summary>   Returns the connection state of the client. </summary>
-''' <value>   [Boolean] True if the IEEE488 Session is connected; otherwise, False. </value>
-Public Property Get Connected() As Boolean
-
-    Connected = IConnectable_Connected
-
+    Set Connectable = This.Session.Socket
 End Property
 
 ''' <summary>   Returns the connection state of the <see cref="cc_isr_Winsock.IConnectable"/>. </summary>
 ''' <value>   [Boolean] True if the <see cref="cc_isr_Winsock.IConnectable"/> is connected; otherwise, False. </value>
-Private Property Get IConnectable_Connected() As Boolean
+Public Property Get Connected() As Boolean
 
     If Me.Connectable Is Nothing Then
-        IConnectable_Connected = False
+        Connected = False
     Else
-        IConnectable_Connected = Me.Connectable.Connected
+        Connected = Me.Connectable.Connected
     End If
 
 End Property
@@ -4287,69 +3945,287 @@ End Property
 ''' <value>   [Boolean] True if a connection can be made. </value>
 Public Property Get CanConnect() As Boolean
 
-    CanConnect = IConnectable_CanConnect
-
-End Property
-
-''' <summary>   Returns true if a connection can be made. </summary>
-''' <value>   [Boolean] True if a connection can be made. </value>
-Private Property Get IConnectable_CanConnect() As Boolean
-
     If Me.Connectable Is Nothing Then
-        IConnectable_CanConnect = False
+        CanConnect = False
     Else
-        IConnectable_CanConnect = Me.Connectable.CanConnect
+        CanConnect = Me.Connectable.CanConnect
     End If
 
 End Property
 
-''' <summary>   Closes the connection and releases the <see cref="Ieee488Session">Session</see>. </summary>
-Public Sub Dispose()
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' Restore Initial State
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-    IConnectable_Dispose
+''' <summary>   Initialize the state of the view model executables.  </summary>
+Friend Sub InitializeExecutablesState()
+
+    Me.OpenConnectionExecutable = Not Me.Connected
+    Me.CloseConnectionExecutable = Me.Connected
+    
+    Me.ClearReadingsExecutable = True
+
+    Me.ResetKnownStateExecutable = Me.Connected
+    Me.ClearExecutionStateExecutable = Me.Connected
+    Me.QueryExecutable = Me.Connected
+    Me.ReadExecutable = Me.Connected
+    Me.WriteExecutable = Me.Connected
+    Me.ReadStatusByteExecutable = Me.Connected
+    Me.ReadStandardEventStatusExecutable = Me.Connected
+    Me.QueryInputsExecutable = Me.Connected
+    Me.ImmediateTriggerOptionExecutable = Me.Connected
+    Me.ExternalTriggerOptionExecutable = Me.Connected
+
+    ' this gets enabled when entering the immediate mode
+    Me.MeasureExecutable = False
+    
+    ' this gets enabled when entering the external trigger mode
+    Me.StartMonitoringExecutable = False
+    Me.StopMonitoringExecutable = False
+
+    If This.Session.GpibLanControllerAttached Then
+        Me.SelectiveDeviceClearExecutable = Me.Connected
+        Me.GoToLocalExecutable = Me.Connected
+        Me.LocalLockoutExecutable = Me.Connected
+        Me.AutoAssertTalkSetExecutable = Me.Connected
+        Me.AutoAssertTalkGetExecutable = Me.Connected
+        Me.SerialPollExecutable = Me.Connected
+        Me.ServiceRequestedExecutable = Me.Connected
+        Me.GpibAddressGetExecutable = Me.Connected
+        Me.GpibAddressSetExecutable = Me.Connected
+        Me.GpibLanReadTimeoutGetExecutable = Me.Connected
+        Me.GpibLanReadTimeoutSetExecutable = Me.Connected
+    End If
+    
+    ' set the connection executables.
+    Me.ConnectionExecutableSetter
 
 End Sub
 
-''' <summary>   Closes the connection and releases the <see cref="cc_isr_Winsock.IConnectable">Session</see>. </summary>
-Private Sub IConnectable_Dispose()
+''' <summary>   Process the initial connection instrument actions. </summary>
+''' <param name="a_errors">         [Out, String] contains any error information that existed before this
+'''                                 method. </param>
+''' <param name="a_methoderrors">   [Out, String] contains any error due to this method. </param>
+''' <returns>   [Boolean] true if no errors are reported. </returns>
+Friend Function TryConfigureInstrumentInitialState(ByRef a_errors As String, _
+    ByRef a_methodErrors As String) As Boolean
 
-    Const p_procedureName As String = "IConnectable_Dispose"
+    ' report the socket number
+    Me.SocketAddress = This.Session.SocketAddress
+    Me.SocketId = This.Session.Socket.SocketId
+    
+    ' report device errors if any before clearing states.
+    
+    Dim p_hasErrors As Boolean
+    a_errors = This.Device.EnumerateErrors()
+    p_hasErrors = VBA.vbNullString <> a_errors
+    If p_hasErrors Then _
+        a_errors = "Error(s) occurred on session connection: " & VBA.vbCrLf & a_errors
+
+    This.Session.SelectiveDeviceClear
+    This.Device.ResetKnownState
+    This.Device.ClearExecutionState
+    
+    Me.TopCard = This.K2700.RouteSystem.CardName(1)
+    Me.BottomCard = This.K2700.RouteSystem.CardName(2)
+    
+    ' initialize the scan list for immediate trigger.
+    If VBA.vbNullString <> This.ImmediateSenseFunctionName Then
+    
+        ' set the instrument function scan list
+        This.K2700.RouteSystem.DefineFunctionScanLists This.ImmediateSenseFunctionName
+    
+        ' show the results.
+        Me.TopCardFunctionScanList = This.K2700.RouteSystem.FunctionScanList(1)
+        Me.BottomCardFunctionScanList = This.K2700.RouteSystem.FunctionScanList(2)
+        
+    End If
+
+    ' configure the instrument for continuous mode.
+    
+    Me.ConfigureContinuousMode
+    
+    ' report any method errors.
+    
+    Dim p_hasMethodErrors As Boolean
+    a_methodErrors = This.Device.EnumerateErrors()
+    p_hasMethodErrors = VBA.vbNullString <> a_methodErrors
+    If p_hasMethodErrors Then _
+        a_methodErrors = "Error(s) occurred on instrument connection: " & VBA.vbCrLf & a_methodErrors
+    
+    TryConfigureInstrumentInitialState = Not (p_hasMethodErrors Or p_hasErrors)
+    
+End Function
+
+''' <summary>   Configures the 2700 Multimeter scanner initial state. </summary>
+''' <remarks>   Call this method upon connecting and restoring Initial State. </remarks>
+''' <param name="a_details">   [Out, String] Details the information of why the instrument
+'''                            failed to restore state. </param>
+Public Function TryConfigureInitialState(ByRef a_details As String) As Boolean
+
+    Const p_procedureName As String = "TryConfigureInitialState"
+
+    Dim p_success As Boolean: p_success = True
+    
+    If p_success Then
+    
+        Dim a_errors As String
+        Dim a_methodErrors As String
+        p_success = TryConfigureInstrumentInitialState(a_errors, a_methodErrors)
+        If Not p_success Then
+            If VBA.vbNullString = a_errors Then
+                a_details = a_methodErrors
+            ElseIf VBA.vbNullString = a_methodErrors Then
+                a_details = a_errors
+            Else
+                a_details = a_errors & VBA.vbCrLf & a_methodErrors
+            End If
+            Me.LastErrorMessage = a_details
+        End If
+    
+    End If
+    
+    TryConfigureInitialState = p_success
+
+End Function
+
+''' <summary>   Returns true and a message if the specified sense function matched neither
+''' one of sense functions of the defferent measurement modes. </summary>
+''' <param name="a_senseFunction">   [String] The actual sense function. </param>
+''' <param name="a_details">         [String] Details why the sense function needs to be restored. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function ShouldRestoreSenseFunction(ByVal a_senseFunction As String, _
+    ByRef a_details As String) As Boolean
+
+    If Not ((1 = InStr(1, This.ContinuousSenseFunctionName, a_senseFunction, vbTextCompare)) Or _
+            (1 = InStr(1, This.ImmediateSenseFunctionName, a_senseFunction, vbTextCompare)) Or _
+            (1 = InStr(1, This.ExternalSenseFunctionName, a_senseFunction, vbTextCompare))) Then
+        a_details = "The K2700 device current sense function '" & a_senseFunction & _
+            "' is not set; it must be set to either " & _
+            This.ContinuousSenseFunctionName & " or " & _
+            This.ImmediateSenseFunctionName & " or " & _
+            This.ExternalSenseFunctionName & "."
+        ShouldRestoreSenseFunction = True
+    Else
+        ShouldRestoreSenseFunction = False
+    End If
+
+End Function
+
+''' <summary>   Returns true and a message if the current state does not match the expected restore state. </summary>
+''' <remarks>   This is the expected state for making resistance measurements. In future releases
+''' we could define a set of states. </remarks>
+''' <param name="a_details">   [String] Details why the view model needs to be resotred
+'''                            to its Initial State. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function ShouldRestoreInitialState(ByRef a_details As String) As Boolean
+
+    If This.K2700 Is Nothing Then
+        a_details = "The K2700 device instance is nothing."
+        ShouldRestoreInitialState = True
+    ElseIf This.K2700.ShouldRestoreInitialState(a_details) Then
+        ShouldRestoreInitialState = True
+    Else
+        ' validate the sense function
+        Dim p_senseFunction As String
+        p_senseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
+        ShouldRestoreInitialState = Me.ShouldRestoreSenseFunction(p_senseFunction, a_details)
+    End If
+
+End Function
+
+''' <summary>   Restores the instrument to its Initial State in case the instrument power
+''' was toggled or a recovery from error is needed. </summary>
+''' <remarks>   This method attempts to restore the instrument to a Initial State in case it is
+''' powered off while the program is active as follows:
+''' - The user defined errors are cleared;
+''' - The View Model is initialized if the instrument is nothing;
+''' - The View Model is connected if it is not connected;
+''' - The GPIB-Lan device is restored to its Initial State;
+''' - The instrument is set to its Initial State if sense function needs to be restored;
+'''     - otherwise, the instrument is set to its clear Initial State.
+''' </remarks>
+''' <param name="a_details">   [String] Details why the view model needs to be resotred
+'''                            to its Initial State. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function TryRestoreInitialState(ByRef a_details As String)
+
+    Dim p_success As Boolean: p_success = True
+
+    If p_success And This.K2700 Is Nothing Then Me.Initialize
+    
+    If Me.Device Is Nothing Or Me.Session Is Nothing Or Me.Session.Socket Is Nothing Then
+        a_details = "Unable to restore the view model to its initial state because the view model failed to initialize the K2700 instance. Please restart the program."
+        p_success = False
+    End If
+    
+    If p_success Then
+        p_success = This.Device.TryRestoreInitialState(a_details)
+    End If
+    
+    If p_success Then
+        ' set the executable condition first, which might
+        ' change depending on how the instrument connected methods affects the executable commands.
+        Me.InitializeExecutablesState
+    End If
+    
+    If p_success Then
+        ' reset the IEEE488 device state
+        p_success = This.Device.ResetKnownState(a_details)
+    End If
+
+    If p_success Then
+        ' configure the initial state
+        p_success = Me.TryConfigureInitialState(a_details)
+    End If
+
+    If p_success Then
+        ' clear the instrument execution state to remove any lingering errors
+        Me.ClearExecutionState
+    End If
+    
+    TryRestoreInitialState = p_success
+    
+End Function
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' Socket Events
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Handles the K2700 <see cref="cc_isr_Winsock.IPv4StreamSocket.ConnectionChanged"/> event. </summary>
+''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/>] event arguments. </param>
+Private Sub m_socket_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
+
+    Const p_procedureName = "m_socket_ConnectionChanged"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
-
-    ' clear the last error message
-    Me.LastErrorMessage = VBA.vbNullString
-
-    Set This.Stopwatch = Nothing
-
-    If Not m_eventTimer Is Nothing Then
-
-        m_eventTimer.StopTimer
-  
-        ' allow the timer to stop.
-        cc_isr_Core_IO.CoreExtensions.Wait 0.0015 * This.TimerInterval
     
-        Set m_eventTimer = Nothing
+    ' set the executable condition first, which might
+    ' change depending on how the instrument connected methods affects the executable commands.
+    Me.InitializeExecutablesState
+    
+    If a_eventArgs.Connected Then
+    
+        Dim p_details As String
+         
+        ' configure the initial state
+        If Not Me.TryConfigureInitialState(p_details) Then _
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " Failed configuring the initial state; " & p_details
+    
+    Else
+    
+        ' we do not wish to remove a user settings.
+        ' Me.SocketAddress = VBA.vbNullString
+        Me.SocketId = 0
     
     End If
-
-    If Not Me.Connectable Is Nothing Then
-        If Me.Connectable.Connected Then
-            Me.Connectable.CloseConnection
-        End If
-    End If
-
-    If Not Me.Connectable Is Nothing Then
-        Me.Connectable.Dispose
-    End If
-
-    If Not m_k2700 Is Nothing Then m_k2700.Dispose
-    Set m_k2700 = Nothing
-    Set This.K2700 = Nothing
-
-    Set This.Device = Nothing
-    Set This.ViSession = Nothing
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -4375,98 +4251,93 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Opens a VI Session connection to the specified host at the specified port
-''' as sets the connection timeout. </summary>
-''' <param name="a_host">        [String] An IPv4 dotted-decimal host address. </param>
-''' <param name="a_port">        [Long] The port that the server is listening on. </param>
-''' <param name=a_"timeoutMs">   [Optional, Long, 500] The receive timeout in milliseconds. </param>
-''' <returns>   [Boolean] True if the VI Session is connected. </returns>
-Public Function OpenConnection(ByVal a_host As String, ByVal a_port As Long, _
-        Optional ByVal a_timeoutMs As Long = 500) As Boolean
-
-    IConnectable_OpenConnection a_host, a_port, a_timeoutMs
-
-End Function
-
-''' <summary>   Opens an <see cref="cc_isr_Winsock.IConnectable"/> connection to the
-''' specified host at the specified port as sets the socket receive timeout. </summary>
-''' <param name="a_host">        [String] An IPv4 dotted-decimal host address. </param>
-''' <param name="a_port">        [Long] The port that the server is listening on. </param>
-''' <param name="a_timeoutMs">   [Optional, Long, 500] The receive timeout in milliseconds. </param>
-''' <returns>   [Boolean] True if the <see cref="Connectable"/> is connected. </returns>
-Private Function IConnectable_OpenConnection(ByVal a_host As String, ByVal a_port As Long, _
-        Optional ByVal a_timeoutMs As Long = 500&) As Boolean
-
-    ' clear the error state
-    cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
-
-    Dim p_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs
-    Set p_eventArgs = cc_isr_Winsock.Factory.NewConnectionChangingEventArgs.Initialize(Me.Connected)
-    IConnectable_OnConnectionChanging p_eventArgs
-
-    If Not p_eventArgs.Cancel Then
-
-        Me.Connectable.OpenConnection a_host, a_port, a_timeoutMs
+''' <summary>   Handles the <see cref="cc_isr_Winsock.IPv4StreamSocket.ConnectionChanging"/> event. </summary>
+''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangingEventArgs"/>] event arguments. </param>
+Private Sub m_socket_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
     
-    End If
+    Const p_procedureName = "m_k2700_ConnectionChanging"
 
-    IConnectable_OpenConnection = Me.Connectable.Connected
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
 
-End Function
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
 
-''' <summary>   Closes the <see cref="cc_isr_Ieee488.Ieee488Session">IEEE488 Session</see> connection. </summary>
-''' <returns>   [Boolean] True if disconnection succeeded; otherwise, false. </returns>
-Public Function CloseConnection() As Boolean
+    On Error GoTo 0
+    Exit Sub
 
-    CloseConnection = IConnectable_CloseConnection
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
-End Function
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
 
-''' <summary>   Closes the <see cref="cc_isr_Winsock.IConnectable"/> connection. </summary>
-''' <returns>   [Boolean] True if disconnection succeeded; otherwise, false. </returns>
-Private Function IConnectable_CloseConnection() As Boolean
-
-    Dim p_args As cc_isr_Winsock.ConnectionChangingEventArgs
-    Set p_args = cc_isr_Winsock.Factory.NewConnectionChangingEventArgs.Initialize(Me.Connected)
-    IConnectable_OnConnectionChanging p_args
-   
-    If Not p_args.Cancel Then
-
-        IConnectable_CloseConnection = Me.Connectable.CloseConnection
-
-    End If
-
-    IConnectable_CloseConnection = Not Me.Connectable.Connected
-
-End Function
-
-''' <summary>   Raises the <see cref="ConnectionChanged"/> event after the
-''' connection was established and ended. </summary>
-''' <para name="a_isConnected">   [Boolean] The connection state. </param>
-Private Sub OnConnectionChanged(ByVal a_isConnected As Boolean)
-
-    IConnectable_OnConnectionChanged cc_isr_Winsock.Factory.NewConnectionChangedEventArgs.Initialize(a_isConnected)
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
 
 End Sub
 
-''' <summary>   Raises the <see cref="ConnectionChanged"/> event after the
-''' connection was established and ended. </summary>
-''' <para name="a_eventArgs">   [<<see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/>]. </param>
-Private Sub IConnectable_OnConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' K2700 Events
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-    If Not a_eventArgs Is Nothing Then
-        If a_eventArgs.Connected Then _
-            This.ViSession.SessionReadTimeout = This.SessionReadTimeout
-        RaiseEvent ConnectionChanged(a_eventArgs)
+''' <summary>   Handles the K2700 <see cref="cc_isr_Tcp_Scpi.ChannelMeasured"/> event. </summary>
+''' <param name="a_eventArgs">   [<see cref="cc_isr_Tcp_Scpi.ChannelReadingEventArgs"/>] event arguments. </param>
+Private Sub m_k2700_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.ChannelReadingEventArgs)
+
+    Const p_procedureName = "m_k2700_ChannelMeasured"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    If Me.ReadingBeepEnabled Then This.K2700.ScpiSystem.Beep
+
+    ' notify the observer of a channel measurements
+    If VBA.vbNullString = a_eventArgs.Reading Then
+        OnChannelMeasured a_eventArgs.ChannelNumber, -1#
+    Else
+        OnChannelMeasured a_eventArgs.ChannelNumber, CDbl(a_eventArgs.Reading)
     End If
 
-End Sub
+    If Me.AutoIncrementChannelNoEnabled Then
 
-''' <summary>   Raises the <see cref="ConnectionChanging"/> event. </summary>
-''' <para name="a_eventArgs">   [<<see cref="cc_isr_Winsock.ConnectionChangingEventArgs"/>]. </param>
-Private Sub IConnectable_OnConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
+        ' increment the resistance for the next reading
+        
+        This.CurrentChannelNumber = IIf(a_eventArgs.ChannelNumber < Me.ChannelCount, _
+            a_eventArgs.ChannelNumber + 1, 1)
 
-    RaiseEvent ConnectionChanging(a_eventArgs)
+    End If
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
 
 End Sub
 
@@ -4482,15 +4353,8 @@ Private Sub Class_Initialize()
     This.ElapsedTimeFormat = "0.0"
     
     ' Winsock properties
-    This.SocketReceiveTimeout = 100
+    This.SessionTimeout = 3000
    
-    ' ieee488 control properties
-    This.SessionReadTimeout = 3000
-    
-    ' GPIB-Lan properties.
-    This.AssertTalkAfterWriteAllowed = False
-    This.GpibLanReadTimeout = 500
-    
     ' 2700 properties
     This.ContinuousSenseFunctionName = "FRES"
     This.ImmediateSenseFunctionName = "RES"

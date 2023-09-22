@@ -14,7 +14,7 @@ Attribute VB_Exposed = True
 Option Explicit
 
 Private Type this_
-    ViSession As cc_isr_Ieee488.ViSession
+    Session As cc_isr_Ieee488.TcpSession
     LastDeviceError As String
     LastDeviceErrors As String
 End Type
@@ -22,28 +22,28 @@ End Type
 Private This As this_
 
 ''' <summary>   Returns a reference to the <see cref="ScpiSystem"/>. </summary>
-''' <param name="a_session">    [<see cref="<see cref="cc_isr_IEEE488.VISession"/>] A connected session. </param>
+''' <param name="a_session">    [<see cref="<see cref="cc_isr_Ieee488.TcpSession"/>] A connected session. </param>
 ''' <value>   [<see cref="ScpiSystem"/>]. </returns>
-Public Function Initialize(ByVal a_session As cc_isr_Ieee488.ViSession) As ScpiSystem
-    Set This.ViSession = a_session
+Public Function Initialize(ByVal a_session As cc_isr_Ieee488.TcpSession) As ScpiSystem
+    Set This.Session = a_session
     Set Initialize = Me
 End Function
 
 ''' <summary>   Returns the connection state of the client. </summary>
-''' <returns>   True if the <see cref="cc_isr_IEEE488.VISession"/>  is connected; otherwise, False. </returns>
+''' <returns>   True if the <see cref="cc_isr_Ieee488.TcpSession"/>  is connected; otherwise, False. </returns>
 Public Property Get Connected() As Boolean
     
-    If This.ViSession Is Nothing Then
+    If This.Session Is Nothing Then
         Connected = False
     Else
-        Connected = This.ViSession.Connected
+        Connected = This.Session.Connected
     End If
 
 End Property
 
 ''' <summary>   Issues a beep. </summary>
 Public Sub Beep()
-    This.ViSession.WriteLine ("SYST:BEEP")
+    This.Session.WriteLine "SYST:BEEP"
 End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -55,12 +55,12 @@ End Sub
 ''' <summary>   Query INPUTS switch (0=rear, 1=front). </summary>
 ''' <value>   [Boolean] true if the inputs are set to the front panel. </value>
 Public Function QueryFrontSwitch() As Boolean
-    QueryFrontSwitch = "1" = This.ViSession.QueryLine(":SYST:FRSW?")
+    QueryFrontSwitch = "1" = This.Session.QueryLine(":SYST:FRSW?")
 End Function
 
 ''' <summary>   Return to :SYST:PRES defaults. </summary>
 Public Sub Preset()
-    This.ViSession.WriteLine (":SYST:PRES")
+    This.Session.WriteLine ":SYST:PRES"
 End Sub
 
 

@@ -14,28 +14,28 @@ Attribute VB_Exposed = True
 Option Explicit
 
 Private Type this_
-    ViSession As cc_isr_Ieee488.ViSession
+    Session As cc_isr_Ieee488.TcpSession
     Elements As String
 End Type
 
 Private This As this_
 
 ''' <summary>   Returns a reference to the <see cref="FormatSystem"/>. </summary>
-''' <param name="a_session">    [<see cref="<see cref="cc_isr_IEEE488.VISession"/>] A connected session. </param>
+''' <param name="a_session">    [<see cref="<see cref="cc_isr_Ieee488.TcpSession"/>] A connected session. </param>
 ''' <value>   [<see cref="FormatSystem"/>]. </returns>
-Public Function Initialize(ByVal a_session As cc_isr_Ieee488.ViSession) As FormatSystem
-    Set This.ViSession = a_session
+Public Function Initialize(ByVal a_session As cc_isr_Ieee488.TcpSession) As FormatSystem
+    Set This.Session = a_session
     Set Initialize = Me
 End Function
 
 ''' <summary>   Returns the connection state of the client. </summary>
-''' <returns>   True if the <see cref="cc_isr_IEEE488.VISession"/>  is connected; otherwise, False. </returns>
+''' <returns>   True if the <see cref="cc_isr_Ieee488.TcpSession"/>  is connected; otherwise, False. </returns>
 Public Property Get Connected() As Boolean
     
-    If This.ViSession Is Nothing Then
+    If This.Session Is Nothing Then
         Connected = False
     Else
-        Connected = This.ViSession.Connected
+        Connected = This.Session.Connected
     End If
 
 End Property
@@ -53,14 +53,14 @@ End Property
 ''' <summary>   Gets the format elements. </summary>
 ''' <returns>   [String]. </returns>
 Public Function ElementsGetter() As String
-    This.Elements = This.ViSession.QueryLine("FORM:ELEM?")
+    This.Elements = This.Session.QueryLine("FORM:ELEM?")
     ElementsGetter = This.Elements
 End Function
 
 ''' <summary>   Sets the format elements. </summary>
 ''' <param name="p_value">   [String] The format elements to set. </param >
-Public Function ElementsSetter(ByVal p_value As String)
-    This.ViSession.WriteLine ("FORM:ELEM " & p_value)
+Public Sub ElementsSetter(ByVal p_value As String)
+    This.Session.WriteLine "FORM:ELEM " & p_value
     This.Elements = p_value
-End Function
+End Sub
 
