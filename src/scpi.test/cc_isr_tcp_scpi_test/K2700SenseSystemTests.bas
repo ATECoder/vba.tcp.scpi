@@ -11,10 +11,12 @@ Private Type this_
     TestNumber As Integer
     BeforeAllAssert As cc_isr_Test_Fx.Assert
     BeforeEachAssert As cc_isr_Test_Fx.Assert
-    Device As cc_isr_Tcp_Scpi.K2700
-    Host As String
-    Port As Long
-    SocketReceiveTimeout As Integer
+    K2700 As cc_isr_Tcp_Scpi.K2700
+    Device As cc_isr_Ieee488.Device
+    Session As cc_isr_Ieee488.TcpSession
+    Address As String
+    SessionTimeout As Integer
+    TestStopper As cc_isr_Core_IO.Stopwatch
     ErrTracer As cc_isr_Test_Fx.IErrTracer
     TestCount As Integer
     RunCount As Integer
@@ -52,6 +54,11 @@ Public Sub RunOneTest()
 End Sub
 
 ''' <summary>   Runs all tests. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 Public Sub RunAllTests()
     BeforeAll
     Dim p_outcome As cc_isr_Test_Fx.Assert
@@ -101,28 +108,36 @@ Public Sub BeforeAll()
     This.Name = "ScpiSystemTests"
     
     This.TestNumber = 0
+    This.Address = "192.168.0.252:1234"
+    This.SessionTimeout = 3000
     
-    ' set a temporary error tracer
-    Set This.ErrTracer = New DeviceErrorsTracer
+    Set This.TestStopper = cc_isr_Core_IO.Factory.NewStopwatch
+    Dim p_errTracer As New DeviceErrorsTracer
     
     ' clear the error state.
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
-    
-    ' Prime all tests
 
-    This.Host = "192.168.0.252"
-    This.Port = 1234
-    This.SocketReceiveTimeout = 100
+    ' Prime all tests
     
-    Set This.Device = cc_isr_Tcp_Scpi.Factory.NewK2700().Initialize()
+    Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize()
+    Set This.Device = This.K2700.Device
+    Set This.Session = This.Device.Session
+    Set This.ErrTracer = p_errTracer.Initialize(This.Device)
     
-    ' set the final error tracer capable of reporting device errors.
-    Dim p_errTracer As New DeviceErrorsTracer
-    Set This.ErrTracer = p_errTracer.Initialize(This.Device.Device)
+    This.Device.GpibLanControllerPort = 1234
+    This.Device.ReadAfterWriteDelay = 1
+    This.Device.SessionTimeout = This.SessionTimeout
+    This.Device.Termination = VBA.vbLf
     
-    This.Device.OpenConnection This.Host, This.Port, This.SocketReceiveTimeout
+    ' this also initializes the IEEE488 device and session
+    This.K2700.Initialize
     
-    If This.Device.Connected Then
+    Dim p_details As String
+    If Not This.K2700.Connectable.TryOpenConnection(This.Address, This.SessionTimeout, p_details) Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+    End If
+   
+    If This.K2700.Connected Then
         Set p_outcome = Assert.Pass("Primed to run all tests; K2700 is connected.")
     Else
         Set p_outcome = Assert.Inconclusive( _
@@ -131,7 +146,7 @@ Public Sub BeforeAll()
     
     ' reset known state so that we initialize the default the sense function
     If p_outcome.AssertSuccessful Then _
-        This.Device.Device.ResetKnownState
+        This.K2700.Device.ResetKnownState
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -184,7 +199,7 @@ Public Sub BeforeEach()
     Dim p_outcome As cc_isr_Test_Fx.Assert
 
     If This.BeforeAllAssert.AssertSuccessful Then
-        Set p_outcome = IIf(This.Device.Connected, _
+        Set p_outcome = IIf(This.K2700.Connected, _
             Assert.Pass("Primed pre-test #" & VBA.CStr(This.TestNumber) & "; K2700 is Connected."), _
             Assert.Inconclusive("Failed priming pre-test #" & VBA.CStr(This.TestNumber) & _
                 "; K2700 should be connected."))
@@ -197,18 +212,47 @@ Public Sub BeforeEach()
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
    
     ' Prepare the next test
+
+    Dim p_details As String: p_details = VBA.vbNullString
    
-    ' clear execution state before each test.
+    If p_outcome.AssertSuccessful Then
+        
+        ' clear execution state before each test.
+        ' clear errors if any so as to leave the instrument without errors.
+        ' here we add *OPC? to prevent the query unterminated error.
+        
+        Dim p_command As String
+        p_command = "*CLS;*WAI;*OPC?"
+        If 0 >= This.Session.TryWriteLine(p_command, p_details) Then
+            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+        End If
+        
+    End If
+    
+    Dim p_reply As String
+    If p_outcome.AssertSuccessful Then
+        If 0 > This.Session.TryRead(p_reply, p_details) Then
+            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+        End If
+    End If
     
     If p_outcome.AssertSuccessful Then _
-        This.Device.Device.ClearExecutionState
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual("1", p_reply, _
+            "Unable to prime pre-test #" & VBA.CStr(This.TestNumber) & _
+            "; Operation completion query should return the correct reply.")
+    
+    ' clear the error state.
+    cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
+    
+    If p_outcome.AssertSuccessful Then _
+        This.K2700.Device.ClearExecutionState
    
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.IsNotNothing(This.Device.SenseSystem, _
+        Set p_outcome = Assert.IsNotNothing(This.K2700.SenseSystem, _
             "K2700 sense System should be instantiated.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.IsNotNothing(This.Device.SenseSystem.SenseSystem, _
+        Set p_outcome = Assert.IsNotNothing(This.K2700.SenseSystem.SenseSystem, _
             "Sense System should be instantiated.")
    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -228,6 +272,9 @@ exit_Handler:
     Set This.BeforeEachAssert = p_outcome
 
     On Error GoTo 0
+    
+    This.TestStopper.Restart
+    
     Exit Sub
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -259,8 +306,30 @@ Public Sub AfterEach()
     Dim p_outcome As cc_isr_Test_Fx.Assert
     Set p_outcome = Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
 
+    ' check if we can proceed with cleanup.
+    
+    If Not This.BeforeEachAssert.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.Inconclusive("Unable to cleanup test #" & VBA.CStr(This.TestNumber) & _
+            ";" & VBA.vbCrLf & This.BeforeEachAssert.AssertMessage)
+
     ' cleanup after each test.
-    If This.BeforeEachAssert.AssertSuccessful Then
+    
+    If p_outcome.AssertSuccessful Then
+    
+        Dim p_command As String
+        Dim p_reply As String
+        Dim p_details As String: p_details = VBA.vbNullString
+    
+        ' clear errors if any so as to leave the instrument without errors.
+        p_command = "*CLS;*WAI;*OPC?"
+        If 0 >= This.Session.TryWriteLine(p_command, p_details) Then
+            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+        End If
+        
+        If 0 > This.Session.TryRead(p_reply, p_details) Then
+            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+        End If
+        
     End If
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -315,12 +384,14 @@ Public Sub AfterAll()
     ' cleanup after all tests.
     If This.BeforeAllAssert.AssertSuccessful Then
         ' reset known state so that we initialize the default the sense function
-        This.Device.Device.ResetKnownState
+        This.K2700.Device.ResetKnownState
     End If
     
     ' disconnect if connected
-    If Not This.Device Is Nothing Then _
-        This.Device.Dispose
+    If Not This.K2700 Is Nothing Then _
+        This.K2700.Dispose
+    Set This.K2700 = Nothing
+    Set This.Session = Nothing
     Set This.Device = Nothing
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -366,6 +437,11 @@ End Sub
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Unit test. Asserts initial sense function should get. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestInitialSenseFunctionShouldGet() As cc_isr_Test_Fx.Assert
@@ -388,7 +464,7 @@ Public Function TestInitialSenseFunctionShouldGet() As cc_isr_Test_Fx.Assert
         Dim p_expectedSenseFunction As String
         p_expectedSenseFunction = "VOLT:DC"
         Dim p_actualSenseFunction As String
-        p_actualSenseFunction = This.Device.SenseSystem.SenseSystem.SenseFunctionGetter()
+        p_actualSenseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
         Set p_outcome = Assert.AreEqualString(p_expectedSenseFunction, p_actualSenseFunction, vbTextCompare, _
             "Initial sense function should match.")
 
@@ -400,7 +476,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestInitialSenseFunctionShouldGet")
+    Debug.Print p_outcome.BuildReport("TestInitialSenseFunctionShouldGet") & _
+        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestInitialSenseFunctionShouldGet = p_outcome
     
@@ -424,6 +501,11 @@ End Function
 
 
 ''' <summary>   Unit test. Asserts that the sense function should set. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestSenseFunctionShouldSet() As cc_isr_Test_Fx.Assert
@@ -449,8 +531,8 @@ Public Function TestSenseFunctionShouldSet() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then
     
         ' set the sense function
-        This.Device.SenseSystem.K2700SenseFunctionSetter p_expectedK2700SenseFunction
-        p_actualK2700SenseFunction = This.Device.SenseSystem.K2700SenseFunctionGetter()
+        This.K2700.SenseSystem.K2700SenseFunctionSetter p_expectedK2700SenseFunction
+        p_actualK2700SenseFunction = This.K2700.SenseSystem.K2700SenseFunctionGetter()
         
         Set p_outcome = Assert.AreEqual(p_expectedK2700SenseFunction, p_actualK2700SenseFunction, _
             "Set K2700 sense function should match.")
@@ -462,7 +544,7 @@ Public Function TestSenseFunctionShouldSet() As cc_isr_Test_Fx.Assert
     
     If p_outcome.AssertSuccessful Then
         p_expectedSenseFunction = "FRES"
-        p_actualSenseFunction = This.Device.SenseSystem.SenseSystem.SenseFunction
+        p_actualSenseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunction
         Set p_outcome = Assert.AreEqualString(p_expectedSenseFunction, p_actualSenseFunction, vbTextCompare, _
             "Set sense function should match.")
     End If
@@ -473,7 +555,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestSenseFunctionShouldSet")
+    Debug.Print p_outcome.BuildReport("TestSenseFunctionShouldSet") & _
+        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestSenseFunctionShouldSet = p_outcome
     

@@ -11,6 +11,7 @@ Private Type this_
     TestNumber As Integer
     BeforeAllAssert As cc_isr_Test_Fx.Assert
     BeforeEachAssert As cc_isr_Test_Fx.Assert
+    TestStopper As cc_isr_Core_IO.Stopwatch
     ErrTracer As cc_isr_Test_Fx.IErrTracer
     TestCount As Integer
     RunCount As Integer
@@ -52,6 +53,11 @@ Public Sub RunOneTest()
 End Sub
 
 ''' <summary>   Runs all tests. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 Public Sub RunAllTests()
     BeforeAll
     Dim p_outcome As cc_isr_Test_Fx.Assert
@@ -101,7 +107,7 @@ Public Sub BeforeAll()
     This.Name = "RouteSystemTests"
     
     This.TestNumber = 0
-    
+    Set This.TestStopper = cc_isr_Core_IO.Factory.NewStopwatch
     Set This.ErrTracer = New ErrTracer
     
     ' clear the error state.
@@ -187,6 +193,9 @@ exit_Handler:
     Set This.BeforeEachAssert = p_outcome
 
     On Error GoTo 0
+    
+    This.TestStopper.Restart
+    
     Exit Sub
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -318,6 +327,11 @@ End Sub
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Unit test. Asserts populating the multimplexer card 7700 cards. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function Test7700CardsShouldBePopulated() As cc_isr_Test_Fx.Assert
@@ -338,7 +352,7 @@ Public Function Test7700CardsShouldBePopulated() As cc_isr_Test_Fx.Assert
     Dim p_routeSystem As cc_isr_Tcp_Scpi.RouteSystem
     
     If p_outcome.AssertSuccessful Then
-        Set p_routeSystem = cc_isr_Tcp_Scpi.Factory.NewRouteSystem.Initialize(cc_isr_Ieee488.Factory.NewViSession())
+        Set p_routeSystem = cc_isr_Tcp_Scpi.Factory.NewRouteSystem.Initialize(cc_isr_Ieee488.Factory.NewTcpSession())
         Set p_outcome = Assert.IsNotNothing(p_routeSystem, TypeName(p_routeSystem) & " should be instantiated.")
     End If
     
@@ -368,7 +382,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("Test7700CardsShouldBePopulated")
+    Debug.Print p_outcome.BuildReport("Test7700CardsShouldBePopulated") & _
+        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldBePopulated = p_outcome
     
@@ -391,6 +406,11 @@ err_Handler:
 End Function
 
 ''' <summary>   Unit test. Asserts populating the multimplexer card 7700 cards. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function Test7700CardsShouldSelected() As cc_isr_Test_Fx.Assert
@@ -410,7 +430,7 @@ Public Function Test7700CardsShouldSelected() As cc_isr_Test_Fx.Assert
     
     Dim p_routeSystem As cc_isr_Tcp_Scpi.RouteSystem
     If p_outcome.AssertSuccessful Then
-        Set p_routeSystem = cc_isr_Tcp_Scpi.Factory.NewRouteSystem.Initialize(cc_isr_Ieee488.Factory.NewViSession())
+        Set p_routeSystem = cc_isr_Tcp_Scpi.Factory.NewRouteSystem.Initialize(cc_isr_Ieee488.Factory.NewTcpSession())
         Set p_outcome = Assert.IsNotNothing(p_routeSystem, _
             TypeName(p_routeSystem) & " should be instantiated.")
     End If
@@ -532,7 +552,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("Test7700CardsShouldSelected")
+    Debug.Print p_outcome.BuildReport("Test7700CardsShouldSelected") & _
+        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldSelected = p_outcome
     
@@ -574,7 +595,7 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As Str
     
     Dim p_routeSystem As cc_isr_Tcp_Scpi.RouteSystem
     If p_outcome.AssertSuccessful Then
-        Set p_routeSystem = cc_isr_Tcp_Scpi.Factory.NewRouteSystem.Initialize(cc_isr_Ieee488.Factory.NewViSession())
+        Set p_routeSystem = cc_isr_Tcp_Scpi.Factory.NewRouteSystem.Initialize(cc_isr_Ieee488.Factory.NewTcpSession())
         Set p_outcome = Assert.IsNotNothing(p_routeSystem, _
             TypeName(p_routeSystem) & " should be instantiated.")
     End If
@@ -734,6 +755,11 @@ End Function
 
 
 ''' <summary>   Unit test. Asserts building scan lists. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function Test7700CardsShouldBuildScanLists() As cc_isr_Test_Fx.Assert
@@ -761,7 +787,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("Test7700CardsShouldBuildScanLists")
+    Debug.Print p_outcome.BuildReport("Test7700CardsShouldBuildScanLists") & _
+        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldBuildScanLists = p_outcome
     
@@ -784,6 +811,11 @@ err_Handler:
 End Function
 
 ''' <summary>   Unit test. Asserts building 4-wire scan lists. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function Test7700CardsShouldBuild4WireScanLists() As cc_isr_Test_Fx.Assert
@@ -811,7 +843,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("Test7700CardsShouldBuild4WireScanLists")
+    Debug.Print p_outcome.BuildReport("Test7700CardsShouldBuild4WireScanLists") & _
+        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldBuild4WireScanLists = p_outcome
     

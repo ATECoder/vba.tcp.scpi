@@ -298,7 +298,7 @@ End Property
 
 ''' <summary>   Sets the Socket Address. </summary>
 ''' <param name="p_value">   [String] the message value. </value>
-Friend Property Let SocketAddress(ByVal p_value As String)
+Public Property Let SocketAddress(ByVal p_value As String)
     If This.SocketAddress <> p_value Then
         This.SocketAddress = p_value
         Me.OnPropertyChanged "SocketAddress"

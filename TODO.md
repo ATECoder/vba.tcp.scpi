@@ -11,7 +11,7 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 ? Add tests for resetting the gpib-lan controller.
 
 SCPI:
-Update the code and ran all tests.
+ran all tests.
 
 Flying
 Power on reset the GPIB Lan device once each session.

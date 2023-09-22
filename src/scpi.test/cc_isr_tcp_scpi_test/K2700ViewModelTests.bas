@@ -15,8 +15,11 @@ Private Type this_
     BeforeEachAssert As cc_isr_Test_Fx.Assert
     ViewModel As cc_isr_Tcp_Scpi.K2700ViewModel
     Observer As K2700Observer
-    Host As String
-    Port As Long
+    Device As cc_isr_Ieee488.Device
+    Session As cc_isr_Ieee488.TcpSession
+    Address As String
+    SessionTimeout As Integer
+    TestStopper As cc_isr_Core_IO.Stopwatch
     TopCard As String
     BottomCard As String
     TopCardFunctionScanList As String
@@ -50,11 +53,11 @@ Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
         Case 3
             Set p_outcome = TestShouldReadCards
         Case 4
-            Set p_outcome = TestShouldRestoreKnownState
+            Set p_outcome = TestShouldRestoreInitialState
         Case 5
             Set p_outcome = TestShouldRecoverFromSyntaxError
         Case 6
-            Set p_outcome = TestShouldRecoverFromReadAfterWriteTrue
+            Set p_outcome = TestShouldRecoverAutoAssertTalk
         Case 7
             Set p_outcome = TestShouldConfigureImmediateMode
         Case 8
@@ -75,6 +78,11 @@ Public Sub RunOneTest()
 End Sub
 
 ''' <summary>   Runs all tests. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 Public Sub RunAllTests()
     BeforeAll
     Dim p_outcome As cc_isr_Test_Fx.Assert
@@ -124,6 +132,9 @@ Public Sub BeforeAll()
     This.Name = "K2700ViewModelTests"
     
     This.TestNumber = 0
+    This.SessionTimeout = 3000
+    This.Address = "192.168.0.252:1234"
+    Set This.TestStopper = cc_isr_Core_IO.Factory.NewStopwatch
     
     ' set a temporary error tracer
     Set This.ErrTracer = New DeviceErrorsTracer
@@ -147,9 +158,13 @@ Public Sub BeforeAll()
     
     Set This.Observer = K2700Observer.Initialize(This.ViewModel)
     
-    This.ViewModel.Host = "192.168.0.252"
-    This.ViewModel.Port = 1234
-    This.ViewModel.SocketReceiveTimeout = 100
+    This.ViewModel.SocketAddress = This.Address
+    This.ViewModel.SessionTimeout = This.SessionTimeout
+    
+    This.ViewModel.Device.GpibLanControllerPort = 1234
+    This.ViewModel.Device.ReadAfterWriteDelay = 1
+    This.ViewModel.Device.SessionTimeout = This.SessionTimeout
+    This.ViewModel.Device.Termination = VBA.vbLf
     
     ' initialize the view model.
     This.ViewModel.Initialize
@@ -230,9 +245,36 @@ Public Sub BeforeEach()
     ' clear the error state.
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
    
-    ' Prepare the next test
+    Dim p_details As String: p_details = VBA.vbNullString
    
-    ' clear execution state before each test.
+    If p_outcome.AssertSuccessful Then
+        
+        ' clear execution state before each test.
+        ' clear errors if any so as to leave the instrument without errors.
+        ' here we add *OPC? to prevent the query unterminated error.
+        
+        Dim p_command As String
+        p_command = "*CLS;*WAI;*OPC?"
+        If 0 >= This.Session.TryWriteLine(p_command, p_details) Then
+            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+        End If
+        
+    End If
+    
+    Dim p_reply As String
+    If p_outcome.AssertSuccessful Then
+        If 0 > This.Session.TryRead(p_reply, p_details) Then
+            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+        End If
+    End If
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual("1", p_reply, _
+            "Unable to prime pre-test #" & VBA.CStr(This.TestNumber) & _
+            "; Operation completion query should return the correct reply.")
+    
+    ' clear the error state.
+    cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
     
     If p_outcome.AssertSuccessful Then _
         This.ViewModel.Device.ClearExecutionState
@@ -254,6 +296,9 @@ exit_Handler:
     Set This.BeforeEachAssert = p_outcome
 
     On Error GoTo 0
+    
+    This.TestStopper.Restart
+    
     Exit Sub
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -285,8 +330,30 @@ Public Sub AfterEach()
     Dim p_outcome As cc_isr_Test_Fx.Assert
     Set p_outcome = Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
 
+    ' check if we can proceed with cleanup.
+    
+    If Not This.BeforeEachAssert.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.Inconclusive("Unable to cleanup test #" & VBA.CStr(This.TestNumber) & _
+            ";" & VBA.vbCrLf & This.BeforeEachAssert.AssertMessage)
+
     ' cleanup after each test.
-    If This.BeforeEachAssert.AssertSuccessful Then
+    
+    If p_outcome.AssertSuccessful Then
+    
+        Dim p_command As String
+        Dim p_reply As String
+        Dim p_details As String: p_details = VBA.vbNullString
+    
+        ' clear errors if any so as to leave the instrument without errors.
+        p_command = "*CLS;*WAI;*OPC?"
+        If 0 >= This.ViewModel.Device.Session.TryWriteLine(p_command, p_details) Then
+            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+        End If
+        
+        If 0 > This.ViewModel.Device.Session.TryRead(p_reply, p_details) Then
+            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+        End If
+        
     End If
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -348,6 +415,8 @@ Public Sub AfterAll()
         This.ViewModel.Dispose
 
     Set This.ViewModel = Nothing
+    Set This.Session = Nothing
+    Set This.Device = Nothing
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -392,6 +461,11 @@ End Sub
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Unit test. Asserts that view model should initialize. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
@@ -409,7 +483,7 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     
     ' proceed with test assertions.
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.IsTrue(This.ViewModel.ToggleConnectionExecutable, _
+        Set p_outcome = Assert.Istrue(This.ViewModel.ToggleConnectionExecutable, _
             "Toggle connection should be executable after initializing the View Model.")
 
     ' Finally, verify that no error message was recorded.
@@ -423,7 +497,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestShouldInitialize")
+    Debug.Print p_outcome.BuildReport("TestShouldInitialize") & _
+        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestShouldInitialize = p_outcome
     
@@ -446,6 +521,11 @@ err_Handler:
 End Function
 
 ''' <summary>   Unit test. Asserts that view model should connect. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestShouldBeConnected() As cc_isr_Test_Fx.Assert
@@ -464,19 +544,19 @@ Public Function TestShouldBeConnected() As cc_isr_Test_Fx.Assert
     ' proceed with test assertions.
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.IsTrue(This.ViewModel.Connected, _
+        Set p_outcome = Assert.Istrue(This.ViewModel.Connected, _
             "View model should be connected.")
         
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.IsTrue(This.ViewModel.CloseConnectionExecutable, _
+        Set p_outcome = Assert.Istrue(This.ViewModel.CloseConnectionExecutable, _
             "View model close connection executable should be enabled.")
         
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.IsTrue(This.Observer.CloseConnectionExecutable, _
+        Set p_outcome = Assert.Istrue(This.Observer.CloseConnectionExecutable, _
             "View model Observer close connection executable should be enabled.")
         
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.IsTrue(This.Observer.ToggleConnectionExecutable, _
+        Set p_outcome = Assert.Istrue(This.Observer.ToggleConnectionExecutable, _
             "View model Observer toggle connection executable should be enabled.")
         
     If p_outcome.AssertSuccessful Then _
@@ -484,15 +564,15 @@ Public Function TestShouldBeConnected() As cc_isr_Test_Fx.Assert
             "View model open connection executable should be disabled.")
         
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.IsTrue(This.ViewModel.ImmediateTriggerOptionExecutable, _
+        Set p_outcome = Assert.Istrue(This.ViewModel.ImmediateTriggerOptionExecutable, _
             "Immediate trigger option button should be enabled.")
         
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.IsTrue(This.ViewModel.ExternalTriggerOptionExecutable, _
+        Set p_outcome = Assert.Istrue(This.ViewModel.ExternalTriggerOptionExecutable, _
             "External trigger option button should be enabled.")
         
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.IsTrue(This.Observer.ExternalTriggerOptionExecutable, _
+        Set p_outcome = Assert.Istrue(This.Observer.ExternalTriggerOptionExecutable, _
             "Observer External trigger option button should be enabled.")
         
     If p_outcome.AssertSuccessful Then _
@@ -514,7 +594,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestShouldBeConnected")
+    Debug.Print p_outcome.BuildReport("TestShouldBeConnected") & _
+        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestShouldBeConnected = p_outcome
     
@@ -585,6 +666,11 @@ Public Function AssertShouldReadCards() As cc_isr_Test_Fx.Assert
 End Function
 
 ''' <summary>   Unit test. Asserts that view model should read cards. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestShouldReadCards() As cc_isr_Test_Fx.Assert
@@ -610,7 +696,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestShouldReadCards")
+    Debug.Print p_outcome.BuildReport("TestShouldReadCards") & _
+        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestShouldReadCards = p_outcome
     
@@ -632,12 +719,17 @@ err_Handler:
 
 End Function
 
-''' <summary>   Unit test. Asserts that view model should restore known state. </summary>
+''' <summary>   Unit test. Asserts that view model should restore initial state. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestShouldRestoreKnownState() As cc_isr_Test_Fx.Assert
+Public Function TestShouldRestoreInitialState() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestShouldRestoreKnownState"
+    Const p_procedureName As String = "TestShouldRestoreInitialState"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -652,10 +744,10 @@ Public Function TestShouldRestoreKnownState() As cc_isr_Test_Fx.Assert
 
     Dim p_details As String: p_details = VBA.vbNullString
 
-    ' check if we need to restore the GPIB-Lan know state.
+    ' check if we need to restore the GPIB-Lan initial state.
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreKnownState(p_details), _
-            "The GPIB-Lan should be in its expected known state upon connecting; " & p_details)
+        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreInitialState(p_details), _
+            "The View Model should not require restoration to inital state after connecting; " & p_details)
     End If
 
     Dim p_expectedSenseFunctionName As String: p_expectedSenseFunctionName = "VOLT:DC"
@@ -663,6 +755,7 @@ Public Function TestShouldRestoreKnownState() As cc_isr_Test_Fx.Assert
         
         ' change function mode to voltage
         This.ViewModel.K2700.SenseSystem.SenseSystem.SenseFunctionSetter p_expectedSenseFunctionName
+        
         Set p_outcome = Assert.AreEqual(p_expectedSenseFunctionName, _
             This.ViewModel.K2700.SenseSystem.SenseSystem.SenseFunction, _
             "Sense function should be set to the expected value.")
@@ -681,52 +774,56 @@ Public Function TestShouldRestoreKnownState() As cc_isr_Test_Fx.Assert
     
     ' now that the function was changed, a resore should be required
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.IsTrue(This.ViewModel.ShouldRestoreSenseFunction(p_actualSenseFunctionName, p_details), _
+    
+        Set p_outcome = Assert.Istrue(This.ViewModel.ShouldRestoreSenseFunction(p_actualSenseFunctionName, _
+                p_details), _
             "Restore should be required after setting the function to: '" & p_actualSenseFunctionName & "'; " & _
             p_details)
+    
     End If
     
     ' if restore is required we should restore
     If p_outcome.AssertSuccessful Then
         
-        This.ViewModel.RestoreKnownState
+        Set p_outcome = Assert.Istrue(This.ViewModel.TryRestoreInitialState(p_details), _
+            "View Model should restore initial state #1; " & p_details)
+            
+    End If
+        
+    If p_outcome.AssertSuccessful Then
+    
+        ' once restored, restore of sense function should no longer be required
         p_actualSenseFunctionName = This.ViewModel.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
-        
-        ' once restore, restore should no longer be required
         Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreSenseFunction(p_actualSenseFunctionName, p_details), _
-            "Restore should not be required after restoring the function to: '" & p_actualSenseFunctionName & "'; " & _
+            "Restore of sense function should not be required after restoring the function to: '" & p_actualSenseFunctionName & "'; " & _
             p_details)
-        
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreKnownState(p_details), _
+        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreInitialState(p_details), _
             "The View Model should be in its expected known state after restoring state #1; " & p_details)
     End If
     
     If p_outcome.AssertSuccessful Then
-        This.ViewModel.ViSession.GpibLan.AssertTalkAfterWriteAllowed = True
-        Set p_outcome = Assert.IsTrue(This.ViewModel.ShouldRestoreKnownState(p_details), _
-            "The View Model should not be in its expected known state after setting allowing to assert talk after write ('" & _
-            VBA.CStr(This.ViewModel.ViSession.GpibLan.AssertTalkAfterWriteAllowed) & "').")
+    
+        This.ViewModel.Session.ReadTimeoutSetter This.SessionTimeout - 1
+        Set p_outcome = Assert.Istrue(This.ViewModel.ShouldRestoreInitialState(p_details), _
+            "The View Model should not be in its expected known state after setting read time out to " & _
+            VBA.CStr(This.ViewModel.Session.ReadTimeout) & " ms.")
+    
     End If
     
     ' if restore is required we should restore
     If p_outcome.AssertSuccessful Then
         
-        This.ViewModel.RestoreKnownState
-        
-        ' once restored, restore should no longer be required
-        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreSenseFunction(p_actualSenseFunctionName, p_details), _
-            "Restore should not be required after restoring the assert talk after write to: '" & _
-            VBA.CStr(This.ViewModel.ViSession.GpibLan.AssertTalkAfterWriteAllowed) & "'; " & _
-            p_details)
+        Set p_outcome = Assert.Istrue(This.ViewModel.TryRestoreInitialState(p_details), _
+            "View Model should restore initial state #2; " & p_details)
         
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreKnownState(p_details), _
-            "The View Model should be in its expected known state after restoring know state #2; " & p_details)
+        Set p_outcome = Assert.IsFalse(This.ViewModel.ShouldRestoreInitialState(p_details), _
+            "The View Model should be in its expected known state after restoring initial state #2; " & p_details)
     End If
     
     ' Finally, verify that no error message was recorded.
@@ -740,9 +837,10 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestShouldRestoreKnownState")
+    Debug.Print p_outcome.BuildReport("TestShouldRestoreInitialState") & _
+        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
-    Set TestShouldRestoreKnownState = p_outcome
+    Set TestShouldRestoreInitialState = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -763,6 +861,11 @@ err_Handler:
 End Function
 
 ''' <summary>   Unit test. Asserts recovery from Syntax error. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestShouldRecoverFromSyntaxError() As Assert
@@ -778,9 +881,6 @@ Public Function TestShouldRecoverFromSyntaxError() As Assert
         Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
     End If
     
-    Dim p_errorNumber As String
-    Dim p_errorMessage As String
-    Dim p_success As Boolean
     Dim p_actualReply As String
     Dim p_expectedReply As String
     
@@ -795,7 +895,7 @@ Public Function TestShouldRecoverFromSyntaxError() As Assert
         
         ' issue a bad command
         On Error Resume Next
-        This.ViewModel.ViSession.WriteLine ("**OPC")
+        This.ViewModel.Session.WriteLine ("**OPC")
         On Error GoTo 0
         
         ' clear the error state
@@ -820,7 +920,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestShouldRecoverFromSyntaxError")
+    Debug.Print p_outcome.BuildReport("TestShouldRecoverFromSyntaxError") & _
+        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestShouldRecoverFromSyntaxError = p_outcome
     
@@ -842,12 +943,17 @@ err_Handler:
     
 End Function
 
-''' <summary>   Unit test. Asserts that view model should recover from read after write true condition. </summary>
+''' <summary>   Unit test. Asserts that view model should recover from austo assert TALK condition. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestShouldRecoverFromReadAfterWriteTrue() As Assert
+Public Function TestShouldRecoverAutoAssertTalk() As Assert
 
-    Const p_procedureName As String = "TestShouldRecoverFromReadAfterWriteTrue"
+    Const p_procedureName As String = "TestShouldRecoverAutoAssertTalk"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -858,28 +964,30 @@ Public Function TestShouldRecoverFromReadAfterWriteTrue() As Assert
         Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
     End If
     
-    Dim p_errorNumber As String
-    Dim p_errorMessage As String
-    Dim p_success As Boolean
     Dim p_actualReply As String
     Dim p_expectedReply As String
     
-    If p_outcome.AssertSuccessful And This.ViewModel.ViSession.UsingGpibLan Then
-        ' turn on read after write condition.
-        This.ViewModel.ViSession.GpibLan.ReadAfterWriteEnabledSetter True
-        Set p_outcome = Assert.IsTrue(This.ViewModel.ViSession.GpibLan.ReadAfterWriteEnabledGetter, _
-            "Read after write should be true.")
+    If p_outcome.AssertSuccessful And This.ViewModel.Session.GpibLanControllerAttached Then
+        ' turn on Auto Assert TALK condition.
+        This.ViewModel.Session.AutoAssertTalkSetter True
+        Set p_outcome = Assert.Istrue(This.ViewModel.Session.AutoAssertTalkGetter, _
+            "Auto Assert TALK should be true.")
     End If
     
     If p_outcome.AssertSuccessful Then
-        This.ViewModel.Device.CloseConnection
+        This.ViewModel.Session.Socket.CloseConnection
         Set p_outcome = Assert.IsFalse(This.ViewModel.Device.Connected, _
             "View Model should be disconnected.")
     End If
     
+    Dim p_details As String
     If p_outcome.AssertSuccessful Then
-        This.ViewModel.RestoreKnownState
-        Set p_outcome = Assert.IsTrue(This.ViewModel.Device.Connected, _
+        Set p_outcome = Assert.Istrue(This.ViewModel.TryRestoreInitialState(p_details), _
+            "View Model should restore its initial state; " & p_details)
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.Istrue(This.ViewModel.Device.Connected, _
             "View Model should be connected.")
     End If
     
@@ -900,9 +1008,10 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestShouldRecoverFromReadAfterWriteTrue")
+    Debug.Print p_outcome.BuildReport("TestShouldRecoverAutoAssertTalk") & _
+        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
-    Set TestShouldRecoverFromReadAfterWriteTrue = p_outcome
+    Set TestShouldRecoverAutoAssertTalk = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -922,9 +1031,12 @@ err_Handler:
     
 End Function
 
-
-
 ''' <summary>   Unit test. Asserts that view model should configure immediate mode. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestShouldConfigureImmediateMode() As cc_isr_Test_Fx.Assert
@@ -1030,7 +1142,7 @@ Public Function TestShouldConfigureImmediateMode() As cc_isr_Test_Fx.Assert
         Set p_outcome = Assert.IsFalse(VBA.vbNullString = p_reading, _
             "Reading should not be empty.")
             
-        Set p_outcome = Assert.IsTrue(p_readingValue > 0, _
+        Set p_outcome = Assert.Istrue(p_readingValue > 0, _
             "Reading value should be positive.")
             
     End If
@@ -1047,7 +1159,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestShouldConfigureImmediateMode")
+    Debug.Print p_outcome.BuildReport("TestShouldConfigureImmediateMode") & _
+        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestShouldConfigureImmediateMode = p_outcome
     
@@ -1070,6 +1183,11 @@ err_Handler:
 End Function
 
 ''' <summary>   Unit test. Asserts that view model should configure external mode. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestShouldConfigureExternalMode() As cc_isr_Test_Fx.Assert
@@ -1136,7 +1254,7 @@ Public Function TestShouldConfigureExternalMode() As cc_isr_Test_Fx.Assert
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = Assert.IsTrue(This.ViewModel.K2700.SenseSystem.SenseSystem.AutoRangeEnabledGetter(), _
+        Set p_outcome = Assert.Istrue(This.ViewModel.K2700.SenseSystem.SenseSystem.AutoRangeEnabledGetter(), _
             "Auto range should be enabled.")
     End If
     
@@ -1164,7 +1282,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestShouldConfigureExternalMode")
+    Debug.Print p_outcome.BuildReport("TestShouldConfigureExternalMode") & _
+        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestShouldConfigureExternalMode = p_outcome
     
@@ -1188,6 +1307,11 @@ End Function
 
 
 ''' <summary>   Unit test. Asserts that view model should monitor triggering. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
@@ -1222,7 +1346,7 @@ Public Function TestShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then
     
         Dim p_minimumTimerInterval As Integer: p_minimumTimerInterval = 100
-        Set p_outcome = Assert.IsTrue(This.ViewModel.TimerInterval >= p_minimumTimerInterval, _
+        Set p_outcome = Assert.Istrue(This.ViewModel.TimerInterval >= p_minimumTimerInterval, _
             "Timer interval should exceed" & VBA.CStr(p_minimumTimerInterval - 1) & ".")
     
     End If
@@ -1264,14 +1388,14 @@ Public Function TestShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then
     
         cc_isr_Core_IO.Factory.NewStopwatch().Wait 10
-        Set p_outcome = Assert.IsTrue(This.ViewModel.K2700.ExtTrigInitiated, _
+        Set p_outcome = Assert.Istrue(This.ViewModel.K2700.ExtTrigInitiated, _
             "External trigger should get initiated after starting the monitoring timer.")
         
     End If
     
     If p_outcome.AssertSuccessful Then
     
-        Set p_outcome = Assert.IsTrue(This.ViewModel.StopMonitoringExecutable, _
+        Set p_outcome = Assert.Istrue(This.ViewModel.StopMonitoringExecutable, _
             "The stop monitoring executable to should enabeld.")
         
     End If
@@ -1286,7 +1410,7 @@ Public Function TestShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then
     
         This.ViewModel.StopMonitoringExternalTriggersCommand
-        Set p_outcome = Assert.IsTrue(This.ViewModel.StopRequested, _
+        Set p_outcome = Assert.Istrue(This.ViewModel.StopRequested, _
             "Stop Requested should be on off after stopping monitoring.")
         
     End If
@@ -1294,7 +1418,7 @@ Public Function TestShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then
     
         cc_isr_Core_IO.Factory.NewStopwatch().Wait 10
-        Set p_outcome = Assert.IsTrue(This.ViewModel.PauseRequested, _
+        Set p_outcome = Assert.Istrue(This.ViewModel.PauseRequested, _
             "Pause should be requested after stopping monitoring.")
         
     End If
@@ -1324,7 +1448,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestShouldMonitorTriggering")
+    Debug.Print p_outcome.BuildReport("TestShouldMonitorTriggering") & _
+        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestShouldMonitorTriggering = p_outcome
     
@@ -1365,6 +1490,11 @@ End Function
 
 
 ''' <summary>   Unit test. Asserts that view model should . </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestViewModelTestTemplate() As cc_isr_Test_Fx.Assert
@@ -1397,7 +1527,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestViewModelTestTemplate")
+    Debug.Print p_outcome.BuildReport("TestViewModelTestTemplate") & _
+        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestViewModelTestTemplate = p_outcome
     

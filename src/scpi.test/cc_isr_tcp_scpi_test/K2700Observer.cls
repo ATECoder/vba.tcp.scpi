@@ -9,8 +9,8 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
 Option Explicit
 
-Private Const m_sessionReadTimeout As String = "B1"
-Private Const m_inputHost As String = "B2"
+Private Const m_sessionTimeout As String = "B1"
+Private Const m_inputAddress As String = "B2"
 Private Const m_inputPort As String = "B3"
 Private Const m_socketAddress As String = "C2"
 Private Const m_socketId As String = "D2"
@@ -30,7 +30,7 @@ Private Const m_standardByte As String = "H11"
 Private Const m_srq As String = "C10"
 Private Const m_gpibAddress As String = "C12"
 Private Const m_readTimeout As String = "C15"
-Private Const m_readAfterWriteEnabled As String = "C18"
+Private Const m_AutoAssertTalk As String = "C18"
 
 Private Const m_readingFormat As String = "C21"
 Private Const m_timerInterval As String = "C22"
@@ -71,11 +71,10 @@ Private Type this_
     Port As Long
     SocketAddress As String
     SocketId As Integer
-    SocketReceiveTimeout As Integer
+    SessionTimeout As Integer
     Connected As Boolean
 
     ' ieee488 control properties
-    SessionReadTimeout As Integer
     MessageToSend As String
     SentMessage As String
     ReceivedMessage As String
@@ -89,8 +88,7 @@ Private Type this_
     ServiceRequested As Boolean
     SerialPollByte As Integer
     GpibAddress As Integer
-    AssertTalkAfterWriteAllowed As Boolean
-    ReadAfterWriteEnabled As Boolean
+    AutoAssertTalk As Boolean
     GpibLanReadTimeout As Integer
     
     ' 2700 properties
@@ -166,8 +164,8 @@ Private Type this_
     SelectiveDeviceClearExecutable As Boolean
     GoToLocalExecutable As Boolean
     LocalLockoutExecutable As Boolean
-    ReadAfterWriteSetExecutable As Boolean
-    ReadAfterWriteGetExecutable As Boolean
+    AutoAssertTalkSetExecutable As Boolean
+    AutoAssertTalkGetExecutable As Boolean
     SerialPollExecutable As Boolean
     GpibAddressGetExecutable As Boolean
     GpibAddressSetExecutable As Boolean
@@ -261,7 +259,7 @@ End Sub
 
 ''' <summary>   Handles the reading status after write changed event. </summary>
 Friend Sub ReadStatusAfterWriteCheckBox_Change()
-    If This.ReadAfterWriteGetExecutable Then _
+    If This.AutoAssertTalkGetExecutable Then _
         This.ViewModel.ReadStatusAfterWriteEnabled = Me.ReadStatusAfterWriteEnabled
 End Sub
 
@@ -367,10 +365,10 @@ Friend Sub LocalLockoutButton_Click()
 
 End Sub
 
-''' <summary>   Handles the read after write set button click event. </summary>
-Friend Sub ReadAfterWriteSetButton_Click()
-    If This.ReadAfterWriteSetExecutable Then
-        This.ViewModel.ReadAfterWriteSetCommand
+''' <summary>   Handles the Auto Asset TALK Set button click event. </summary>
+Friend Sub AutoAssertTalkSetButton_Click()
+    If This.AutoAssertTalkSetExecutable Then
+        This.ViewModel.AutoAssertTalkSetCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me), "._Click", _
@@ -379,10 +377,10 @@ Friend Sub ReadAfterWriteSetButton_Click()
 
 End Sub
 
-''' <summary>   Handles the read after write get button click event. </summary>
-Friend Sub ReadAfterWriteGetButton_Click()
-    If This.ReadAfterWriteGetExecutable Then
-        This.ViewModel.ReadAfterWriteGetCommand
+''' <summary>   Handles the Auto Asset TALK get button click event. </summary>
+Friend Sub AutoAssertTalkGetButton_Click()
+    If This.AutoAssertTalkGetExecutable Then
+        This.ViewModel.AutoAssertTalkGetCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me), "._Click", _
@@ -555,7 +553,7 @@ End Sub
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Gets the host dotted IP Address. </summary>
+''' <summary>   Gets the INET Address dotted IP Address. </summary>
 ''' <value>   [String]. </value>
 Public Property Get Host() As String
     Host = This.Host
@@ -566,7 +564,6 @@ End Property
 Public Property Let Host(ByVal a_value As String)
     If This.Host <> a_value Then
         This.Host = a_value
-        This.ViewModel.Host = This.Host
     End If
 End Property
 
@@ -581,7 +578,6 @@ End Property
 Public Property Let Port(ByVal a_value As Long)
     If This.Port <> a_value Then
         This.Port = a_value
-        This.ViewModel.Port = This.Port
     End If
 End Property
 
@@ -610,6 +606,7 @@ End Property
 Friend Property Let SocketAddress(ByVal a_value As String)
     If This.SocketAddress <> a_value Then
         This.SocketAddress = a_value
+        This.ViewModel.SocketAddress = This.SocketAddress
     End If
 End Property
 
@@ -627,18 +624,18 @@ Friend Property Let SocketId(ByVal a_value As Integer)
     End If
 End Property
 
-''' <summary>   Gets the socket receive timeout in milliseconds. </summary>
+''' <summary>   Gets the socket and session timeout in milliseconds. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get SocketReceiveTimeout() As Integer
-    SocketReceiveTimeout = This.SocketReceiveTimeout
+Public Property Get SessionTimeout() As Integer
+    SessionTimeout = This.SessionTimeout
 End Property
 
-''' <summary>   Sets the receive timeout in milliseconds. </summary>
+''' <summary>   Sets the socket and session timeout in milliseconds. </summary>
 ''' <param name="a_value">   [Integer] the timeout value in milliseconds. </value>
-Public Property Let SocketReceiveTimeout(ByVal a_value As Integer)
-    If This.SocketReceiveTimeout <> a_value Then
-        This.SocketReceiveTimeout = a_value
-        This.ViewModel.SocketReceiveTimeout = This.SocketReceiveTimeout
+Public Property Let SessionTimeout(ByVal a_value As Integer)
+    If This.SessionTimeout <> a_value Then
+        This.SessionTimeout = a_value
+        This.ViewModel.SessionTimeout = This.SessionTimeout
     End If
 End Property
 
@@ -647,21 +644,6 @@ End Property
 ' IEEE 488 properties
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
-''' <summary>   Gets the session read timeout in milliseconds. </summary>
-''' <value>   [Integer]. </value>
-Public Property Get SessionReadTimeout() As Integer
-    SessionReadTimeout = This.SessionReadTimeout
-End Property
-
-''' <summary>   Sets the session read timeout in milliseconds. </summary>
-''' <param name="a_value">   [Integer] the timeout value in milliseconds. </value>
-Public Property Let SessionReadTimeout(ByVal a_value As Integer)
-    If This.SessionReadTimeout <> a_value Then
-        This.SessionReadTimeout = a_value
-        This.ViewModel.SessionReadTimeout = This.SessionReadTimeout
-    End If
-End Property
 
 ''' <summary>   Gets the Message to Sent. </summary>
 ''' <value>   [String]. </value>
@@ -789,21 +771,6 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Gets the Assert Talk After Write Allowed. </summary>
-''' <value>   [Boolean]. </value>
-Public Property Get AssertTalkAfterWriteAllowed() As Boolean
-    AssertTalkAfterWriteAllowed = This.AssertTalkAfterWriteAllowed
-End Property
-
-''' <summary>   Sets the Assert Talk After Write Allowed. </summary>
-''' <param name="a_value">   [Boolean] the value. </value>
-Public Property Let AssertTalkAfterWriteAllowed(ByVal a_value As Boolean)
-    If This.AssertTalkAfterWriteAllowed <> a_value Then
-        This.AssertTalkAfterWriteAllowed = a_value
-        This.ViewModel.AssertTalkAfterWriteAllowed = This.AssertTalkAfterWriteAllowed
-    End If
-End Property
-
 ''' <summary>   Gets the Serial Poll Byte. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get SerialPollByte() As Integer
@@ -851,16 +818,16 @@ End Property
 
 ''' <summary>   Gets the Read After Write Enabled. </summary>
 ''' <value>   [Boolean]. </value>
-Public Property Get ReadAfterWriteEnabled() As Boolean
-    ReadAfterWriteEnabled = This.ReadAfterWriteEnabled
+Public Property Get AutoAssertTalk() As Boolean
+    AutoAssertTalk = This.AutoAssertTalk
 End Property
 
 ''' <summary>   Sets the Read After Write Enabled. </summary>
 ''' <param name="a_value">   [Boolean] the value. </value>
-Public Property Let ReadAfterWriteEnabled(ByVal a_value As Boolean)
-    If This.ReadAfterWriteEnabled <> a_value Then
-        This.ReadAfterWriteEnabled = a_value
-        This.ViewModel.ReadAfterWriteEnabled = This.ReadAfterWriteEnabled
+Public Property Let AutoAssertTalk(ByVal a_value As Boolean)
+    If This.AutoAssertTalk <> a_value Then
+        This.AutoAssertTalk = a_value
+        This.ViewModel.AutoAssertTalk = This.AutoAssertTalk
     End If
 End Property
 
@@ -1558,18 +1525,18 @@ Public Property Get LocalLockoutExecutable() As Boolean
     LocalLockoutExecutable = This.LocalLockoutExecutable
 End Property
 
-''' <summary>   Gets the condition indicating that the Read After Write Get command
+''' <summary>   Gets the condition indicating that the Auto Asset TALK get command
 '''             can be executed. </summary>
-''' <value>   [Boolean] True if the Read After Write Get command can be executed. </value>
-Public Property Get ReadAfterWriteGetExecutable() As Boolean
-    ReadAfterWriteGetExecutable = This.ReadAfterWriteGetExecutable
+''' <value>   [Boolean] True if the Auto Asset TALK get command can be executed. </value>
+Public Property Get AutoAssertTalkGetExecutable() As Boolean
+    AutoAssertTalkGetExecutable = This.AutoAssertTalkGetExecutable
 End Property
 
-''' <summary>   Gets the condition indicating that the Read After Write Set command
+''' <summary>   Gets the condition indicating that the Auto Asset TALK Setcommand
 '''             can be executed. </summary>
-''' <value>   [Boolean] True if the Read After Write Set command can be executed. </value>
-Public Property Get ReadAfterWriteSetExecutable() As Boolean
-    ReadAfterWriteSetExecutable = This.ReadAfterWriteSetExecutable
+''' <value>   [Boolean] True if the Auto Asset TALK Setcommand can be executed. </value>
+Public Property Get AutoAssertTalkSetExecutable() As Boolean
+    AutoAssertTalkSetExecutable = This.AutoAssertTalkSetExecutable
 End Property
 
 ''' <summary>   Gets the condition indicating that the Serial Poll command
@@ -1886,10 +1853,8 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.SocketAddress = This.ViewModel.SocketAddress
         Case "SocketId"
             Me.SocketId = This.ViewModel.SocketId
-        Case "SocketReceiveTimeout"
-            Me.SocketReceiveTimeout = This.ViewModel.SocketReceiveTimeout
-        Case "SessionReadTimeout"
-            Me.SessionReadTimeout = This.ViewModel.SessionReadTimeout
+        Case "SessionTimeout"
+            Me.SessionTimeout = This.ViewModel.SessionTimeout
         Case "PauseRequested"
             Me.PauseRequested = This.ViewModel.PauseRequested
         Case "StopRequested"
@@ -1926,10 +1891,10 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.ServiceRequested = This.ViewModel.ServiceRequested
         Case "GpibAddress"
             Me.GpibAddress = This.ViewModel.GpibAddress
-        Case "ReadAfterWriteEnabled"
-            Me.ReadAfterWriteEnabled = This.ViewModel.ReadAfterWriteEnabled
+        Case "AutoAssertTalk"
+            Me.AutoAssertTalk = This.ViewModel.AutoAssertTalk
         Case "GpibLanReadTimeout"
-            Me.ReadAfterWriteEnabled = This.ViewModel.ReadAfterWriteEnabled
+            Me.AutoAssertTalk = This.ViewModel.AutoAssertTalk
             
         Case "TopCard"
             Me.TopCard = This.ViewModel.TopCard
@@ -2040,12 +2005,12 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
         Case "LocalLockoutExecutable"
             This.LocalLockoutExecutable = This.ViewModel.LocalLockoutExecutable
             'LocalLockoutButton.Enabled = This.ViewModel.LocalLockoutExecutable
-        Case "ReadAfterWriteSetExecutable"
-            This.ReadAfterWriteSetExecutable = This.ViewModel.ReadAfterWriteSetExecutable
-            'ReadAfterWriteSetButton.Enabled = This.ViewModel.ReadAfterWriteSetExecutable
-        Case "ReadAfterWriteGetExecutable"
-            This.ReadAfterWriteGetExecutable = This.ViewModel.ReadAfterWriteGetExecutable
-            'ReadAfterWriteGetButton.Enabled = This.ViewModel.ReadAfterWriteGetExecutable
+        Case "AutoAssertTalkSetExecutable"
+            This.AutoAssertTalkSetExecutable = This.ViewModel.AutoAssertTalkSetExecutable
+            'AutoAssertTalkSetButton.Enabled = This.ViewModel.AutoAssertTalkSetExecutable
+        Case "AutoAssertTalkGetExecutable"
+            This.AutoAssertTalkGetExecutable = This.ViewModel.AutoAssertTalkGetExecutable
+            'AutoAssertTalkGetButton.Enabled = This.ViewModel.AutoAssertTalkGetExecutable
         Case "SerialPollExecutable"
             This.SerialPollExecutable = This.ViewModel.SerialPollExecutable
             'SerialPollButton.Enabled = This.ViewModel.SerialPollExecutable

@@ -11,10 +11,12 @@ Private Type this_
     TestNumber As Integer
     BeforeAllAssert As cc_isr_Test_Fx.Assert
     BeforeEachAssert As cc_isr_Test_Fx.Assert
-    Device As cc_isr_Tcp_Scpi.K2700
-    Host As String
-    Port As Long
-    SocketReceiveTimeout As Integer
+    K2700 As cc_isr_Tcp_Scpi.K2700
+    Device As cc_isr_Ieee488.Device
+    Session As cc_isr_Ieee488.TcpSession
+    Address As String
+    SessionTimeout As Integer
+    TestStopper As cc_isr_Core_IO.Stopwatch
     ErrTracer As cc_isr_Test_Fx.IErrTracer
     TestCount As Integer
     RunCount As Integer
@@ -39,7 +41,7 @@ Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
         Case 2
             Set p_outcome = TestRecoveryFromSyntaxFromError
         Case 3
-            Set p_outcome = TestRecoveryFromReadAfterWriteTrue
+            Set p_outcome = TestShouldRecoverFromAutoAssertTalk
         Case Else
     End Select
     AfterEach
@@ -54,6 +56,11 @@ Public Sub RunOneTest()
 End Sub
 
 ''' <summary>   Runs all tests. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 Public Sub RunAllTests()
     BeforeAll
     Dim p_outcome As cc_isr_Test_Fx.Assert
@@ -103,27 +110,36 @@ Public Sub BeforeAll()
     This.Name = "K2700Tests"
     
     This.TestNumber = 0
+    This.Address = "192.168.0.252:1234"
+    This.SessionTimeout = 3000
     
-    ' set a temporate error tracer.
-    Set This.ErrTracer = New DeviceErrorsTracer
+    Set This.TestStopper = cc_isr_Core_IO.Factory.NewStopwatch
+    Dim p_errTracer As New DeviceErrorsTracer
     
     ' clear the error state.
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
-    
+
     ' Prime all tests
     
-    This.Host = "192.168.0.252"
-    This.Port = 1234
-    This.SocketReceiveTimeout = 100
+    Set This.K2700 = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize()
+    Set This.Device = This.K2700.Device
+    Set This.Session = This.Device.Session
+    Set This.ErrTracer = p_errTracer.Initialize(This.Device)
     
-    Set This.Device = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize()
+    This.Device.GpibLanControllerPort = 1234
+    This.Device.ReadAfterWriteDelay = 1
+    This.Device.SessionTimeout = This.SessionTimeout
+    This.Device.Termination = VBA.vbLf
     
-    Dim p_errTracer As New DeviceErrorsTracer
-    Set This.ErrTracer = p_errTracer.Initialize(This.Device.Device)
+    ' this also initializes the IEEE488 device and session
+    This.K2700.Initialize
     
-    This.Device.OpenConnection This.Host, This.Port, This.SocketReceiveTimeout
-    
-    If This.Device.Connected Then
+    Dim p_details As String
+    If Not This.K2700.Connectable.TryOpenConnection(This.Address, This.SessionTimeout, p_details) Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+    End If
+   
+    If This.K2700.Connected Then
         Set p_outcome = Assert.Pass("Primed to run all tests; K2700 is connected.")
     Else
         Set p_outcome = Assert.Inconclusive( _
@@ -180,7 +196,7 @@ Public Sub BeforeEach()
     Dim p_outcome As cc_isr_Test_Fx.Assert
 
     If This.BeforeAllAssert.AssertSuccessful Then
-        Set p_outcome = IIf(This.Device.Connected, _
+        Set p_outcome = IIf(This.K2700.Connected, _
             Assert.Pass("Primed pre-test #" & VBA.CStr(This.TestNumber) & "; K2700 is Connected."), _
             Assert.Inconclusive("Failed priming pre-test #" & VBA.CStr(This.TestNumber) & _
                 "; K2700 should be connected."))
@@ -193,8 +209,37 @@ Public Sub BeforeEach()
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
    
     ' Prepare the next test
+
+    Dim p_details As String: p_details = VBA.vbNullString
    
-    ' clear execution state before each test.
+    If p_outcome.AssertSuccessful Then
+        
+        ' clear execution state before each test.
+        ' clear errors if any so as to leave the instrument without errors.
+        ' here we add *OPC? to prevent the query unterminated error.
+        
+        Dim p_command As String
+        p_command = "*CLS;*WAI;*OPC?"
+        If 0 >= This.Session.TryWriteLine(p_command, p_details) Then
+            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+        End If
+        
+    End If
+    
+    Dim p_reply As String
+    If p_outcome.AssertSuccessful Then
+        If 0 > This.Session.TryRead(p_reply, p_details) Then
+            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+        End If
+    End If
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual("1", p_reply, _
+            "Unable to prime pre-test #" & VBA.CStr(This.TestNumber) & _
+            "; Operation completion query should return the correct reply.")
+    
+    ' clear the error state.
+    cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -211,11 +256,14 @@ exit_Handler:
     End If
     
     If p_outcome.AssertSuccessful Then _
-        This.Device.Device.ClearExecutionState
+        This.K2700.Device.ClearExecutionState
     
     Set This.BeforeEachAssert = p_outcome
 
     On Error GoTo 0
+    
+    This.TestStopper.Restart
+    
     Exit Sub
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -247,10 +295,32 @@ Public Sub AfterEach()
     Dim p_outcome As cc_isr_Test_Fx.Assert
     Set p_outcome = Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
 
-    ' cleanup after each test.
-    If This.BeforeEachAssert.AssertSuccessful Then
-    End If
+    ' check if we can proceed with cleanup.
     
+    If Not This.BeforeEachAssert.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.Inconclusive("Unable to cleanup test #" & VBA.CStr(This.TestNumber) & _
+            ";" & VBA.vbCrLf & This.BeforeEachAssert.AssertMessage)
+
+    ' cleanup after each test.
+    
+    If p_outcome.AssertSuccessful Then
+    
+        Dim p_command As String
+        Dim p_reply As String
+        Dim p_details As String: p_details = VBA.vbNullString
+    
+        ' clear errors if any so as to leave the instrument without errors.
+        p_command = "*CLS;*WAI;*OPC?"
+        If 0 >= This.Session.TryWriteLine(p_command, p_details) Then
+            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+        End If
+        
+        If 0 > This.Session.TryRead(p_reply, p_details) Then
+            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+        End If
+        
+    End If
+   
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
@@ -305,8 +375,11 @@ Public Sub AfterAll()
     End If
     
     ' disconnect if connected
-    If Not This.Device Is Nothing Then _
-        This.Device.Dispose
+    If Not This.K2700 Is Nothing Then _
+        This.K2700.Dispose
+    Set This.K2700 = Nothing
+    Set This.Session = Nothing
+    Set This.Device = Nothing
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -351,6 +424,11 @@ End Sub
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Unit test. Asserts querying operation completion. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestQueryOperationCompletion() As cc_isr_Test_Fx.Assert
@@ -368,15 +446,12 @@ Public Function TestQueryOperationCompletion() As cc_isr_Test_Fx.Assert
     
     ' proceed with test assertions.
     
-    Dim p_errorNumber As String
-    Dim p_errorMessage As String
-    Dim p_success As Boolean
-        Dim p_actualReply As String
-        Dim p_expectedReply As String
+    Dim p_actualReply As String
+    Dim p_expectedReply As String
     
     If p_outcome.AssertSuccessful Then
         p_expectedReply = "1"
-        p_actualReply = This.Device.Device.QueryOperationCompleted()
+        p_actualReply = This.K2700.Device.QueryOperationCompleted()
         Set p_outcome = Assert.AreEqual(p_expectedReply, p_actualReply, _
             "K2700 Device should query operation completion.")
 
@@ -388,7 +463,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestQueryOperationCompletion")
+    Debug.Print p_outcome.BuildReport("TestQueryOperationCompletion") & _
+        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestQueryOperationCompletion = p_outcome
     
@@ -411,6 +487,11 @@ err_Handler:
 End Function
 
 ''' <summary>   Unit test. Asserts recovery from Syntax error. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestRecoveryFromSyntaxFromError() As cc_isr_Test_Fx.Assert
@@ -428,15 +509,12 @@ Public Function TestRecoveryFromSyntaxFromError() As cc_isr_Test_Fx.Assert
     
     ' proceed with test assertions.
     
-    Dim p_errorNumber As String
-    Dim p_errorMessage As String
-    Dim p_success As Boolean
     Dim p_actualReply As String
     Dim p_expectedReply As String
     
     If p_outcome.AssertSuccessful Then
         p_expectedReply = "1"
-        p_actualReply = This.Device.Device.QueryOperationCompleted()
+        p_actualReply = This.K2700.Device.QueryOperationCompleted()
         Set p_outcome = Assert.AreEqual(p_expectedReply, p_actualReply, _
             "K2700 Device should query operation completion.")
     End If
@@ -445,7 +523,7 @@ Public Function TestRecoveryFromSyntaxFromError() As cc_isr_Test_Fx.Assert
         
         ' issue a bad command
         On Error Resume Next
-        This.Device.ViSession.WriteLine ("**OPC")
+        This.K2700.Session.WriteLine ("**OPC")
         On Error GoTo 0
         
         ' clear the error state
@@ -455,7 +533,7 @@ Public Function TestRecoveryFromSyntaxFromError() As cc_isr_Test_Fx.Assert
         cc_isr_Core_IO.Factory.NewStopwatch().Wait 100
         
         p_expectedReply = "1"
-        p_actualReply = This.Device.Device.ClearExecutionState()
+        p_actualReply = This.K2700.Device.ClearExecutionState()
         Set p_outcome = Assert.AreEqual(p_expectedReply, p_actualReply, _
             "K2700 Device should query operation completion.")
     End If
@@ -466,7 +544,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestQueryOperationCompletion")
+    Debug.Print p_outcome.BuildReport("TestQueryOperationCompletion") & _
+        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestRecoveryFromSyntaxFromError = p_outcome
     
@@ -488,12 +567,17 @@ err_Handler:
 
 End Function
 
-''' <summary>   Unit test. Asserts recovery from read after write true condition. </summary>
+''' <summary>   Unit test. Asserts recovery from auto assert Talk condition. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestRecoveryFromReadAfterWriteTrue() As cc_isr_Test_Fx.Assert
+Public Function TestShouldRecoverFromAutoAssertTalk() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestRecoveryFromReadAfterWriteTrue"
+    Const p_procedureName As String = "TestShouldRecoverFromAutoAssertTalk"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -506,34 +590,40 @@ Public Function TestRecoveryFromReadAfterWriteTrue() As cc_isr_Test_Fx.Assert
     
     ' proceed with test assertions.
     
-    Dim p_errorNumber As String
-    Dim p_errorMessage As String
-    Dim p_success As Boolean
     Dim p_actualReply As String
     Dim p_expectedReply As String
     
-    If p_outcome.AssertSuccessful And This.Device.ViSession.UsingGpibLan Then
-        ' turn on read after write condition.
-        This.Device.ViSession.GpibLan.ReadAfterWriteEnabledSetter True
-        Set p_outcome = Assert.IsTrue(This.Device.ViSession.GpibLan.ReadAfterWriteEnabledGetter, _
-            "Read after write should be true.")
+    If p_outcome.AssertSuccessful And This.K2700.Session.GpibLanControllerAttached Then
+        ' turn on Auto Assert TALK condition.
+        This.K2700.Session.AutoAssertTalkSetter True
+        Set p_outcome = Assert.Istrue(This.K2700.Session.AutoAssertTalkGetter, _
+            "Auto Assert TALK should be true.")
+    End If
+    
+    Dim p_details As String
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.Istrue(This.K2700.Session.Socket.TryCloseConnection(p_details), _
+            "K2700 Device should be disconnect; " & p_details)
     End If
     
     If p_outcome.AssertSuccessful Then
-        This.Device.CloseConnection
-        Set p_outcome = Assert.IsFalse(This.Device.Connected, _
+        Set p_outcome = Assert.IsFalse(This.K2700.Connected, _
             "K2700 Device should be disconnected.")
     End If
     
     If p_outcome.AssertSuccessful Then
-        This.Device.OpenConnection This.Host, This.Port
-        Set p_outcome = Assert.IsTrue(This.Device.Connected, _
+        Set p_outcome = Assert.Istrue(This.K2700.TryRestoreInitialState(p_details), _
+            "K2700 Device should restore its initial state; " & p_details)
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = Assert.Istrue(This.K2700.Connected, _
             "K2700 Device should be connected.")
     End If
     
     If p_outcome.AssertSuccessful Then
         p_expectedReply = "1"
-        p_actualReply = This.Device.Device.QueryOperationCompleted()
+        p_actualReply = This.K2700.Device.QueryOperationCompleted()
         Set p_outcome = Assert.AreEqual(p_expectedReply, p_actualReply, _
             "K2700 Device should query operation completion.")
     End If
@@ -544,9 +634,10 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestRecoveryFromReadAfterWriteTrue")
+    Debug.Print p_outcome.BuildReport("TestShouldRecoverFromAutoAssertTalk") & _
+        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
-    Set TestRecoveryFromReadAfterWriteTrue = p_outcome
+    Set TestShouldRecoverFromAutoAssertTalk = p_outcome
     
     On Error GoTo 0
     Exit Function
