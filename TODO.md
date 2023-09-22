@@ -8,42 +8,14 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## TODO
 
-? Add tests for resetting the gpib-lan controller.
 
 SCPI:
 ran all tests.
 
 Flying
+- test power on reset of the GPIB=Lan controller.
 Power on reset the GPIB Lan device once each session.
 -- Store the Gpib Lan power on reset condition at the IEEE488 workbook level, e.g., in a Project Singleton Settings Class.
-
-
-Must use +AUTO MODE at 0 otherwise serial poll does not work. 
-Change await reading to await device reading
-Add Await Controller Reading.
-Set gpib-lan timeout to session timeout. 
-Set the limits to the GPIB-Lan timeout (1, 3000)
-Reset the controller on connection changed. 
-After reset test toggling timeout to see that we are getting the correct values.
-
-
-
-
-
-It looks like the GPIB Lan device is failing to return the correct value.
-We need to run more unit tests on the GPIB Lan device testing getting Read after write and serial poll consistently.
-
-
-
-the instrument is left with 16/n  on the output. possible a serial pool reading.
-
-
-!! it looks like we have an issue with reading device errors and that the serial poll is left handling in the queue. 
-possibly we need a longer timeout to read the serial poll from the GPIB Lan.
-
-!!! trace using device test where the leftover reading comes from.
-
-
 
 ### SCPI View Model Test:
 continue checking the restore.  See if the code that clears the queue fixes this issue.
