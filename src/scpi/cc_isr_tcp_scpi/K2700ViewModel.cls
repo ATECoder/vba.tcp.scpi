@@ -4248,7 +4248,7 @@ Public Function TryReadSessionState(ByRef a_details As String) As Boolean
         If p_success Then
             This.GpibAddress = This.Session.PrimaryGpibAddress
         Else
-            p_details = "Failed reading GPIB Address: '" & p_reading & "'."
+            a_details = "Failed reading GPIB Address: '" & p_reading & "'."
         End If
     
     End If
