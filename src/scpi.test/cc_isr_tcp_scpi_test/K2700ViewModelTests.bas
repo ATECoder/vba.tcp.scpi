@@ -9,28 +9,40 @@ Option Explicit
 
 ''' <summary>   This class properties. </summary>
 Private Type this_
+    
+    ' unit test settings
     Name As String
     TestNumber As Integer
     BeforeAllAssert As cc_isr_Test_Fx.Assert
     BeforeEachAssert As cc_isr_Test_Fx.Assert
-    ViewModel As cc_isr_Tcp_Scpi.K2700ViewModel
-    Observer As K2700Observer
-    Address As String
-    SessionTimeout As Integer
     TestStopper As cc_isr_Core_IO.Stopwatch
-    TopCard As String
-    BottomCard As String
-    TopCardFunctionScanList As String
-    BottomCardFunctionScanList As String
-    ContinuousSenseFunctionName As String
-    ImmediateSenseFunctionName As String
-    ExternalSenseFunctionName As String
     ErrTracer As cc_isr_Test_Fx.IErrTracer
     TestCount As Integer
     RunCount As Integer
     PassedCount As Integer
     FailedCount As Integer
     InconclusiveCount As Integer
+    
+    ' initial observer settings
+    Observer As K2700Observer
+    Address As String
+    ReadingOffset As Double
+    GpibLanControllerPort As Integer
+    
+    ' initial view model settings
+    ViewModel As cc_isr_Tcp_Scpi.K2700ViewModel
+    SessionTimeout As Integer
+    
+    ContinuousSenseFunctionName As String
+    ImmediateSenseFunctionName As String
+    ExternalSenseFunctionName As String
+    
+    ' known information
+    TopCard As String
+    BottomCard As String
+    TopCardFunctionScanList As String
+    BottomCardFunctionScanList As String
+    
 End Type
 
 Private This As this_
@@ -129,10 +141,24 @@ Public Sub BeforeAll()
 
     This.Name = "K2700ViewModelTests"
     
+    ' initialize test settings
     This.TestNumber = 0
-    This.SessionTimeout = 3000
-    This.Address = "192.168.0.252:1234"
     Set This.TestStopper = cc_isr_Core_IO.Factory.NewStopwatch
+    
+    ' initialize observer settings
+    This.Address = "192.168.0.252:1234"
+    This.ReadingOffset = 0#
+    This.GpibLanControllerPort = 1234
+    
+    ' initialize view model settings
+    This.SessionTimeout = 3000
+    
+    ' initialize known data.
+    This.TopCard = "7700"
+    This.BottomCard = VBA.vbNullString
+    This.ContinuousSenseFunctionName = "FRES"
+    This.ImmediateSenseFunctionName = "RES"
+    This.ExternalSenseFunctionName = "FRES"
     
     ' set a temporary error tracer
     Dim p_errTrace As New DeviceErrorsTracer
@@ -143,12 +169,6 @@ Public Sub BeforeAll()
     
     ' Prime all tests
     
-    ' initialize known data.
-    This.TopCard = "7700"
-    This.BottomCard = VBA.vbNullString
-    This.ContinuousSenseFunctionName = "FRES"
-    This.ImmediateSenseFunctionName = "RES"
-    This.ExternalSenseFunctionName = "FRES"
     ' card scan list uses immediate mode sense function
     This.TopCardFunctionScanList = ":FUNC 'RES',(@101,120)"
     This.BottomCardFunctionScanList = VBA.vbNullString
@@ -156,16 +176,21 @@ Public Sub BeforeAll()
     Set This.ViewModel = cc_isr_Tcp_Scpi.Factory.NewK2700ViewModel
     
     Set This.ErrTracer = p_errTrace.Initialize(This.ViewModel.Device)
+    
+    ' set observer user interface settings
+    K2700Observer.SocketAddress = This.Address
+    K2700Observer.ReadingOffset = This.ReadingOffset
+    K2700Observer.GpibLanControllerPort = This.GpibLanControllerPort
+    
+    ' initialize the observer before initializing the view mode
+    ' but after the observer setting are set. The observer initial
+    ' settings are then applied to the view model.
     Set This.Observer = K2700Observer.Initialize(This.ViewModel)
     
-    This.ViewModel.SocketAddress = This.Address
+    ' set view model initial settings
     This.ViewModel.SessionTimeout = This.SessionTimeout
-    This.ViewModel.GpibLanControllerPort = 1234
-    This.ViewModel.ReadAfterWriteDelay = 1
-    This.ViewModel.SessionTimeout = This.SessionTimeout
-    This.ViewModel.Termination = VBA.vbLf
     
-    ' connect
+    ' issue the open connection command. This initializes the view model.
     This.ViewModel.OpenConnectionCommand
     
     If This.ViewModel.Connected Then

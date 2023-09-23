@@ -29,6 +29,7 @@ Private Type this_
     SenseSystem As K2700SenseSystem
     TriggerSystem As TriggerSystem
     ExtTrigInitiated As Boolean
+    
 End Type
 
 Private This As this_

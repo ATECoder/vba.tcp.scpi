@@ -54,11 +54,17 @@ Private WithEvents m_viewModel As K2700ViewModel
 Attribute m_viewModel.VB_VarHelpID = -1
 
 Private Type this_
+
+    ' Observer properties
     Initialized As Boolean
-    ViewModel As K2700ViewModel
     FocusedControlName As String
         
+    ' Initial User inputs
+    SocketAddress As String
+    ReadingOffset As Double
+    
     ' view model properties
+    ViewModel As K2700ViewModel
     ElapsedTime As Double
     ElapsedTimeFormat As String
     ElapsedTimeCaption As String
@@ -69,7 +75,6 @@ Private Type this_
     ' Winsock properties
     Host As String
     Port As Long
-    SocketAddress As String
     SocketId As Integer
     SessionTimeout As Integer
     Connected As Boolean
@@ -114,7 +119,6 @@ Private Type this_
     MeasuredValueFormat As String
     MeasuredValue As Double
     SenseFunctions As Collection
-    ReadingOffset As Double
     
     ' service request monitoring timer control
     ExternalTrigMonitoringEnabled As Boolean
@@ -2098,6 +2102,12 @@ Friend Function Initialize(ByVal a_viewModel As K2700ViewModel) As K2700Observer
     On Error GoTo err_Handler
     
     Set This.ViewModel = a_viewModel
+    
+    ' set the view model settings that come from the Observer user interface
+    This.ViewModel.SocketAddress = This.Address
+    This.ViewModel.ReadingOffset = This.ReadingOffset
+    This.ViewModel.GpibLanControllerPort = This.GpibLanControllerPort
+
     Set m_viewModel = a_viewModel
     
     If Not This.Initialized Then

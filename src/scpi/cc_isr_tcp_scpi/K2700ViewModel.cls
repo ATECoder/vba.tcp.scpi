@@ -188,6 +188,10 @@ Public Function Initialize() As K2700ViewModel
     ' populate the function box commands
     PopulateSenseFunctions
 
+    ' K2700 default settings
+    Me.ReadAfterWriteDelay = 1
+    Me.Termination = VBA.vbLf
+    
     This.K2700.GpibLanControllerPort = This.GpibLanControllerPort
     This.K2700.ReadAfterWriteDelay = This.ReadAfterWriteDelay
     This.K2700.Termination = This.Termination
@@ -2040,7 +2044,9 @@ Public Sub GpibAddressGetCommand()
 
     Me.RestartStopper
 
-    Me.GpibAddress = This.Session.GpibAddressGetter
+    Dim p_reading As String
+    p_reading = This.Session.GpibAddressGetter()
+    Me.GpibAddress = This.Session.PrimaryGpibAddress
 
     Me.ReadStopper
 
@@ -4216,6 +4222,42 @@ Friend Sub InitializeExecutablesState()
 
 End Sub
 
+''' <summary>   Read the Tcp Session state. </summary>
+''' <remarks>   This method updates the View Model with the Tcp Session State
+''' As follows:
+''' <see cref="TcpSession.GpibAddress"/>,
+''' This method assumes that the following information is already set when connecting:
+''' <see cref="TcpSession.ReadTimeout"/>, <see cref="TcpSession.AppendTermination"/>,
+''' <see cref="TcpSession.EndOfIdentity"/>, <see cref="TcpSession.AutoAssertTalk"/>,
+''' <see cref="TcpSession.LocalLockout"/>.
+''' </remarks>
+''' <param name="a_details">   [Out, String] Details the information of why the instrument
+'''                            failed to restore state. </param>
+Public Function TryReadSessionState(ByRef a_details As String) As Boolean
+
+    Const p_procedureName As String = "TryReadSessionState"
+
+    Dim p_success As Boolean
+    p_success = True
+    
+    If p_success Then
+    
+        Dim p_reading As String: p_reading = This.Session.GpibAddressGetter
+        
+        p_success = 0 < This.Session.PrimaryGpibAddress
+        If p_success Then
+            This.GpibAddress = This.Session.PrimaryGpibAddress
+        Else
+            p_details = "Failed reading GPIB Address: '" & p_reading & "'."
+        End If
+    
+    End If
+    
+    TryReadSessionState = p_success
+
+End Function
+
+
 ''' <summary>   Process the initial connection instrument actions. </summary>
 ''' <param name="a_errors">         [Out, String] contains any error information that existed before this
 '''                                 method. </param>
@@ -4445,6 +4487,12 @@ Private Sub m_socket_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Conne
             cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
                 ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
                 " Failed configuring the initial state; " & p_details
+    
+        ' read the session state
+        If Not Me.TryReadSessionState(p_details) Then _
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " Failed reading the session state; " & p_details
     
     Else
     
