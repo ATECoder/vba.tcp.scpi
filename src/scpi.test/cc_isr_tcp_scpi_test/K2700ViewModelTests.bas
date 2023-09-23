@@ -36,6 +36,7 @@ Private Type this_
     ContinuousSenseFunctionName As String
     ImmediateSenseFunctionName As String
     ExternalSenseFunctionName As String
+    PrimaryGpibAddress As Integer
     
     ' known information
     TopCard As String
@@ -83,7 +84,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 2
+    RunTest 1
     AfterAll
 End Sub
 
@@ -147,7 +148,7 @@ Public Sub BeforeAll()
     
     ' initialize observer settings
     This.Address = "192.168.0.252:1234"
-    This.ReadingOffset = 0#
+    This.ReadingOffset = 0.01
     This.GpibLanControllerPort = 1234
     
     ' initialize view model settings
@@ -159,6 +160,7 @@ Public Sub BeforeAll()
     This.ContinuousSenseFunctionName = "FRES"
     This.ImmediateSenseFunctionName = "RES"
     This.ExternalSenseFunctionName = "FRES"
+    This.PrimaryGpibAddress = 16
     
     ' set a temporary error tracer
     Dim p_errTrace As New DeviceErrorsTracer
@@ -498,7 +500,7 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     
     ' proceed with test assertions.
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.isTrue(This.ViewModel.ToggleConnectionExecutable, _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.ToggleConnectionExecutable, _
             "Toggle connection should be executable after initializing the View Model.")
 
     If p_outcome.AssertSuccessful Then _
@@ -510,13 +512,26 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
             "Observer and view model 'Port' setting should equal.")
 
     If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.AreEqual(This.Address, This.Observer.SocketAddress, _
+            "Observer 'SocketAddress' setting should equal initial setting.")
+    
+    If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.AreEqual(This.ViewModel.SocketAddress, This.Observer.SocketAddress, _
             "Observer and view model 'SocketAddress' setting should equal.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.AreEqual(This.ReadingOffset, This.ViewModel.ReadingOffset, _
+            "View Model 'ReadingOffset' setting should equal initial value.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.AreEqual(This.GpibLanControllerPort, This.ViewModel.GpibLanControllerPort, _
+            "View Model 'GpibLanControllerPort' setting should equal initial value.")
 
     ' Finally, verify that no error message was recorded.
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
             "Last error message should be empty but found: '" & This.ViewModel.LastErrorMessage & "'.")
+        
         
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -571,19 +586,23 @@ Public Function TestShouldBeConnected() As cc_isr_Test_Fx.Assert
     ' proceed with test assertions.
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.isTrue(This.ViewModel.Connected, _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.Connected, _
             "View model should be connected.")
         
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.isTrue(This.ViewModel.CloseConnectionExecutable, _
+        Set p_outcome = Assert.AreEqual(This.PrimaryGpibAddress, This.ViewModel.GpibAddress, _
+            "View model Gpib address should be set.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.CloseConnectionExecutable, _
             "View model close connection executable should be enabled.")
         
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.isTrue(This.Observer.CloseConnectionExecutable, _
+        Set p_outcome = Assert.IsTrue(This.Observer.CloseConnectionExecutable, _
             "View model Observer close connection executable should be enabled.")
         
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.isTrue(This.Observer.ToggleConnectionExecutable, _
+        Set p_outcome = Assert.IsTrue(This.Observer.ToggleConnectionExecutable, _
             "View model Observer toggle connection executable should be enabled.")
         
     If p_outcome.AssertSuccessful Then _
@@ -591,15 +610,15 @@ Public Function TestShouldBeConnected() As cc_isr_Test_Fx.Assert
             "View model open connection executable should be disabled.")
         
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.isTrue(This.ViewModel.ImmediateTriggerOptionExecutable, _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.ImmediateTriggerOptionExecutable, _
             "Immediate trigger option button should be enabled.")
         
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.isTrue(This.ViewModel.ExternalTriggerOptionExecutable, _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.ExternalTriggerOptionExecutable, _
             "External trigger option button should be enabled.")
         
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.isTrue(This.Observer.ExternalTriggerOptionExecutable, _
+        Set p_outcome = Assert.IsTrue(This.Observer.ExternalTriggerOptionExecutable, _
             "Observer External trigger option button should be enabled.")
         
     If p_outcome.AssertSuccessful Then _
@@ -802,7 +821,7 @@ Public Function TestShouldRestoreInitialState() As cc_isr_Test_Fx.Assert
     ' now that the function was changed, a resore should be required
     If p_outcome.AssertSuccessful Then
     
-        Set p_outcome = Assert.isTrue(This.ViewModel.ShouldRestoreSenseFunction(p_actualSenseFunctionName, _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.ShouldRestoreSenseFunction(p_actualSenseFunctionName, _
                 p_details), _
             "Restore should be required after setting the function to: '" & p_actualSenseFunctionName & "'; " & _
             p_details)
@@ -812,7 +831,7 @@ Public Function TestShouldRestoreInitialState() As cc_isr_Test_Fx.Assert
     ' if restore is required we should restore
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = Assert.isTrue(This.ViewModel.TryRestoreInitialState(p_details), _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.TryRestoreInitialState(p_details), _
             "View Model should restore initial state #1; " & p_details)
             
     End If
@@ -834,7 +853,7 @@ Public Function TestShouldRestoreInitialState() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then
     
         This.ViewModel.Session.ReadTimeoutSetter This.SessionTimeout - 1
-        Set p_outcome = Assert.isTrue(This.ViewModel.ShouldRestoreInitialState(p_details), _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.ShouldRestoreInitialState(p_details), _
             "The View Model should not be in its expected known state after setting session timeout to " & _
             VBA.CStr(This.ViewModel.Session.ReadTimeout) & " ms.")
     
@@ -843,7 +862,7 @@ Public Function TestShouldRestoreInitialState() As cc_isr_Test_Fx.Assert
     ' if restore is required we should restore
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = Assert.isTrue(This.ViewModel.TryRestoreInitialState(p_details), _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.TryRestoreInitialState(p_details), _
             "View Model should restore initial state #2; " & p_details)
         
     End If
@@ -856,7 +875,7 @@ Public Function TestShouldRestoreInitialState() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then
     
         This.ViewModel.Session.AutoAssertTalkSetter True
-        Set p_outcome = Assert.isTrue(This.ViewModel.ShouldRestoreInitialState(p_details), _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.ShouldRestoreInitialState(p_details), _
             "The View Model should not be in its expected known state after setting auto assert TALK to true.")
     
     End If
@@ -864,7 +883,7 @@ Public Function TestShouldRestoreInitialState() As cc_isr_Test_Fx.Assert
     ' if restore is required we should restore
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = Assert.isTrue(This.ViewModel.TryRestoreInitialState(p_details), _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.TryRestoreInitialState(p_details), _
             "View Model should restore initial state #3; " & p_details)
         
     End If
@@ -1018,7 +1037,7 @@ Public Function TestShouldRestoreFromClosedConnection() As Assert
     
     Dim p_details As String
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.isTrue(This.ViewModel.Session.Socket.TryCloseConnection(p_details), _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.Session.Socket.TryCloseConnection(p_details), _
             "View Model should close connection.")
     End If
     
@@ -1028,12 +1047,12 @@ Public Function TestShouldRestoreFromClosedConnection() As Assert
     End If
 
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.isTrue(This.ViewModel.TryRestoreInitialState(p_details), _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.TryRestoreInitialState(p_details), _
             "View Model should restore its initial state; " & p_details)
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.isTrue(This.ViewModel.Device.Connected, _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.Device.Connected, _
             "View Model should be connected after restoring its initial state.")
     End If
     
@@ -1188,7 +1207,7 @@ Public Function TestShouldConfigureImmediateMode() As cc_isr_Test_Fx.Assert
         Set p_outcome = Assert.isFalse(VBA.vbNullString = p_reading, _
             "Reading should not be empty.")
             
-        Set p_outcome = Assert.isTrue(p_readingValue > 0, _
+        Set p_outcome = Assert.IsTrue(p_readingValue > 0, _
             "Reading value should be positive.")
             
     End If
@@ -1300,7 +1319,7 @@ Public Function TestShouldConfigureExternalMode() As cc_isr_Test_Fx.Assert
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = Assert.isTrue(This.ViewModel.K2700.SenseSystem.SenseSystem.AutoRangeEnabledGetter(), _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.K2700.SenseSystem.SenseSystem.AutoRangeEnabledGetter(), _
             "Auto range should be enabled.")
     End If
     
@@ -1392,7 +1411,7 @@ Public Function TestShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then
     
         Dim p_minimumTimerInterval As Integer: p_minimumTimerInterval = 100
-        Set p_outcome = Assert.isTrue(This.ViewModel.TimerInterval >= p_minimumTimerInterval, _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.TimerInterval >= p_minimumTimerInterval, _
             "Timer interval should exceed" & VBA.CStr(p_minimumTimerInterval - 1) & ".")
     
     End If
@@ -1434,14 +1453,14 @@ Public Function TestShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then
     
         cc_isr_Core_IO.Factory.NewStopwatch().Wait 10
-        Set p_outcome = Assert.isTrue(This.ViewModel.K2700.ExtTrigInitiated, _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.K2700.ExtTrigInitiated, _
             "External trigger should get initiated after starting the monitoring timer.")
         
     End If
     
     If p_outcome.AssertSuccessful Then
     
-        Set p_outcome = Assert.isTrue(This.ViewModel.StopMonitoringExecutable, _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.StopMonitoringExecutable, _
             "The stop monitoring executable to should enabeld.")
         
     End If
@@ -1456,7 +1475,7 @@ Public Function TestShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then
     
         This.ViewModel.StopMonitoringExternalTriggersCommand
-        Set p_outcome = Assert.isTrue(This.ViewModel.StopRequested, _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.StopRequested, _
             "Stop Requested should be on off after stopping monitoring.")
         
     End If
@@ -1464,7 +1483,7 @@ Public Function TestShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then
     
         cc_isr_Core_IO.Factory.NewStopwatch().Wait 10
-        Set p_outcome = Assert.isTrue(This.ViewModel.PauseRequested, _
+        Set p_outcome = Assert.IsTrue(This.ViewModel.PauseRequested, _
             "Pause should be requested after stopping monitoring.")
         
     End If

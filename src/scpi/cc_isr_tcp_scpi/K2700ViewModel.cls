@@ -311,8 +311,6 @@ Public Property Let SocketAddress(ByVal a_value As String)
         This.SocketAddress = a_value
         Me.OnPropertyChanged "SocketAddress"
         Me.ConnectionExecutableSetter
-        Me.OnPropertyChanged "Port"
-        Me.OnPropertyChanged "Host"
     End If
 End Property
 
@@ -397,6 +395,9 @@ Friend Sub ConnectionExecutableSetter()
         p_canExecute = VBA.vbNullString <> This.Host _
             And (5025 = This.Port Or 1234 = This.Port) _
             And 0 < This.SessionTimeout
+    Me.OnPropertyChanged "Port"
+    Me.OnPropertyChanged "Host"
+    Me.OnPropertyChanged "SocketAddress"
     Me.OpenConnectionExecutable = p_canExecute And Not Me.Connected
     Me.CloseConnectionExecutable = p_canExecute And Me.Connected
 End Sub

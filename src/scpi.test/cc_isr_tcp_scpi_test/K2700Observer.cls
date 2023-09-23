@@ -62,6 +62,7 @@ Private Type this_
     ' Initial User inputs
     SocketAddress As String
     ReadingOffset As Double
+    GpibLanControllerPort As Long
     
     ' view model properties
     ViewModel As K2700ViewModel
@@ -610,7 +611,8 @@ End Property
 Friend Property Let SocketAddress(ByVal a_value As String)
     If This.SocketAddress <> a_value Then
         This.SocketAddress = a_value
-        This.ViewModel.SocketAddress = This.SocketAddress
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.SocketAddress = This.SocketAddress
     End If
 End Property
 
@@ -639,7 +641,8 @@ End Property
 Public Property Let SessionTimeout(ByVal a_value As Integer)
     If This.SessionTimeout <> a_value Then
         This.SessionTimeout = a_value
-        This.ViewModel.SessionTimeout = This.SessionTimeout
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.SessionTimeout = This.SessionTimeout
     End If
 End Property
 
@@ -660,7 +663,8 @@ End Property
 Public Property Let MessageToSend(ByVal a_value As String)
     If This.MessageToSend <> a_value Then
         This.MessageToSend = a_value
-        This.ViewModel.MessageToSend = This.MessageToSend
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.MessageToSend = This.MessageToSend
     End If
 End Property
 
@@ -675,7 +679,8 @@ End Property
 Public Property Let SentMessage(ByVal a_value As String)
     If This.SentMessage <> a_value Then
         This.SentMessage = a_value
-        This.ViewModel.SentMessage = This.SentMessage
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.SentMessage = This.SentMessage
     End If
 End Property
 
@@ -690,7 +695,8 @@ End Property
 Public Property Let ReceivedMessage(ByVal a_value As String)
     If This.ReceivedMessage <> a_value Then
         This.ReceivedMessage = a_value
-        This.ViewModel.ReceivedMessage = This.ReceivedMessage
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ReceivedMessage = This.ReceivedMessage
     End If
 End Property
 
@@ -705,7 +711,8 @@ End Property
 Public Property Let ReceivedMessageLength(ByVal a_value As Integer)
     If This.ReceivedMessageLength <> a_value Then
         This.ReceivedMessageLength = a_value
-        This.ViewModel.ReceivedMessageLength = This.ReceivedMessageLength
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ReceivedMessageLength = This.ReceivedMessageLength
     End If
 End Property
 
@@ -720,7 +727,8 @@ End Property
 Public Property Let StatusByte(ByVal a_value As Integer)
     If This.StatusByte <> a_value Then
         This.StatusByte = a_value
-        This.ViewModel.StatusByte = This.StatusByte
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.StatusByte = This.StatusByte
     End If
 End Property
 
@@ -735,7 +743,8 @@ End Property
 Public Property Let StandardByte(ByVal a_value As Integer)
     If This.StandardByte <> a_value Then
         This.StandardByte = a_value
-        This.ViewModel.StandardByte = This.StandardByte
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.StandardByte = This.StandardByte
     End If
 End Property
 
@@ -750,7 +759,8 @@ End Property
 Public Property Let ReadStatusAfterWriteEnabled(ByVal a_value As Boolean)
     If This.ReadStatusAfterWriteEnabled <> a_value Then
         This.ReadStatusAfterWriteEnabled = a_value
-        This.ViewModel.ReadStatusAfterWriteEnabled = This.ReadStatusAfterWriteEnabled
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ReadStatusAfterWriteEnabled = This.ReadStatusAfterWriteEnabled
     End If
 End Property
 
@@ -765,7 +775,8 @@ End Property
 Public Property Let ScpiCommands(ByVal a_value As Collection)
     If Not cc_isr_Core.CollectionExtensions.AreEqual(This.ScpiCommands, a_value) Then
         Set This.ScpiCommands = a_value
-        This.ViewModel.ScpiCommands = This.ScpiCommands
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ScpiCommands = This.ScpiCommands
     End If
 End Property
 
@@ -786,7 +797,8 @@ End Property
 Public Property Let SerialPollByte(ByVal a_value As Integer)
     If This.SerialPollByte <> a_value Then
         This.SerialPollByte = a_value
-        This.ViewModel.SerialPollByte = This.SerialPollByte
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.SerialPollByte = This.SerialPollByte
     End If
 End Property
 
@@ -801,7 +813,8 @@ End Property
 Public Property Let ServiceRequested(ByVal a_value As Integer)
     If This.ServiceRequested <> a_value Then
         This.ServiceRequested = a_value
-        This.ViewModel.ServiceRequested = This.ServiceRequested
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ServiceRequested = This.ServiceRequested
     End If
 End Property
 
@@ -816,7 +829,8 @@ End Property
 Public Property Let GpibAddress(ByVal a_value As Integer)
     If This.GpibAddress <> a_value Then
         This.GpibAddress = a_value
-        This.ViewModel.GpibAddress = This.GpibAddress
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.GpibAddress = This.GpibAddress
     End If
 End Property
 
@@ -831,7 +845,24 @@ End Property
 Public Property Let AutoAssertTalk(ByVal a_value As Boolean)
     If This.AutoAssertTalk <> a_value Then
         This.AutoAssertTalk = a_value
-        This.ViewModel.AutoAssertTalk = This.AutoAssertTalk
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.AutoAssertTalk = This.AutoAssertTalk
+    End If
+End Property
+
+''' <summary>   Gets the port number of the GPIB Lan controller. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get GpibLanControllerPort() As Long
+    GpibLanControllerPort = This.GpibLanControllerPort
+End Property
+
+''' <summary>   Sets the port number of the GPIB Lan controller. </summary>
+''' <param name="a_value">   [Long] the GPIB Lan controller port. </param>
+Public Property Let GpibLanControllerPort(ByVal a_value As Long)
+    If This.GpibLanControllerPort <> a_value Then
+        This.GpibLanControllerPort = a_value
+        If Not This.ViewModel Is Nothing Then _
+                This.ViewModel.GpibLanControllerPort = This.GpibLanControllerPort
     End If
 End Property
 
@@ -848,7 +879,8 @@ End Property
 Public Property Let GpibLanReadTimeout(ByVal a_value As Integer)
     If This.GpibLanReadTimeout <> a_value Then
         This.GpibLanReadTimeout = a_value
-        This.ViewModel.GpibLanReadTimeout = This.GpibLanReadTimeout
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.GpibLanReadTimeout = This.GpibLanReadTimeout
     End If
 End Property
 
@@ -863,7 +895,8 @@ End Property
 Public Property Let TopCard(ByVal a_value As String)
     If This.TopCard <> a_value Then
         This.TopCard = a_value
-        This.ViewModel.TopCard = This.TopCard
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.TopCard = This.TopCard
     End If
 End Property
 
@@ -878,7 +911,8 @@ End Property
 Public Property Let TopCardFunctionScanList(ByVal a_value As String)
     If This.TopCardFunctionScanList <> a_value Then
         This.TopCardFunctionScanList = a_value
-        This.ViewModel.TopCardFunctionScanList = This.TopCardFunctionScanList
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.TopCardFunctionScanList = This.TopCardFunctionScanList
     End If
 End Property
 
@@ -893,7 +927,8 @@ End Property
 Public Property Let BottomCard(ByVal a_value As String)
     If This.BottomCard <> a_value Then
         This.BottomCard = a_value
-        This.ViewModel.BottomCard = This.BottomCard
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.BottomCard = This.BottomCard
     End If
 End Property
 
@@ -908,7 +943,8 @@ End Property
 Public Property Let BottomCardFunctionScanList(ByVal a_value As String)
     If This.BottomCardFunctionScanList <> a_value Then
         This.BottomCardFunctionScanList = a_value
-        This.ViewModel.BottomCardFunctionScanList = This.BottomCardFunctionScanList
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.BottomCardFunctionScanList = This.BottomCardFunctionScanList
     End If
 End Property
 
@@ -939,7 +975,8 @@ End Property
 Public Property Let FrontInputsRequired(ByVal a_value As Boolean)
     If This.FrontInputsRequired <> a_value Then
         This.FrontInputsRequired = a_value
-        This.ViewModel.FrontInputsRequired = This.FrontInputsRequired
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.FrontInputsRequired = This.FrontInputsRequired
     End If
 End Property
 
@@ -955,7 +992,8 @@ End Property
 Public Property Let ReadingBeepEnabled(ByVal a_value As Boolean)
     If This.ReadingBeepEnabled <> a_value Then
         This.ReadingBeepEnabled = a_value
-        This.ViewModel.ReadingBeepEnabled = This.ReadingBeepEnabled
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ReadingBeepEnabled = This.ReadingBeepEnabled
     End If
 End Property
 
@@ -971,7 +1009,8 @@ End Property
 Public Property Let FrontInputsValue(ByVal a_value As Boolean)
     If This.FrontInputsValue <> a_value Then
         This.FrontInputsValue = a_value
-        This.ViewModel.FrontInputsValue = This.FrontInputsValue
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.FrontInputsValue = This.FrontInputsValue
     End If
 End Property
 
@@ -986,7 +1025,8 @@ End Property
 Public Property Let FrontInputsCaption(ByVal a_value As String)
     If This.FrontInputsCaption <> a_value Then
         This.FrontInputsCaption = a_value
-        This.ViewModel.FrontInputsCaption = This.FrontInputsCaption
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.FrontInputsCaption = This.FrontInputsCaption
     End If
 End Property
 
@@ -1001,7 +1041,8 @@ End Property
 Public Property Let ChannelCount(ByVal a_value As Integer)
     If This.ChannelCount <> a_value Then
         This.ChannelCount = a_value
-        This.ViewModel.ChannelCount = This.ChannelCount
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ChannelCount = This.ChannelCount
     End If
 End Property
 
@@ -1016,7 +1057,8 @@ End Property
 Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
     If This.SelectedChannelNumber <> a_value Then
         This.SelectedChannelNumber = a_value
-        This.ViewModel.SelectedChannelNumber = This.SelectedChannelNumber
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.SelectedChannelNumber = This.SelectedChannelNumber
     End If
 End Property
 
@@ -1031,7 +1073,8 @@ End Property
 Public Property Let CurrentChannelNumber(ByVal a_value As Integer)
     If This.CurrentChannelNumber <> a_value Then
         This.CurrentChannelNumber = a_value
-        This.ViewModel.CurrentChannelNumber = This.CurrentChannelNumber
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.CurrentChannelNumber = This.CurrentChannelNumber
     End If
 End Property
 
@@ -1046,7 +1089,8 @@ End Property
 Public Property Let MeasuredChannelNumber(ByVal a_value As Integer)
     If This.MeasuredChannelNumber <> a_value Then
         This.MeasuredChannelNumber = a_value
-        This.ViewModel.MeasuredChannelNumber = This.MeasuredChannelNumber
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.MeasuredChannelNumber = This.MeasuredChannelNumber
     End If
 End Property
 
@@ -1061,7 +1105,8 @@ End Property
 Public Property Let ContinuousSenseFunctionName(ByVal a_value As String)
     If This.ContinuousSenseFunctionName <> a_value Then
         This.ContinuousSenseFunctionName = a_value
-        This.ViewModel.ContinuousSenseFunctionName = This.ContinuousSenseFunctionName
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ContinuousSenseFunctionName = This.ContinuousSenseFunctionName
     End If
 End Property
 
@@ -1076,7 +1121,8 @@ End Property
 Public Property Let ImmediateSenseFunctionName(ByVal a_value As String)
     If This.ImmediateSenseFunctionName <> a_value Then
         This.ImmediateSenseFunctionName = a_value
-        This.ViewModel.ImmediateSenseFunctionName = This.ImmediateSenseFunctionName
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ImmediateSenseFunctionName = This.ImmediateSenseFunctionName
     End If
 End Property
 
@@ -1091,7 +1137,8 @@ End Property
 Public Property Let ExternalSenseFunctionName(ByVal a_value As String)
     If This.ExternalSenseFunctionName <> a_value Then
         This.ExternalSenseFunctionName = a_value
-        This.ViewModel.ExternalSenseFunctionName = This.ExternalSenseFunctionName
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ExternalSenseFunctionName = This.ExternalSenseFunctionName
     End If
 End Property
 
@@ -1120,7 +1167,8 @@ End Property
 Public Property Let SenseFunctionCaption(ByVal a_value As String)
     If This.SenseFunctionCaption <> a_value Then
         This.SenseFunctionCaption = a_value
-        This.ViewModel.SenseFunctionCaption = This.SenseFunctionCaption
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.SenseFunctionCaption = This.SenseFunctionCaption
     End If
 End Property
 
@@ -1135,7 +1183,8 @@ End Property
 Public Property Let SenseFunctionUnit(ByVal a_value As String)
     If This.SenseFunctionUnit <> a_value Then
         This.SenseFunctionUnit = a_value
-        This.ViewModel.SenseFunctionUnit = This.SenseFunctionUnit
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.SenseFunctionUnit = This.SenseFunctionUnit
     End If
 End Property
 
@@ -1150,7 +1199,8 @@ End Property
 Public Property Let MeasuredReading(ByVal a_value As String)
     If This.MeasuredReading <> a_value Then
         This.MeasuredReading = a_value
-        This.ViewModel.MeasuredReading = This.MeasuredReading
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.MeasuredReading = This.MeasuredReading
     End If
 End Property
 
@@ -1165,7 +1215,8 @@ End Property
 Public Property Let MeasuredValueFormat(ByVal a_value As String)
     If This.MeasuredValueFormat <> a_value Then
         This.MeasuredValueFormat = a_value
-        This.ViewModel.MeasuredValueFormat = This.MeasuredValueFormat
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.MeasuredValueFormat = This.MeasuredValueFormat
     End If
 End Property
 
@@ -1180,7 +1231,8 @@ End Property
 Public Property Let MeasuredValue(ByVal a_value As Double)
     If This.MeasuredValue <> a_value Then
         This.MeasuredValue = a_value
-        This.ViewModel.MeasuredValue = This.MeasuredValue
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.MeasuredValue = This.MeasuredValue
     End If
 End Property
 
@@ -1195,7 +1247,8 @@ End Property
 Public Property Let SenseFunctions(ByVal a_value As Collection)
     If Not cc_isr_Core.CollectionExtensions.AreEqual(This.SenseFunctions, a_value) Then
         Set This.SenseFunctions = a_value
-        This.ViewModel.SenseFunctions = This.SenseFunctions
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.SenseFunctions = This.SenseFunctions
     End If
 End Property
 
@@ -1210,7 +1263,8 @@ End Property
 Public Property Let ReadingOffset(ByVal a_value As Double)
     If This.ReadingOffset <> a_value Then
         This.ReadingOffset = a_value
-        This.ViewModel.ReadingOffset = This.ReadingOffset
+        If Not This.ViewModel Is Nothing Then _
+                This.ViewModel.ReadingOffset = This.ReadingOffset
     End If
 End Property
 
@@ -1225,7 +1279,8 @@ End Property
 Public Property Let MonitoringState(ByVal a_value As String)
     If This.MonitoringState <> a_value Then
         This.MonitoringState = a_value
-        This.ViewModel.MonitoringState = This.MonitoringState
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.MonitoringState = This.MonitoringState
     End If
 End Property
 
@@ -1257,7 +1312,8 @@ End Property
 Public Property Let AutoIncrementChannelNoEnabled(ByVal a_value As Boolean)
     If This.AutoIncrementChannelNoEnabled <> a_value Then
         This.AutoIncrementChannelNoEnabled = a_value
-        This.ViewModel.AutoIncrementChannelNoEnabled = This.AutoIncrementChannelNoEnabled
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.AutoIncrementChannelNoEnabled = This.AutoIncrementChannelNoEnabled
     End If
 End Property
 
@@ -1273,7 +1329,8 @@ End Property
 Public Property Let SingleReadEnabled(ByVal a_value As Boolean)
     If This.SingleReadEnabled <> a_value Then
         This.SingleReadEnabled = a_value
-        This.ViewModel.SingleReadEnabled = This.SingleReadEnabled
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.SingleReadEnabled = This.SingleReadEnabled
     End If
 End Property
 
@@ -1326,7 +1383,8 @@ End Property
 Public Property Let TimerInterval(ByVal a_value As Integer)
     If This.TimerInterval <> a_value Then
         This.TimerInterval = a_value
-        This.ViewModel.TimerInterval = This.TimerInterval
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.TimerInterval = This.TimerInterval
     End If
 End Property
 
@@ -1341,7 +1399,8 @@ End Property
 Public Property Let ElapsedTime(ByVal a_value As Double)
     If This.ElapsedTime <> a_value Then
         This.ElapsedTime = a_value
-        This.ViewModel.ElapsedTime = This.ElapsedTime
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ElapsedTime = This.ElapsedTime
     End If
 End Property
 
@@ -1356,7 +1415,8 @@ End Property
 Public Property Let ElapsedTimeFormat(ByVal a_value As String)
     If This.ElapsedTimeFormat <> a_value Then
         This.ElapsedTimeFormat = a_value
-        This.ViewModel.ElapsedTimeFormat = This.ElapsedTimeFormat
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ElapsedTimeFormat = This.ElapsedTimeFormat
     End If
 End Property
 
@@ -1371,7 +1431,8 @@ End Property
 Public Property Let ElapsedTimeCaption(ByVal a_value As String)
     If This.ElapsedTimeCaption <> a_value Then
         This.ElapsedTimeCaption = a_value
-        This.ViewModel.ElapsedTimeCaption = This.ElapsedTimeCaption
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ElapsedTimeCaption = This.ElapsedTimeCaption
     End If
 End Property
 
@@ -1386,7 +1447,8 @@ End Property
 Public Property Let LastErrorMessage(ByVal a_value As String)
     If This.LastErrorMessage <> a_value Then
         This.LastErrorMessage = a_value
-        This.ViewModel.LastErrorMessage = This.LastErrorMessage
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.LastErrorMessage = This.LastErrorMessage
     End If
 End Property
 
@@ -1401,7 +1463,8 @@ End Property
 Public Property Let LastMessage(ByVal a_value As String)
     If This.LastMessage <> a_value Then
         This.LastMessage = a_value
-        This.ViewModel.LastMessage = This.LastMessage
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.LastMessage = This.LastMessage
     End If
 End Property
 
@@ -2104,7 +2167,7 @@ Friend Function Initialize(ByVal a_viewModel As K2700ViewModel) As K2700Observer
     Set This.ViewModel = a_viewModel
     
     ' set the view model settings that come from the Observer user interface
-    This.ViewModel.SocketAddress = This.Address
+    This.ViewModel.SocketAddress = This.SocketAddress
     This.ViewModel.ReadingOffset = This.ReadingOffset
     This.ViewModel.GpibLanControllerPort = This.GpibLanControllerPort
 

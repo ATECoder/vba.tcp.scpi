@@ -451,7 +451,7 @@ Public Function TestInputsShouldBeFront() As cc_isr_Test_Fx.Assert
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = Assert.isTrue(This.K2700.ScpiSystem.QueryFrontSwitch(), _
+        Set p_outcome = Assert.IsTrue(This.K2700.ScpiSystem.QueryFrontSwitch(), _
             "Scpi System should query and report the correct state of the front switch.")
 
     End If

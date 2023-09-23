@@ -6,9 +6,11 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
-IEEEE488:
-Update reading the GPIB Address.
-Add reading GPIB test.
+
+SCPI:
+Fix updating host and port. passed view model test #1.
+
+
 
 ## TODO
 
