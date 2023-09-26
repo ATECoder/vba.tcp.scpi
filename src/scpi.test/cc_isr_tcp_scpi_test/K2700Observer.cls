@@ -185,6 +185,9 @@ Private Type this_
     MeasurementCell As String
     ChannelValue As String
     MeasurementValue As String
+    
+    LastCommandDetails As String
+    LastCommandOutcome As Boolean
 
 End Type
 
@@ -224,7 +227,7 @@ End Sub
 
 Friend Sub CLSButton_Click()
     If This.ClearExecutionStateExecutable Then
-        This.ViewModel.ClearExecutionStateCommand
+        Me.LastCommandOutcome = This.ViewModel.ClearExecutionStateCommand(Me.LastCommandDetails)
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me), "._Click", _
@@ -497,8 +500,9 @@ End Sub
 '''             This method issues the click event on actual click.
 '''             Note: Make sure to not implement the click event,
 Friend Sub ImmediateTriggerOptionButton_Change()
+
     If This.ImmediateTriggerOptionExecutable Then
-        This.ViewModel.ConfigureImmediateTriggerReadingsCommand
+        Me.LastCommandOutcome = This.ViewModel.ConfigureImmediateTriggerReadingsCommand(Me.LastCommandDetails)
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me), "._Click", _
@@ -516,7 +520,7 @@ End Sub
 Friend Sub MeasureButton_Click()
     If This.MeasureExecutable Then
         ' make an immediate measure of one or all channels.
-        This.ViewModel.MeasureImmediatelyCommand
+        Me.LastCommandOutcome = This.ViewModel.MeasureImmediatelyCommand(Me.LastCommandDetails)
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me), "._Click", _
@@ -1465,6 +1469,34 @@ Public Property Let LastMessage(ByVal a_value As String)
         This.LastMessage = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.LastMessage = This.LastMessage
+    End If
+End Property
+
+''' <summary>   Gets the Last Command Details. </summary>
+''' <value>   [String]. </value>
+Public Property Get LastCommandDetails() As String
+    LastCommandDetails = This.LastCommandDetails
+End Property
+
+''' <summary>   Sets the Last Command Details. </summary>
+''' <param name="a_value">   [String] the last Command Details value. </value>
+Public Property Let LastCommandDetails(ByVal a_value As String)
+    If This.LastCommandDetails <> a_value Then
+        This.LastCommandDetails = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Last Command Outcome. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get LastCommandOutcome() As Boolean
+    LastCommandOutcome = This.LastCommandOutcome
+End Property
+
+''' <summary>   Sets the Last Command Outcome. </summary>
+''' <param name="a_value">   [Boolean] the last Command Outcome value. </value>
+Public Property Let LastCommandOutcome(ByVal a_value As Boolean)
+    If This.LastCommandOutcome <> a_value Then
+        This.LastCommandOutcome = a_value
     End If
 End Property
 

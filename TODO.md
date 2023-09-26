@@ -6,12 +6,6 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
-
-SCPI:
-Fix updating host and port. passed view model test #1.
-
-
-
 ## TODO
 
 SCPI:

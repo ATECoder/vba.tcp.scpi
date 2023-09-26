@@ -140,7 +140,7 @@ Public Sub BeforeAll()
     
     Dim p_details As String
     If Not This.K2700.Connectable.TryOpenConnection(This.Address, This.SessionTimeout, p_details) Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+        Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
     End If
    
     If This.K2700.Connected Then
@@ -225,7 +225,7 @@ Public Sub BeforeEach()
         Dim p_command As String
         p_command = "*CLS;*WAI;*OPC?"
         If 0 >= This.Session.TryWriteLine(p_command, p_details) Then
-            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+            Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
         End If
         
     End If
@@ -233,7 +233,7 @@ Public Sub BeforeEach()
     Dim p_reply As String
     If p_outcome.AssertSuccessful Then
         If 0 > This.Session.TryRead(p_reply, p_details) Then
-            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+            Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
         End If
     End If
     
@@ -259,8 +259,10 @@ exit_Handler:
         End If
     End If
     
-    If p_outcome.AssertSuccessful Then _
-        This.K2700.Device.ClearExecutionState
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700.Device.TryClearExecutionState(p_details), _
+            p_details)
+    End If
     
     Set This.BeforeEachAssert = p_outcome
 
@@ -316,11 +318,11 @@ Public Sub AfterEach()
         ' clear errors if any so as to leave the instrument without errors.
         p_command = "*CLS;*WAI;*OPC?"
         If 0 >= This.Session.TryWriteLine(p_command, p_details) Then
-            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+            Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
         End If
         
         If 0 > This.Session.TryRead(p_reply, p_details) Then
-            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+            Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
         End If
         
     End If
@@ -538,10 +540,12 @@ Public Function TestShouldRecoverFromSyntaxFromError() As cc_isr_Test_Fx.Assert
         DoEvents
         cc_isr_Core_IO.Factory.NewStopwatch().Wait 100
         
-        p_expectedReply = "1"
-        p_actualReply = This.K2700.Device.ClearExecutionState()
-        Set p_outcome = Assert.AreEqual(p_expectedReply, p_actualReply, _
-            "K2700 Device should query operation completion.")
+    End If
+    
+    Dim p_details As String
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700.Device.TryClearExecutionState(p_details), _
+            p_details)
     End If
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .

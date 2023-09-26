@@ -84,7 +84,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 4
+    RunTest 1
     AfterAll
 End Sub
 
@@ -275,7 +275,7 @@ Public Sub BeforeEach()
         Dim p_command As String
         p_command = "*CLS;*WAI;*OPC?"
         If 0 >= This.ViewModel.Session.TryWriteLine(p_command, p_details) Then
-            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+            Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
         End If
         
     End If
@@ -283,7 +283,7 @@ Public Sub BeforeEach()
     Dim p_reply As String
     If p_outcome.AssertSuccessful Then
         If 0 > This.ViewModel.Session.TryRead(p_reply, p_details) Then
-            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+            Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
         End If
     End If
     
@@ -295,8 +295,10 @@ Public Sub BeforeEach()
     ' clear the error state.
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
     
-    If p_outcome.AssertSuccessful Then _
-        This.ViewModel.Device.ClearExecutionState
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.TryClearExecutionState(p_details), _
+            p_details)
+    End If
    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -366,11 +368,11 @@ Public Sub AfterEach()
         ' clear errors if any so as to leave the instrument without errors.
         p_command = "*CLS;*WAI;*OPC?"
         If 0 >= This.ViewModel.Session.TryWriteLine(p_command, p_details) Then
-            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+            Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
         End If
         
         If 0 > This.ViewModel.Session.TryRead(p_reply, p_details) Then
-            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+            Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
         End If
         
     End If
@@ -481,6 +483,7 @@ End Sub
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' TestShouldInitialize passed. in 11.3 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -566,6 +569,8 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' TestShouldInitialize passed. in 11.3 ms.
+''' TestShouldBeConnected passed. in 16.8 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -715,6 +720,7 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' TestShouldReadCards passed. in 13.2 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -769,6 +775,7 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' TestShouldRestoreInitialState passed. in 12234.4 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -932,6 +939,7 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' TestShouldRecoverFromSyntaxError passed. in 145.6 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -951,12 +959,11 @@ Public Function TestShouldRecoverFromSyntaxError() As Assert
     
     Dim p_actualReply As String
     Dim p_expectedReply As String
+    Dim p_details As String
     
     If p_outcome.AssertSuccessful Then
-        p_expectedReply = "1"
-        p_actualReply = This.ViewModel.ClearExecutionStateCommand()
-        Set p_outcome = Assert.AreEqual(p_expectedReply, p_actualReply, _
-            "View Model should clear execution state and query operation completion #1.")
+        Set p_outcome = Assert.IsTrue(This.ViewModel.ClearExecutionStateCommand(p_details), _
+            "View Model should clear execution state and query operation completion #1; " & p_details)
     End If
 
     If p_outcome.AssertSuccessful Then
@@ -972,10 +979,11 @@ Public Function TestShouldRecoverFromSyntaxError() As Assert
         DoEvents
         cc_isr_Core_IO.Factory.NewStopwatch().Wait 100
         
-        p_expectedReply = "1"
-        p_actualReply = This.ViewModel.ClearExecutionStateCommand()
-        Set p_outcome = Assert.AreEqual(p_expectedReply, p_actualReply, _
-            "View Model should clear ewxecution state and query operation completion #2.")
+        If p_outcome.AssertSuccessful Then
+            Set p_outcome = Assert.IsTrue(This.ViewModel.ClearExecutionStateCommand(p_details), _
+                "View Model should clear execution state and query operation completion #2; " & p_details)
+        End If
+        
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1015,6 +1023,7 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' TestShouldRestoreFromClosedConnection passed. in 5733.7 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -1118,19 +1127,18 @@ Public Function TestShouldConfigureImmediateMode() As cc_isr_Test_Fx.Assert
     End If
     
     ' proceed with test assertions.
-    
+    Dim p_details As String
     If p_outcome.AssertSuccessful Then
         
         ' configure immediate mode with front switch.
         This.ViewModel.FrontInputsRequired = True
-        This.ViewModel.ConfigureImmediateTriggerReadingsCommand
         
-        Dim p_expectedSenseFunctionName As String: p_expectedSenseFunctionName = This.ImmediateSenseFunctionName
-        Dim p_actualSenseFunctionName As String:
-        p_actualSenseFunctionName = This.ViewModel.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
-        Set p_outcome = Assert.AreEqualString(p_expectedSenseFunctionName, p_actualSenseFunctionName, _
-            VBA.VbCompareMethod.vbTextCompare, _
-            "Immediate mode sense function name should be as expected.")
+        ' returns true of if success. Otherwise, the error should be in the
+        ' last error, if the inputs are invalid or the last error message
+        ' if the configuration failed.
+        Set p_outcome = Assert.IsTrue(This.ViewModel.ConfigureImmediateTriggerReadingsCommand(p_details), _
+            p_details)
+        
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1186,27 +1194,45 @@ Public Function TestShouldConfigureImmediateMode() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then
         
         ' take a reading
-        This.ViewModel.MeasureImmediatelyCommand
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.MeasureImmediatelyCommand(p_details), _
+            p_details)
+        
+    End If
+    
+    Dim p_reading As String
+    Dim p_channelNumber As Integer
+    Dim p_readingValue As Double
+    
+    If p_outcome.AssertSuccessful Then
         
         ' wait for the reading event to take shape.
         cc_isr_Core_IO.Factory.NewStopwatch().Wait 10
         
         ' get the reading from the observer.
-        Dim p_reading As String
         p_reading = This.Observer.MeasuredReading
         
-        Dim p_channelNumber As Integer
         p_channelNumber = This.Observer.MeasuredChannelNumber
 
-        Dim p_readingValue As Double
         p_readingValue = This.Observer.MeasuredValue
+        
+    End If
+    
+    If p_outcome.AssertSuccessful Then
         
         Set p_outcome = Assert.AreEqual(This.ViewModel.SelectedChannelNumber, p_channelNumber, _
             "Reading should come from the expected channel number.")
             
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
         Set p_outcome = Assert.isFalse(VBA.vbNullString = p_reading, _
             "Reading should not be empty.")
             
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
         Set p_outcome = Assert.IsTrue(p_readingValue > 0, _
             "Reading value should be positive.")
             
