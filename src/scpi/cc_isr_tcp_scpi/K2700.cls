@@ -187,19 +187,46 @@ End Property
 '''                             failed to restore state. </param>
 ''' <param name="a_function">   [Optional, String, 'RES'] The measurement function. </param>
 ''' <param name="a_timeout">    [Optional, Long, 3000] The session read timeout in milliseconds. </param>
-''' <returns>   True if the device was initialized. </returns>
+''' <returns>   [Boolean] True if the device was initialized. </returns>
 Public Function InitializeLegacy(ByVal a_address As String, _
         ByRef a_details As String, _
         Optional ByVal a_function As String = "RES", _
         Optional ByVal a_timeout As Long = 3000) As Boolean
 
-    If This.Session.Socket.TryOpenConnection(a_address, a_timeout, a_details) Then
+    Const p_procedureName = "InitializeLegacy"
     
+    Dim p_success As Boolean: p_success = True
+    a_details = VBA.vbNullString
+    
+    p_success = This.Session.Socket.TryOpenConnection(a_address, a_timeout, a_details)
+    If Not p_success Then _
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            "; " & a_details
+    
+    If p_success Then
         ' reset clear the device.
         This.Session.SelectiveDeviceClear
-        This.Device.ResetKnownState
-        This.Device.ClearExecutionState
+    End If
+    
+    If p_success Then
         
+        p_success = This.Device.TryResetKnownState(a_details)
+        
+        If Not p_success Then _
+            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                "; " & a_details
+    
+    End If
+    
+    If p_success Then
+        p_success = This.Device.TryClearExecutionState(a_details)
+        If Not p_success Then _
+            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                "; " & a_details
+    End If
+    
+    If p_success Then
+    
         ' read the instrument options and parse the card names and types.
         
         Me.RouteSystem.Read7700Cards This.Device.QueryOptions
@@ -209,16 +236,14 @@ Public Function InitializeLegacy(ByVal a_address As String, _
         Me.RouteSystem.DefineFunctionScanLists a_function
         
         ' turn on continuous auto range
-        Me.ConfigureContinuousFunctionAutoRange a_function
+        p_success = Me.TryConfigureContinuousFunctionAutoRange(a_function, a_details)
+        If Not p_success Then _
+            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                "; " & a_details
         
-        InitializeLegacy = True
-        
-    Else
-    
-        InitializeLegacy = False
-    
     End If
 
+    InitializeLegacy = p_success
     
 End Function
 
@@ -263,18 +288,34 @@ End Sub
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Performs a single read from the front panel. </summary>
-''' <param name="a_channelNumber">   [Integer] The channel number. </param>
-''' <returns>   [String] the reading. </returns>
-Public Function TakeFrontReading(Optional a_channelNumber As Integer = 0) As String
+''' <param name="a_reading">         [Out, String] The reading. </param>
+''' <param name="a_details">         [Out, String] Details the information of why the instrument
+'''                                  failed to restore state. </param>
+''' <param name="a_channelNumber">   [Optional, Integer, 0] The channel number. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function TryTakeFrontReading(ByRef a_reading As String, ByRef a_details As String, _
+    Optional a_channelNumber As Integer = 0) As Boolean
 
+    Const p_procedureName = "TryConfigureIntitialTriggerMode"
+    
+    Dim p_success As Boolean: p_success = True
+    a_details = VBA.vbNullString
+    a_reading = VBA.vbNullString
+
+    ' trigger a reading
+    
     This.Session.WriteLine ":INIT"
-    This.Session.WriteLine ":READ?"
     
-    Dim p_reading As String: p_reading = This.Session.Read
+    Dim p_command As String: p_command = ":READ?"
+    p_success = This.Session.TryQueryLine(p_command, a_reading, a_details)
+    If p_success Then
+        OnChannelMeasured a_channelNumber, a_reading
+    Else
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            " failed taking a front reading using the command '" & p_command & "; " & a_details
+    End If
     
-    OnChannelMeasured a_channelNumber, p_reading
-
-    TakeFrontReading = p_reading
+    TryTakeFrontReading = p_success
 
 End Function
 
@@ -283,33 +324,50 @@ End Function
 ''' Use this method to get a single value from the instrument using the back panel switches
 ''' </remarks>
 ''' <param name="a_channelNumber">   The device channel number. </param>
-''' <returns>    [String] the reading of empty if the channel number is out
-''' of range for this device. </returns>
-Public Function TakeRearReading(ByVal a_channelNumber As Integer) As String
+''' <param name="a_reading">         [Out, String] The reading or empty if
+''                                   the channel number is out of range for this device. </param>
+''' <param name="a_details">         [Out, String] Details the information of why the instrument
+'''                                  failed to restore state. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function TryTakeRearReading(ByVal a_channelNumber As Integer, _
+    ByRef a_reading As String, ByRef a_details As String) As Boolean
 
+    Const p_procedureName = "TryTakeRearReading"
+    
+    Dim p_success As Boolean: p_success = True
+    a_details = VBA.vbNullString
+    
     ' get the channel close command
     Dim p_routeCloseCommand As String
     On Error Resume Next
     p_routeCloseCommand = This.RouteSystem.GetRouteCloseCommand(a_channelNumber)
     On Error GoTo 0
     
-    Dim p_reading As String
-    p_reading = VBA.vbNullString
+    a_details = VBA.vbNullString
+    a_reading = VBA.vbNullString
     
     If VBA.Len(p_routeCloseCommand) > 0 Then
     
         ' close the rear channel
         This.Session.WriteLine p_routeCloseCommand
+        
+        ' uinitiate a reading
         This.Session.WriteLine ":INIT"
-        This.Session.WriteLine ":READ?"
         
-        p_reading = This.Session.Read
+        ' take the reading.
         
-        OnChannelMeasured a_channelNumber, p_reading
-    
+        Dim p_command As String: p_command = ":READ?"
+        p_success = This.Session.TryQueryLine(p_command, a_reading, a_details)
+        If p_success Then
+            OnChannelMeasured a_channelNumber, a_reading
+        Else
+            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                " failed taking a rear reading using the command '" & p_command & "; " & a_details
+        End If
+   
     End If
 
-    TakeRearReading = p_reading
+    TryTakeRearReading = p_success
 
 End Function
 
@@ -319,10 +377,22 @@ End Function
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Sets the instrument to continuous auto range reading. </summary>
-''' <param name="a_function">    [String] The measurement function. </param>
-Public Sub ConfigureContinuousFunctionAutoRange(ByVal a_function As String)
+''' <summary>   Configure continuous trigger mode for the specified function
+''' abdpower line cycles. </summary>
+''' <param name="a_function">          [String] The measurement function. </param>
+''' <param name="a_details">           [Out, String] Details the information of why the instrument
+'''                                    failed to restore state. </param>
+''' <param name="a_powerLineCycles">   [Optional, Double, 1] number of power line cycle for
+'''                                    the reading aperture. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function TryConfigureContinuousFunctionAutoRange(ByVal a_function As String, _
+    ByRef a_details As String, Optional a_powerLineCycles As Double = 1#) As Boolean
 
+    Const p_procedureName = "TryConfigureContinuousFunctionAutoRange"
+
+    Dim p_success As Boolean: p_success = True
+    a_details = VBA.vbNullString
+    
     ' set function defaults
     ' This.Session.WriteLine ":RES:RANG:AUTO ON"
     ' This.Session.WriteLine ":RES:NPLC 1"
@@ -336,29 +406,75 @@ Public Sub ConfigureContinuousFunctionAutoRange(ByVal a_function As String)
     
     ' turn on continuous mode
     This.Session.WriteLine ":" & a_function & ":RANG:AUTO ON"
-    This.Session.WriteLine ":" & a_function & ":NPLC 1"
-    This.Session.WriteLine ":INIT:CONT ON"
+    This.Session.WriteLine ":" & a_function & ":NPLC " & Format(a_powerLineCycles, "#.###")
+    
+    Dim p_command As String: p_command = ":INIT:CONT ON"
+    p_command = p_command & ";*WAI;*OPC?"
+    Dim p_reply As String
+    p_success = This.Session.TryQueryLine(p_command, p_reply, a_details)
+    If p_success Then
+        If "1" <> p_reply Then _
+            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                " failed initiating continuous function mode; '" & p_command & "' returned '" & p_reply & _
+                "' instead of '1'."
+    Else
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            "; " & a_details
+    End If
+    
+    TryConfigureContinuousFunctionAutoRange = p_reply
 
-End Sub
+End Function
 
-''' <summary>   Restore continuous reading. </summary>
+''' <summary>   Restore the continuous trigger mode. </summary>
 ''' <remarks>   This is typically called to restore continuous mode without
-'''             chaning the function mode. </remarks>
-Public Sub RestoreContinuousReading()
+''' changing the function mode. </remarks>
+''' <param name="a_details">   [Out, String] Details the information of why the instrument
+'''                            failed to restore state. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function TryRestoreContinuousReading(ByRef a_details As String) As Boolean
 
+    Const p_procedureName = "TryRestoreContinuousReading"
+
+    Dim p_success As Boolean: p_success = True
+    a_details = VBA.vbNullString
+    
     This.Session.WriteLine ":INIT:CONT OFF"
     
     ' set the trigger source to immediate.
     This.TriggerSystem.SourceSetter TriggerSource.Immediate
 
-    This.Session.WriteLine ":INIT:CONT ON"
+    Dim p_command As String: p_command = ":INIT:CONT ON"
+    p_command = p_command & ";*WAI;*OPC?"
+    Dim p_reply As String
+    p_success = This.Session.TryQueryLine(p_command, p_reply, a_details)
+    If p_success Then
+        If "1" <> p_reply Then _
+            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                " failed restoring continuous reading mode; '" & p_command & "' returned '" & p_reply & _
+                "' instead of '1'."
+    Else
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            "; " & a_details
+    End If
+    
+    TryRestoreContinuousReading = p_success
 
-End Sub
+End Function
 
 ''' <summary>   Configures single function reading. </summary>
 ''' <param name="a_function">    [String] The measurement function. </param>
-Public Sub ConfigureSingleFunctionReading(ByVal a_function As String)
+''' <param name="a_details">     [Out, String] Details the information of why the instrument
+'''                              failed to restore state. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function TryConfigureSingleFunctionReading(ByVal a_function As String, _
+    ByRef a_details As String) As Boolean
 
+    Const p_procedureName = "TryRestoreContinuousReading"
+
+    Dim p_success As Boolean: p_success = True
+    a_details = VBA.vbNullString
+    
     ' reset is not applied on each configuration because it takes too long to complete.
     ' This.Session.WriteLine "*RST"
     
@@ -374,9 +490,23 @@ Public Sub ConfigureSingleFunctionReading(ByVal a_function As String)
     ' This.Session.WriteLine ":FUNC '" & a_function & "'"
     
     ' set reading format
-    This.Session.WriteLine ":FORM:ELEM READ"
+    
+    Dim p_command As String: p_command = ":FORM:ELEM READ"
+    p_command = p_command & ";*WAI;*OPC?"
+    Dim p_reply As String
+    If p_success Then
+        If "1" <> p_reply Then _
+            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                " failed configuring single function reading mode; '" & p_command & "' returned '" & p_reply & _
+                "' instead of '1'."
+    Else
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            "; " & a_details
+    End If
+    
+    TryConfigureSingleFunctionReading = p_success
 
-End Sub
+End Function
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
@@ -393,7 +523,15 @@ End Property
 
 ''' <summary>   Sets the instrument to detect the measurement available bit
 '''             of the status register upon receiving an external trigger. </summary>
-Public Sub EnableMeasurementAvailableMonitoring()
+''' <param name="a_details">           [Out, String] Details the information of why the instrument
+'''                                    failed to restore state. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function TryEnableMeasurementAvailableMonitoring(ByRef a_details As String) As Boolean
+
+    Const p_procedureName = "TryEnableMeasurementAvailableMonitoring"
+
+    Dim p_success As Boolean: p_success = True
+    a_details = VBA.vbNullString
 
     ' setup the status register so that we get a RQS
     ' on measurement available
@@ -406,9 +544,20 @@ Public Sub EnableMeasurementAvailableMonitoring()
     This.Session.WriteLine "STAT:PRES"
     
     ' enable the reading available bit of the measurement event register.
-    
-    This.Session.WriteLine "STAT:MEAS:ENAB 32"
-    
+    Dim p_command As String: p_command = "STAT:MEAS:ENAB 32"
+    p_command = p_command & ";*WAI;*OPC?"
+    Dim p_reply As String
+    p_success = This.Session.TryQueryLine(p_command, p_reply, a_details)
+    If p_success Then
+        If "1" <> p_reply Then _
+            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                " failed enabling measurement available monitoring; '" & p_command & "' returned '" & p_reply & _
+                "' instead of '1'."
+    Else
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            "; " & a_details
+    End If
+
 #If False Then
     ' legacy code used the operation register going to idle to indicate that
     ' a measurement is available. This did not work when testing
@@ -428,12 +577,23 @@ Public Sub EnableMeasurementAvailableMonitoring()
     
     This.ExtTrigInitiated = False
 
-End Sub
+    TryEnableMeasurementAvailableMonitoring = p_success
+    
+End Function
 
 ''' <summary> Sets the instrument to read using external trigger. </summary>
 ''' <remarks>   Typically, readings will be fetched when the instrument requests service. </remarks>
 ''' <param name="a_function">        [String] The measurement function. </param>
-Public Sub ConfigureExternalTriggerReading(ByVal a_function As String)
+''' <param name="a_details">         [Out, String] Details the information of why the instrument
+'''                                  failed to restore state. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function TryConfigureExternalTriggerReading(ByVal a_function As String, _
+    ByRef a_details As String) As Boolean
+
+    Const p_procedureName = "TryConfigureExternalTriggerReading"
+
+    Dim p_success As Boolean: p_success = True
+    a_details = VBA.vbNullString
 
     ' set reading format
     This.Session.WriteLine ":FORM:ELEM READ"
@@ -456,15 +616,31 @@ Public Sub ConfigureExternalTriggerReading(ByVal a_function As String)
     
     ' enable the detection of externally triggered measurement available.
     
-    Me.EnableMeasurementAvailableMonitoring
-  
-End Sub
+    p_success = Me.TryEnableMeasurementAvailableMonitoring(a_details)
+    If Not p_success Then _
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            "; " & a_details
+    
+    TryConfigureExternalTriggerReading = p_success
+    
+End Function
 
 ''' <summary>   Monitors an external trigger taking a reading from the front panel. </summary>
 ''' <remarks>   Call this method from a timer event. </remarks>
-''' <param name="a_channelNumber">   [Integer] The channel number. </param>
-''' <param name="a_isDone">          [Boolean] True if done. </param>
-Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDone As Boolean)
+''' <param name="a_channelNumber">     [Integer] The channel number. </param>
+''' <param name="a_isDone">            [Boolean] True if done. </param>
+''' <param name="a_details">           [Out, String] Details the information of why the instrument
+'''                                    failed to restore state. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function TryMonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDone As Boolean, _
+    ByRef a_details As String) As Boolean
+
+    Const p_procedureName = "TryMonitorExternalTrigger"
+
+    Dim p_success As Boolean: p_success = True
+    a_details = VBA.vbNullString
+
+    Dim p_command As String
 
     ' allow other events to occur
     VBA.DoEvents
@@ -485,15 +661,23 @@ Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDo
             ' the Service request bit might already be cleared at this point
             This.Device.ReadStatusByte True
             
-            ' fetch the data
-            This.Session.WriteLine ":FETCH?"
+            ' fetch and read the data
           
-            ' read the data
-            Dim p_reading As String: p_reading = This.Session.Read()
-
-            ' raise the channel measured event.
-            OnChannelMeasured a_channelNumber, p_reading
-          
+            p_command = ":FETCH?"
+            Dim p_reading As String
+            p_success = This.Session.TryQueryLine(p_command, p_reading, a_details)
+            If p_success Then
+            
+                ' raise the channel measured event.
+                OnChannelMeasured a_channelNumber, p_reading
+            
+            Else
+            
+                a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                    " failed reading; " & a_details
+            
+            End If
+                
         End If
     
     ElseIf Not a_isDone Then
@@ -513,7 +697,19 @@ Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDo
         
         ' initiate awaiting for the external trigger
         
-        This.Session.WriteLine ":INIT;*WAI;*CLS"
+        p_command = ":INIT"
+        p_command = p_command & ";*WAI;*OPC?"
+        Dim p_reply As String
+        p_success = This.Session.TryQueryLine(p_command, p_reply, a_details)
+        If p_success Then
+            If "1" <> p_reply Then _
+                a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                    " failed preparing for the next external trigger; '" & p_command & "' returned '" & p_reply & _
+                    "' instead of '1'."
+        Else
+            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                "; " & a_details
+        End If
         
         ' and indicate that external triggering was initiated
         
@@ -521,7 +717,7 @@ Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDo
     
     End If
     
-    ' check if the option button is on
+    ' check if done
     If a_isDone Then
     
         ' if we are done,
@@ -536,7 +732,11 @@ Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDo
         
         This.Device.ClearExecutionState
         
-        Me.RestoreContinuousReading
+        p_success = Me.TryRestoreContinuousReading(a_details)
+        
+        If Not p_success Then _
+            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                "; " & a_details
         
         ' these were replaced with restoration of
         ' Continuous reading method above.
@@ -554,7 +754,9 @@ Public Sub MonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDo
             
     End If
 
-End Sub
+    TryMonitorExternalTrigger = p_success
+    
+End Function
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
@@ -668,11 +870,13 @@ End Property
 ''' <remarks>   Call this method upon connecting and restoring Initial State. </remarks>
 ''' <param name="a_details">   [Out, String] Details the information of why the instrument
 '''                            failed to restore state. </param>
+''' <returns>   [Boolean]. </returns>
 Public Function TryConfigureInitialState(ByRef a_details As String) As Boolean
 
     Const p_procedureName As String = "TryConfigureInitialState"
 
     Dim p_success As Boolean: p_success = True
+    a_details = VBA.vbNullString
     
     If p_success Then
     
@@ -690,6 +894,7 @@ End Function
 ''' <returns>   [Boolean]. </returns>
 Public Function ShouldRestoreInitialState(ByRef a_details As String) As Boolean
 
+    a_details = VBA.vbNullString
     If This.Device Is Nothing Then
         a_details = "The IEEE 488 device instance is nothing."
         ShouldRestoreInitialState = True
@@ -718,18 +923,23 @@ End Function
 ''' <returns>   [Boolean] true if restored. </returns>
 Public Function TryRestoreInitialState(ByRef a_details As String) As Boolean
 
+    Const p_procedureName As String = "TryConfigureInitialState"
+    
     Dim p_success As Boolean: p_success = True
+    a_details = VBA.vbNullString
     
     If p_success And This.Device Is Nothing Then
     
-        a_details = "Unable to restore state because the IEEE 488 device was disposed. Please restart the program."
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            " unable to restore state because the IEEE 488 device was disposed. Please restart the program."
         p_success = False
     
     End If
     
     If p_success And This.Session Is Nothing Then
     
-        a_details = "Unable to restore state because the Tcp Session was disposed. Please restart the program."
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            "; unable to restore state because the Tcp Session was disposed. Please restart the program."
         p_success = False
     
     End If
@@ -737,7 +947,8 @@ Public Function TryRestoreInitialState(ByRef a_details As String) As Boolean
     If p_success Then
     
         If This.Session Is Nothing Then
-            a_details = "Unable to restore state because the Tcp Session was disposed. Please restart the program."
+            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                "; unable to restore state because the Tcp Session was disposed. Please restart the program."
             p_success = False
         End If
     
@@ -758,22 +969,28 @@ Public Function TryRestoreInitialState(ByRef a_details As String) As Boolean
         p_success = This.Session.Socket.CanConnect
         
         If Not p_success Then
-            a_details = "Failed initializing the socket; the socket id is invalid ('" & _
+            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                    " failed initializing the socket; the socket id is invalid ('" & _
                 VBA.CStr(cc_isr_Winsock.ws32_INVALID_SOCKET) & "')."
         End If
     
     End If
     
     If p_success Then
-    
         p_success = This.Device.TryRestoreInitialState(a_details)
-    
+        If Not p_success Then _
+            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                "; " & a_details
     End If
     
     If p_success Then
     
         ' configure the initial state
         p_success = Me.TryConfigureInitialState(a_details)
+    
+        If Not p_success Then _
+            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                "; " & a_details
     
     End If
 
