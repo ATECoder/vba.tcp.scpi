@@ -1288,6 +1288,7 @@ Public Function TestShouldConfigureExternalMode() As cc_isr_Test_Fx.Assert
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
+    Dim p_details As String: p_details = VBA.vbNullString
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then
@@ -1300,7 +1301,13 @@ Public Function TestShouldConfigureExternalMode() As cc_isr_Test_Fx.Assert
         
         ' configure external mode with front switch.
         This.ViewModel.FrontInputsRequired = True
-        This.ViewModel.ConfigureExternalTriggerReadingCommand
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.ConfigureExternalTriggerReadingCommand(p_details), _
+            p_details)
+        
+    End If
+    
+    If p_outcome.AssertSuccessful Then
         
         Dim p_expectedSenseFunctionName As String: p_expectedSenseFunctionName = This.ExternalSenseFunctionName
         Dim p_actualSenseFunctionName As String:
@@ -1412,6 +1419,8 @@ Public Function TestShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
+    Dim p_details As String: p_details = VBA.vbNullString
+    
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then
@@ -1424,7 +1433,13 @@ Public Function TestShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
         
         ' configure external mode with front switch.
         This.ViewModel.FrontInputsRequired = True
-        This.ViewModel.ConfigureExternalTriggerReadingCommand
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.ConfigureExternalTriggerReadingCommand(p_details), _
+            p_details)
+        
+    End If
+    
+    If p_outcome.AssertSuccessful Then
         
         Dim p_expectedSenseFunctionName As String: p_expectedSenseFunctionName = This.ExternalSenseFunctionName
         Dim p_actualSenseFunctionName As String:

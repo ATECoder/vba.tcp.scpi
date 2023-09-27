@@ -6,7 +6,21 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
+IEEE488:
+Add check for NaN, and Negative and positive infinity.
+
+Scpi:
+Parse reading using try code.
+Update configuration methods in line with immediate mode.
+Add parameter and return value to configuration commands.
+ 
+
 ## TODO
+
+implement configure continuous like immediate.
+implement configure external like immediate
+
+
 
 SCPI:
 ran all tests.

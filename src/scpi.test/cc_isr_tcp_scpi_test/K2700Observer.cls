@@ -480,7 +480,7 @@ End Sub
 ''' <summary>   Handles the external trigger option button change and click events. </summary>
 Friend Sub ExternalTriggerOptionButton_Change()
     If This.ExternalTriggerOptionExecutable Then
-        This.ViewModel.ConfigureExternalTriggerReadingCommand
+         Me.LastCommandOutcome = This.ViewModel.ConfigureExternalTriggerReadingCommand(Me.LastCommandDetails)
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me), "._Click", _
@@ -1901,12 +1901,19 @@ Friend Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Chan
     
     Me.MeasuredReading = a_eventArgs.Reading
     Me.MeasuredChannelNumber = a_eventArgs.ChannelNumber
+        
+    Dim p_value As Double
+    Dim p_details As String
     
     If VBA.vbNullString = a_eventArgs.Reading Then
-        Me.MeasuredValue = -1#
+        p_value = -1#
     Else
-        Me.MeasuredValue = CDbl(a_eventArgs.Reading)
+        If Not cc_isr_Core.StringExtensions.TryParseDouble(a_eventArgs.Reading, p_value, p_details) Then
+            p_value = -1#
+        End If
     End If
+    Me.MeasuredValue = p_value
+    
     SetReading Me.MeasuredChannelNumber, Me.MeasuredValue
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .

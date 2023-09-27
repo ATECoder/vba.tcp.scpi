@@ -195,34 +195,34 @@ Public Function InitializeLegacy(ByVal a_address As String, _
 
     Const p_procedureName = "InitializeLegacy"
     
-    Dim p_success As Boolean: p_success = True
-    a_details = VBA.vbNullString
+    Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
+    Dim p_details As String: p_details = VBA.vbNullString
     
-    p_success = This.Session.Socket.TryOpenConnection(a_address, a_timeout, a_details)
-    If Not p_success Then _
-        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-            "; " & a_details
+    p_success = This.Session.Socket.TryOpenConnection(a_address, a_timeout, p_details)
     
     If p_success Then
+        
         ' reset clear the device.
         This.Session.SelectiveDeviceClear
+    
     End If
     
     If p_success Then
         
-        p_success = This.Device.TryResetKnownState(a_details)
-        
+        p_success = This.Device.TryResetKnownState(p_details)
+    
         If Not p_success Then _
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                "; " & a_details
-    
+            p_details = "Failed resetting the IEEE488 device to its known state; " & p_details
+        
     End If
     
     If p_success Then
+    
         p_success = This.Device.TryClearExecutionState(a_details)
+        
         If Not p_success Then _
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                "; " & a_details
+            p_details = "Failed clearing the IEEE488 device execution state; " & p_details
+    
     End If
     
     If p_success Then
@@ -236,12 +236,16 @@ Public Function InitializeLegacy(ByVal a_address As String, _
         Me.RouteSystem.DefineFunctionScanLists a_function
         
         ' turn on continuous auto range
-        p_success = Me.TryConfigureContinuousFunctionAutoRange(a_function, a_details)
+        p_success = Me.TryConfigureContinuousFunctionAutoRange(a_function, p_details)
+        
         If Not p_success Then _
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                "; " & a_details
+            a_details = "Failed configuring continuous mode; " & p_details
         
     End If
+    
+    If Not p_success Then _
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            " failed configuring continous trigger mode; " & p_details
 
     InitializeLegacy = p_success
     
@@ -299,17 +303,18 @@ Public Function TryTakeFrontReading(ByRef a_reading As String, ByRef a_details A
     Const p_procedureName = "TryTakeFrontReading"
     
     Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
+    Dim p_details As String: p_details = VBA.vbNullString
     a_reading = VBA.vbNullString
 
     ' trigger and fetch a reading
     
     Dim p_command As String: p_command = ":INIT;*WAI;:READ?"
-    p_success = This.Session.TryQueryLine(p_command, a_reading, a_details)
+    p_success = This.Session.TryQueryLine(p_command, a_reading, p_details)
     If p_success Then
         OnChannelMeasured a_channelNumber, a_reading
     Else
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-            " failed taking a front reading using the command '" & p_command & "; " & a_details
+            " failed taking a front reading using the command '" & p_command & "; " & p_details
     End If
     
     TryTakeFrontReading = p_success
@@ -331,38 +336,48 @@ Public Function TryTakeRearReading(ByVal a_channelNumber As Integer, _
 
     Const p_procedureName = "TryTakeRearReading"
     
-    Dim p_success As Boolean: p_success = True
-    a_details = VBA.vbNullString
+    Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
+    Dim p_details As String: p_details = VBA.vbNullString
+    Dim p_command As String
     
     ' get the channel close command
     Dim p_routeCloseCommand As String
     On Error Resume Next
+    
     p_routeCloseCommand = This.RouteSystem.GetRouteCloseCommand(a_channelNumber)
+    
     On Error GoTo 0
     
-    a_details = VBA.vbNullString
     a_reading = VBA.vbNullString
     
     If VBA.Len(p_routeCloseCommand) > 0 Then
     
         ' close the rear channel
-        This.Session.WriteLine p_routeCloseCommand
+        p_command = p_routeCloseCommand & ";*WAI;*OPC?"
+        p_success = This.Session.TryQueryLine(p_command, a_reading, p_details)
+        If Not p_success Then _
+            p_details = "Failed closing channel #" & VBA.CStr(a_channelNumber) & _
+                " using the command '" & p_command & "; " & p_details
         
-        ' uinitiate a reading
-        This.Session.WriteLine ":INIT"
-        
-        ' take the reading.
-        
-        Dim p_command As String: p_command = ":READ?"
-        p_success = This.Session.TryQueryLine(p_command, a_reading, a_details)
         If p_success Then
-            OnChannelMeasured a_channelNumber, a_reading
-        Else
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                " failed taking a rear reading using the command '" & p_command & "; " & a_details
+        
+            ' trigger and fetch a reading
+            
+            p_command = ":INIT;*WAI;:READ?"
+            p_success = This.Session.TryQueryLine(p_command, a_reading, p_details)
+            If p_success Then
+                OnChannelMeasured a_channelNumber, a_reading
+            Else
+                p_details = "Failed taking a rear reading using the command '" & p_command & "; " & p_details
+            End If
+        
         End If
-   
+        
     End If
+
+    If Not p_success Then _
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            " " & p_details
 
     TryTakeRearReading = p_success
 
@@ -615,8 +630,8 @@ Public Function TryMonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVa
 
     Const p_procedureName = "TryMonitorExternalTrigger"
 
-    Dim p_success As Boolean: p_success = True
-    a_details = VBA.vbNullString
+    Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
+    Dim p_details As String: p_details = VBA.vbNullString
 
     Dim p_command As String
 
@@ -643,7 +658,7 @@ Public Function TryMonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVa
           
             p_command = ":FETCH?"
             Dim p_reading As String
-            p_success = This.Session.TryQueryLine(p_command, p_reading, a_details)
+            p_success = This.Session.TryQueryLine(p_command, p_reading, p_details)
             If p_success Then
             
                 ' raise the channel measured event.
@@ -651,8 +666,7 @@ Public Function TryMonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVa
             
             Else
             
-                a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                    " failed reading; " & a_details
+                a_details = "Failed fetching a reading; " & a_details
             
             End If
                 
@@ -676,18 +690,9 @@ Public Function TryMonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVa
         ' initiate awaiting for the external trigger
         
         p_command = ":INIT"
-        p_command = p_command & ";*WAI;*OPC?"
-        Dim p_reply As String
-        p_success = This.Session.TryQueryLine(p_command, p_reply, a_details)
-        If p_success Then
-            If "1" <> p_reply Then _
-                a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                    " failed preparing for the next external trigger; '" & p_command & "' returned '" & p_reply & _
-                    "' instead of '1'."
-        Else
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                "; " & a_details
-        End If
+        p_success = This.Device.TryApplyCommandAwaitOperationCompleted(p_command, p_details)
+        If Not p_success Then _
+            p_details = "Failed preparing for the next external trigger; " & p_details
         
         ' and indicate that external triggering was initiated
         
@@ -710,11 +715,10 @@ Public Function TryMonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVa
         
         This.Device.ClearExecutionState
         
-        p_success = Me.TryRestoreContinuousReading(a_details)
+        p_success = Me.TryRestoreContinuousReading(p_details)
         
         If Not p_success Then _
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                "; " & a_details
+            a_details = "Failed restoring continuous reading; " & p_details
         
         ' these were replaced with restoration of
         ' Continuous reading method above.
@@ -731,6 +735,11 @@ Public Function TryMonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVa
         This.ExtTrigInitiated = False
             
     End If
+    
+    If Not p_success Then _
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            " " & p_details
+    
 
     TryMonitorExternalTrigger = p_success
     
@@ -761,7 +770,7 @@ End Property
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Gets true if the instrument is configured for taking
-'''             immeidate measurments. </summary>
+'''             immediate measurments. </summary>
 ''' <value>   [Boolean]. </value>
 Public Property Get CanTakeImmediateMeasurement() As Boolean
     

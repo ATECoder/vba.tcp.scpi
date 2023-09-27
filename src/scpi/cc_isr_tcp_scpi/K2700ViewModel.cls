@@ -2928,22 +2928,26 @@ Friend Function TryConfigureIntitialTriggerMode(ByRef a_details As String) As Bo
     Const p_procedureName = "TryConfigureIntitialTriggerMode"
     
     Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
+    Dim p_details As String: p_details = VBA.vbNullString
     
     If cc_isr_Tcp_Scpi.MeasurementMode.Continuous <> This.CurrentMeasurementMode Then
+        
         ' reset if changing modes.
-        p_success = This.K2700.Device.TryResetKnownState(a_details)
+        p_success = This.K2700.Device.TryResetKnownState(p_details)
+        
         If Not p_success Then _
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                "; " & a_details
+            p_details = "Failed resetting the IEEE488 device to its known state; " & p_details
+    
     End If
     
     If p_success Then
+    
         ' clear execution state
-        p_success = This.K2700.Device.TryClearExecutionState(a_details)
+        p_success = This.K2700.Device.TryClearExecutionState(p_details)
         
         If Not p_success Then _
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                "; " & a_details
+            p_details = "Failed clearing the IEEE488 device execution state; " & p_details
+    
     End If
     
     If p_success Then
@@ -2952,28 +2956,34 @@ Friend Function TryConfigureIntitialTriggerMode(ByRef a_details As String) As Bo
         Me.SenseFunctionName = This.ContinuousSenseFunctionName
 
         ' configure measuring a single value on each read.
-        p_success = This.K2700.TryConfigureContinuousFunctionAutoRange(This.SenseFunctionName, a_details)
+        p_success = This.K2700.TryConfigureContinuousFunctionAutoRange(This.SenseFunctionName, p_details)
+        
         If Not p_success Then _
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                "; " & a_details
+            p_details = "Failed configuring continous trigger state; " & p_details
         
         If p_success Then
         
             ' validate the sense function.
-            p_success = Me.TryValidateSenseFunction(This.SenseFunctionName, a_details)
+            p_success = Me.TryValidateSenseFunction(This.SenseFunctionName, p_details)
         
             If Not p_success Then _
-                a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                    " failed setting the sense function; " & a_details
+                p_details = "Failed setting the sense function; " & p_details
         
         End If
         
     End If
+ 
+    ' enable the mode executables and conditions.
+    If p_success Then _
+        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementMode.Continuous, "continuous"
+
+    If Not p_success Then _
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            " failed configuring initial trigger mode; " & p_details
     
     TryConfigureIntitialTriggerMode = p_success
     
 End Function
-
 
 ''' <summary>   Internal. Configures the intial trigger mode to continuous trigger mode. </summary>
 ''' <exception cref="cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError">   Thrown if this method
@@ -2995,9 +3005,6 @@ Friend Sub ConfigureIntitialTriggerMode()
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
-
-    ' enable the mode executables and conditions.
-    Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementMode.Continuous, "continuous"
 
     On Error GoTo 0
     Exit Sub
@@ -3029,38 +3036,37 @@ Friend Function TryConfigureContinuousMode(ByRef a_details As String) As Boolean
     Const p_procedureName = "TryConfigureContinuousMode"
     
     Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
+    Dim p_details As String: p_details = VBA.vbNullString
 
     ' return failure if the initial state was not restored before this method.
-    p_success = Me.ShouldRestoreInitialState(a_details)
+    p_success = Not Me.ShouldRestoreInitialState(p_details)
     
     If Not p_success Then _
-        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-            " failed configuring continuous mode because the instrument is not ready; " & a_details
+        p_details = "Restoring initial state failed; " & p_details
 
     If p_success Then
     
         ' reset if changing modes.
         If cc_isr_Tcp_Scpi.MeasurementMode.Continuous <> This.CurrentMeasurementMode Then
             
-            p_success = This.K2700.Device.TryResetKnownState(a_details)
+            p_success = This.K2700.Device.TryResetKnownState(p_details)
         
             If Not p_success Then _
-                a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                    " failed resetting the instrument known state; " & a_details
+                p_details = "Failed resetting the IEEE488 device to its known state; " & p_details
         
         End If
     
     End If
     
-    
     ' clear execution state
     
     If p_success Then
-        p_success = This.K2700.Device.TryClearExecutionState(a_details)
+        
+        p_success = This.K2700.Device.TryClearExecutionState(p_details)
     
         If Not p_success Then _
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                " failed clearing the instrument execution state; " & a_details
+            p_details = "Failed clearing the IEEE488 device execution state; " & p_details
+    
     End If
 
     If p_success Then
@@ -3068,102 +3074,83 @@ Friend Function TryConfigureContinuousMode(ByRef a_details As String) As Boolean
         Me.SenseFunctionName = This.ContinuousSenseFunctionName
     
         ' configure measuring a single value on each read.
-        p_success = This.K2700.TryConfigureContinuousFunctionAutoRange(This.SenseFunctionName, a_details)
+        p_success = This.K2700.TryConfigureContinuousFunctionAutoRange(This.SenseFunctionName, p_details)
         
         If Not p_success Then _
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                " failed configuring continuous function auto mode; " & a_details
+            p_details = "Failed configuring the 2700 continuous trigger mode; " & p_details
         
     End If
 
     If p_success Then
     
         ' validate the sense function.
-        p_success = Me.TryValidateSenseFunction(This.SenseFunctionName, a_details)
+        p_success = Me.TryValidateSenseFunction(This.SenseFunctionName, p_details)
     
         If Not p_success Then _
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                " failed setting sense function; " & a_details
+            p_details = "Failed setting the 2700 instrument sense function; " & p_details
     
     End If
+    
+    ' enable the mode executables and conditions.
+    If p_success Then _
+        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementMode.Continuous, "continuous"
+    
+    If Not p_success Then _
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            " failed configuring continuous mode; " & p_details
 
     TryConfigureContinuousMode = p_success
     
 End Function
 
-''' <summary>   Internal. Configures continuous trigger mode. </summary>
-''' <remarks>   This method requires that the instrument be connected as per
-''' <see cref=TryRestoreInitialState"/>. This method disables both the trigger
-''' monitoring executable and disable the immediate reading executable (Measure). </remarks>
-Friend Sub ConfigureContinuousMode()
-
-    Const p_procedureName = "ConfigureContinuousMode"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    ' throw an error if failed to configure
-    Dim p_details As String: p_details = VBA.vbNullString
-    If Not Me.TryConfigureContinuousMode(p_details) Then _
-        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " Failed configuring continuous mode; " & p_details
-            
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    ' enable the mode executables and conditions.
-    Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementMode.Continuous, "continuous"
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' enqueue the error or append its source to the last error.
-    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
 ''' <summary>   Configure continuous trigger mode. </summary>
-Public Sub ConfigureContinuousModeCommand()
+''' <param name="a_details">   [Out, String] Details why the command failed. </param>
+''' <returns>   [Boolean] True if the command succeeded. </returns>
+Public Function ConfigureContinuousModeCommand(ByVal a_details As String) As Boolean
 
     Const p_procedureName = "ConfigureContinuousModeCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
+    Dim p_success As Boolean: p_success = False
+    Dim p_details As String: p_details = VBA.vbNullString
+    
     ' restore the instrument state if it had a power toggle.
     
-    Dim p_details As String
-    If Not Me.TryRestoreInitialState(p_details) Then _
+    p_success = Me.TryRestoreInitialState(p_details)
+    
+    If Not p_success Then
+        a_details = "Failed restoring initial state; " & p_details
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " Failed restoring initial state; " & p_details
+            " " & a_details
+    End If
 
-    ' executed the specific actions for configuring conditinuous mode.
+    ' configure for continuous trigger
+
+    p_success = Me.TryConfigureContinuousMode(p_details)
     
-    Me.ConfigureContinuousMode
+    ' throw an error if failed to configure
+    
+    If Not p_success Then
+        a_details = "Failed configuring continuous trigger mode; " & p_details
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " " & a_details
+    End If
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
+    ConfigureContinuousModeCommand = p_success
     On Error GoTo 0
-    Exit Sub
+    Exit Function
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 err_Handler:
+
+    p_success = False
   
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
@@ -3174,13 +3161,20 @@ err_Handler:
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
 
+    ' this primarily is for unit testing.
+    a_details = Me.LastErrorMessage
+
     ' exit this procedure (not an active handler)
     On Error Resume Next
     GoTo exit_Handler
 
-End Sub
+End Function
 
 ''' <summary>   Internal. Tries to configure the external trigger reading mode. </summary>
+''' <remarks>   This method requires that instrument be connected as per
+''' <see cref=TryRestoreInitialState"/> and inputs are set as required.
+''' This method enables the trigger monitoring executable and disables the
+''' immediate reading executable (Measure). </remarks>
 ''' <param name="a_details">   [Out, String] Details the information of why the instrument
 '''                            failed to restore state. </param>
 ''' <returns>   [Boolean]. </returns>
@@ -3189,40 +3183,38 @@ Friend Function TryConfigureExternalTriggerReading(ByRef a_details As String) As
     Const p_procedureName = "TryConfigureExternalTriggerReading"
     
     Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
+    Dim p_details As String: p_details = VBA.vbNullString
 
     ' return failure if the initial state was not restored before this method.
-    p_success = Me.ShouldRestoreInitialState(a_details)
+    p_success = Not Me.ShouldRestoreInitialState(p_details)
     
     If Not p_success Then _
-        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-            " failed configuring external trigger reading mode because the instrument is not ready; " & a_details
+        p_details = "Restoring initial state failed; " & p_details
 
     If p_success Then
     
         ' reset if changing modes.
-        If cc_isr_Tcp_Scpi.MeasurementMode.External <> This.CurrentMeasurementMode Then
+        If cc_isr_Tcp_Scpi.MeasurementMode.Continuous <> This.CurrentMeasurementMode Then
             
-            p_success = This.K2700.Device.TryResetKnownState(a_details)
+            p_success = This.K2700.Device.TryResetKnownState(p_details)
         
             If Not p_success Then _
-                a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                    " failed resetting the instrument known state; " & a_details
+                p_details = "Failed resetting the IEEE488 device to its known state; " & p_details
         
         End If
     
     End If
     
-    
     ' clear execution state
     
     If p_success Then
-        p_success = This.K2700.Device.TryClearExecutionState(a_details)
+    
+        p_success = This.K2700.Device.TryClearExecutionState(p_details)
     
         If Not p_success Then _
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                " failed clearing the instrument execution state; " & a_details
+            p_details = "Failed clearing the IEEE488 device execution state; " & p_details
+    
     End If
-
 
     If p_success Then
     
@@ -3230,11 +3222,10 @@ Friend Function TryConfigureExternalTriggerReading(ByRef a_details As String) As
         
         Me.SenseFunctionName = This.ExternalSenseFunctionName
         
-        p_success = This.K2700.TryConfigureExternalTriggerReading(This.SenseFunctionName, a_details)
+        p_success = This.K2700.TryConfigureExternalTriggerReading(This.SenseFunctionName, p_details)
         
         If Not p_success Then _
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                " failed configuring external trigger reading mode; " & a_details
+            p_details = "Failed configuring the 2700 external trigger reading mode; " & p_details
     
     End If
     
@@ -3262,70 +3253,29 @@ Friend Function TryConfigureExternalTriggerReading(ByRef a_details As String) As
     If p_success Then
     
         ' validate the sense function.
-        p_success = Me.TryValidateSenseFunction(This.SenseFunctionName, a_details)
+        p_success = Me.TryValidateSenseFunction(This.SenseFunctionName, p_details)
     
         If Not p_success Then _
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                " failed setting the sense function; " & a_details
+            p_details = "Failed setting the 2700 instrument sense function; " & p_details
     
     End If
+
+    ' enable the mode executables and conditions.
+    If p_success Then _
+        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementMode.External, "external trigger mode"
+    
+    If Not p_success Then _
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            " failed configuring external trigger readings; " & p_details
 
     TryConfigureExternalTriggerReading = p_success
     
 End Function
 
-''' <summary>   Internal. Configures external trigger reading mode. </summary>
-''' <remarks>   This method requires that instrument be connected as per
-''' <see cref=TryRestoreInitialState"/> and inputs are set as required.
-''' This method enables the trigger monitoring executable and disables the
-''' immediate reading executable (Measure). </remarks>
-Friend Sub ConfigureExternalTriggerReading()
-
-    Const p_procedureName = "ConfigureExternalTriggerReading"
-    
-    ' Trap errors to the error handler
-    
-    On Error GoTo err_Handler
-    
-    ' throw an error if configuring failed
-    
-    Dim p_details As String: p_details = VBA.vbNullString
-    If Not Me.TryConfigureExternalTriggerReading(p_details) Then _
-        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " failed configuring external trigger reading mode; " & p_details
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-    
-    ' enable the mode executables and conditions.
-    Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementMode.External, "external trigger mode"
-    
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' enqueue the error or append its source to the last error.
-    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-
-End Sub
-
-
 ''' <summary>   Configures external trigger reading mode. </summary>
-Public Sub ConfigureExternalTriggerReadingCommand()
+''' <param name="a_details">   [Out, String] Details why the command failed. </param>
+''' <returns>   [Boolean] True if the command succeeded. </returns>
+Public Function ConfigureExternalTriggerReadingCommand(ByRef a_details As String) As Boolean
 
     Const p_procedureName = "ConfigureExternalTriggerReadingCommand"
 
@@ -3333,31 +3283,61 @@ Public Sub ConfigureExternalTriggerReadingCommand()
     
     On Error GoTo err_Handler
 
+    Dim p_success As Boolean: p_success = False
+    Dim p_details As String: p_details = VBA.vbNullString
+    
     ' restore the instrument state if it had a power toggle.
     
-    Dim p_details As String
-    If Not Me.TryRestoreInitialState(p_details) Then _
+    p_success = Me.TryRestoreInitialState(p_details)
+    
+    If Not p_success Then
+        a_details = "Failed restoring initial state; " & p_details
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " Failed restoring initial state; " & p_details
+            " " & a_details
+    End If
     
     ' exit if inputs are not in the correct settings
 
-    If Me.ValidateInputs(Me.LastMessage) Then
+    If p_success Then
     
-        Me.ConfigureExternalTriggerReading
+        p_success = Me.ValidateInputs(p_details)
         
+        If p_success Then
+    
+            ' configure for external trigger readings
+            p_success = Me.TryConfigureExternalTriggerReading(p_details)
+            
+            If Not p_success Then
+            
+                a_details = "Failed configuring external trigger reading mode; " & p_details
+                cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                    ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                    " " & a_details
+            End If
+            
+        Else
+        
+            Me.LastMessage = p_details
+            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                " failed restoring initial state; " & p_details
+        
+        End If
+    
     End If
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
+    ConfigureExternalTriggerReadingCommand = p_success
     On Error GoTo 0
-    Exit Sub
+    Exit Function
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 err_Handler:
   
+    p_success = False
+    
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
@@ -3367,12 +3347,15 @@ err_Handler:
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
 
+    ' this primarily is for unit testing.
+    a_details = Me.LastErrorMessage
+
     ' exit this procedure (not an active handler)
     On Error Resume Next
     GoTo exit_Handler
 
 
-End Sub
+End Function
 
 
 ''' <summary>   Tries to configure the immediate trigger reading mode. </summary>
@@ -3393,7 +3376,7 @@ Public Function TryConfigureImmediateTriggerReadings(ByRef a_details As String) 
     p_success = Not Me.ShouldRestoreInitialState(p_details)
     
     If Not p_success Then _
-        p_details = "Failed configuring external trigger reading mode because the instrument is not ready; " & p_details
+        p_details = "Restoring initial state failed; " & p_details
 
     If p_success Then
     
@@ -3403,7 +3386,7 @@ Public Function TryConfigureImmediateTriggerReadings(ByRef a_details As String) 
             p_success = This.K2700.Device.TryResetKnownState(p_details)
         
             If Not p_success Then _
-                a_details = "Failed resetting the IEEE488 device to its known state; " & p_details
+                p_details = "Failed resetting the IEEE488 device to its known state; " & p_details
         
         End If
     
@@ -3417,7 +3400,7 @@ Public Function TryConfigureImmediateTriggerReadings(ByRef a_details As String) 
         p_success = This.K2700.Device.TryClearExecutionState(p_details)
     
         If Not p_success Then _
-            a_details = "Failed clearing the IEEE488 device execution state; " & p_details
+            p_details = "Failed clearing the IEEE488 device execution state; " & p_details
     
     End If
 
@@ -3443,26 +3426,20 @@ Public Function TryConfigureImmediateTriggerReadings(ByRef a_details As String) 
     
     End If
     
-    If p_success Then
-    
-        ' upon success, notify that the immeidate mode was set
-        ' and set the relevant controls.
-    
-        ' enable the mode executables and conditions.
+    ' enable the mode executables and conditions.
+    If p_success Then _
         Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementMode.Immediate, "immediate mode"
     
-    Else
-    
+    If Not p_success Then _
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-            " failed configuring immeriate trigger readings; " & p_details
+            " failed configuring immediate trigger readings; " & p_details
     
-    End If
    
     TryConfigureImmediateTriggerReadings = p_success
 
 End Function
 
-''' <summary>   Configures immediate trigger redading mode. </summary>
+''' <summary>   Configures immediate trigger reading mode. </summary>
 ''' <param name="a_details">   [Out, String] Details why the command failed. </param>
 ''' <returns>   [Boolean] True if the command succeeded. </returns>
 Public Function ConfigureImmediateTriggerReadingsCommand(ByRef a_details As String) As Boolean
@@ -4348,12 +4325,15 @@ Private Sub HandleTimerEvent()
     p_success = This.K2700.TryMonitorExternalTrigger(p_channelNumber, p_isDone, p_details)
     
     If Not p_success Then
+    
         ' if monitoring failed, request a stop and report.
         Me.StopRequested = True
+        
         cc_isr_Core_IO.UserDefinedErrors.EnqueueError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
             " failed handling timer event; " & p_details
         Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
     End If
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
