@@ -1057,6 +1057,7 @@ Public Function ClearExecutionStateCommand(ByVal a_details As String) As Boolean
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
+    ClearExecutionStateCommand = p_success
     On Error GoTo 0
     Exit Function
 
@@ -2859,6 +2860,13 @@ End Property
 ''' <returns>   [Boolean]. </returns>
 Public Function ValidateInputs(ByRef a_userMessage As String) As Boolean
 
+
+    ' synchronize.
+    ' Me.Device.TryQueryOperationCompleted(p_details)
+    
+    ' query front switch has been returning false values until this cludge was added.
+    cc_isr_Core_IO.Factory.NewStopwatch.Wait 10
+    
     ' gets the front input condition: True is Front.
     This.FrontInputsValue = This.K2700.ScpiSystem.QueryFrontSwitch
     
@@ -3382,7 +3390,7 @@ Public Function TryConfigureImmediateTriggerReadings(ByRef a_details As String) 
     Dim p_details As String: p_details = VBA.vbNullString
 
     ' return failure if the initial state was not restored before this method.
-    p_success = Me.ShouldRestoreInitialState(p_details)
+    p_success = Not Me.ShouldRestoreInitialState(p_details)
     
     If Not p_success Then _
         p_details = "Failed configuring external trigger reading mode because the instrument is not ready; " & p_details
@@ -3412,7 +3420,6 @@ Public Function TryConfigureImmediateTriggerReadings(ByRef a_details As String) 
             a_details = "Failed clearing the IEEE488 device execution state; " & p_details
     
     End If
-
 
     If p_success Then
     
@@ -3603,10 +3610,12 @@ Public Function TryMeasureImmediately(ByRef a_details As String) As Boolean
             Me.RestartStopper
             If Me.FrontInputsValue Then
                 p_success = This.K2700.TryTakeFrontReading(p_reading, p_details, p_channelNumber)
-                p_details = "Failed taking a front reading; " & p_details
+                If Not p_success Then _
+                    p_details = "Failed taking a front reading; " & p_details
             Else
                 p_success = This.K2700.TryTakeRearReading(p_channelNumber, p_reading, p_details)
-                p_details = "Failed taking a rear reading; " & p_details
+                If Not p_success Then _
+                    p_details = "Failed taking a rear reading; " & p_details
             End If
             Me.ReadStopper
     
@@ -3622,10 +3631,12 @@ Public Function TryMeasureImmediately(ByRef a_details As String) As Boolean
         
         If Me.FrontInputsValue Then
             p_success = This.K2700.TryTakeFrontReading(p_reading, p_details, p_channelNumber)
+            If Not p_success Then _
                 p_details = "Failed taking a front reading; " & p_details
         Else
             p_success = This.K2700.TryTakeRearReading(p_channelNumber, p_reading, p_details)
-            p_details = "Failed taking a rear reading; " & p_details
+            If Not p_success Then _
+                p_details = "Failed taking a rear reading; " & p_details
         End If
         
         Me.ReadStopper
@@ -3660,6 +3671,13 @@ Public Function MeasureImmediatelyCommand(ByRef a_details As String) As Boolean
         ' This.K2700.InitializeLegacy Me.host, Me.port, Me.SessionTimeout
     End If
 
+    ' synchronize.
+    p_success = Me.Device.TryQueryOperationCompleted(p_details)
+    
+    ' validate inputs was returning false values until this cludge was added.
+    cc_isr_Core_IO.Factory.NewStopwatch.Wait 10
+    
+    ' Validate inputs is returning an incorrect value quite often
     p_success = Me.ValidateInputs(p_details)
     
     If p_success Then
@@ -3670,8 +3688,9 @@ Public Function MeasureImmediatelyCommand(ByRef a_details As String) As Boolean
         Me.ExternalTriggerOptionExecutable = False
     
         ' throw an error if measurement failed
+        p_success = Me.TryMeasureImmediately(p_details)
         
-        If Not Me.TryMeasureImmediately(p_details) Then
+        If Not p_success Then
         
             cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
                 ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
@@ -3682,6 +3701,7 @@ Public Function MeasureImmediatelyCommand(ByRef a_details As String) As Boolean
     Else
     
         Me.LastMessage = p_details
+        a_details = p_details
         
     End If
     
@@ -4785,11 +4805,10 @@ Private Sub m_socket_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Conne
         Dim p_details As String
          
         ' configure the initial state
-    Me.RestartStopper
-
-    This.Session.WriteLine This.MessageToSend
-
-    Me.ReadStopper
+        If Not Me.TryConfigureInitialState(p_details) Then _
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " Failed configuring the initial state; " & p_details
     
         ' read the session state
         If Not Me.TryReadSessionState(p_details) Then _
@@ -4949,5 +4968,7 @@ Private Sub Class_Initialize()
     Set This.Device = This.K2700.Device
     Set This.Session = This.Device.Session
     Set This.Stopper = cc_isr_Core_IO.Factory.NewStopwatch()
+    
+    This.TopCard = VBA.vbNullString
     
 End Sub

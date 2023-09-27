@@ -1886,6 +1886,10 @@ Friend Sub SetReading(ByVal a_channelNo As Integer, ByVal a_value As Double)
     
 End Sub
 
+Private Sub Class_Initialize()
+    This.TopCard = VBA.vbNullString
+End Sub
+
 ''' <summary>   Handles the K2700 <see cref="cc_isr_Tcp_Scpi.ChannelMeasured"/> event. </summary>
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Tcp_Scpi.ChannelReadingEventArgs"/>] event arguments. </param>
 Friend Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.ChannelReadingEventArgs)

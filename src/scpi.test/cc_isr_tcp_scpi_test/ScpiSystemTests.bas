@@ -103,7 +103,7 @@ Public Sub BeforeAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("Primed to run all tests.")
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Primed to run all tests.")
 
     This.Name = "ScpiSystemTests"
     
@@ -137,14 +137,14 @@ Public Sub BeforeAll()
     End If
    
     If This.K2700.Connected Then
-        Set p_outcome = Assert.Pass("Primed to run all tests; K2700 is connected.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Primed to run all tests; K2700 is connected.")
     Else
-        Set p_outcome = Assert.Inconclusive( _
+        Set p_outcome = cc_isr_Test_Fx.Assert.Inconclusive( _
             "Failed priming all tests; K2700 should be connected.")
     End If
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = Assert.IsNotNothing(This.K2700.ScpiSystem, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsNotNothing(This.K2700.ScpiSystem, _
             "Scpi System should be instantiated.")
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -154,9 +154,9 @@ exit_Handler:
         ' report any leftover errors.
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors()
         If p_outcome.AssertSuccessful Then
-            Set p_outcome = Assert.Pass("Primed to run all tests.")
+            Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Primed to run all tests.")
         Else
-            Set p_outcome = Assert.Inconclusive("Failed priming all tests;" & _
+            Set p_outcome = cc_isr_Test_Fx.Assert.Inconclusive("Failed priming all tests;" & _
                 VBA.vbCrLf & p_outcome.AssertMessage)
         End If
         
@@ -203,7 +203,7 @@ Public Sub BeforeEach()
             Assert.Inconclusive("Failed priming pre-test #" & VBA.CStr(This.TestNumber) & _
                 "; K2700 should be connected."))
     Else
-        Set p_outcome = Assert.Inconclusive("Unable to prime pre-test #" & VBA.CStr(This.TestNumber) & _
+        Set p_outcome = cc_isr_Test_Fx.Assert.Inconclusive("Unable to prime pre-test #" & VBA.CStr(This.TestNumber) & _
             ";" & VBA.vbCrLf & This.BeforeAllAssert.AssertMessage)
     End If
     
@@ -255,9 +255,9 @@ exit_Handler:
         ' report any leftover errors.
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors()
         If p_outcome.AssertSuccessful Then
-             Set p_outcome = Assert.Pass("Primed pre-test #" & VBA.CStr(This.TestNumber))
+             Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Primed pre-test #" & VBA.CStr(This.TestNumber))
         Else
-            Set p_outcome = Assert.Inconclusive("Failed priming pre-test #" & VBA.CStr(This.TestNumber) & _
+            Set p_outcome = cc_isr_Test_Fx.Assert.Inconclusive("Failed priming pre-test #" & VBA.CStr(This.TestNumber) & _
                 ";" & VBA.vbCrLf & p_outcome.AssertMessage)
         End If
     End If
@@ -297,7 +297,7 @@ Public Sub AfterEach()
     On Error GoTo err_Handler
 
     Dim p_outcome As cc_isr_Test_Fx.Assert
-    Set p_outcome = Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
+    Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
 
     ' check if we can proceed with cleanup.
     
@@ -334,9 +334,9 @@ exit_Handler:
     ' report any leftover errors.
     Set p_outcome = This.ErrTracer.AssertLeftoverErrors()
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
     Else
-        Set p_outcome = Assert.Inconclusive("Errors reported cleaning up test #" & VBA.CStr(This.TestNumber) & _
+        Set p_outcome = cc_isr_Test_Fx.Assert.Inconclusive("Errors reported cleaning up test #" & VBA.CStr(This.TestNumber) & _
             ";" & VBA.vbCrLf & p_outcome.AssertMessage)
     End If
     
@@ -372,7 +372,7 @@ Public Sub AfterAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("All tests cleaned up.")
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = cc_isr_Test_Fx.Assert.Pass("All tests cleaned up.")
     
     ' cleanup after all tests.
     If This.BeforeAllAssert.AssertSuccessful Then
@@ -394,9 +394,9 @@ exit_Handler:
     ' report any leftover errors.
     Set p_outcome = This.ErrTracer.AssertLeftoverErrors()
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
     Else
-        Set p_outcome = Assert.Inconclusive("Errors reported cleaning up all tests;" & _
+        Set p_outcome = cc_isr_Test_Fx.Assert.Inconclusive("Errors reported cleaning up all tests;" & _
             VBA.vbCrLf & p_outcome.AssertMessage)
     End If
     
@@ -446,14 +446,14 @@ Public Function TestInputsShouldBeFront() As cc_isr_Test_Fx.Assert
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
     End If
     
     ' proceed with test assertions.
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = Assert.IsTrue(This.K2700.ScpiSystem.QueryFrontSwitch(), _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700.ScpiSystem.QueryFrontSwitch(), _
             "Scpi System should query and report the correct state of the front switch.")
 
     End If
@@ -465,7 +465,7 @@ exit_Handler:
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
     Debug.Print p_outcome.BuildReport("TestInputsShouldBeFront") & _
-        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
+        " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestInputsShouldBeFront = p_outcome
     

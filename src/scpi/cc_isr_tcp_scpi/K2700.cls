@@ -296,17 +296,14 @@ End Sub
 Public Function TryTakeFrontReading(ByRef a_reading As String, ByRef a_details As String, _
     Optional a_channelNumber As Integer = 0) As Boolean
 
-    Const p_procedureName = "TryConfigureIntitialTriggerMode"
+    Const p_procedureName = "TryTakeFrontReading"
     
-    Dim p_success As Boolean: p_success = True
-    a_details = VBA.vbNullString
+    Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
     a_reading = VBA.vbNullString
 
-    ' trigger a reading
+    ' trigger and fetch a reading
     
-    This.Session.WriteLine ":INIT"
-    
-    Dim p_command As String: p_command = ":READ?"
+    Dim p_command As String: p_command = ":INIT;*WAI;:READ?"
     p_success = This.Session.TryQueryLine(p_command, a_reading, a_details)
     If p_success Then
         OnChannelMeasured a_channelNumber, a_reading
@@ -390,9 +387,9 @@ Public Function TryConfigureContinuousFunctionAutoRange(ByVal a_function As Stri
 
     Const p_procedureName = "TryConfigureContinuousFunctionAutoRange"
 
-    Dim p_success As Boolean: p_success = True
-    a_details = VBA.vbNullString
-    
+    Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
+    Dim p_details As String: p_details = VBA.vbNullString
+
     ' set function defaults
     ' This.Session.WriteLine ":RES:RANG:AUTO ON"
     ' This.Session.WriteLine ":RES:NPLC 1"
@@ -409,20 +406,15 @@ Public Function TryConfigureContinuousFunctionAutoRange(ByVal a_function As Stri
     This.Session.WriteLine ":" & a_function & ":NPLC " & Format(a_powerLineCycles, "#.###")
     
     Dim p_command As String: p_command = ":INIT:CONT ON"
-    p_command = p_command & ";*WAI;*OPC?"
-    Dim p_reply As String
-    p_success = This.Session.TryQueryLine(p_command, p_reply, a_details)
-    If p_success Then
-        If "1" <> p_reply Then _
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                " failed initiating continuous function mode; '" & p_command & "' returned '" & p_reply & _
-                "' instead of '1'."
-    Else
-        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-            "; " & a_details
-    End If
+    p_success = This.Device.TryApplyCommandAwaitOperationCompleted(p_command, p_details)
+    If Not p_success Then _
+        p_details = "Failed initiating continuous function mode; " & p_details
     
-    TryConfigureContinuousFunctionAutoRange = p_reply
+    If Not p_success Then _
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            "; " & p_details
+    
+    TryConfigureContinuousFunctionAutoRange = p_success
 
 End Function
 
@@ -436,8 +428,8 @@ Public Function TryRestoreContinuousReading(ByRef a_details As String) As Boolea
 
     Const p_procedureName = "TryRestoreContinuousReading"
 
-    Dim p_success As Boolean: p_success = True
-    a_details = VBA.vbNullString
+    Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
+    Dim p_details As String: p_details = VBA.vbNullString
     
     This.Session.WriteLine ":INIT:CONT OFF"
     
@@ -445,18 +437,13 @@ Public Function TryRestoreContinuousReading(ByRef a_details As String) As Boolea
     This.TriggerSystem.SourceSetter TriggerSource.Immediate
 
     Dim p_command As String: p_command = ":INIT:CONT ON"
-    p_command = p_command & ";*WAI;*OPC?"
-    Dim p_reply As String
-    p_success = This.Session.TryQueryLine(p_command, p_reply, a_details)
-    If p_success Then
-        If "1" <> p_reply Then _
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                " failed restoring continuous reading mode; '" & p_command & "' returned '" & p_reply & _
-                "' instead of '1'."
-    Else
+    p_success = This.Device.TryApplyCommandAwaitOperationCompleted(p_command, p_details)
+    If Not p_success Then _
+        p_details = "Failed restoring continuous reading mode; " & p_details
+    
+    If Not p_success Then _
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-            "; " & a_details
-    End If
+            "; " & p_details
     
     TryRestoreContinuousReading = p_success
 
@@ -472,8 +459,8 @@ Public Function TryConfigureSingleFunctionReading(ByVal a_function As String, _
 
     Const p_procedureName = "TryRestoreContinuousReading"
 
-    Dim p_success As Boolean: p_success = True
-    a_details = VBA.vbNullString
+    Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
+    Dim p_details As String: p_details = VBA.vbNullString
     
     ' reset is not applied on each configuration because it takes too long to complete.
     ' This.Session.WriteLine "*RST"
@@ -492,17 +479,13 @@ Public Function TryConfigureSingleFunctionReading(ByVal a_function As String, _
     ' set reading format
     
     Dim p_command As String: p_command = ":FORM:ELEM READ"
-    p_command = p_command & ";*WAI;*OPC?"
-    Dim p_reply As String
-    If p_success Then
-        If "1" <> p_reply Then _
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                " failed configuring single function reading mode; '" & p_command & "' returned '" & p_reply & _
-                "' instead of '1'."
-    Else
+    p_success = This.Device.TryApplyCommandAwaitOperationCompleted(p_command, p_details)
+    If Not p_success Then _
+        p_details = "Failed configuring single function reading mode; " & p_details
+    
+    If Not p_success Then _
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-            "; " & a_details
-    End If
+            "; " & p_details
     
     TryConfigureSingleFunctionReading = p_success
 
@@ -530,8 +513,8 @@ Public Function TryEnableMeasurementAvailableMonitoring(ByRef a_details As Strin
 
     Const p_procedureName = "TryEnableMeasurementAvailableMonitoring"
 
-    Dim p_success As Boolean: p_success = True
-    a_details = VBA.vbNullString
+    Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
+    Dim p_details As String: p_details = VBA.vbNullString
 
     ' setup the status register so that we get a RQS
     ' on measurement available
@@ -545,19 +528,10 @@ Public Function TryEnableMeasurementAvailableMonitoring(ByRef a_details As Strin
     
     ' enable the reading available bit of the measurement event register.
     Dim p_command As String: p_command = "STAT:MEAS:ENAB 32"
-    p_command = p_command & ";*WAI;*OPC?"
-    Dim p_reply As String
-    p_success = This.Session.TryQueryLine(p_command, p_reply, a_details)
-    If p_success Then
-        If "1" <> p_reply Then _
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                " failed enabling measurement available monitoring; '" & p_command & "' returned '" & p_reply & _
-                "' instead of '1'."
-    Else
-        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-            "; " & a_details
-    End If
-
+    p_success = This.Device.TryApplyCommandAwaitOperationCompleted(p_command, p_details)
+    If Not p_success Then _
+        p_details = "Failed enabling measurement available monitoring; " & p_details
+    
 #If False Then
     ' legacy code used the operation register going to idle to indicate that
     ' a measurement is available. This did not work when testing
@@ -576,6 +550,10 @@ Public Function TryEnableMeasurementAvailableMonitoring(ByRef a_details As Strin
     ' trigger source was not initiated
     
     This.ExtTrigInitiated = False
+
+    If Not p_success Then _
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            "; " & p_details
 
     TryEnableMeasurementAvailableMonitoring = p_success
     

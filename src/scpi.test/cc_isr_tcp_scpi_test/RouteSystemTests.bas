@@ -115,7 +115,7 @@ Public Sub BeforeAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("Primed to run all tests.")
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Primed to run all tests.")
 
     This.Name = "RouteSystemTests"
     
@@ -135,9 +135,9 @@ exit_Handler:
         ' report any leftover errors.
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors()
         If p_outcome.AssertSuccessful Then
-            Set p_outcome = Assert.Pass("Primed to run all tests.")
+            Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Primed to run all tests.")
         Else
-            Set p_outcome = Assert.Inconclusive("Failed priming all tests;" & _
+            Set p_outcome = cc_isr_Test_Fx.Assert.Inconclusive("Failed priming all tests;" & _
                 VBA.vbCrLf & p_outcome.AssertMessage)
         End If
     End If
@@ -178,9 +178,9 @@ Public Sub BeforeEach()
     Dim p_outcome As cc_isr_Test_Fx.Assert
 
     If This.BeforeAllAssert.AssertSuccessful Then
-         Set p_outcome = Assert.Pass("Primed pre-test #" & VBA.CStr(This.TestNumber))
+         Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Primed pre-test #" & VBA.CStr(This.TestNumber))
     Else
-        Set p_outcome = Assert.Inconclusive("Unable to prime pre-test #" & VBA.CStr(This.TestNumber) & _
+        Set p_outcome = cc_isr_Test_Fx.Assert.Inconclusive("Unable to prime pre-test #" & VBA.CStr(This.TestNumber) & _
             ";" & VBA.vbCrLf & This.BeforeAllAssert.AssertMessage)
     End If
     
@@ -196,9 +196,9 @@ exit_Handler:
         ' report any leftover errors.
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors()
         If p_outcome.AssertSuccessful Then
-             Set p_outcome = Assert.Pass("Primed pre-test #" & VBA.CStr(This.TestNumber))
+             Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Primed pre-test #" & VBA.CStr(This.TestNumber))
         Else
-            Set p_outcome = Assert.Inconclusive("Failed priming pre-test #" & VBA.CStr(This.TestNumber) & _
+            Set p_outcome = cc_isr_Test_Fx.Assert.Inconclusive("Failed priming pre-test #" & VBA.CStr(This.TestNumber) & _
                 ";" & VBA.vbCrLf & p_outcome.AssertMessage)
         End If
     End If
@@ -238,7 +238,7 @@ Public Sub AfterEach()
     On Error GoTo err_Handler
 
     Dim p_outcome As cc_isr_Test_Fx.Assert
-    Set p_outcome = Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
+    Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
 
     ' cleanup after each test.
     If This.BeforeEachAssert.AssertSuccessful Then
@@ -253,9 +253,9 @@ exit_Handler:
     ' report any leftover errors.
     Set p_outcome = This.ErrTracer.AssertLeftoverErrors()
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
     Else
-        Set p_outcome = Assert.Inconclusive("Errors reported cleaning up test #" & VBA.CStr(This.TestNumber) & _
+        Set p_outcome = cc_isr_Test_Fx.Assert.Inconclusive("Errors reported cleaning up test #" & VBA.CStr(This.TestNumber) & _
             ";" & VBA.vbCrLf & p_outcome.AssertMessage)
     End If
     
@@ -291,7 +291,7 @@ Public Sub AfterAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = Assert.Pass("All tests cleaned up.")
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = cc_isr_Test_Fx.Assert.Pass("All tests cleaned up.")
     
     ' cleanup after all tests.
     If This.BeforeAllAssert.AssertSuccessful Then
@@ -306,9 +306,9 @@ exit_Handler:
     ' report any leftover errors.
     Set p_outcome = This.ErrTracer.AssertLeftoverErrors()
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Test #" & VBA.CStr(This.TestNumber) & " cleaned up.")
     Else
-        Set p_outcome = Assert.Inconclusive("Errors reported cleaning up all tests;" & _
+        Set p_outcome = cc_isr_Test_Fx.Assert.Inconclusive("Errors reported cleaning up all tests;" & _
             VBA.vbCrLf & p_outcome.AssertMessage)
     End If
     
@@ -357,7 +357,7 @@ Public Function Test7700CardsShouldBePopulated() As cc_isr_Test_Fx.Assert
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
     End If
     
     ' proceed with test assertions.
@@ -366,11 +366,11 @@ Public Function Test7700CardsShouldBePopulated() As cc_isr_Test_Fx.Assert
     
     If p_outcome.AssertSuccessful Then
         Set p_routeSystem = cc_isr_Tcp_Scpi.Factory.NewRouteSystem.Initialize(cc_isr_Ieee488.Factory.NewTcpSession())
-        Set p_outcome = Assert.IsNotNothing(p_routeSystem, TypeName(p_routeSystem) & " should be instantiated.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsNotNothing(p_routeSystem, TypeName(p_routeSystem) & " should be instantiated.")
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.IsNotNothing(p_routeSystem.InstrumentFamilyCards, "Instrument family cardcollection should be instantiated.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsNotNothing(p_routeSystem.InstrumentFamilyCards, "Instrument family cardcollection should be instantiated.")
     End If
     
     Dim p_expectedCount As Integer
@@ -378,7 +378,7 @@ Public Function Test7700CardsShouldBePopulated() As cc_isr_Test_Fx.Assert
     Dim p_actualCount As Integer
     If p_outcome.AssertSuccessful Then
         p_actualCount = p_routeSystem.Populate7700Cards
-        Set p_outcome = Assert.AreEqual(p_expectedCount, p_routeSystem.InstrumentFamilyCards.Count, "Instrument family card collection should have the expected number of cards.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedCount, p_routeSystem.InstrumentFamilyCards.Count, "Instrument family card collection should have the expected number of cards.")
     End If
     
     Dim p_cardName As String
@@ -386,7 +386,7 @@ Public Function Test7700CardsShouldBePopulated() As cc_isr_Test_Fx.Assert
     Dim p_card As MultiplexerCard
     If p_outcome.AssertSuccessful Then
         Set p_card = p_routeSystem.InstrumentFamilyCards(p_cardName)
-        Set p_outcome = Assert.AreEqual(p_cardName, p_card.Name, "The expected cad should be selected from the Instrument family card collection.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_cardName, p_card.Name, "The expected cad should be selected from the Instrument family card collection.")
     End If
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -396,7 +396,7 @@ exit_Handler:
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
     Debug.Print p_outcome.BuildReport("Test7700CardsShouldBePopulated") & _
-        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
+        " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldBePopulated = p_outcome
     
@@ -436,7 +436,7 @@ Public Function Test7700CardsShouldSelected() As cc_isr_Test_Fx.Assert
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
     End If
     
     ' proceed with test assertions.
@@ -444,12 +444,12 @@ Public Function Test7700CardsShouldSelected() As cc_isr_Test_Fx.Assert
     Dim p_routeSystem As cc_isr_Tcp_Scpi.RouteSystem
     If p_outcome.AssertSuccessful Then
         Set p_routeSystem = cc_isr_Tcp_Scpi.Factory.NewRouteSystem.Initialize(cc_isr_Ieee488.Factory.NewTcpSession())
-        Set p_outcome = Assert.IsNotNothing(p_routeSystem, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsNotNothing(p_routeSystem, _
             TypeName(p_routeSystem) & " should be instantiated.")
     End If
 
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.IsNotNothing(p_routeSystem.InstrumentFamilyCards, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsNotNothing(p_routeSystem.InstrumentFamilyCards, _
             "Instrument family card collection should be instantiated.")
     End If
     
@@ -458,7 +458,7 @@ Public Function Test7700CardsShouldSelected() As cc_isr_Test_Fx.Assert
     Dim p_actualCount As Integer
     If p_outcome.AssertSuccessful Then
         p_actualCount = p_routeSystem.Populate7700Cards
-        Set p_outcome = Assert.AreEqual(p_expectedCount, p_routeSystem.InstrumentFamilyCards.Count, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedCount, p_routeSystem.InstrumentFamilyCards.Count, _
             "Instrument family card collection should have the expected number of cards.")
     End If
     
@@ -468,7 +468,7 @@ Public Function Test7700CardsShouldSelected() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then
         p_cardName = "7700"
         Set p_card = p_routeSystem.InstrumentFamilyCards(p_cardName)
-        Set p_outcome = Assert.AreEqual(p_cardName, p_card.Name, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_cardName, p_card.Name, _
             "The expected card should be selected from the Instrument family card collection.")
     End If
     
@@ -477,7 +477,7 @@ Public Function Test7700CardsShouldSelected() As cc_isr_Test_Fx.Assert
     p_expectedCount = 2
     If p_outcome.AssertSuccessful Then
         p_actualCount = p_routeSystem.PopulateCards(p_options)
-        Set p_outcome = Assert.AreEqual(p_expectedCount, p_actualCount, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedCount, p_actualCount, _
             "Installed card collection should have the expected number of cards.")
     End If
     
@@ -486,7 +486,7 @@ Public Function Test7700CardsShouldSelected() As cc_isr_Test_Fx.Assert
         Dim p_cards As Collection
         Set p_cards = p_routeSystem.InstalledCards
         Set p_card = p_cards(1)
-        Set p_outcome = Assert.AreEqual(p_cardName, p_card.Name, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_cardName, p_card.Name, _
             "The expected card should be selected from the installed card collection.")
     End If
     
@@ -503,27 +503,27 @@ Public Function Test7700CardsShouldSelected() As cc_isr_Test_Fx.Assert
     
     If p_outcome.AssertSuccessful Then
         Set p_card = p_routeSystem.InstalledCards(CStr(p_expectedSlotNumber))
-        Set p_outcome = Assert.AreEqual(p_cardName, p_card.Name, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_cardName, p_card.Name, _
             "The expected card should be selected from the installed card collection.")
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.AreEqual(p_expectedCapacity, p_card.Capacity, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedCapacity, p_card.Capacity, _
             "Card '" & p_cardName & "' should have the expected capacity.")
     End If
 
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.AreEqual(p_expectedFirstChannel, p_card.DeviceFirstChannel, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedFirstChannel, p_card.DeviceFirstChannel, _
             "Card '" & p_cardName & "' should have the expected first channel number.")
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.AreEqual(p_expectedLastChannel, p_card.DeviceLastChannel, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedLastChannel, p_card.DeviceLastChannel, _
             "Card '" & p_cardName & "' should have the expected last channel number.")
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.AreEqual(p_expectedSlotNumber, p_card.SlotNumber, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedSlotNumber, p_card.SlotNumber, _
             "Card '" & p_cardName & "' should have the expected slot number.")
     End If
     
@@ -535,27 +535,27 @@ Public Function Test7700CardsShouldSelected() As cc_isr_Test_Fx.Assert
     
     If p_outcome.AssertSuccessful Then
         Set p_card = p_routeSystem.InstalledCards(CStr(p_expectedSlotNumber))
-        Set p_outcome = Assert.AreEqual(p_cardName, p_card.Name, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_cardName, p_card.Name, _
             "The expected card should be selected from the installed card collection.")
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.AreEqual(p_expectedCapacity, p_card.Capacity, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedCapacity, p_card.Capacity, _
             "Card '" & p_cardName & "' should have the expected capacity.")
     End If
 
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.AreEqual(p_expectedFirstChannel, p_card.DeviceFirstChannel, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedFirstChannel, p_card.DeviceFirstChannel, _
             "Card '" & p_cardName & "' should have the expected first channel number.")
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.AreEqual(p_expectedLastChannel, p_card.DeviceLastChannel, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedLastChannel, p_card.DeviceLastChannel, _
             "Card '" & p_cardName & "' should have the expected last channel number.")
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.AreEqual(p_expectedSlotNumber, p_card.SlotNumber, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedSlotNumber, p_card.SlotNumber, _
             "Card '" & p_cardName & "' should have the expected slot number.")
     End If
     
@@ -566,7 +566,7 @@ exit_Handler:
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
     Debug.Print p_outcome.BuildReport("Test7700CardsShouldSelected") & _
-        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
+        " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldSelected = p_outcome
     
@@ -601,7 +601,7 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As Str
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
     End If
     
     ' proceed with test assertions.
@@ -609,7 +609,7 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As Str
     Dim p_routeSystem As cc_isr_Tcp_Scpi.RouteSystem
     If p_outcome.AssertSuccessful Then
         Set p_routeSystem = cc_isr_Tcp_Scpi.Factory.NewRouteSystem.Initialize(cc_isr_Ieee488.Factory.NewTcpSession())
-        Set p_outcome = Assert.IsNotNothing(p_routeSystem, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsNotNothing(p_routeSystem, _
             TypeName(p_routeSystem) & " should be instantiated.")
     End If
 
@@ -618,7 +618,7 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As Str
     Dim p_actualCount As Integer
     If p_outcome.AssertSuccessful Then
         p_actualCount = p_routeSystem.Populate7700Cards
-        Set p_outcome = Assert.AreEqual(p_expectedCount, p_routeSystem.InstrumentFamilyCards.Count, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedCount, p_routeSystem.InstrumentFamilyCards.Count, _
             "Instrument family card collection should have the expected number of cards.")
     End If
     
@@ -629,7 +629,7 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As Str
     p_expectedCount = 2
     If p_outcome.AssertSuccessful Then
         p_actualCount = p_routeSystem.PopulateCards(p_options)
-        Set p_outcome = Assert.AreEqual(p_expectedCount, p_actualCount, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedCount, p_actualCount, _
             "Installed card collection should have the expected number of cards.")
     End If
     
@@ -641,13 +641,13 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As Str
         p_routeSystem.BuildFunctionScanLists a_senseFunction
         
         Set p_card = p_routeSystem.SelectMultiplexerCard(p_channelNumber)
-        Set p_outcome = Assert.IsNotNothing(p_card, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsNotNothing(p_card, _
             "A card should be selected for channel " & CStr(p_channelNumber) & ".")
     End If
         
     If p_outcome.AssertSuccessful Then
         Set p_card = p_routeSystem.SelectMultiplexerCard(p_channelNumber)
-        Set p_outcome = Assert.AreEqual(p_cardName, p_card.Name, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_cardName, p_card.Name, _
             "The expected card should be selected for channel " & CStr(p_channelNumber) & ".")
     End If
     
@@ -657,20 +657,20 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As Str
     
     If p_outcome.AssertSuccessful Then
         p_actualFunctionScanList = p_card.FunctionScanList
-        Set p_outcome = Assert.AreEqual(p_expectedFunctionScanList, p_actualFunctionScanList, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedFunctionScanList, p_actualFunctionScanList, _
             "The expected scan list should be built for card '" & p_cardName & "'.")
     End If
     
     If p_outcome.AssertSuccessful Then
         p_channelNumber = p_channelNumber + p_card.FunctionalCapacity - 1
         Set p_card = p_routeSystem.SelectMultiplexerCard(p_channelNumber)
-        Set p_outcome = Assert.IsNotNothing(p_card, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsNotNothing(p_card, _
             "A card should be selected for channel " & CStr(p_channelNumber) & ".")
     End If
         
     If p_outcome.AssertSuccessful Then
         Set p_card = p_routeSystem.SelectMultiplexerCard(p_channelNumber)
-        Set p_outcome = Assert.AreEqual(p_cardName, p_card.Name, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_cardName, p_card.Name, _
             "The expected card should be selected for channel " & CStr(p_channelNumber) & ".")
     End If
     
@@ -679,7 +679,7 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As Str
     Dim p_actualScanList As String
     If p_outcome.AssertSuccessful Then
         p_actualScanList = p_card.BuildChannelScanList(p_channelNumber)
-        Set p_outcome = Assert.AreEqual(p_expectedScanList, p_actualScanList, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedScanList, p_actualScanList, _
             "The expected scan list should be returned for card '" & p_cardName & "' and channel " & CStr(p_channelNumber) & ".")
     End If
     
@@ -688,7 +688,7 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As Str
     Dim p_actualRouteCommand As String
     If p_outcome.AssertSuccessful Then
         p_actualRouteCommand = p_card.RouteMultipleCloseCommand()
-        Set p_outcome = Assert.AreEqual(p_expectedRouteCommand, p_actualRouteCommand, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedRouteCommand, p_actualRouteCommand, _
             "The expected route command should be returned for card '" & p_cardName & "'.")
     End If
     
@@ -696,47 +696,47 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As Str
     p_channelNumber = p_channelNumber + 1
     If p_outcome.AssertSuccessful Then
         Set p_card = p_routeSystem.SelectMultiplexerCard(p_channelNumber)
-        Set p_outcome = Assert.IsNotNothing(p_card, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsNotNothing(p_card, _
             "A card should be selected for channel " & CStr(p_channelNumber) & ".")
     End If
         
     If p_outcome.AssertSuccessful Then
         Set p_card = p_routeSystem.SelectMultiplexerCard(p_channelNumber)
-        Set p_outcome = Assert.AreEqual(p_cardName, p_card.Name, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_cardName, p_card.Name, _
             "The expected card should be selected for channel " & CStr(p_channelNumber) & ".")
     End If
     
     If p_outcome.AssertSuccessful Then
         p_actualFunctionScanList = p_card.FunctionScanList
         p_expectedFunctionScanList = ":FUNC '" & a_senseFunction & "',(@201,2" & VBA.CStr(p_card.FunctionalCapacity) & ")"
-        Set p_outcome = Assert.AreEqual(p_expectedFunctionScanList, p_actualFunctionScanList, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedFunctionScanList, p_actualFunctionScanList, _
             "The expected scan list should be built for card '" & p_cardName & "'.")
     End If
     
     If p_outcome.AssertSuccessful Then
         p_channelNumber = p_channelNumber + p_card.FunctionalCapacity - 1
         Set p_card = p_routeSystem.SelectMultiplexerCard(p_channelNumber)
-        Set p_outcome = Assert.IsNotNothing(p_card, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsNotNothing(p_card, _
             "A card should be selected for channel " & CStr(p_channelNumber) & ".")
     End If
         
     If p_outcome.AssertSuccessful Then
         Set p_card = p_routeSystem.SelectMultiplexerCard(p_channelNumber)
-        Set p_outcome = Assert.AreEqual(p_cardName, p_card.Name, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_cardName, p_card.Name, _
             "The expected card should be selected for channel " & CStr(p_channelNumber) & ".")
     End If
     
     p_expectedScanList = "(@2" & VBA.CStr(p_card.FunctionalCapacity) & ")"
     If p_outcome.AssertSuccessful Then
         p_actualScanList = p_card.BuildChannelScanList(p_channelNumber)
-        Set p_outcome = Assert.AreEqual(p_expectedScanList, p_actualScanList, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedScanList, p_actualScanList, _
             "The expected scan list should be returned for card '" & p_cardName & "' and channel " & CStr(p_channelNumber) & ".")
     End If
     
     p_expectedRouteCommand = ":ROUT:MULT:CLOS (@244,245)"
     If p_outcome.AssertSuccessful Then
         p_actualRouteCommand = p_card.RouteMultipleCloseCommand()
-        Set p_outcome = Assert.AreEqual(p_expectedRouteCommand, p_actualRouteCommand, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedRouteCommand, p_actualRouteCommand, _
             "The expected route command should be returned for card '" & p_cardName & "'.")
     End If
     
@@ -785,7 +785,7 @@ Public Function Test7700CardsShouldBuildScanLists() As cc_isr_Test_Fx.Assert
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
     End If
     
     ' proceed with test assertions.
@@ -801,7 +801,7 @@ exit_Handler:
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
     Debug.Print p_outcome.BuildReport("Test7700CardsShouldBuildScanLists") & _
-        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
+        " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldBuildScanLists = p_outcome
     
@@ -841,7 +841,7 @@ Public Function Test7700CardsShouldBuild4WireScanLists() As cc_isr_Test_Fx.Asser
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = Assert.Pass("Entered the " & p_procedureName & " test.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
     End If
     
     ' proceed with test assertions.
@@ -857,7 +857,7 @@ exit_Handler:
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
     Debug.Print p_outcome.BuildReport("Test7700CardsShouldBuild4WireScanLists") & _
-        " in " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
+        " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldBuild4WireScanLists = p_outcome
     
