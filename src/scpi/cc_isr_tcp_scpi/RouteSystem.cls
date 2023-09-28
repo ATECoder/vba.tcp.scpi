@@ -208,11 +208,11 @@ Public Sub UpdateFunctionalCapacities()
 End Sub
 
 ''' <summary>   Sets the full capacity function scan lists for on all cards. </summary>
-''' <para name="a_senseFunction">   [String] The sense function. </param>
-Public Sub BuildFunctionScanLists(ByVal a_senseFunction As String)
+''' <para name="a_senseFunctionName">   [String] The sense function. </param>
+Public Sub BuildFunctionScanLists(ByVal a_senseFunctionName As String)
     Dim p_multiplexerCard As MultiplexerCard
     For Each p_multiplexerCard In This.InstalledCards
-        p_multiplexerCard.BuildFunctionScanList a_senseFunction
+        p_multiplexerCard.BuildFunctionScanList a_senseFunctionName
     Next
     ' update the functional capacities based on the modified
     ' card sense function.

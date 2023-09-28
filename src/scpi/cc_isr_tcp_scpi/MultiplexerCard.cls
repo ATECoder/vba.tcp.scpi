@@ -144,12 +144,12 @@ End Property
 
 ''' <summary>   Builds the function scan list, e.g., <c>:FUNC 'RES',(@101,120)</c>. </summary>
 ''' <remarks>   2023-08-17. </remarks>
-''' <param name="a_senseFunction">   The sense function, e.g., RES. </param>
+''' <param name="a_senseFunctionName">   The sense function name, e.g., RES. </param>
 ''' <returns>   [String]. </returns>
-Public Function BuildFunctionScanList(ByVal a_senseFunction As String) As String
+Public Function BuildFunctionScanList(ByVal a_senseFunctionName As String) As String
 
     ' update the function channel count
-    This.FunctionalCapacity = IIf("FRES" = a_senseFunction, This.Capacity / 2, This.Capacity)
+    This.FunctionalCapacity = IIf("FRES" = a_senseFunctionName, This.Capacity / 2, This.Capacity)
     
     Dim p_firstChannelNumber As Integer
     p_firstChannelNumber = This.SlotNumber * 100 + 1
@@ -157,7 +157,7 @@ Public Function BuildFunctionScanList(ByVal a_senseFunction As String) As String
     Dim p_lastChannelNumber As Integer
     p_lastChannelNumber = p_firstChannelNumber + This.FunctionalCapacity - 1
     
-    This.FunctionScanList = ":FUNC '" & a_senseFunction & _
+    This.FunctionScanList = ":FUNC '" & a_senseFunctionName & _
             "',(@" & VBA.CStr(p_firstChannelNumber) & _
             "," & VBA.CStr(p_lastChannelNumber) & ")"
             

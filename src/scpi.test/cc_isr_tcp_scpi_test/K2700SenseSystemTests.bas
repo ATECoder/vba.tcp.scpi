@@ -467,11 +467,11 @@ Public Function TestInitialSenseFunctionShouldGet() As cc_isr_Test_Fx.Assert
     
     If p_outcome.AssertSuccessful Then
     
-        Dim p_expectedSenseFunction As String
-        p_expectedSenseFunction = "VOLT:DC"
-        Dim p_actualSenseFunction As String
-        p_actualSenseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqualString(p_expectedSenseFunction, p_actualSenseFunction, vbTextCompare, _
+        Dim p_expectedSenseFunctionName As String
+        p_expectedSenseFunctionName = "VOLT:DC"
+        Dim p_actualSenseFunctionName As String
+        p_actualSenseFunctionName = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqualString(p_expectedSenseFunctionName, p_actualSenseFunctionName, vbTextCompare, _
             "Initial sense function should match.")
 
     End If
@@ -530,29 +530,30 @@ Public Function TestSenseFunctionShouldSet() As cc_isr_Test_Fx.Assert
     
     ' proceed with test assertions.
     
-    Dim p_expectedK2700SenseFunction As cc_isr_Tcp_Scpi.K2700SenseFunction
-    p_expectedK2700SenseFunction = cc_isr_Tcp_Scpi.K2700SenseFunction.FourWireResistance
+    Dim p_expectedSenseFunctionOption As cc_isr_Tcp_Scpi.SenseFunctionOption
+    p_expectedSenseFunctionOption = cc_isr_Tcp_Scpi.SenseFunctionOption.FourWireResistance
     
-    Dim p_actualK2700SenseFunction As cc_isr_Tcp_Scpi.K2700SenseFunction
+    Dim p_actualSenseFunctionOption As cc_isr_Tcp_Scpi.SenseFunctionOption
     
     If p_outcome.AssertSuccessful Then
     
         ' set the sense function
-        This.K2700.SenseSystem.K2700SenseFunctionSetter p_expectedK2700SenseFunction
-        p_actualK2700SenseFunction = This.K2700.SenseSystem.K2700SenseFunctionGetter()
+        This.K2700.SenseSystem.SenseFunctionSetter p_expectedSenseFunctionOption
+        p_actualSenseFunctionOption = This.K2700.SenseSystem.SenseFunctionGetter()
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedK2700SenseFunction, p_actualK2700SenseFunction, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedSenseFunctionOption, p_actualSenseFunctionOption, _
             "Set K2700 sense function should match.")
 
     End If
     
-    Dim p_expectedSenseFunction As String
-    Dim p_actualSenseFunction As String
+    Dim p_expectedSenseFunctionName As String
+    Dim p_actualSenseFunctionName As String
     
     If p_outcome.AssertSuccessful Then
-        p_expectedSenseFunction = "FRES"
-        p_actualSenseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunction
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqualString(p_expectedSenseFunction, p_actualSenseFunction, vbTextCompare, _
+        p_expectedSenseFunctionName = "FRES"
+        p_actualSenseFunctionName = This.K2700.SenseSystem.SenseSystem.SenseFunctionName
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqualString(p_expectedSenseFunctionName, _
+            p_actualSenseFunctionName, vbTextCompare, _
             "Set sense function should match.")
     End If
     

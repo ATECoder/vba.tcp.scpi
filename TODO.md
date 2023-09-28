@@ -6,21 +6,20 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
-IEEE488:
-Add check for NaN, and Negative and positive infinity.
+Core:
+Test Fx: rename Module Test Methods to Test Methods Flags
+
+Ieee488:
+Rename standard events Enum to standard event flags.
+Rename service requests to service request flags.
 
 Scpi:
-Parse reading using try code.
-Update configuration methods in line with immediate mode.
-Add parameter and return value to configuration commands.
- 
+Rename Trigger Source Enum to trigger source option.
+Rename K2700 Sense function to sense function option and move to the sense system class.
+Rename sense function to sense function name.
+Rename measurement mode Enum to measurement mode option. 
 
 ## TODO
-
-implement configure continuous like immediate.
-implement configure external like immediate
-
-
 
 SCPI:
 ran all tests.

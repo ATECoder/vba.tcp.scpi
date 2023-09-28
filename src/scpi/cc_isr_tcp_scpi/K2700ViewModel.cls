@@ -13,10 +13,16 @@ Attribute VB_Exposed = True
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Option Explicit
 
-Public Enum MeasurementMode
-    Continuous = 0
-    Immediate = 1
-    External = 2
+''' <summary>   Values that represent mesaurment mode options. </summary>
+Public Enum MeasurementModeOption
+    ''' <summary>   An enum constant representing the none option. </summary>
+    None = 0
+    ''' <summary>   An enum constant representing the continuous trigger option. </summary>
+    Continuous = 1
+    ''' <summary>   An enum constant representing the immediate trigger option. </summary>
+    Immediate = 2
+    ''' <summary>   An enum constant representing the externam trigger option. </summary>
+    External = 3
 End Enum
 
 ''' <summary>   Represents an observer pattern subject that can notify observers
@@ -54,7 +60,7 @@ Private Type this_
     ElapsedTimeCaption As String
     LastErrorMessage As String
     LastMessage As String
-    CurrentMeasurementMode As cc_isr_Tcp_Scpi.MeasurementMode
+    CurrentMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
 
     ' Winsock properties
     Host As String
@@ -201,7 +207,7 @@ Public Function Initialize() As K2700ViewModel
     Set m_k2700 = This.K2700
     Set m_socket = This.Session.Socket
     
-    Me.CurrentMeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.Continuous
+    Me.CurrentMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous
     
     ' update the executable settings
     Me.InitializeExecutablesState
@@ -739,8 +745,8 @@ Public Property Let StatusByte(ByVal a_value As Integer)
     If This.StatusByte <> a_value Then
         This.StatusByte = a_value
         Me.OnPropertyChanged "StatusByte"
-        Me.ServiceRequested = cc_isr_Ieee488.ServiceRequests.RequestingService = _
-                a_value And cc_isr_Ieee488.ServiceRequests.RequestingService
+        Me.ServiceRequested = cc_isr_Ieee488.ServiceRequestFlags.RequestingService = _
+                a_value And cc_isr_Ieee488.ServiceRequestFlags.RequestingService
     End If
 End Property
 
@@ -1348,8 +1354,8 @@ Public Property Let SerialPollByte(ByVal a_value As Integer)
     If This.SerialPollByte <> a_value Then
         This.SerialPollByte = a_value
         Me.OnPropertyChanged "SerialPollByte"
-        Me.ServiceRequested = cc_isr_Ieee488.ServiceRequests.RequestingService = _
-                a_value And cc_isr_Ieee488.ServiceRequests.RequestingService
+        Me.ServiceRequested = cc_isr_Ieee488.ServiceRequestFlags.RequestingService = _
+                a_value And cc_isr_Ieee488.ServiceRequestFlags.RequestingService
     End If
 End Property
 
@@ -2263,18 +2269,18 @@ Public Property Let BottomCardFunctionScanList(ByVal a_value As String)
 End Property
 
 ''' <summary>   Gets the current measurement mode. </summary>
-''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementMode"/>]. </value>
-Public Property Get CurrentMeasurementMode() As cc_isr_Tcp_Scpi.MeasurementMode
+''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
+Public Property Get CurrentMeasurementMode() As cc_isr_Tcp_Scpi.MeasurementModeOption
     CurrentMeasurementMode = This.CurrentMeasurementMode
 End Property
 
 ''' <summary>   Gets the current measurement mode. </summary>
-''' <param name=-"a_value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementMode"/>] the value. </param>
-''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementMode"/>]. </value>
-Friend Property Let CurrentMeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementMode)
+''' <param name=-"a_value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>] the value. </param>
+''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
+Friend Property Let CurrentMeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementModeOption)
     If This.CurrentMeasurementMode <> a_value Then
         This.CurrentMeasurementMode = a_value
-        Me.OnPropertyChanged "MeasurementMode"
+        Me.OnPropertyChanged "CurrentMeasurementMode"
     End If
 End Property
 
@@ -2907,12 +2913,12 @@ Friend Function TryValidateSenseFunction(ByVal a_functionName As String, _
     Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
     
     ' validate the sense function.
-    Dim p_senseFunction As String
-    p_senseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
-    p_success = 1 = VBA.InStr(1, a_functionName, p_senseFunction, vbTextCompare)
+    Dim p_senseFunctionName As String
+    p_senseFunctionName = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
+    p_success = 1 = VBA.InStr(1, a_functionName, p_senseFunctionName, vbTextCompare)
     If Not p_success Then _
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-            "; The instrument sense function '" & p_senseFunction & _
+            "; The instrument sense function '" & p_senseFunctionName & _
             "' is different from the expected '" & This.SenseFunctionName & "' sense function."
 
     TryValidateSenseFunction = p_success
@@ -2930,7 +2936,7 @@ Friend Function TryConfigureIntitialTriggerMode(ByRef a_details As String) As Bo
     Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
     Dim p_details As String: p_details = VBA.vbNullString
     
-    If cc_isr_Tcp_Scpi.MeasurementMode.Continuous <> This.CurrentMeasurementMode Then
+    If cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous <> This.CurrentMeasurementMode Then
         
         ' reset if changing modes.
         p_success = This.K2700.Device.TryResetKnownState(p_details)
@@ -2975,7 +2981,7 @@ Friend Function TryConfigureIntitialTriggerMode(ByRef a_details As String) As Bo
  
     ' enable the mode executables and conditions.
     If p_success Then _
-        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementMode.Continuous, "continuous"
+        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous, "continuous"
 
     If Not p_success Then _
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
@@ -3047,7 +3053,7 @@ Friend Function TryConfigureContinuousMode(ByRef a_details As String) As Boolean
     If p_success Then
     
         ' reset if changing modes.
-        If cc_isr_Tcp_Scpi.MeasurementMode.Continuous <> This.CurrentMeasurementMode Then
+        If cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous <> This.CurrentMeasurementMode Then
             
             p_success = This.K2700.Device.TryResetKnownState(p_details)
         
@@ -3093,7 +3099,7 @@ Friend Function TryConfigureContinuousMode(ByRef a_details As String) As Boolean
     
     ' enable the mode executables and conditions.
     If p_success Then _
-        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementMode.Continuous, "continuous"
+        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous, "continuous"
     
     If Not p_success Then _
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
@@ -3194,7 +3200,7 @@ Friend Function TryConfigureExternalTriggerReading(ByRef a_details As String) As
     If p_success Then
     
         ' reset if changing modes.
-        If cc_isr_Tcp_Scpi.MeasurementMode.Continuous <> This.CurrentMeasurementMode Then
+        If cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous <> This.CurrentMeasurementMode Then
             
             p_success = This.K2700.Device.TryResetKnownState(p_details)
         
@@ -3262,7 +3268,7 @@ Friend Function TryConfigureExternalTriggerReading(ByRef a_details As String) As
 
     ' enable the mode executables and conditions.
     If p_success Then _
-        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementMode.External, "external trigger mode"
+        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.External, "external trigger mode"
     
     If Not p_success Then _
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
@@ -3381,7 +3387,7 @@ Public Function TryConfigureImmediateTriggerReadings(ByRef a_details As String) 
     If p_success Then
     
         ' reset if changing modes.
-        If cc_isr_Tcp_Scpi.MeasurementMode.Immediate <> This.CurrentMeasurementMode Then
+        If cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate <> This.CurrentMeasurementMode Then
             
             p_success = This.K2700.Device.TryResetKnownState(p_details)
         
@@ -3428,7 +3434,7 @@ Public Function TryConfigureImmediateTriggerReadings(ByRef a_details As String) 
     
     ' enable the mode executables and conditions.
     If p_success Then _
-        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementMode.Immediate, "immediate mode"
+        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate, "immediate mode"
     
     If Not p_success Then _
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
@@ -4129,7 +4135,7 @@ End Property
 
 ''' <summary>   Handles the change of measurement mode. </summary>
 ''' <param name="a_infoMessage">   [Option, String] info about the monitoring state. </param>
-Friend Sub OnMeasurementModeChanged(ByVal a_mode As cc_isr_Tcp_Scpi.MeasurementMode, _
+Friend Sub OnMeasurementModeChanged(ByVal a_mode As cc_isr_Tcp_Scpi.MeasurementModeOption, _
     ByVal a_infoMessage As String)
     
     Me.CurrentMeasurementMode = a_mode
@@ -4144,10 +4150,10 @@ Friend Sub OnMeasurementModeChanged(ByVal a_mode As cc_isr_Tcp_Scpi.MeasurementM
     Me.StopMonitoringExecutable = False
     
     ' enable the start monitoring action in external mode
-    Me.StartMonitoringExecutable = cc_isr_Tcp_Scpi.MeasurementMode.External = a_mode
+    Me.StartMonitoringExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.External = a_mode
     
     ' enable immediate readings in immediate mode
-    Me.MeasureExecutable = cc_isr_Tcp_Scpi.MeasurementMode.Immediate = a_mode
+    Me.MeasureExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate = a_mode
     
     ' enable toggling the configurations
     Me.ImmediateTriggerOptionExecutable = True
@@ -4207,6 +4213,9 @@ Friend Sub OnMonitoringEnded(ByVal a_infoMessage As String)
 
     ' finally, toggle off the trigger monitoring.
     Me.ExternalTrigMonitoringEnabled = False
+    
+    ' set the measurmentmode to none for force a reset on setting a new measurement
+    Me.CurrentMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.None
 
 End Sub
 
@@ -4636,16 +4645,16 @@ End Function
 
 ''' <summary>   Returns true and a message if the specified sense function matched neither
 ''' one of sense functions of the defferent measurement modes. </summary>
-''' <param name="a_senseFunction">   [String] The actual sense function. </param>
+''' <param name="a_senseFunctionName">   [String] The actual sense function name. </param>
 ''' <param name="a_details">         [String] Details why the sense function needs to be restored. </param>
 ''' <returns>   [Boolean]. </returns>
-Public Function ShouldRestoreSenseFunction(ByVal a_senseFunction As String, _
+Public Function ShouldRestoreSenseFunction(ByVal a_senseFunctionName As String, _
     ByRef a_details As String) As Boolean
 
-    If Not ((1 = InStr(1, This.ContinuousSenseFunctionName, a_senseFunction, vbTextCompare)) Or _
-            (1 = InStr(1, This.ImmediateSenseFunctionName, a_senseFunction, vbTextCompare)) Or _
-            (1 = InStr(1, This.ExternalSenseFunctionName, a_senseFunction, vbTextCompare))) Then
-        a_details = "The K2700 device current sense function '" & a_senseFunction & _
+    If Not ((1 = InStr(1, This.ContinuousSenseFunctionName, a_senseFunctionName, vbTextCompare)) Or _
+            (1 = InStr(1, This.ImmediateSenseFunctionName, a_senseFunctionName, vbTextCompare)) Or _
+            (1 = InStr(1, This.ExternalSenseFunctionName, a_senseFunctionName, vbTextCompare))) Then
+        a_details = "The K2700 device current sense function '" & a_senseFunctionName & _
             "' is not expected; it must be either " & _
             This.ContinuousSenseFunctionName & " or " & _
             This.ImmediateSenseFunctionName & " or " & _
@@ -4672,9 +4681,9 @@ Public Function ShouldRestoreInitialState(ByRef a_details As String) As Boolean
         ShouldRestoreInitialState = True
     Else
         ' validate the sense function
-        Dim p_senseFunction As String
-        p_senseFunction = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
-        ShouldRestoreInitialState = Me.ShouldRestoreSenseFunction(p_senseFunction, a_details)
+        Dim p_senseFunctionName As String
+        p_senseFunctionName = This.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
+        ShouldRestoreInitialState = Me.ShouldRestoreSenseFunction(p_senseFunctionName, a_details)
     End If
 
 End Function

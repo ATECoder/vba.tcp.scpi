@@ -17,14 +17,14 @@ Private Type this_
     Session As cc_isr_Ieee488.TcpSession
     ContinuousEnabled As Boolean
     SampleCount As Long
-    Source As cc_isr_Tcp_Scpi.TriggerSource
+    Source As cc_isr_Tcp_Scpi.TriggerSourceOption
     TriggerCount As Long
 End Type
 
 Private This As this_
 
-''' <summary>   Values that represent trigger sources. </summary>
-Public Enum TriggerSource
+''' <summary>   Values that represent trigger source options. </summary>
+Public Enum TriggerSourceOption
     ''' <summary>   An enum constant representing the none trigger source. </summary>
     None = 0
     ''' <summary>   An enum constant representing the immediate trigger source. </summary>
@@ -125,19 +125,19 @@ Public Sub SampleCountSetter(ByVal a_value As Long)
 End Sub
 
 
-''' <summary>   Gets the <see cref="TriggerSource"/>. </summary>
-''' <value>   <see cref="TriggerSource"/>. </returns>
-Public Property Get Source() As cc_isr_Tcp_Scpi.TriggerSource
+''' <summary>   Gets the <see cref="TriggerSourceOption"/>. </summary>
+''' <value>   <see cref="TriggerSourceOption"/>. </returns>
+Public Property Get Source() As cc_isr_Tcp_Scpi.TriggerSourceOption
     Source = This.Source
 End Property
 
-''' <summary>   Sets the <see cref="TriggerSource"/>. </summary>
-''' <param name="a_value">   [<see cref="TriggerSource"/>] the trigger source. </param>
-Public Sub SourceSetter(ByVal a_value As cc_isr_Tcp_Scpi.TriggerSource)
+''' <summary>   Sets the <see cref="TriggerSourceOption"/>. </summary>
+''' <param name="a_value">   [<see cref="TriggerSourceOption"/>] the trigger source. </param>
+Public Sub SourceSetter(ByVal a_value As cc_isr_Tcp_Scpi.TriggerSourceOption)
 
-    If cc_isr_Tcp_Scpi.TriggerSource.Immediate = a_value Then
+    If cc_isr_Tcp_Scpi.TriggerSourceOption.Immediate = a_value Then
         This.Session.WriteLine ":TRIG:SOUR IMM"
-    ElseIf cc_isr_Tcp_Scpi.TriggerSource.External = a_value Then
+    ElseIf cc_isr_Tcp_Scpi.TriggerSourceOption.External = a_value Then
         ' for some reason the old application had the trigger source toggled
         ' if requesting an external trigger source
         ' This.Session.WriteLine ":TRIG:SOUR IMM"
@@ -147,19 +147,19 @@ Public Sub SourceSetter(ByVal a_value As cc_isr_Tcp_Scpi.TriggerSource)
     
 End Sub
 
-''' <summary>   Gets the <see cref="TriggerSource"/>. </summary>
-''' <param name="a_value">   [<see cref="TriggerSource"/>] the trigger source. </param>
-Public Function SourceGetter() As cc_isr_Tcp_Scpi.TriggerSource
+''' <summary>   Gets the <see cref="TriggerSourceOption"/>. </summary>
+''' <param name="a_value">   [<see cref="TriggerSourceOption"/>] the trigger source. </param>
+Public Function SourceGetter() As cc_isr_Tcp_Scpi.TriggerSourceOption
 
     Dim p_source As String
     p_source = This.Session.QueryLine(":TRIG:SOUR?")
     Select Case p_source
         Case "IMM"
-            This.Source = TriggerSource.Immediate
+            This.Source = TriggerSourceOption.Immediate
         Case "EXT"
-            This.Source = TriggerSource.External
+            This.Source = TriggerSourceOption.External
         Case Else
-            This.Source = TriggerSource.None
+            This.Source = TriggerSourceOption.None
     End Select
     SourceGetter = This.Source
     

@@ -71,7 +71,7 @@ Private Type this_
     ElapsedTimeCaption As String
     LastErrorMessage As String
     LastMessage As String
-    CurrentMeasurementMode As cc_isr_Tcp_Scpi.MeasurementMode
+    CurrentMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
 
     ' Winsock properties
     Host As String
@@ -953,15 +953,15 @@ Public Property Let BottomCardFunctionScanList(ByVal a_value As String)
 End Property
 
 ''' <summary>   Gets the current measurement mode. </summary>
-''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementMode"/>]. </value>
-Public Property Get CurrentMeasurementMode() As cc_isr_Tcp_Scpi.MeasurementMode
+''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
+Public Property Get CurrentMeasurementMode() As cc_isr_Tcp_Scpi.MeasurementModeOption
     CurrentMeasurementMode = This.CurrentMeasurementMode
 End Property
 
 ''' <summary>   Gets the current measurement mode. </summary>
-''' <param name=-"a_value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementMode"/>] the value. </param>
-''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementMode"/>]. </value>
-Friend Property Let CurrentMeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementMode)
+''' <param name=-"a_value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>] the value. </param>
+''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
+Friend Property Let CurrentMeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementModeOption)
     If This.CurrentMeasurementMode <> a_value Then
         This.CurrentMeasurementMode = a_value
     End If

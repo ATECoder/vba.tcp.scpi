@@ -15,132 +15,110 @@ Option Explicit
 
 Private Type this_
     SenseSystem As SenseSystem
-    SenseFunction As cc_isr_Tcp_Scpi.K2700SenseFunction
 End Type
 
 Private This As this_
 
-''' <summary>   Values that represent trigger sources. </summary>
-Public Enum K2700SenseFunction
-    ''' <summary>   An enum constant representing the none option. </summary>
-    None = 0
-    ''' <summary>   An enum constant representing the DC Voltage sense function. </summary>
-    DcVoltage = 1
-    AcVoltage = 2
-    DcCurrent = 3
-    AcCurrent = 4
-    Resistance = 5
-    FourWireResistance = 6
-    Temperature = 7
-    Frequency = 8
-    Period = 9
-    Continuity = 10
-End Enum
-
 ''' <summary>   Returns a reference to the <see cref="SenseSystem"/>. </summary>
 ''' <param name="a_session">    [<see cref="<see cref="cc_isr_Ieee488.TcpSession"/>] A connected session. </param>
-''' <value>   [<see cref="SenseSystem"/>]. </returns>
+''' <returns>   [<see cref="SenseSystem"/>]. </returns>
 Public Function Initialize(ByVal a_system As SenseSystem) As K2700SenseSystem
     Set This.SenseSystem = a_system
     Set Initialize = Me
 End Function
 
-''' <summary>   Gets the Sense Function/ </summary>
+''' <summary>   Gets the underlying Sense System/ </summary>
+''' <value>   [<see cref="SenseSystem"/>]. </value>
 Public Property Get SenseSystem() As SenseSystem
     Set SenseSystem = This.SenseSystem
 End Property
 
-''' <summary>   Gets the Sense Function/ </summary>
-Public Property Get SenseFunction() As cc_isr_Tcp_Scpi.K2700SenseFunction
-    SenseFunction = This.SenseFunction
-End Property
+''' <summary>   Sets the <see cref="SenseFunctionOption"/>. </summary>
+''' <param name="a_value">   [<see cref="SenseFunctionOption"/>] the sense function option. </param>
+Public Sub SenseFunctionSetter(ByVal a_value As cc_isr_Tcp_Scpi.SenseFunctionOption)
 
-''' <summary>   Sets the <see cref="K2700SenseFunction"/>. </summary>
-''' <param name="a_value">   [<see cref="K2700SenseFunction"/>] the K2700 sense function. </param>
-Public Sub K2700SenseFunctionSetter(ByVal a_value As cc_isr_Tcp_Scpi.K2700SenseFunction)
-
-    Dim p_senseFunctionName As String:  p_senseFunctionName = FromK2700SenseFunction(a_value)
+    Dim p_senseFunctionName As String: p_senseFunctionName = Me.FromSenseFunction(a_value)
     This.SenseSystem.SenseFunctionSetter p_senseFunctionName, "'"
-    This.SenseFunction = a_value
+    This.SenseSystem.SenseFunction = a_value
 
 End Sub
 
-''' <summary>   Gets the <see cref="K2700SenseFunction"/>. </summary>
-''' <param name="a_value">   [<see cref="K2700SenseFunction"/>] the sense function. </param>
-''' <value>   [<see cref="cc_isr_Tcp_Scpi.K2700SenseFunction"/>]. </value>
-Public Function K2700SenseFunctionGetter() As cc_isr_Tcp_Scpi.K2700SenseFunction
+''' <summary>   Gets the <see cref="SenseFunctionOption"/>. </summary>
+''' <param name="a_value">   [<see cref="SenseFunctionOption"/>] the sense function option. </param>
+''' <value>   [<see cref="cc_isr_Tcp_Scpi.SenseFunctionOption"/>]. </value>
+Public Function SenseFunctionGetter() As cc_isr_Tcp_Scpi.SenseFunctionOption
 
-    This.SenseFunction = ToK2700SenseFunction(This.SenseSystem.SenseFunctionGetter(""""))
-    K2700SenseFunctionGetter = This.SenseFunction
+    This.SenseSystem.SenseFunction = ToSenseFunction(This.SenseSystem.SenseFunctionGetter(""""))
+    SenseFunctionGetter = This.SenseSystem.SenseFunction
 
 End Function
 
-''' <summary>   Converts a sense function <see cref="K2700SenseFunction"/>
+''' <summary>   Converts a sense function <see cref="SenseFunctionOption"/>
 ''' to a sense function name. </summary>
-''' <param name="a_value">   [<see cref="K2700SenseFunction"/>] the sense function. </param>
+''' <param name="a_value">   [<see cref="SenseFunctionOption"/>] the sense function. </param>
 ''' <returns>   [String]. </returns>
-Public Function FromK2700SenseFunction(ByVal a_value As cc_isr_Tcp_Scpi.K2700SenseFunction) As String
+Public Function FromSenseFunction(ByVal a_value As cc_isr_Tcp_Scpi.SenseFunctionOption) As String
 
     Select Case a_value
-        Case K2700SenseFunction.DcVoltage
-            FromK2700SenseFunction = "VOLT:DC"
-        Case K2700SenseFunction.AcVoltage
-            FromK2700SenseFunction = "VOLT:AC"
-        Case K2700SenseFunction.DcCurrent
-            FromK2700SenseFunction = "CURR:DC"
-        Case K2700SenseFunction.AcCurrent
-            FromK2700SenseFunction = "CURR:AC"
-        Case K2700SenseFunction.Resistance
-            FromK2700SenseFunction = "RES"
-        Case K2700SenseFunction.FourWireResistance
-            FromK2700SenseFunction = "FRES"
-        Case K2700SenseFunction.Temperature
-            FromK2700SenseFunction = "TEMP"
-        Case K2700SenseFunction.Frequency
-            FromK2700SenseFunction = "FREQ"
-        Case K2700SenseFunction.Period
-            FromK2700SenseFunction = "PER"
-        Case K2700SenseFunction.Continuity
-            FromK2700SenseFunction = "CONT"
+        Case SenseFunctionOption.DcVoltage
+            FromSenseFunction = "VOLT:DC"
+        Case SenseFunctionOption.AcVoltage
+            FromSenseFunction = "VOLT:AC"
+        Case SenseFunctionOption.DcCurrent
+            FromSenseFunction = "CURR:DC"
+        Case SenseFunctionOption.AcCurrent
+            FromSenseFunction = "CURR:AC"
+        Case SenseFunctionOption.Resistance
+            FromSenseFunction = "RES"
+        Case SenseFunctionOption.FourWireResistance
+            FromSenseFunction = "FRES"
+        Case SenseFunctionOption.Temperature
+            FromSenseFunction = "TEMP"
+        Case SenseFunctionOption.Frequency
+            FromSenseFunction = "FREQ"
+        Case SenseFunctionOption.Period
+            FromSenseFunction = "PER"
+        Case SenseFunctionOption.Continuity
+            FromSenseFunction = "CONT"
         Case Else
-            FromK2700SenseFunction = ""
+            FromSenseFunction = ""
     End Select
     
 End Function
 
-''' <summary>   Converts a sense function name to a <see cref="K2700SenseFunction"/>
+''' <summary>   Converts a sense function name to a <see cref="SenseFunctionOption"/>
 ''' sense function. </summary>
 ''' <param name="a_value">   [String] the sense function name. </param>
-''' <returns>   [<see cref="cc_isr_Tcp_Scpi.K2700SenseFunction"/>]. </returns>
-Public Function ToK2700SenseFunction(ByVal a_value As String) As cc_isr_Tcp_Scpi.K2700SenseFunction
+''' <returns>   [<see cref="cc_isr_Tcp_Scpi.SenseFunctionOption"/>]. </returns>
+Public Function ToSenseFunction(ByVal a_value As String) As cc_isr_Tcp_Scpi.SenseFunctionOption
 
     Select Case a_value
         Case "VOLT"
-            ToK2700SenseFunction = K2700SenseFunction.DcVoltage
+            ToSenseFunction = SenseFunctionOption.DcVoltage
         Case "VOLT:DC"
-            ToK2700SenseFunction = K2700SenseFunction.DcVoltage
+            ToSenseFunction = SenseFunctionOption.DcVoltage
         Case "VOLT:AC"
-            ToK2700SenseFunction = K2700SenseFunction.AcVoltage
+            ToSenseFunction = SenseFunctionOption.AcVoltage
         Case "CURR"
-            ToK2700SenseFunction = K2700SenseFunction.DcCurrent
+            ToSenseFunction = SenseFunctionOption.DcCurrent
         Case "CURR:DC"
-            ToK2700SenseFunction = K2700SenseFunction.DcCurrent
+            ToSenseFunction = SenseFunctionOption.DcCurrent
         Case "CURR:AC"
-            ToK2700SenseFunction = K2700SenseFunction.AcCurrent
+            ToSenseFunction = SenseFunctionOption.AcCurrent
         Case "RES"
-            ToK2700SenseFunction = K2700SenseFunction.Resistance
+            ToSenseFunction = SenseFunctionOption.Resistance
         Case "FRES"
-            ToK2700SenseFunction = K2700SenseFunction.FourWireResistance
+            ToSenseFunction = SenseFunctionOption.FourWireResistance
         Case "TEMP"
-            ToK2700SenseFunction = K2700SenseFunction.Temperature
+            ToSenseFunction = SenseFunctionOption.Temperature
         Case "FREQ"
-            ToK2700SenseFunction = K2700SenseFunction.Frequency
+            ToSenseFunction = SenseFunctionOption.Frequency
         Case "PER"
-            ToK2700SenseFunction = K2700SenseFunction.Period
+            ToSenseFunction = SenseFunctionOption.Period
         Case "CONT"
-            ToK2700SenseFunction = K2700SenseFunction.Continuity
+            ToSenseFunction = SenseFunctionOption.Continuity
         Case Else
-            ToK2700SenseFunction = K2700SenseFunction.None
+            ToSenseFunction = SenseFunctionOption.None
     End Select
     
 End Function

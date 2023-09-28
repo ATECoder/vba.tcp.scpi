@@ -810,8 +810,8 @@ Public Function TestShouldRestoreInitialState() As cc_isr_Test_Fx.Assert
         This.ViewModel.K2700.SenseSystem.SenseSystem.SenseFunctionSetter p_expectedSenseFunctionName
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedSenseFunctionName, _
-            This.ViewModel.K2700.SenseSystem.SenseSystem.SenseFunction, _
-            "Sense function should be set to the expected value.")
+            This.ViewModel.K2700.SenseSystem.SenseSystem.SenseFunctionName, _
+            "Sense function name should be set to the expected value.")
             
     End If
     
@@ -1143,15 +1143,15 @@ Public Function TestShouldConfigureImmediateMode() As cc_isr_Test_Fx.Assert
     
     If p_outcome.AssertSuccessful Then
         
-        Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementMode
-        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.Immediate
+        Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
+        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.CurrentMeasurementMode, _
             "Immediate measurement mode should be as expected.")
     End If
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(cc_isr_Tcp_Scpi.TriggerSource.Immediate, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(cc_isr_Tcp_Scpi.TriggerSourceOption.Immediate, _
             This.ViewModel.K2700.TriggerSystem.SourceGetter(), _
             "Immediate trigger source should be as expected.")
     End If
@@ -1319,15 +1319,15 @@ Public Function TestShouldConfigureExternalMode() As cc_isr_Test_Fx.Assert
     
     If p_outcome.AssertSuccessful Then
         
-        Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementMode
-        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementMode.External
+        Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
+        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.CurrentMeasurementMode, _
             "External measurement mode should be as expected.")
     End If
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(cc_isr_Tcp_Scpi.TriggerSource.External, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(cc_isr_Tcp_Scpi.TriggerSourceOption.External, _
             This.ViewModel.K2700.TriggerSystem.SourceGetter(), _
             "External trigger source should be as expected.")
     End If

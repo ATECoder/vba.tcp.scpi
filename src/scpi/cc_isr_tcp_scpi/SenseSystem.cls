@@ -17,10 +17,28 @@ Private Type this_
     Session As cc_isr_Ieee488.TcpSession
     AutoRangeEnabled  As Boolean
     PowerLineCycles As Double
-    SenseFunction As String
+    SenseFunctionName As String
+    SenseFunction As cc_isr_Tcp_Scpi.SenseFunctionOption
 End Type
 
 Private This As this_
+
+''' <summary>   Values that represent sense function options. </summary>
+Public Enum SenseFunctionOption
+    ''' <summary>   An enum constant representing the none option. </summary>
+    None = 0
+    ''' <summary>   An enum constant representing the DC Voltage sense function. </summary>
+    DcVoltage = 1
+    AcVoltage = 2
+    DcCurrent = 3
+    AcCurrent = 4
+    Resistance = 5
+    FourWireResistance = 6
+    Temperature = 7
+    Frequency = 8
+    Period = 9
+    Continuity = 10
+End Enum
 
 ''' <summary>   Returns a reference to the <see cref="SenseSystem"/>. </summary>
 ''' <param name="a_session">    [<see cref="<see cref="cc_isr_Ieee488.TcpSession"/>] A connected session. </param>
@@ -52,7 +70,7 @@ End Property
 ''' <returns>   [Boolean]. </returns>
 Public Function AutoRangeEnabledGetter() As Boolean
     Dim p_value As String
-    p_value = This.Session.QueryLine(":" & This.SenseFunction & ":RANG:AUTO?")
+    p_value = This.Session.QueryLine(":" & This.SenseFunctionName & ":RANG:AUTO?")
     This.AutoRangeEnabled = IIf(p_value = "1", True, False)
     AutoRangeEnabledGetter = This.AutoRangeEnabled
 End Function
@@ -60,7 +78,7 @@ End Function
 ''' <summary>   Sets the Auto Range enabled. </summary>
 ''' <param name="a_value">   [Boolean] The AutoRange enabled to set. </param >
 Public Sub AutoRangeEnabledSetter(ByVal a_value As Boolean)
-    This.Session.WriteLine ":" & This.SenseFunction & ":RANG:AUTO " & IIf(a_value, "1", "0")
+    This.Session.WriteLine ":" & This.SenseFunctionName & ":RANG:AUTO " & IIf(a_value, "1", "0")
     This.AutoRangeEnabled = a_value
 End Sub
 
@@ -74,7 +92,7 @@ End Property
 ''' <returns>   [Double]. </returns>
 Public Function PowerLineCyclesGetter() As Double
     
-    Dim p_command As String: p_command = ":" & This.SenseFunction & ":NPLC?"
+    Dim p_command As String: p_command = ":" & This.SenseFunctionName & ":NPLC?"
     Dim p_details As String
     Dim p_value As Double
     If Not cc_isr_Core.StringExtensions.TryParseDouble(This.Session.QueryLine(p_command), _
@@ -92,23 +110,42 @@ End Function
 ''' <summary>   Sets the integration rate in Power Line Cycles. </summary>
 ''' <param name="a_value">   [Double] The integration rate in Power Line Cyclest. </param >
 Public Sub PowerLineCyclesSetter(ByVal a_value As Double)
-    This.Session.WriteLine ":" & This.SenseFunction & ":NPLC " & VBA.CStr(a_value)
+    This.Session.WriteLine ":" & This.SenseFunctionName & ":NPLC " & VBA.CStr(a_value)
     This.PowerLineCycles = a_value
 End Sub
 
-''' <summary>   Gets the Sense Function/ </summary>
-Public Property Get SenseFunction() As String
+''' <summary>   Gets the [<see cref="cc_isr_Tcp_Scpi.SenseFunctionOption"/>]. </summary>
+''' <value>   [<see cref="cc_isr_Tcp_Scpi.SenseFunctionOption"/>]. </value>
+Public Property Get SenseFunction() As cc_isr_Tcp_Scpi.SenseFunctionOption
     SenseFunction = This.SenseFunction
+End Property
+
+''' <summary>   Sets the [<see cref="cc_isr_Tcp_Scpi.SenseFunctionOption"/>]. </summary>
+''' <param name="a_value">    [<see cref="cc_isr_Tcp_Scpi.SenseFunctionOption"/>] the sense function. </param>
+Friend Property Let SenseFunction(ByVal a_value As cc_isr_Tcp_Scpi.SenseFunctionOption)
+    This.SenseFunction = a_value
+End Property
+
+''' <summary>   Sets the Sense Function name. </summary>
+''' <value>    [String]. </value>
+Public Property Get SenseFunctionName() As String
+    SenseFunctionName = This.SenseFunctionName
+End Property
+
+''' <summary>   Sets the Sense Function name. </summary>
+''' <param name="a_value">    [String] the sense function name. </param>
+Friend Property Let SenseFunctionName(ByVal a_value As String)
+    This.SenseFunctionName = a_value
 End Property
 
 ''' <summary>   Gets the sense function. </summary>
 ''' <param name="a_decorator">   [String] the decorator to trigger from the function name. </param>
 Public Function SenseFunctionGetter(Optional ByVal a_decorator As String = """") As String
 
-    This.SenseFunction = This.Session.QueryLine(":SENS:FUNC?")
-    This.SenseFunction = cc_isr_Core.StringExtensions.TrimLeft(This.SenseFunction, a_decorator)
-    This.SenseFunction = cc_isr_Core.StringExtensions.TrimRight(This.SenseFunction, a_decorator)
-    SenseFunctionGetter = This.SenseFunction
+    This.SenseFunctionName = This.Session.QueryLine(":SENS:FUNC?")
+    This.SenseFunctionName = cc_isr_Core.StringExtensions.TrimLeft(This.SenseFunctionName, a_decorator)
+    This.SenseFunctionName = cc_isr_Core.StringExtensions.TrimRight(This.SenseFunctionName, a_decorator)
+    SenseFunctionGetter = This.SenseFunctionName
     
 End Function
 
@@ -118,8 +155,8 @@ End Function
 Public Sub SenseFunctionSetter(ByVal a_value As String, _
         Optional ByVal a_decorator As String = "'")
 
-    This.SenseFunction = a_value
-    This.Session.WriteLine ":SENS:FUNC " & a_decorator & This.SenseFunction & a_decorator
+    This.SenseFunctionName = a_value
+    This.Session.WriteLine ":SENS:FUNC " & a_decorator & This.SenseFunctionName & a_decorator
 
 End Sub
 

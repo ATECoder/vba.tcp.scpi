@@ -591,7 +591,7 @@ End Function
 ''' <summary>   Asserts building scan lists. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As String) As cc_isr_Test_Fx.Assert
+Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunctionName As String) As cc_isr_Test_Fx.Assert
 
     Const p_procedureName As String = "Assert7700CardsShouldBuildScanLists"
 
@@ -638,7 +638,7 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As Str
     If p_outcome.AssertSuccessful Then
         
         ' build the scan lists here so as to set the channel numbers properly.
-        p_routeSystem.BuildFunctionScanLists a_senseFunction
+        p_routeSystem.BuildFunctionScanLists a_senseFunctionName
         
         Set p_card = p_routeSystem.SelectMultiplexerCard(p_channelNumber)
         Set p_outcome = cc_isr_Test_Fx.Assert.IsNotNothing(p_card, _
@@ -652,7 +652,7 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As Str
     End If
     
     Dim p_expectedFunctionScanList As String
-    p_expectedFunctionScanList = ":FUNC '" & a_senseFunction & "',(@101,1" & VBA.CStr(p_card.FunctionalCapacity) & ")"
+    p_expectedFunctionScanList = ":FUNC '" & a_senseFunctionName & "',(@101,1" & VBA.CStr(p_card.FunctionalCapacity) & ")"
     Dim p_actualFunctionScanList As String
     
     If p_outcome.AssertSuccessful Then
@@ -708,7 +708,7 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunction As Str
     
     If p_outcome.AssertSuccessful Then
         p_actualFunctionScanList = p_card.FunctionScanList
-        p_expectedFunctionScanList = ":FUNC '" & a_senseFunction & "',(@201,2" & VBA.CStr(p_card.FunctionalCapacity) & ")"
+        p_expectedFunctionScanList = ":FUNC '" & a_senseFunctionName & "',(@201,2" & VBA.CStr(p_card.FunctionalCapacity) & ")"
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedFunctionScanList, p_actualFunctionScanList, _
             "The expected scan list should be built for card '" & p_cardName & "'.")
     End If

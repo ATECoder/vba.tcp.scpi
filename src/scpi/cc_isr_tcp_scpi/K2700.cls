@@ -449,7 +449,7 @@ Public Function TryRestoreContinuousReading(ByRef a_details As String) As Boolea
     This.Session.WriteLine ":INIT:CONT OFF"
     
     ' set the trigger source to immediate.
-    This.TriggerSystem.SourceSetter TriggerSource.Immediate
+    This.TriggerSystem.SourceSetter TriggerSourceOption.Immediate
 
     Dim p_command As String: p_command = ":INIT:CONT ON"
     p_success = This.Device.TryApplyCommandAwaitOperationCompleted(p_command, p_details)
@@ -482,7 +482,7 @@ Public Function TryConfigureSingleFunctionReading(ByVal a_function As String, _
     
     ' set the trigger source to immediate.
     ' This.Session.WriteLine ":TRIG:SOUR IMM"
-    This.TriggerSystem.SourceSetter cc_isr_Tcp_Scpi.TriggerSource.Immediate
+    This.TriggerSystem.SourceSetter cc_isr_Tcp_Scpi.TriggerSourceOption.Immediate
     This.Session.WriteLine ":INIT:CONT OFF"
     This.Session.WriteLine ":SAMP:COUN 1"
     This.Session.WriteLine ":TRIG:COUN 1"
@@ -604,7 +604,7 @@ Public Function TryConfigureExternalTriggerReading(ByVal a_function As String, _
     This.Session.WriteLine ":TRIG:COUN 1"
     
     ' set the trigger source to external
-    This.TriggerSystem.SourceSetter TriggerSource.External
+    This.TriggerSystem.SourceSetter TriggerSourceOption.External
     ' This.Session.WriteLine ":TRIG:SOUR EXT"
     
     ' enable the detection of externally triggered measurement available.
@@ -775,7 +775,7 @@ End Property
 Public Property Get CanTakeImmediateMeasurement() As Boolean
     
     CanTakeImmediateMeasurement = Me.Connected And _
-        This.TriggerSystem.Source = cc_isr_Tcp_Scpi.TriggerSource.Immediate
+        This.TriggerSystem.Source = cc_isr_Tcp_Scpi.TriggerSourceOption.Immediate
                                     
 End Property
 
@@ -785,7 +785,7 @@ End Property
 Public Property Get CanTakeExternalTriggers() As Boolean
     
     CanTakeExternalTriggers = Me.Connected And _
-        This.TriggerSystem.Source = cc_isr_Tcp_Scpi.TriggerSource.External
+        This.TriggerSystem.Source = cc_isr_Tcp_Scpi.TriggerSourceOption.External
                                     
 End Property
 
