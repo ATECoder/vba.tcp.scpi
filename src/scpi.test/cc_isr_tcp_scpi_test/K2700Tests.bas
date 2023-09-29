@@ -140,7 +140,7 @@ Public Sub BeforeAll()
     
     Dim p_details As String
     If Not This.K2700.Connectable.TryOpenConnection(This.Address, This.SessionTimeout, p_details) Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
+        Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
     End If
    
     If This.K2700.Connected Then
@@ -225,7 +225,7 @@ Public Sub BeforeEach()
         Dim p_command As String
         p_command = "*CLS;*WAI;*OPC?"
         If 0 >= This.Session.TryWriteLine(p_command, p_details) Then
-            Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
+            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
         End If
         
     End If
@@ -233,7 +233,7 @@ Public Sub BeforeEach()
     Dim p_reply As String
     If p_outcome.AssertSuccessful Then
         If 0 > This.Session.TryRead(p_reply, p_details) Then
-            Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
+            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
         End If
     End If
     
@@ -318,11 +318,11 @@ Public Sub AfterEach()
         ' clear errors if any so as to leave the instrument without errors.
         p_command = "*CLS;*WAI;*OPC?"
         If 0 >= This.Session.TryWriteLine(p_command, p_details) Then
-            Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
+            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
         End If
         
         If 0 > This.Session.TryRead(p_reply, p_details) Then
-            Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
+            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
         End If
         
     End If
@@ -611,7 +611,7 @@ Public Function TestShouldRestoreFromClosedConnection() As cc_isr_Test_Fx.Assert
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.isFalse(This.K2700.Connected, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.K2700.Connected, _
             "K2700 Device should be disconnected.")
     End If
     

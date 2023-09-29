@@ -146,7 +146,7 @@ Private Type this_
     MessageToSendExecutable As Boolean
     QueryExecutable As Boolean
     ReadExecutable As Boolean
-    ReadStatusByteExecutable As Boolean
+    QueryStatusByteExecutable As Boolean
     ReadStatusAfterWriteExecutable As Boolean
     ReadStandardEventStatusExecutable As Boolean
     ResetKnownStateExecutable As Boolean
@@ -171,7 +171,7 @@ Private Type this_
     LocalLockoutExecutable As Boolean
     AutoAssertTalkSetExecutable As Boolean
     AutoAssertTalkGetExecutable As Boolean
-    SerialPollExecutable As Boolean
+    ReadStatsuByteExecutable As Boolean
     GpibAddressGetExecutable As Boolean
     GpibAddressSetExecutable As Boolean
     GpibLanReadTimeoutGetExecutable As Boolean
@@ -271,9 +271,9 @@ Friend Sub ReadStatusAfterWriteCheckBox_Change()
         This.ViewModel.ReadStatusAfterWriteEnabled = Me.ReadStatusAfterWriteEnabled
 End Sub
 
-''' <summary>   Handles the Read Status Byte button click event. </summary>
-Public Sub ReadStatusByteButton_Click()
-    If This.ReadStatusByteExecutable Then
+''' <summary>   Handles the Query Status Byte button click event. </summary>
+Public Sub QueryStatusByteButton_Click()
+    If This.QueryStatusByteExecutable Then
         This.ViewModel.QueryStatusByteCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
@@ -281,7 +281,6 @@ Public Sub ReadStatusByteButton_Click()
             " Command not enabled."
     End If
 End Sub
-
 
 ''' <summary>   Handles the Read Standard Event Status Byte button click event. </summary>
 Friend Sub ReadStandardEventStatusButton_Click()
@@ -433,9 +432,9 @@ Friend Sub SDCButton_Click()
 End Sub
 
 ''' <summary>   Handles the serial poll button click event. </summary>
-Friend Sub SerialPollButton_Click()
-    If This.SerialPollExecutable Then
-        This.ViewModel.SerialPollCommand
+Friend Sub ReadStatsuByteButton_Click()
+    If This.ReadStatsuByteExecutable Then
+        This.ViewModel.ReadStatsuByteCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me), "._Click", _
@@ -1564,8 +1563,8 @@ End Property
 ''' <summary>   Gets the condition indicating that the Read Status Byte command
 '''             can be executed. </summary>
 ''' <value>   [Boolean] True if the Read Status Byte command can be executed. </value>
-Public Property Get ReadStatusByteExecutable() As Boolean
-    ReadStatusByteExecutable = This.ReadStatusByteExecutable
+Public Property Get QueryStatusByteExecutable() As Boolean
+    QueryStatusByteExecutable = This.QueryStatusByteExecutable
 End Property
 
 ''' <summary>   Gets the condition indicating that the Read Status After Write command
@@ -1641,8 +1640,8 @@ End Property
 ''' <summary>   Gets the condition indicating that the Serial Poll command
 '''             can be executed. </summary>
 ''' <value>   [Boolean] True if the Serial Poll command can be executed. </value>
-Public Property Get SerialPollExecutable() As Boolean
-    SerialPollExecutable = This.SerialPollExecutable
+Public Property Get ReadStatsuByteExecutable() As Boolean
+    ReadStatsuByteExecutable = This.ReadStatsuByteExecutable
 End Property
 
 ''' <summary>   Gets the condition indicating that the Service Requested command
@@ -2075,8 +2074,8 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             This.QueryExecutable = This.ViewModel.QueryExecutable
         Case "ReadExecutable"
             This.ReadExecutable = This.ViewModel.ReadExecutable
-        Case "ReadStatusByteExecutable"
-            This.ReadStatusByteExecutable = This.ViewModel.ReadStatusByteExecutable
+        Case "QueryStatusByteExecutable"
+            This.QueryStatusByteExecutable = This.ViewModel.QueryStatusByteExecutable
         Case "ReadStandardEventStatusExecutable"
             This.ReadStandardEventStatusExecutable = This.ViewModel.ReadStandardEventStatusExecutable
         Case "ReadStatusAfterWriteExecutable"
@@ -2121,9 +2120,9 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
         Case "AutoAssertTalkGetExecutable"
             This.AutoAssertTalkGetExecutable = This.ViewModel.AutoAssertTalkGetExecutable
             'AutoAssertTalkGetButton.Enabled = This.ViewModel.AutoAssertTalkGetExecutable
-        Case "SerialPollExecutable"
-            This.SerialPollExecutable = This.ViewModel.SerialPollExecutable
-            'SerialPollButton.Enabled = This.ViewModel.SerialPollExecutable
+        Case "ReadStatsuByteExecutable"
+            This.ReadStatsuByteExecutable = This.ViewModel.ReadStatsuByteExecutable
+            'ReadStatsuByteButton.Enabled = This.ViewModel.ReadStatsuByteExecutable
         Case "ServiceRequestedExecutable"
             This.ServiceRequestedExecutable = This.ViewModel.ServiceRequestedExecutable
             'SRQButton.Enabled = This.ViewModel.ServiceRequestedExecutable

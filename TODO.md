@@ -7,17 +7,11 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 ## GIT:
 
 Core:
-Test Fx: rename Module Test Methods to Test Methods Flags
-
-Ieee488:
-Rename standard events Enum to standard event flags.
-Rename service requests to service request flags.
+Tests: Add test for closeness.
 
 Scpi:
-Rename Trigger Source Enum to trigger source option.
-Rename K2700 Sense function to sense function option and move to the sense system class.
-Rename sense function to sense function name.
-Rename measurement mode Enum to measurement mode option. 
+Add assertions for executable and observer values.
+Add test for serial poll. 
 
 ## TODO
 

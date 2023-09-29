@@ -21,8 +21,10 @@ Public Enum MeasurementModeOption
     Continuous = 1
     ''' <summary>   An enum constant representing the immediate trigger option. </summary>
     Immediate = 2
-    ''' <summary>   An enum constant representing the externam trigger option. </summary>
+    ''' <summary>   An enum constant representing the external trigger option. </summary>
     External = 3
+    ''' <summary>   An enum constant representing the external trigger monitoring option. </summary>
+    Monitoring = 4
 End Enum
 
 ''' <summary>   Represents an observer pattern subject that can notify observers
@@ -146,6 +148,7 @@ Private Type this_
     MessageToSendExecutable As Boolean
     QueryExecutable As Boolean
     ReadExecutable As Boolean
+    QueryStatusByteExecutable As Boolean
     ReadStatusByteExecutable As Boolean
     ReadStatusAfterWriteExecutable As Boolean
     ReadStandardEventStatusExecutable As Boolean
@@ -171,7 +174,7 @@ Private Type this_
     LocalLockoutExecutable As Boolean
     AutoAssertTalkSetExecutable As Boolean
     AutoAssertTalkGetExecutable As Boolean
-    SerialPollExecutable As Boolean
+    ReadStatisByteExecutable As Boolean
     GpibAddressGetExecutable As Boolean
     GpibAddressSetExecutable As Boolean
     GpibLanReadTimeoutGetExecutable As Boolean
@@ -919,6 +922,23 @@ Public Property Let ReadExecutable(ByVal a_value As Boolean)
     End If
 End Property
 
+''' <summary>   Gets the condition indicating that the Query Status Byte command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Query Status Byte command can be executed. </value>
+Public Property Get QueryStatusByteExecutable() As Boolean
+    QueryStatusByteExecutable = This.QueryStatusByteExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Query Status Byte command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Query Status Byte command can be executed. </param>
+Public Property Let QueryStatusByteExecutable(ByVal a_value As Boolean)
+    If This.QueryStatusByteExecutable <> a_value Then
+        This.QueryStatusByteExecutable = a_value
+        Me.OnPropertyChanged "QueryStatusByteExecutable"
+    End If
+End Property
+
 ''' <summary>   Gets the condition indicating that the Read Status Byte command
 '''             can be executed. </summary>
 ''' <value>   [Boolean] True if the Read Status Byte command can be executed. </value>
@@ -1109,7 +1129,7 @@ Public Sub WriteCommand()
     If Me.ReadStatusAfterWriteEnabled Then
 
         If This.Session.GpibLanControllerAttached Then _
-            Me.SerialPollByte = This.Session.SerialPoll
+            Me.SerialPollByte = Me.ReadStatusByte
 
         If Not cc_isr_Ieee488.Scpi.IsQuery(This.MessageToSend) Then
             Me.StatusByte = This.Device.QueryServiceRequestStatus
@@ -1299,6 +1319,7 @@ err_Handler:
 End Function
 
 ''' <summary>   Handles the Query Status Byte button click event and sets the status byte. </summary>
+''' <remarks>   Uses <c>*STB?</c> </remarks>
 Public Sub QueryStatusByteCommand()
 
     Const p_procedureName = "QueryStatusByteCommand"
@@ -1512,20 +1533,20 @@ Public Property Let AutoAssertTalkSetExecutable(ByVal a_value As Boolean)
     End If
 End Property
 
-''' <summary>   Gets the condition indicating that the Serial Poll command
-'''             can be executed. </summary>
+''' <summary>   Gets the condition indicating that the Read Status Byte (Serial poll) command
+''' can be executed. </summary>
 ''' <value>   [Boolean] True if the Serial Poll command can be executed. </value>
-Public Property Get SerialPollExecutable() As Boolean
-    SerialPollExecutable = This.SerialPollExecutable
+Public Property Get ReadStatisByteExecutable() As Boolean
+    ReadStatisByteExecutable = This.ReadStatisByteExecutable
 End Property
 
-''' <summary>   Sets the condition indicating that the Serial Poll command
-'''             can be executed. </summary>
+''' <summary>   Sets the condition indicating that the read status byte (Serial Poll) command
+''' can be executed. </summary>
 ''' <param name="a_value">   [Boolean] True if the Serial Poll command can be executed. </param>
-Public Property Let SerialPollExecutable(ByVal a_value As Boolean)
-    If This.SerialPollExecutable <> a_value Then
-        This.SerialPollExecutable = a_value
-        Me.OnPropertyChanged "SerialPollExecutable"
+Public Property Let ReadStatisByteExecutable(ByVal a_value As Boolean)
+    If This.ReadStatusByteExecutable <> a_value Then
+        This.ReadStatusByteExecutable = a_value
+        Me.OnPropertyChanged "ReadStatusByteExecutable"
     End If
 End Property
 
@@ -1657,9 +1678,10 @@ err_Handler:
 End Sub
 
 ''' <summary>   Internal. Serial polls the instrument. </summary>
-Friend Sub SerialPoll()
+''' <remarks>   Uses serial poll if available; otherwise <c>*STB?</></remakrs>
+Friend Sub ReadStatusByte()
 
-    Const p_procedureName = "SerialPoll"
+    Const p_procedureName = "ReadStatusByte"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -1694,15 +1716,15 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Handles the Serial Poll button click event. </summary>
-Public Sub SerialPollCommand()
+''' <summary>   Handles the Read Status Byte (srerial poll) button click event. </summary>
+Public Sub ReadStatusByteCommand()
 
-    Const p_procedureName = "SerialPollCommand"
+    Const p_procedureName = "ReadStatusByteCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.SerialPoll
+    Me.ReadStatusByte
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -2037,7 +2059,7 @@ Public Sub ServiceRequestedQueryCommand()
     ' Me.ServiceRequested = This.Session.ServiceRequested
 
     ' do this instead.
-    Me.SerialPoll
+    Me.ReadStatusByte
 
 End Sub
 
@@ -4144,10 +4166,10 @@ Friend Sub OnMeasurementModeChanged(ByVal a_mode As cc_isr_Tcp_Scpi.MeasurementM
     Me.MonitoringState = a_infoMessage
 
     ' turn on the stop requested in case the timer is still active.
-    Me.StopRequested = True
+    Me.StopRequested = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring <> a_mode
 
     ' disable the stop monitoring action
-    Me.StopMonitoringExecutable = False
+    Me.StopMonitoringExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring = a_mode
     
     ' enable the start monitoring action in external mode
     Me.StartMonitoringExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.External = a_mode
@@ -4156,69 +4178,13 @@ Friend Sub OnMeasurementModeChanged(ByVal a_mode As cc_isr_Tcp_Scpi.MeasurementM
     Me.MeasureExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate = a_mode
     
     ' enable toggling the configurations
-    Me.ImmediateTriggerOptionExecutable = True
-    Me.ExternalTriggerOptionExecutable = True
+    Me.ImmediateTriggerOptionExecutable = a_mode <> cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
+    Me.ExternalTriggerOptionExecutable = a_mode <> cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
     
-    ' finally, indicates that external trigger monitoring is disabled
-    Me.ExternalTrigMonitoringEnabled = False
-    
-End Sub
-
-''' <summary>   Handles the termination of external trigger monitoring in one place. </summary>
-''' <param name="a_infoMessage">   [String] info about the monitoring state. </param>
-Friend Sub OnMonitoringStarted(ByVal a_infoMessage As String)
-
-    ' turn off the stop requested to allow the onset of external trigger monitoring.
-    Me.StopRequested = True
-    
-    ' update the monitoring state
-    Me.MonitoringState = a_infoMessage
-
-    ' enable the stop monitoring action
-    Me.StopMonitoringExecutable = True
-    
-    ' and disable the start monitoring action
-    Me.StartMonitoringExecutable = False
-    
-    ' disable the measure executable.
-    Me.MeasureExecutable = False
-    
-    ' disable the option buttons that configure the reading modes.
-    Me.ImmediateTriggerOptionExecutable = True
-    Me.ExternalTriggerOptionExecutable = True
-
     ' finally, indicates that external trigger monitoring is enabled thus updating the related button.
-    Me.ExternalTrigMonitoringEnabled = True
-
+    Me.ExternalTrigMonitoringEnabled = a_mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
+    
 End Sub
-
-''' <summary>   Handles the termination of external trigger monitoring in one place. </summary>
-''' <param name="a_infoMessage">   [String] info about the monitoring state. </param>
-Friend Sub OnMonitoringEnded(ByVal a_infoMessage As String)
-
-    ' update the monitoring state
-    Me.MonitoringState = a_infoMessage
-
-    ' disable both start and stop monitoring thus requiring the
-    ' configuration of external triggering each time.
-    Me.StopMonitoringExecutable = False
-    Me.StartMonitoringExecutable = False
-    
-    ' disable the measure executable.
-    Me.MeasureExecutable = False
-    
-    ' enable the option buttons that configure the reading mdoes.
-    Me.ImmediateTriggerOptionExecutable = True
-    Me.ExternalTriggerOptionExecutable = True
-
-    ' finally, toggle off the trigger monitoring.
-    Me.ExternalTrigMonitoringEnabled = False
-    
-    ' set the measurmentmode to none for force a reset on setting a new measurement
-    Me.CurrentMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.None
-
-End Sub
-
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
@@ -4364,7 +4330,7 @@ err_Handler:
     p_isDone = True
 
     ' handle the termination of monitoring
-    Me.OnMonitoringEnded "Error handling the timer event"
+    Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.None, "Error handling the timer event"
 
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
@@ -4387,7 +4353,7 @@ Public Sub StartTimer(Optional ByVal a_interval As Long = 500)
 
     This.HandlingTimerEvent = False
     This.PauseRequested = False
-    Me.OnMonitoringStarted "Trigger monitoring commenced"
+    Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring, "Trigger monitoring commenced"
     If m_eventTimer Is Nothing Then
         Set m_eventTimer = cc_isr_Core.Factory.NewEventTimer.Initialize(a_interval)
         m_eventTimer.StartTimer
@@ -4421,7 +4387,7 @@ Private Sub m_eventTimer_Tick()
     DoEvents
     If This.PauseRequested Then
         If Not m_eventTimer Is Nothing Then m_eventTimer.PauseTimer
-        Me.OnMonitoringEnded "Trigger monitoring done"
+        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.None, "Trigger monitoring done"
     Else
         HandleTimerEvent
     End If
@@ -4504,7 +4470,7 @@ Friend Sub InitializeExecutablesState()
         Me.LocalLockoutExecutable = Me.Connected
         Me.AutoAssertTalkSetExecutable = Me.Connected
         Me.AutoAssertTalkGetExecutable = Me.Connected
-        Me.SerialPollExecutable = Me.Connected
+        Me.ReadStatusByteExecutable = Me.Connected
         Me.ServiceRequestedExecutable = Me.Connected
         Me.GpibAddressGetExecutable = Me.Connected
         Me.GpibAddressSetExecutable = Me.Connected

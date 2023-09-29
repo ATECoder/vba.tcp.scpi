@@ -85,7 +85,7 @@ Private Function IErrTracer_AssertLeftoverErrors(Optional ByVal a_delimiter As S
     If VBA.vbNullString = p_errors Then
         Set p_outcome = cc_isr_Test_Fx.Assert.Pass("There are no leftover errors to assert.")
     Else
-        Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_errors)
+        Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_errors)
     End If
     
     Set IErrTracer_AssertLeftoverErrors = p_outcome
