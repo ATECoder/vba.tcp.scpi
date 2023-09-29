@@ -6,16 +6,12 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
-Ieee4888:
-Add try query service request status,
-
 SCPI:
-View Model: Update readinf and querying the status byte to correctly update the serial poll or status bytes.
 
 ## TODO
 
 SCPI:
-ran all tests.
+View model: ran all tests.
 
 Flying
 - test power on reset of the GPIB=Lan controller.

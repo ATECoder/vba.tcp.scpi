@@ -84,7 +84,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 1
+    RunTest 2
     AfterAll
 End Sub
 
@@ -93,6 +93,8 @@ End Sub
 ''' <code>
 ''' With 1ms read after write delay.
 ''' TestShouldInitialize passed. Elapsed time: 16.4 ms.
+''' TestShouldBeConnected passed. Elapsed time: 31.4 ms.
+'''     Serial Poll is 16 in 11.8ms.
 ''' </code>
 ''' </remarks>
 Public Sub RunAllTests()
@@ -276,7 +278,7 @@ Public Sub BeforeEach()
         Dim p_command As String
         p_command = "*CLS;*WAI;*OPC?"
         If 0 >= This.ViewModel.Session.TryWriteLine(p_command, p_details) Then
-            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+            Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
         End If
         
     End If
@@ -284,7 +286,7 @@ Public Sub BeforeEach()
     Dim p_reply As String
     If p_outcome.AssertSuccessful Then
         If 0 > This.ViewModel.Session.TryRead(p_reply, p_details) Then
-            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+            Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
         End If
     End If
     
@@ -369,11 +371,11 @@ Public Sub AfterEach()
         ' clear errors if any so as to leave the instrument without errors.
         p_command = "*CLS;*WAI;*OPC?"
         If 0 >= This.ViewModel.Session.TryWriteLine(p_command, p_details) Then
-            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+            Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
         End If
         
         If 0 > This.ViewModel.Session.TryRead(p_reply, p_details) Then
-            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+            Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
         End If
         
     End If
@@ -497,16 +499,15 @@ Private Function AssertSerialPollShouldValidate(ByVal a_bitsStatus As Integer, _
     p_polled = This.ViewModel.Session.AwaitStatusBits(a_bitsStatus, a_statusBits, 3000, a_statusByte, p_details)
     p_elapsed = p_stopper.ElapsedMilliseconds
     If a_statusByte < 0 Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+        Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
     ElseIf p_polled Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.Pass()
+        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Serial Poll is " & VBA.CStr(a_statusByte) & _
+            " in " & Format(p_elapsed, "0.0") & " ms.")
     Else
-        Set p_outcome = cc_isr_Test_Fx.Assert.fail("    Status byte '" & _
+        Set p_outcome = cc_isr_Test_Fx.Assert.Fail("    Status byte '" & _
             VBA.CStr(a_statusByte) & "' bits '" & VBA.CStr(a_statusBits) & _
             "' not matching the expected bits '" & VBA.CStr(a_bitsStatus) & "' value.")
     End If
-    Debug.Print "    Serial Poll is " & VBA.CStr(a_statusByte) & _
-        " in " & Format(p_elapsed, "0.0") & "ms."
     Set AssertSerialPollShouldValidate = p_outcome
 
 End Function
@@ -670,28 +671,37 @@ Public Function TestShouldBeConnected() As cc_isr_Test_Fx.Assert
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.StopMonitoringExecutable, _
             "Stop monitoning command should be disabled.")
         
-        
+    ' test serial polling
     If p_outcome.AssertSuccessful Then
             
-        ' check if connected and clear errors.
-        p_command = "*CLS;*WAI;*OPC?"
+        Dim p_details As String: p_details = VBA.vbNullString
+        Dim p_command As String: p_command = "*CLS;*WAI;*OPC?"
         If 0 >= This.ViewModel.Session.TryWriteLine(p_command, p_details) Then
-            Set p_outcome = cc_isr_Test_Fx.Assert.fail(p_details)
+            Set p_outcome = cc_isr_Test_Fx.Assert.Fail(p_details)
         End If
         
     End If
     
-    If p_outcome.AssertSuccessful And This.Session.GpibLanControllerAttached Then
+    Dim p_serialPollDetails As String: p_serialPollDetails = VBA.vbNullString
     
-        Dim p_expectedValue As Integer: p_expectedValue = 16
-        Dim p_testBit As Integer: p_testBit = 16
+    If p_outcome.AssertSuccessful And This.ViewModel.Session.GpibLanControllerAttached Then
+    
+        Dim p_expectedValue As Integer: p_expectedValue = cc_isr_Ieee488.ServiceRequestFlags.MessageAvailable
+        Dim p_testBit As Integer: p_testBit = cc_isr_Ieee488.ServiceRequestFlags.MessageAvailable
         Dim p_statusByte As Integer
         Set p_outcome = AssertSerialPollShouldValidate(p_expectedValue, p_testBit, p_statusByte)
+        p_serialPollDetails = p_outcome.AssertMessage
             
         ' set the serial poll and service request bytes
         This.ViewModel.SerialPollByte = p_statusByte
         This.ViewModel.StatusByte = p_statusByte
             
+        ' get the operation completion values
+        Dim p_reply As String: p_reply = VBA.vbNullString
+        If 0 >= This.ViewModel.Session.TryRead(p_reply, p_details) Then _
+            Set p_outcome = cc_isr_Test_Fx.Assert.Fail( _
+                "Failed reading the operation completion reply after serial poll; " & p_details)
+        
         If p_outcome.AssertSuccessful Then _
             Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SerialPollByte, _
                 This.Observer.SerialPollByte, _
@@ -701,8 +711,9 @@ Public Function TestShouldBeConnected() As cc_isr_Test_Fx.Assert
             Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.StatusByte, _
                 This.Observer.StatusByte, _
                 "Observer and view model status bytes should be equal.")
-        End If
-    
+                
+                        
+                
     End If
     
         
@@ -719,6 +730,7 @@ exit_Handler:
     
     Debug.Print p_outcome.BuildReport("TestShouldBeConnected") & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
+    Debug.Print VBA.vbTab & p_serialPollDetails
     
     Set TestShouldBeConnected = p_outcome
     
@@ -1048,13 +1060,16 @@ Public Function TestShouldRecoverFromSyntaxError() As Assert
         
     End If
 
-    If p_outcome.AssertSuccessful And This.Session.GpibLanControllerAttached Then
+    Dim p_serialPollDetails As String: p_serialPollDetails = VBA.vbNullString
+
+    If p_outcome.AssertSuccessful And This.ViewModel.Session.GpibLanControllerAttached Then
     
-        Dim p_expectedValue As Integer: p_expectedValue = 4
-        Dim p_testBit As Integer: p_testBit = 4
+        Dim p_expectedValue As Integer: p_expectedValue = cc_isr_Ieee488.ServiceRequestFlags.ErrorAvailable
+        Dim p_testBit As Integer: p_testBit = cc_isr_Ieee488.ServiceRequestFlags.ErrorAvailable
         Dim p_statusByte As Integer
         Set p_outcome = AssertSerialPollShouldValidate(p_expectedValue, p_testBit, p_statusByte)
-            
+        p_serialPollDetails = p_outcome.AssertMessage
+        
         ' set the serial poll and service request bytes
         This.ViewModel.SerialPollByte = p_statusByte
         
@@ -1069,7 +1084,6 @@ Public Function TestShouldRecoverFromSyntaxError() As Assert
             Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.StatusByte, _
                 This.Observer.StatusByte, _
                 "Observer and view model status bytes should be equal.")
-        End If
     
         ' clear the error state
         cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
@@ -1097,6 +1111,7 @@ exit_Handler:
     
     Debug.Print p_outcome.BuildReport("TestShouldRecoverFromSyntaxError") & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
+    Debug.Print VBA.vbTab & p_serialPollDetails
     
     Set TestShouldRecoverFromSyntaxError = p_outcome
     
@@ -1440,7 +1455,7 @@ Public Function TestShouldConfigureImmediateMode() As cc_isr_Test_Fx.Assert
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreClose(p_readingValue, VBA.cdb(p_reading), p_epsilon, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreCloseDouble(p_readingValue, VBA.CDbl(p_reading), p_epsilon, _
             "Reading should equal the parsed value.")
             
     End If

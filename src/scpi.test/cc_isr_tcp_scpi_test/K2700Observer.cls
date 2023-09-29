@@ -171,7 +171,7 @@ Private Type this_
     LocalLockoutExecutable As Boolean
     AutoAssertTalkSetExecutable As Boolean
     AutoAssertTalkGetExecutable As Boolean
-    ReadStatsuByteExecutable As Boolean
+    ReadStatusByteExecutable As Boolean
     GpibAddressGetExecutable As Boolean
     GpibAddressSetExecutable As Boolean
     GpibLanReadTimeoutGetExecutable As Boolean
@@ -432,9 +432,9 @@ Friend Sub SDCButton_Click()
 End Sub
 
 ''' <summary>   Handles the serial poll button click event. </summary>
-Friend Sub ReadStatsuByteButton_Click()
-    If This.ReadStatsuByteExecutable Then
-        This.ViewModel.ReadStatsuByteCommand
+Friend Sub ReadStatusByteButton_Click()
+    If This.ReadStatusByteExecutable Then
+        This.ViewModel.ReadStatusByteCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me), "._Click", _
@@ -1640,8 +1640,8 @@ End Property
 ''' <summary>   Gets the condition indicating that the Serial Poll command
 '''             can be executed. </summary>
 ''' <value>   [Boolean] True if the Serial Poll command can be executed. </value>
-Public Property Get ReadStatsuByteExecutable() As Boolean
-    ReadStatsuByteExecutable = This.ReadStatsuByteExecutable
+Public Property Get ReadStatusByteExecutable() As Boolean
+    ReadStatusByteExecutable = This.ReadStatusByteExecutable
 End Property
 
 ''' <summary>   Gets the condition indicating that the Service Requested command
@@ -2120,9 +2120,9 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
         Case "AutoAssertTalkGetExecutable"
             This.AutoAssertTalkGetExecutable = This.ViewModel.AutoAssertTalkGetExecutable
             'AutoAssertTalkGetButton.Enabled = This.ViewModel.AutoAssertTalkGetExecutable
-        Case "ReadStatsuByteExecutable"
-            This.ReadStatsuByteExecutable = This.ViewModel.ReadStatusByteExecutable
-            'ReadStatsuByteButton.Enabled = This.ViewModel.ReadStatusByteExecutable
+        Case "ReadStatusByteExecutable"
+            This.ReadStatusByteExecutable = This.ViewModel.ReadStatusByteExecutable
+            'ReadStatusByteButton.Enabled = This.ViewModel.ReadStatusByteExecutable
         Case "ServiceRequestedExecutable"
             This.ServiceRequestedExecutable = This.ViewModel.ServiceRequestedExecutable
             'SRQButton.Enabled = This.ViewModel.ServiceRequestedExecutable
