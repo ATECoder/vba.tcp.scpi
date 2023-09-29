@@ -6,12 +6,11 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
-Core:
-Tests: Add test for closeness.
+Ieee4888:
+Add try query service request status,
 
-Scpi:
-Add assertions for executable and observer values.
-Add test for serial poll. 
+SCPI:
+View Model: Update readinf and querying the status byte to correctly update the serial poll or status bytes.
 
 ## TODO
 

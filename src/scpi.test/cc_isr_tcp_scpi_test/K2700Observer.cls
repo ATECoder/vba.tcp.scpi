@@ -2121,8 +2121,8 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             This.AutoAssertTalkGetExecutable = This.ViewModel.AutoAssertTalkGetExecutable
             'AutoAssertTalkGetButton.Enabled = This.ViewModel.AutoAssertTalkGetExecutable
         Case "ReadStatsuByteExecutable"
-            This.ReadStatsuByteExecutable = This.ViewModel.ReadStatsuByteExecutable
-            'ReadStatsuByteButton.Enabled = This.ViewModel.ReadStatsuByteExecutable
+            This.ReadStatsuByteExecutable = This.ViewModel.ReadStatusByteExecutable
+            'ReadStatsuByteButton.Enabled = This.ViewModel.ReadStatusByteExecutable
         Case "ServiceRequestedExecutable"
             This.ServiceRequestedExecutable = This.ViewModel.ServiceRequestedExecutable
             'SRQButton.Enabled = This.ViewModel.ServiceRequestedExecutable

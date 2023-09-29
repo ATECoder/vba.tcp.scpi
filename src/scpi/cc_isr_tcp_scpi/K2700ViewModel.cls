@@ -1128,12 +1128,13 @@ Public Sub WriteCommand()
 
     If Me.ReadStatusAfterWriteEnabled Then
 
-        If This.Session.GpibLanControllerAttached Then _
-            Me.SerialPollByte = Me.ReadStatusByte
+        Dim p_canQuery As Boolean
+        p_canQuery = Not cc_isr_Ieee488.Scpi.IsQuery(This.MessageToSend)
+        Me.ReadStatusByte p_canQuery
 
-        If Not cc_isr_Ieee488.Scpi.IsQuery(This.MessageToSend) Then
-            Me.StatusByte = This.Device.QueryServiceRequestStatus
-            Me.StandardByte = This.Device.QueryStandardEventsStatus
+        If p_canQuery Then
+            Me.QueryStatusByteCommand
+            Me.ReadStandardEventStatusCommand
         End If
 
     End If
@@ -1318,8 +1319,34 @@ err_Handler:
 
 End Function
 
+''' <summary>   Tries to read (<c>*STB?</c>) the device status byte. </summary>
+''' <remarks>   This method updates the <see cref="K2700ViewModel.StatusByte"/>. </remarks>
+''' <param name="a_details">   [Out, String] Details the information of why the instrument
+'''                            failed to restore state. </param>
+''' <returns>   [Boolean] ture if success. </returns>
+Public Function TryQueryStatusByte(ByRef a_details As String) As Boolean
+
+    Const p_procedureName As String = "TryQueryStatusByte"
+
+    Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
+    Dim p_details As String: p_details = VBA.vbNullString
+    Dim p_statusByte As Integer
+    p_statusByte = This.Device.TryQueryServiceRequestStatus(p_details)
+    If 0 > p_statusByte Then
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                p_details
+    Else
+        This.StatusByte = p_statusByte
+    End If
+    
+    TryQueryStatusByte = 0 <= p_statusByte
+
+End Function
+
+
 ''' <summary>   Handles the Query Status Byte button click event and sets the status byte. </summary>
-''' <remarks>   Uses <c>*STB?</c> </remarks>
+''' <remarks>   This method updates the <see cref="K2700ViewModel.StatusByte"/>.
+''' Uses <c>*STB?</c> </remarks>
 Public Sub QueryStatusByteCommand()
 
     Const p_procedureName = "QueryStatusByteCommand"
@@ -1328,8 +1355,12 @@ Public Sub QueryStatusByteCommand()
     On Error GoTo err_Handler
 
     Me.RestartStopper
-
-    Me.StatusByte = This.Device.QueryServiceRequestStatus()
+    
+    Dim p_details As String: p_details = VBA.vbNullString
+    If Not Me.TryQueryStatusByte(p_details) Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " " & p_details
 
     Me.ReadStopper
 
@@ -1677,9 +1708,39 @@ err_Handler:
 
 End Sub
 
+''' <summary>   Tries to read (serial poll) or query (<c>*STB?</c>) the device status byte. </summary>
+''' <remarks>   This method updates the <see cref="K2700ViewModel.SerialPollByte"/>. </remarks>
+''' <param name="canQuery">    [Optional, Boolean, False] True if the <c>*STB?</c>
+'''                            can be used to query the status byte in case
+'''                            <see cref="TcpSession.GpibLanControllerAttached"/> is false. </param>
+''' <param name="a_details">   [Out, String] Details the information of why the instrument
+'''                            failed to restore state. </param>
+''' <returns>   [Boolean] ture if success. </returns>
+Public Function TryReadStatusByte(ByRef a_details As String, Optional ByVal a_canQuery As Boolean = False) As Boolean
+
+    Const p_procedureName As String = "TryReadStatusByte"
+
+    Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
+    Dim p_details As String: p_details = VBA.vbNullString
+    Dim p_statusByte As Integer
+    p_statusByte = This.Device.TryReadStatusByte(p_details)
+    If 0 > p_statusByte Then
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                p_details
+    Else
+        This.SerialPollByte = p_statusByte
+    End If
+    
+    TryReadStatusByte = 0 <= p_statusByte
+
+End Function
+
 ''' <summary>   Internal. Serial polls the instrument. </summary>
 ''' <remarks>   Uses serial poll if available; otherwise <c>*STB?</></remakrs>
-Friend Sub ReadStatusByte()
+''' <param name="canQuery">   [Optional, Boolean, False] True if the <c>*STB?</c>
+'''                           can be used to query the status byte in case
+'''                           <see cref="TcpSession.GpibLanControllerAttached"/> is false. </param>
+Friend Sub ReadStatusByte(Optional ByVal a_canQuery As Boolean = False)
 
     Const p_procedureName = "ReadStatusByte"
 
@@ -1688,8 +1749,12 @@ Friend Sub ReadStatusByte()
 
     Me.RestartStopper
 
-    Me.StatusByte = This.Device.ReadStatusByte(True)
-
+    Dim p_details As String: p_details = VBA.vbNullString
+    If Not Me.TryReadStatusByte(p_details, a_canQuery) Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " " & p_details
+    
     Me.ReadStopper
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -1857,16 +1922,24 @@ Public Sub WriteSocketCommand()
     
         Me.SentMessage = This.MessageToSend
     
-        If Me.ReadStatusAfterWriteEnabled And _
-            Not cc_isr_Ieee488.Scpi.IsQuery(Me.MessageToSend) Then
-            Me.SerialPollByte = This.Session.TrySerialPoll(p_details)
-            p_success = 0 <= Me.SerialPollByte
+        If Me.ReadStatusAfterWriteEnabled Then
+    
+            Dim p_canQuery As Boolean
+            p_canQuery = Not cc_isr_Ieee488.Scpi.IsQuery(This.MessageToSend)
+            Me.ReadStatusByte p_canQuery
+    
+            If p_canQuery Then
+                Me.QueryStatusByteCommand
+                Me.ReadStandardEventStatusCommand
+            End If
+    
         End If
     
-    End If
-
-    If Not p_success Then _
+    Else
+    
         Me.LastErrorMessage = p_details
+    
+    End If
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:

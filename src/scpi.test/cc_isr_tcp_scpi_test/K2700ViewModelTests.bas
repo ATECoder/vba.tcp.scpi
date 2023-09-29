@@ -84,7 +84,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 7
+    RunTest 1
     AfterAll
 End Sub
 
@@ -92,6 +92,7 @@ End Sub
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' TestShouldInitialize passed. Elapsed time: 16.4 ms.
 ''' </code>
 ''' </remarks>
 Public Sub RunAllTests()
