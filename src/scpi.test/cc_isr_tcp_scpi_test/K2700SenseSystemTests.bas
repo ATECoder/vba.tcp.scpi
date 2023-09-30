@@ -480,7 +480,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("TestInitialSenseFunctionShouldGet") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestInitialSenseFunctionShouldGet = p_outcome
@@ -561,7 +561,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("TestSenseFunctionShouldSet") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestSenseFunctionShouldSet = p_outcome

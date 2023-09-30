@@ -3892,7 +3892,8 @@ End Sub
 
 ''' <summary>   Gets the Stop Requested condition. </summary>
 ''' <remarks>   When true, a Stop request is set so that the timer event could be used to stop
-''' monitring for external triggers. </remarks>
+''' monitring for external triggers. Thereafter a pause request is turned on so as to
+''' end the timer events. </remarks>
 ''' <value>   [Boolean]. </value>
 Public Property Get StopRequested() As Boolean
     StopRequested = This.StopRequested
@@ -4115,8 +4116,7 @@ End Sub
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Gets the Pause Requested condition. </summary>
-''' <remarks>   When true, a pause request is sent to the timer so that the timer
-'''             event is not handled and the timer is paused on the next event. </remarks>
+''' <remarks>   When true, the timer is pauses on the next timer event. </remarks>
 ''' <value>   [Boolean]. </value>
 Public Property Get PauseRequested() As Boolean
     PauseRequested = This.PauseRequested
@@ -4335,7 +4335,7 @@ End Sub
 ''' 10/16/00  David Hary  1.00.00 Add a beep </para>
 ''' 2023-06-23 David Hary 1.0.8574 Use the device event handler to update the reading values.
 ''' </remarks>
-Private Sub HandleTimerEvent()
+Public Sub HandleTimerEvent()
 
     Const p_procedureName = "HandleTimerEvent"
 
@@ -4372,17 +4372,27 @@ Private Sub HandleTimerEvent()
 
     p_success = This.K2700.TryMonitorExternalTrigger(p_channelNumber, p_isDone, p_details)
     
-    If Not p_success Then
+    ' if done, make sure to pause the timer
+    If p_isDone Then
+    
+        ' the timer event will pause itself on the next timer event
+        Me.PauseRequested = True
+    
+    ElseIf Not p_success Then
     
         ' if monitoring failed, request a stop and report.
         Me.StopRequested = True
         
+    End If
+    
+    ' either way report the error.
+    If Not p_success Then
         cc_isr_Core_IO.UserDefinedErrors.EnqueueError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
             " failed handling timer event; " & p_details
         Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
     End If
+    
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:

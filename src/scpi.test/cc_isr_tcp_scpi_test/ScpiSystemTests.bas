@@ -462,7 +462,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("TestInputsShouldBeFront") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestInputsShouldBeFront = p_outcome

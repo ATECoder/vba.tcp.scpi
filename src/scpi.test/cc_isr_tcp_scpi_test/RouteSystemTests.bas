@@ -393,7 +393,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("Test7700CardsShouldBePopulated") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldBePopulated = p_outcome
@@ -563,7 +563,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("Test7700CardsShouldSelected") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldSelected = p_outcome
@@ -798,7 +798,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("Test7700CardsShouldBuildScanLists") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldBuildScanLists = p_outcome
@@ -854,7 +854,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("Test7700CardsShouldBuild4WireScanLists") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldBuild4WireScanLists = p_outcome

@@ -75,6 +75,8 @@ Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
         Case 8
             Set p_outcome = TestShouldConfigureExternalMode
         Case 9
+            Set p_outcome = TestTriggersShouldPoll
+        Case 10
             Set p_outcome = TestShouldMonitorTriggering
         Case Else
     End Select
@@ -123,7 +125,7 @@ Public Sub RunAllTests()
     This.PassedCount = 0
     This.FailedCount = 0
     This.InconclusiveCount = 0
-    This.TestCount = 6
+    This.TestCount = 8
     Dim p_testNumber As Integer
     For p_testNumber = 1 To This.TestCount
         Set p_outcome = RunTest(p_testNumber)
@@ -1513,7 +1515,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("TestShouldInitialize") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestShouldInitialize = p_outcome
@@ -1662,7 +1664,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("TestShouldBeConnected") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     Debug.Print VBA.vbTab & p_serialPollDetails
     
@@ -1766,7 +1768,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("TestShouldReadCards") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestShouldReadCards = p_outcome
@@ -1930,7 +1932,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("TestShouldRestoreInitialState") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestShouldRestoreInitialState = p_outcome
@@ -2043,7 +2045,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("TestShouldRecoverFromSyntaxError") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     Debug.Print VBA.vbTab & p_serialPollDetails
     
@@ -2130,7 +2132,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("TestShouldRestoreFromClosedConnection") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestShouldRestoreFromClosedConnection = p_outcome
@@ -2201,7 +2203,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("TestShouldConfigureImmediateMode") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestShouldConfigureImmediateMode = p_outcome
@@ -2267,10 +2269,171 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("TestShouldConfigureExternalMode") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestShouldConfigureExternalMode = p_outcome
+    
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
+    
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Function
+
+''' summary>   Asserts that triggers should get polled. </summary>
+''' <param name="a_outcome">          [<see cref="cc_isr_Test_Fx.Assert"/>] The current outcome. </param>
+''' <param name="a_timeoutSeconds">   [Optional, Double, 30] The time to wait for some triggered values. </param>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
+Public Function AssertTriggersShouldPoll(ByVal a_outcome As cc_isr_Test_Fx.Assert, _
+    Optional ByVal a_timeoutSeconds As Double = 30) As cc_isr_Test_Fx.Assert
+
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_outcome
+    
+    Set AssertTriggersShouldPoll = p_outcome
+
+End Function
+
+
+''' <summary>   Unit test. Asserts that view model should polltriggering. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
+Public Function TestTriggersShouldPoll() As cc_isr_Test_Fx.Assert
+
+    Const p_procedureName As String = "TestTriggersShouldPoll"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_details As String: p_details = VBA.vbNullString
+    
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    ' start the external trigger mode
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = AssertExternalTriggerModeShouldStart(p_outcome)
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.PauseRequested, _
+            "Pause requested should be off upon starting external trigger mode.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.K2700.ExtTrigInitiated, _
+            "External trigger initiation should be off upon starting external trigger mode.")
+    
+    ' set auto increment on view model
+    This.ViewModel.CurrentChannelNumber = 1
+    This.ViewModel.AutoIncrementChannelNoEnabled = True
+    
+    ' get some data here.
+    
+    ' get the first channel number
+    Dim p_channel As Integer
+    p_channel = This.Observer.CurrentChannelNumber
+    
+    ' get the initial reading
+    Dim p_reading As String
+    p_reading = This.Observer.MeasuredReading
+    
+    If p_outcome.AssertSuccessful Then
+    
+        ' prime triggering so that we can get the trigger state.
+        This.ViewModel.HandleTimerEvent
+    
+        ' after the first handle of timer event,
+        ' external trigger monitor should be initiated.
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.K2700.ExtTrigInitiated, _
+            "External trigger initiation should be on after first call to handle the timer event.")
+    
+    End If
+    
+    ' loop for some time waiting for triggered measurements.
+    Dim p_duration As Double: p_duration = 10 ' seconds
+    Dim p_endTime As Double
+    p_endTime = cc_isr_Core_IO.CoreExtensions.DaysNow() + _
+        (p_duration / cc_isr_Core_IO.CoreExtensions.SecondsPerDay)
+    Do Until This.ViewModel.PauseRequested
+        
+        DoEvents
+    
+        ' on failure, send a stop requested.
+        ' this is processed on the next timer event handler, which then
+        ' sets the pause requested, which stops the timer
+        If Not p_outcome.AssertSuccessful Then _
+            This.ViewModel.StopRequested = True
+            
+        If p_endTime > cc_isr_Core_IO.CoreExtensions.DaysNow() Then _
+            This.ViewModel.StopRequested = True
+        
+        If This.ViewModel.PauseRequested Then
+            ' the loop is exited when the timer events are signaled to stop
+            Exit Do
+        Else
+            On Error Resume Next
+            This.ViewModel.HandleTimerEvent
+            If Err.Number <> 0 Then
+                Set p_outcome = cc_isr_Test_Fx.Assert.Fail( _
+                    "Error #" & Err.Number & " handling timer event; " & Err.Description & ".")
+                Exit Do
+            End If
+            On Error GoTo 0
+        End If
+    
+        If p_channel <> This.Observer.CurrentChannelNumber Then
+        
+            DoEvents
+            p_channel = This.Observer.CurrentChannelNumber
+            DoEvents
+            p_reading = This.Observer.MeasuredReading
+            DoEvents
+            Debug.Print p_channel; ": "; p_reading
+
+        End If
+    
+    Loop
+    
+    
+    
+    
+    
+    ' Finally, verify that no error message was recorded.
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
+            "Last error message should be empty but found: '" & This.ViewModel.LastErrorMessage & "'.")
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
+    
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+        " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
+    
+    Set TestTriggersShouldPoll = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -2354,7 +2517,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("TestShouldMonitorTriggering") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestShouldMonitorTriggering = p_outcome
@@ -2433,7 +2596,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("TestViewModelTestTemplate") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestViewModelTestTemplate = p_outcome
