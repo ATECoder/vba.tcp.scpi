@@ -7,6 +7,9 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 ## GIT:
 
 SCPI:
+Fix tests. Add test number.
+Add assert methods for configuration, validation and stopping measurement modes.
+
 
 ## TODO
 

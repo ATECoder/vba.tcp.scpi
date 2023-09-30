@@ -29,6 +29,7 @@ Private This As this_
 ''' <summary>   Runs the specified test. </summary>
 Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
     Dim p_outcome As cc_isr_Test_Fx.Assert
+    This.TestNumber = a_testNumber
     BeforeEach
     Select Case a_testNumber
         Case 1
@@ -119,7 +120,6 @@ Public Sub BeforeAll()
 
     This.Name = "RouteSystemTests"
     
-    This.TestNumber = 0
     Set This.TestStopper = cc_isr_Core_IO.Factory.NewStopwatch
     Set This.ErrTracer = New ErrTracer
     
@@ -172,8 +172,6 @@ Public Sub BeforeEach()
     
     ' Trap errors to the error handler
     On Error GoTo err_Handler
-
-    This.TestNumber = This.TestNumber + 1
 
     Dim p_outcome As cc_isr_Test_Fx.Assert
 
@@ -395,7 +393,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("Test7700CardsShouldBePopulated") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("Test7700CardsShouldBePopulated") & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldBePopulated = p_outcome
@@ -565,7 +563,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("Test7700CardsShouldSelected") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("Test7700CardsShouldSelected") & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldSelected = p_outcome
@@ -800,7 +798,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("Test7700CardsShouldBuildScanLists") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("Test7700CardsShouldBuildScanLists") & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldBuildScanLists = p_outcome
@@ -856,7 +854,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("Test7700CardsShouldBuild4WireScanLists") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("Test7700CardsShouldBuild4WireScanLists") & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldBuild4WireScanLists = p_outcome

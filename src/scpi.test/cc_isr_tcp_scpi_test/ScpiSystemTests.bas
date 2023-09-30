@@ -34,6 +34,7 @@ Private This As this_
 ''' <summary>   Runs the specified test. </summary>
 Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
     Dim p_outcome As cc_isr_Test_Fx.Assert
+    This.TestNumber = a_testNumber
     BeforeEach
     Select Case a_testNumber
         Case 1
@@ -107,7 +108,6 @@ Public Sub BeforeAll()
 
     This.Name = "ScpiSystemTests"
     
-    This.TestNumber = 0
     This.Address = "192.168.0.252:1234"
     This.SessionTimeout = 3000
     
@@ -192,8 +192,6 @@ Public Sub BeforeEach()
     
     ' Trap errors to the error handler
     On Error GoTo err_Handler
-
-    This.TestNumber = This.TestNumber + 1
 
     Dim p_outcome As cc_isr_Test_Fx.Assert
 
@@ -464,7 +462,7 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print p_outcome.BuildReport("TestInputsShouldBeFront") & _
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport("TestInputsShouldBeFront") & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestInputsShouldBeFront = p_outcome
