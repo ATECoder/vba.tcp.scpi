@@ -6,6 +6,8 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
+View model: add trigger polling test.
+
 
 ## TODO
 

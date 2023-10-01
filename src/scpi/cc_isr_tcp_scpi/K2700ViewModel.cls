@@ -133,6 +133,9 @@ Private Type this_
     ' event handler overrun. This effectively synchronizes the timer
     ' event with the instrument.
     HandlingTimerEvent As Boolean
+    ' indicates that the timer started; used to monitor timer state.
+    TimerStarted As Boolean
+    TimerControlled As Boolean
 
     ' Service request monitoring properties
     MonitoringState As String
@@ -3925,7 +3928,9 @@ Friend Property Let ExternalTrigMonitoringEnabled(ByVal a_value As Boolean)
 End Property
 
 ''' <summary>   Internal. Starts monitoring the instrument for external triggered measurements. </summary>
-Friend Sub StartMonitoringExternalTriggers()
+''' <param name="a_timerControlled">   [Optional, Boolean, True] true time controlled; otherwise, the timer event
+''' handler will be polled. </value>
+Friend Sub StartMonitoringExternalTriggers(Optional ByVal a_timerControlled As Boolean = True)
 
     Const p_procedureName = "StartMonitoringExternalTriggers"
 
@@ -3958,11 +3963,22 @@ Friend Sub StartMonitoringExternalTriggers()
     ' this is handled by the K2700.MonitorExternalTrigger method.
     ' This.Session.WriteLine ":INIT;*CLS"
 
-    ' start the timer
-    Me.StartTimer Me.TimerInterval
- 
-    ' take some time for it to take effect.
-    cc_isr_Core_IO.Factory.NewStopwatch.Wait Me.TimerInterval
+    This.TimerControlled = a_timerControlled
+    
+    If This.TimerControlled Then
+    
+       ' start the timer
+       Me.StartTimer Me.TimerInterval
+    
+       ' take some time for it to take effect.
+       cc_isr_Core_IO.Factory.NewStopwatch.Wait Me.TimerInterval
+    
+    Else
+        
+        ' if not using timer, go to monitoring mode
+        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring, "Trigger monitoring commenced"
+        
+    End If
  
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -4039,11 +4055,26 @@ Friend Sub StopMonitoringExternalTriggers()
     ' request a stop of external trigger monitoring.
     Me.StopRequested = True
     
-    ' take some time for it to take effect.
-    cc_isr_Core_IO.Factory.NewStopwatch.Wait Me.TimerInterval
+    If This.TimerControlled Then
     
-    ' TODO: ? If check if timer stopped. if not,
-    ' for it.
+        Dim p_stopper As cc_isr_Core_IO.Stopwatch
+        Set p_stopper = cc_isr_Core_IO.Factory.NewStopwatch
+        Dim p_timeout As Integer: p_timeout = 2 * Me.TimerInterval
+        p_stopper.Restart
+        
+        ' wait until timer stopped
+        Do While (Not m_eventTimer Is Nothing) And This.TimerStarted And p_stopper.ElapsedMilliseconds < p_timeout
+            DoEvents
+        Loop
+        
+        If This.TimerStarted Then
+            ' if timer has not stopped, force stop
+            This.TimerStarted = False
+            If Not m_eventTimer Is Nothing Then m_eventTimer.PauseTimer
+            
+        End If
+
+    End If
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -4233,13 +4264,20 @@ End Property
 Friend Sub OnMeasurementModeChanged(ByVal a_mode As cc_isr_Tcp_Scpi.MeasurementModeOption, _
     ByVal a_infoMessage As String)
     
+    ' turn off the flag handling a timer event.
+    This.HandlingTimerEvent = False
+    
+    ' set the current mode.
     Me.CurrentMeasurementMode = a_mode
 
     ' update the monitoring state
     Me.MonitoringState = a_infoMessage
 
-    ' turn on the stop requested in case the timer is still active.
+    ' turn on the stop requested in case the timer is still active except for monitoring mode.
     Me.StopRequested = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring <> a_mode
+
+    ' turn off the pause requested
+    Me.PauseRequested = False
 
     ' disable the stop monitoring action
     Me.StopMonitoringExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring = a_mode
@@ -4372,20 +4410,7 @@ Public Sub HandleTimerEvent()
 
     p_success = This.K2700.TryMonitorExternalTrigger(p_channelNumber, p_isDone, p_details)
     
-    ' if done, make sure to pause the timer
-    If p_isDone Then
-    
-        ' the timer event will pause itself on the next timer event
-        Me.PauseRequested = True
-    
-    ElseIf Not p_success Then
-    
-        ' if monitoring failed, request a stop and report.
-        Me.StopRequested = True
-        
-    End If
-    
-    ' either way report the error.
+    ' report an error on failure.
     If Not p_success Then
         cc_isr_Core_IO.UserDefinedErrors.EnqueueError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
@@ -4397,8 +4422,21 @@ Public Sub HandleTimerEvent()
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
-    ' request the pause of the timer.
-    If p_isDone Then Me.PauseTimer
+    If p_isDone Then
+    
+        'if done, request the pause of the timer.
+        Me.PauseTimer
+        
+        ' if not using the timer, go to none mode.
+        If Not This.TimerControlled Then _
+            Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.None, "Trigger monitoring done"
+        
+    ElseIf Not p_success Then
+    
+        ' if monitoring failed, request a stop and report.
+        Me.StopRequested = True
+        
+    End If
 
     ' release reentry prevention
     This.HandlingTimerEvent = False
@@ -4409,12 +4447,9 @@ exit_Handler:
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 err_Handler:
   
-    ' stop the timer.
-    p_isDone = True
-
-    ' handle the termination of monitoring
-    Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.None, "Error handling the timer event"
-
+    ' inidicate a failure to elicitate a stop request
+    p_success = False
+    
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
@@ -4436,6 +4471,7 @@ Public Sub StartTimer(Optional ByVal a_interval As Long = 500)
 
     This.HandlingTimerEvent = False
     This.PauseRequested = False
+    This.TimerStarted = True
     Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring, "Trigger monitoring commenced"
     If m_eventTimer Is Nothing Then
         Set m_eventTimer = cc_isr_Core.Factory.NewEventTimer.Initialize(a_interval)
@@ -4469,6 +4505,7 @@ Private Sub m_eventTimer_Tick()
     On Error Resume Next
     DoEvents
     If This.PauseRequested Then
+        This.TimerStarted = False
         If Not m_eventTimer Is Nothing Then m_eventTimer.PauseTimer
         Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.None, "Trigger monitoring done"
     Else

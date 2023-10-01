@@ -116,6 +116,20 @@ End Sub
 ''' Test 06 TestShouldRestoreFromClosedConnection passed. Elapsed time: 5740.3 ms.
 ''' Ran 6 out of 6 tests.
 ''' Passed: 6; Failed: 0; Inconclusive: 0.
+'''
+''' Test 01 TestShouldInitialize passed. Elapsed time: 11.2 ms.
+''' Test 02 TestShouldBeConnected passed. Elapsed time: 43.4 ms.
+'''     Serial Poll is 16 in 10.3 ms.
+''' Test 03 TestShouldReadCards passed. Elapsed time: 14.0 ms.
+''' Test 04 TestShouldRestoreInitialState passed. Elapsed time: 12176.9 ms.
+''' Test 05 TestShouldRecoverFromSyntaxError passed. Elapsed time: 159.6 ms.
+'''     Serial Poll is 4 in 4.1 ms.
+''' Test 06 TestShouldRestoreFromClosedConnection passed. Elapsed time: 5730.3 ms.
+''' Test 07 TestShouldConfigureImmediateMode passed. Elapsed time: 5663.8 ms.
+''' Test 08 TestShouldConfigureExternalMode passed. Elapsed time: 5524.5 ms.
+''' Ran 8 out of 8 tests.
+''' Passed: 8; Failed: 0; Inconclusive: 0.
+'''
 ''' </code>
 ''' </remarks>
 Public Sub RunAllTests()
@@ -658,6 +672,14 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_outcome As cc_is
             "Format elements should be as expected.")
     End If
     
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.K2700.ExtTrigInitiated, _
+            "External trigger initiation should be off in external trigger reading mode.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.PauseRequested, _
+            "Pause requested should be off in external trigger reading mode.")
+    
     If p_outcome.AssertSuccessful Then
         
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.StopRequested, _
@@ -1029,9 +1051,12 @@ End Function
 
 ''' summary>   Asserts that trigger monitoring mode should be configured. </summary>
 ''' <param name="a_outcome">   [<see cref="cc_isr_Test_Fx.Assert"/>] The current outcome. </param>
+''' <param name="a_timerControlled">   [Optional, Boolean, True] true time controlled; otherwise, the timer event
+''' handler will be polled. </value>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function AssertMonitoringModeShouldStart(ByVal a_outcome As cc_isr_Test_Fx.Assert) As cc_isr_Test_Fx.Assert
+Public Function AssertMonitoringModeShouldStart(ByVal a_outcome As cc_isr_Test_Fx.Assert, _
+    Optional ByVal a_timerControlled As Boolean = True) As cc_isr_Test_Fx.Assert
     
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_outcome
     Dim p_details As String: p_details = VBA.vbNullString
@@ -1050,9 +1075,9 @@ Public Function AssertMonitoringModeShouldStart(ByVal a_outcome As cc_isr_Test_F
     
     If p_outcome.AssertSuccessful Then
     
-        This.ViewModel.StartMonitoringExternalTriggersCommand
+        This.ViewModel.StartMonitoringExternalTriggers a_timerControlled
         
-        ' allow the monitoring to commenct.
+        ' allow the monitoring to commence.
         cc_isr_Core_IO.Factory.NewStopwatch().Wait 10
         
     End If
@@ -2335,13 +2360,20 @@ Public Function TestTriggersShouldPoll() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = AssertExternalTriggerModeShouldStart(p_outcome)
     
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.PauseRequested, _
-            "Pause requested should be off upon starting external trigger mode.")
+    ' validate the external trigger reading mode
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.K2700.ExtTrigInitiated, _
-            "External trigger initiation should be off upon starting external trigger mode.")
+        Set p_outcome = AssertExternalTriggerModeShouldValidate(p_outcome)
+    
+    ' start the monitoring mode turning timer monitoring off.
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = AssertMonitoringModeShouldStart(p_outcomem, False)
+    
+    ' validate the monitoring mode
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = AssertMonitoringModeShouldValidate(p_outcome)
     
     ' set auto increment on view model
     This.ViewModel.CurrentChannelNumber = 1
@@ -2382,24 +2414,20 @@ Public Function TestTriggersShouldPoll() As cc_isr_Test_Fx.Assert
         ' this is processed on the next timer event handler, which then
         ' sets the pause requested, which stops the timer
         If Not p_outcome.AssertSuccessful Then _
-            This.ViewModel.StopRequested = True
-            
+            This.ViewModel.StopMonitoringExternalTriggersCommand
+        
+        ' on expiration, set stop request.
         If p_endTime > cc_isr_Core_IO.CoreExtensions.DaysNow() Then _
             This.ViewModel.StopRequested = True
         
-        If This.ViewModel.PauseRequested Then
-            ' the loop is exited when the timer events are signaled to stop
-            Exit Do
-        Else
-            On Error Resume Next
-            This.ViewModel.HandleTimerEvent
-            If Err.Number <> 0 Then
-                Set p_outcome = cc_isr_Test_Fx.Assert.Fail( _
-                    "Error #" & Err.Number & " handling timer event; " & Err.Description & ".")
-                Exit Do
-            End If
-            On Error GoTo 0
+        ' invoke the event handler, which moves the moves the measurement mode to none when done.
+        On Error Resume Next
+        This.ViewModel.HandleTimerEvent
+        If Err.Number <> 0 Then
+            Set p_outcome = cc_isr_Test_Fx.Assert.Fail( _
+                "Error #" & Err.Number & " handling timer event; " & Err.Description & ".")
         End If
+        On Error GoTo 0
     
         If p_channel <> This.Observer.CurrentChannelNumber Then
         
@@ -2415,8 +2443,10 @@ Public Function TestTriggersShouldPoll() As cc_isr_Test_Fx.Assert
     Loop
     
     
+    ' stop monitoring here
     
-    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = AssertMonitoringModeShouldStop(p_outcome)
     
     ' Finally, verify that no error message was recorded.
     
