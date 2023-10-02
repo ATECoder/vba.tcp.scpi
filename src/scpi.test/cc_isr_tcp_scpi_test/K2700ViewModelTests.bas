@@ -87,7 +87,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 9
+    RunTest 8
     AfterAll
 End Sub
 
@@ -548,12 +548,12 @@ Private Function AssertSerialPollShouldValidate(ByVal a_bitsStatus As Integer, _
 End Function
 
 ''' summary>   Asserts that external trigger mode should be configured. </summary>
-''' <param name="a_outcome">   [<see cref="cc_isr_Test_Fx.Assert"/>] The current outcome. </param>
+''' <param name="a_assert">   [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function AssertExternalTriggerModeShouldStart(ByVal a_outcome As cc_isr_Test_Fx.Assert) As cc_isr_Test_Fx.Assert
+Public Function AssertExternalTriggerModeShouldStart(ByVal a_assert As cc_isr_Test_Fx.Assert) As cc_isr_Test_Fx.Assert
     
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_outcome
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
     Dim p_details As String: p_details = VBA.vbNullString
     
     ' proceed with test assertions.
@@ -572,14 +572,14 @@ Public Function AssertExternalTriggerModeShouldStart(ByVal a_outcome As cc_isr_T
         
         Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
         p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.CurrentMeasurementMode, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
             "External trigger reading mode should be as expected.")
     End If
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.Observer.CurrentMeasurementMode, _
-            "Observer measuerment mode should equal expected value for external trigger reading mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.Observer.MeasurementMode, _
+            "Observer measurement mode should equal expected value for external trigger reading mode.")
     End If
     
     Set AssertExternalTriggerModeShouldStart = p_outcome
@@ -587,12 +587,12 @@ Public Function AssertExternalTriggerModeShouldStart(ByVal a_outcome As cc_isr_T
 End Function
 
 ''' summary>   Asserts that external trigger mode should be validated. </summary>
-''' <param name="a_outcome">   [<see cref="cc_isr_Test_Fx.Assert"/>] The current outcome. </param>
+''' <param name="a_assert">   [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function AssertExternalTriggerModeShouldValidate(ByVal a_outcome As cc_isr_Test_Fx.Assert) As cc_isr_Test_Fx.Assert
+Public Function AssertExternalTriggerModeShouldValidate(ByVal a_assert As cc_isr_Test_Fx.Assert) As cc_isr_Test_Fx.Assert
     
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_outcome
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
     Dim p_details As String: p_details = VBA.vbNullString
     
     ' proceed with test validations.
@@ -601,14 +601,14 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_outcome As cc_is
         
         Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
         p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.CurrentMeasurementMode, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
             "External trigger reading mode should be as expected.")
     End If
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.Observer.CurrentMeasurementMode, _
-            "Observer measuerment mode should equal expected value for external trigger reading mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.Observer.MeasurementMode, _
+            "Observer measurement mode should equal expected value for external trigger reading mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -623,8 +623,8 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_outcome As cc_is
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.CurrentChannelNumber, This.Observer.CurrentChannelNumber, _
-            "Observer current channel number should equal the view model channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, This.Observer.TargetChannelNumber, _
+            "Observer Target Channel Number should equal the view model channel number.")
     
     End If
     
@@ -763,12 +763,12 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_outcome As cc_is
 End Function
 
 ''' summary>   Asserts that immediate trigger mode should be configured. </summary>
-''' <param name="a_outcome">   [<see cref="cc_isr_Test_Fx.Assert"/>] The current outcome. </param>
+''' <param name="a_assert">   [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function AssertImmediateModeShouldStart(ByVal a_outcome As cc_isr_Test_Fx.Assert) As cc_isr_Test_Fx.Assert
+Public Function AssertImmediateModeShouldStart(ByVal a_assert As cc_isr_Test_Fx.Assert) As cc_isr_Test_Fx.Assert
     
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_outcome
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
     Dim p_details As String: p_details = VBA.vbNullString
     
     ' proceed with test assertions.
@@ -790,14 +790,14 @@ Public Function AssertImmediateModeShouldStart(ByVal a_outcome As cc_isr_Test_Fx
         
         Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
         p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.CurrentMeasurementMode, _
-            "Immediate measurement mode should be as expected.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
+            "Immediate measurement mode should be as expected when starting.")
     End If
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.Observer.CurrentMeasurementMode, _
-            "Observer measuerment mode should equal expected value for immediate trigger reading mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.Observer.MeasurementMode, _
+            "Observer measurement mode should equal view model immediate measurement mode upon start.")
     End If
     
     Set AssertImmediateModeShouldStart = p_outcome
@@ -805,12 +805,12 @@ Public Function AssertImmediateModeShouldStart(ByVal a_outcome As cc_isr_Test_Fx
 End Function
 
 ''' summary>   Asserts that immediate trigger mode should be be validated. </summary>
-''' <param name="a_outcome">   [<see cref="cc_isr_Test_Fx.Assert"/>] The current outcome. </param>
+''' <param name="a_assert">   [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function AssertImmediateModeShouldValidate(ByVal a_outcome As cc_isr_Test_Fx.Assert) As cc_isr_Test_Fx.Assert
+Public Function AssertImmediateModeShouldValidate(ByVal a_assert As cc_isr_Test_Fx.Assert) As cc_isr_Test_Fx.Assert
     
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_outcome
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
     Dim p_details As String: p_details = VBA.vbNullString
     
     ' proceed with validations
@@ -819,21 +819,14 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_outcome As cc_isr_Test
         
         Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
         p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.CurrentMeasurementMode, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
             "Immediate measurement mode should be as expected.")
     End If
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.Observer.CurrentMeasurementMode, _
-            "Observer measuerment mode should equal expected value for immediate trigger reading mode.")
-    End If
-    
-    If p_outcome.AssertSuccessful Then
-        
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.CurrentChannelNumber, This.Observer.CurrentChannelNumber, _
-            "Observer current channel number should equal the view model channel number.")
-    
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.Observer.MeasurementMode, _
+            "Observer measurement mode should equal view model measurement mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -948,12 +941,38 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_outcome As cc_isr_Test
     
     If p_outcome.AssertSuccessful Then
     
-        ' turn off auto increment so that we can take a single reading.
+        ' with immediate mode, auto increment is turned off for single readings.
         Dim p_autoIncrementChannelNumber As Boolean: p_autoIncrementChannelNumber = False
-        This.ViewModel.AutoIncrementChannelNoEnabled = p_autoIncrementChannelNumber
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_autoIncrementChannelNumber, _
             This.ViewModel.AutoIncrementChannelNoEnabled, _
             "Auto increment channel number should be as expected.")
+    
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+    
+        ' with immediate mode and single reading, the selected channel is used to set the
+        ' measured channel after a reading is triggered and the measurement event is handled
+        ' by the observer.
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.SelectedChannelNumber > 0, _
+            "The View Model selected channel number '" & VBA.CStr(This.ViewModel.SelectedChannelNumber) & _
+            "' should be positive.")
+    
+    End If
+   
+    If p_outcome.AssertSuccessful Then
+    
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.SelectedChannelNumber <= This.ViewModel.ChannelCount, _
+            "The View Model selected channel number '" & VBA.CStr(This.ViewModel.SelectedChannelNumber) & _
+            "' should be smaller or equal the channel count '" & VBA.CStr(This.ViewModel.ChannelCount) & ".")
+    
+    End If
+   
+    If p_outcome.AssertSuccessful Then
+    
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
+            This.Observer.SelectedChannelNumber, _
+            "The Observer selected channel number should be set to the View Model selected channel number.")
     
     End If
     
@@ -961,13 +980,32 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_outcome As cc_isr_Test
 
 End Function
 
+''' summary>   Returns the expected target channel number given the measured channel number. </summary>
+''' <returns>   [Integer]. </returns>
+Public Function ExpectedTargetChannelNumber() As Integer
+    
+    If This.ViewModel.AutoIncrementChannelNoEnabled Then
+
+        ' with multiple measurement, the target channel number increments after the measurement is made
+        ExpectedTargetChannelNumber = IIf(This.ViewModel.MeasuredChannelNumber < This.ViewModel.ChannelCount, _
+                This.ViewModel.MeasuredChannelNumber + 1, 1)
+    Else
+    
+        ' with single measurements, the channel number is the selected channel number.
+        ExpectedTargetChannelNumber = This.ViewModel.SelectedChannelNumber
+    
+    End If
+    
+
+End Function
+
 ''' summary>   Asserts that immediate measurement should take a reading. </summary>
-''' <param name="a_outcome">   [<see cref="cc_isr_Test_Fx.Assert"/>] The current outcome. </param>
+''' <param name="a_assert">   [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_outcome As cc_isr_Test_Fx.Assert) As cc_isr_Test_Fx.Assert
+Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr_Test_Fx.Assert) As cc_isr_Test_Fx.Assert
     
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_outcome
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
     Dim p_details As String: p_details = VBA.vbNullString
     
     ' make sure we are in immediate trigger mode.
@@ -976,8 +1014,16 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_outcome As cc_is
         
         Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
         p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.CurrentMeasurementMode, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
             "Immediate measurement mode should be as expected.")
+    End If
+    
+    ' immediate mode is tested with single measurements. Auto increment is off
+    ' and the measured channel is the selected channel
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.SelectedChannelNumber > 0, _
+            "The selected channel number for immediate measurement should be positive.")
     End If
     
     ' proceed with test assertions.
@@ -990,14 +1036,23 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_outcome As cc_is
         
     End If
     
-    Dim p_reading As String
-    Dim p_channelNumber As Integer
-    Dim p_readingValue As Double
-    
     If p_outcome.AssertSuccessful Then
         
         ' wait for the reading event to take shape.
         cc_isr_Core_IO.Factory.NewStopwatch().Wait 10
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
+            This.Observer.MeasuredChannelNumber, _
+            "Observer measured channel number should equal the selected channel number.")
+            
+    End If
+    
+    Dim p_reading As String
+    Dim p_channelNumber As Integer
+    Dim p_readingValue As Double
+    
+    
+    If p_outcome.AssertSuccessful Then
         
         ' get the reading from the observer.
         p_reading = This.Observer.MeasuredReading
@@ -1010,15 +1065,25 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_outcome As cc_is
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, p_channelNumber, _
-            "Reading should come from the expected channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.MeasuredChannelNumber, _
+            This.ViewModel.MeasuredChannelNumber, _
+            "View Model measured channel number should equal the Observer measured channel.")
             
     End If
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_channelNumber, This.Observer.SelectedChannelNumber, _
-            "The observer selected channel number should equals the view model channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(ExpectedTargetChannelNumber(), _
+            This.ViewModel.SelectedChannelNumber, _
+            "The expected target channel number should equal the selected channel number.")
+            
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
+            This.Observer.SelectedChannelNumber, _
+            "The observer Selected Channel Number should equals the view model selected channel number.")
             
     End If
     
@@ -1050,15 +1115,15 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_outcome As cc_is
 End Function
 
 ''' summary>   Asserts that trigger monitoring mode should be configured. </summary>
-''' <param name="a_outcome">   [<see cref="cc_isr_Test_Fx.Assert"/>] The current outcome. </param>
+''' <param name="a_assert">   [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
 ''' <param name="a_timerControlled">   [Optional, Boolean, True] true time controlled; otherwise, the timer event
 ''' handler will be polled. </value>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function AssertMonitoringModeShouldStart(ByVal a_outcome As cc_isr_Test_Fx.Assert, _
+Public Function AssertMonitoringModeShouldStart(ByVal a_assert As cc_isr_Test_Fx.Assert, _
     Optional ByVal a_timerControlled As Boolean = True) As cc_isr_Test_Fx.Assert
     
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_outcome
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
     Dim p_details As String: p_details = VBA.vbNullString
     
     ' check that the external trigger mode was set.
@@ -1067,7 +1132,7 @@ Public Function AssertMonitoringModeShouldStart(ByVal a_outcome As cc_isr_Test_F
         
         Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
         p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.CurrentMeasurementMode, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
             "External Trigger mode should be as expected.")
     End If
     
@@ -1085,14 +1150,14 @@ Public Function AssertMonitoringModeShouldStart(ByVal a_outcome As cc_isr_Test_F
     If p_outcome.AssertSuccessful Then
         
         p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.CurrentMeasurementMode, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
             "External trigger monitoring mode should be as expected.")
     End If
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.CurrentMeasurementMode, _
-            This.Observer.CurrentMeasurementMode, "Observer external trigger monitoring mode should be as expected.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
+            This.Observer.MeasurementMode, "Observer external trigger monitoring mode should be as expected.")
     End If
     
     Set AssertMonitoringModeShouldStart = p_outcome
@@ -1101,12 +1166,12 @@ End Function
 
 
 ''' summary>   Asserts that trigger monitoring mode should be validated. </summary>
-''' <param name="a_outcome">   [<see cref="cc_isr_Test_Fx.Assert"/>] The current outcome. </param>
+''' <param name="a_assert">   [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function AssertMonitoringModeShouldValidate(ByVal a_outcome As cc_isr_Test_Fx.Assert) As cc_isr_Test_Fx.Assert
+Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test_Fx.Assert) As cc_isr_Test_Fx.Assert
     
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_outcome
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
     Dim p_details As String: p_details = VBA.vbNullString
     
     ' start validating.
@@ -1115,14 +1180,14 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_outcome As cc_isr_Tes
         
         Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
         p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.CurrentMeasurementMode, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
             "External trigger monitoring mode should be as expected.")
     End If
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.CurrentMeasurementMode, _
-            This.Observer.CurrentMeasurementMode, "Observer external trigger monitoring mode should be as expected.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
+            This.Observer.MeasurementMode, "Observer external trigger monitoring mode should be as expected.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1220,9 +1285,8 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_outcome As cc_isr_Tes
     
     If p_outcome.AssertSuccessful Then
     
-        ' turn on auto increment so that we can monitor readings.
+        ' testing trigger montoring uses auto increment to detect changes in channel number as readings are triggered.
         Dim p_autoIncrementChannelNumber As Boolean: p_autoIncrementChannelNumber = True
-        This.ViewModel.AutoIncrementChannelNoEnabled = p_autoIncrementChannelNumber
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_autoIncrementChannelNumber, _
             This.ViewModel.AutoIncrementChannelNoEnabled, _
             "Auto increment channel number should be as expected.")
@@ -1231,17 +1295,27 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_outcome As cc_isr_Tes
     
     If p_outcome.AssertSuccessful Then
     
-        Dim p_selectedChannelNumber As Integer: p_selectedChannelNumber = 1
-        This.ViewModel.SelectedChannelNumber = p_selectedChannelNumber
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_selectedChannelNumber, This.ViewModel.CurrentChannelNumber, _
-            "Current channel number should be set to the selected channel number.")
+        ' with triggered mode and multiple reading, the Target Channel Number is used to set the
+        ' measured channel after a reading is triggered and the measurement event is handled
+        ' by the observer.
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.TargetChannelNumber > 0, _
+            "The View Model Target channel number '" & VBA.CStr(This.ViewModel.TargetChannelNumber) & _
+            "' should be positive.")
     
     End If
    
     If p_outcome.AssertSuccessful Then
     
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.CurrentChannelNumber, This.Observer.CurrentChannelNumber, _
-            "Observer current channel number should be set to the selected channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.TargetChannelNumber <= This.ViewModel.ChannelCount, _
+            "The View Model Target channel number '" & VBA.CStr(This.ViewModel.TargetChannelNumber) & _
+            "' should be smaller or equal the channel count '" & VBA.CStr(This.ViewModel.ChannelCount) & ".")
+    
+    End If
+   
+    If p_outcome.AssertSuccessful Then
+    
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, This.Observer.TargetChannelNumber, _
+            "Observer Target Channel Number should be set to the selected channel number.")
     
     End If
    
@@ -1250,18 +1324,22 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_outcome As cc_isr_Tes
 End Function
 
 ''' summary>   Asserts that measurements should get triggered. </summary>
-''' <param name="a_outcome">          [<see cref="cc_isr_Test_Fx.Assert"/>] The current outcome. </param>
+''' <param name="a_assert">   [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
 ''' <param name="a_timeoutSeconds">   [Optional, Double, 30] The time to wait for some triggered values. </param>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function AssertMeasurementsShouldGetTriggered(ByVal a_outcome As cc_isr_Test_Fx.Assert, _
+Public Function AssertMeasurementsShouldGetTriggered(ByVal a_assert As cc_isr_Test_Fx.Assert, _
     Optional ByVal a_timeoutSeconds As Double = 30) As cc_isr_Test_Fx.Assert
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_outcome
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
+    
+    ' Auto increment (mupltiple readings) is used in triggered measurement tests in which
+    ' case, the target channel number is measured. Following each reading, the target channel
+    ' number is incremented in a circular fasion.
     
     ' get the first channel number
     Dim p_channel As Integer
-    p_channel = This.Observer.CurrentChannelNumber
+    p_channel = This.Observer.TargetChannelNumber
     
     Dim p_reading As String
     p_reading = This.Observer.MeasuredReading
@@ -1275,12 +1353,14 @@ Public Function AssertMeasurementsShouldGetTriggered(ByVal a_outcome As cc_isr_T
         
         DoEvents
     
-        If p_channel <> This.Observer.CurrentChannelNumber Then
+        If p_channel <> This.Observer.TargetChannelNumber Then
         
             DoEvents
-            p_channel = This.Observer.CurrentChannelNumber
+            p_channel = This.Observer.TargetChannelNumber
+            
             DoEvents
             p_reading = This.Observer.MeasuredReading
+            
             DoEvents
             Debug.Print p_channel; ": "; p_reading
 
@@ -1293,12 +1373,12 @@ Public Function AssertMeasurementsShouldGetTriggered(ByVal a_outcome As cc_isr_T
 End Function
 
 ''' summary>   Asserts that trigger monitoring mode should be stopped. </summary>
-''' <param name="a_outcome">   [<see cref="cc_isr_Test_Fx.Assert"/>] The current outcome. </param>
+''' <param name="a_assert">   [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function AssertMonitoringModeShouldStop(ByVal a_outcome As cc_isr_Test_Fx.Assert) As cc_isr_Test_Fx.Assert
+Public Function AssertMonitoringModeShouldStop(ByVal a_assert As cc_isr_Test_Fx.Assert) As cc_isr_Test_Fx.Assert
     
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_outcome
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
     Dim p_details As String: p_details = VBA.vbNullString
     
     ' verify that we stop from an active monitoring mode.
@@ -1307,7 +1387,7 @@ Public Function AssertMonitoringModeShouldStop(ByVal a_outcome As cc_isr_Test_Fx
         
         Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
         p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.CurrentMeasurementMode, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
             "External trigger monitoring mode should be as expected.")
     End If
     
@@ -1339,7 +1419,7 @@ Public Function AssertMonitoringModeShouldStop(ByVal a_outcome As cc_isr_Test_Fx
     If p_outcome.AssertSuccessful Then
         
         p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.None
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.CurrentMeasurementMode, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
             "Measurement mode should be as expected after monitoring stopped.")
     End If
     
@@ -1348,12 +1428,12 @@ Public Function AssertMonitoringModeShouldStop(ByVal a_outcome As cc_isr_Test_Fx
 End Function
 
 ''' summary>   Asserts that trigger monitoring mode stop should be validated. </summary>
-''' <param name="a_outcome">   [<see cref="cc_isr_Test_Fx.Assert"/>] The current outcome. </param>
+''' <param name="a_assert">   [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function AssertMonitoringModeStopShouldValidate(ByVal a_outcome As cc_isr_Test_Fx.Assert) As cc_isr_Test_Fx.Assert
+Public Function AssertMonitoringModeStopShouldValidate(ByVal a_assert As cc_isr_Test_Fx.Assert) As cc_isr_Test_Fx.Assert
     
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_outcome
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
     Dim p_details As String: p_details = VBA.vbNullString
     
     ' validate monitoring stop state
@@ -1362,7 +1442,7 @@ Public Function AssertMonitoringModeStopShouldValidate(ByVal a_outcome As cc_isr
         
         Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
         p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.None
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.CurrentMeasurementMode, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
             "Measurement mode should be as expected after monitoring stopped.")
     End If
     
@@ -1463,8 +1543,8 @@ Public Function AssertMonitoringModeStopShouldValidate(ByVal a_outcome As cc_isr
     
     If p_outcome.AssertSuccessful Then
     
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.CurrentChannelNumber, This.Observer.CurrentChannelNumber, _
-            "Observer current channel number should be set to the selected channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, This.Observer.TargetChannelNumber, _
+            "Observer Target Channel Number should be set to the selected channel number.")
     
     End If
    
@@ -2201,6 +2281,21 @@ Public Function TestShouldConfigureImmediateMode() As cc_isr_Test_Fx.Assert
         Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
     End If
     
+    ' setup conditions for immeidate triggering
+    
+    ' Immediate trigger mode is tested in single readings
+    ' by turning auto increment off.
+    
+    ' With single reading mode (auto increment is off),
+    ' the selected channel number becomes the
+    ' measured channel number after the immediate reading is
+    ' triggered and the observer event handler handles the
+    ' measurement completion event. Thus, start with channel 1 and
+    ' turn off auto increment in order to take single readings.
+    
+    This.ViewModel.SelectedChannelNumber = 1
+    This.ViewModel.AutoIncrementChannelNoEnabled = False
+    
     ' start the immediate trigger reading mode
     
     If p_outcome.AssertSuccessful Then _
@@ -2318,14 +2413,14 @@ err_Handler:
 End Function
 
 ''' summary>   Asserts that triggers should get polled. </summary>
-''' <param name="a_outcome">          [<see cref="cc_isr_Test_Fx.Assert"/>] The current outcome. </param>
+''' <param name="a_assert">   [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
 ''' <param name="a_timeoutSeconds">   [Optional, Double, 30] The time to wait for some triggered values. </param>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function AssertTriggersShouldPoll(ByVal a_outcome As cc_isr_Test_Fx.Assert, _
+Public Function AssertTriggersShouldPoll(ByVal a_assert As cc_isr_Test_Fx.Assert, _
     Optional ByVal a_timeoutSeconds As Double = 30) As cc_isr_Test_Fx.Assert
 
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_outcome
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
     
     Set AssertTriggersShouldPoll = p_outcome
 
@@ -2365,27 +2460,36 @@ Public Function TestTriggersShouldPoll() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = AssertExternalTriggerModeShouldValidate(p_outcome)
     
+    ' setup conditions for monitoring
+    
+    ' Multiple readings (auto increment on) is used for testing
+    ' trigger monitoring. The test checks that channel numbers change
+    ' with each trigger.
+    
+    ' With multiple readings (auto increment is on),
+    ' channel numbers start with the Target Channel Number.
+    ' Start with channel 1
+    
+    This.ViewModel.TargetChannelNumber = 1
+    This.ViewModel.AutoIncrementChannelNoEnabled = True
+    
     ' start the monitoring mode turning timer monitoring off.
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = AssertMonitoringModeShouldStart(p_outcomem, False)
+        Set p_outcome = AssertMonitoringModeShouldStart(p_outcome, False)
     
     ' validate the monitoring mode
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = AssertMonitoringModeShouldValidate(p_outcome)
     
-    ' set auto increment on view model
-    This.ViewModel.CurrentChannelNumber = 1
-    This.ViewModel.AutoIncrementChannelNoEnabled = True
-    
     ' get some data here.
     
-    ' get the first channel number
+    ' get the pre-trigger measured channel
     Dim p_channel As Integer
-    p_channel = This.Observer.CurrentChannelNumber
+    p_channel = This.Observer.MeasuredChannelNumber
     
-    ' get the initial reading
+    ' get the pre-trigger reading
     Dim p_reading As String
     p_reading = This.Observer.MeasuredReading
     
@@ -2429,14 +2533,43 @@ Public Function TestTriggersShouldPoll() As cc_isr_Test_Fx.Assert
         End If
         On Error GoTo 0
     
-        If p_channel <> This.Observer.CurrentChannelNumber Then
+        ' record reading if the measured channel number changed.
+        
+        If p_channel <> This.Observer.MeasuredChannelNumber Then
         
             DoEvents
-            p_channel = This.Observer.CurrentChannelNumber
+            p_channel = This.Observer.MeasuredChannelNumber
+            
             DoEvents
             p_reading = This.Observer.MeasuredReading
+            
             DoEvents
             Debug.Print p_channel; ": "; p_reading
+
+            ' check if measured channel numbers propagate correctly.
+            If p_outcome.AssertSuccessful Then
+                
+                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.MeasuredChannelNumber, _
+                    This.ViewModel.MeasuredChannelNumber, _
+                    "View Model measured channel number should equal the Observer measured channel.")
+                    
+            End If
+            
+            If p_outcome.AssertSuccessful Then
+                
+                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(ExpectedTargetChannelNumber(), _
+                    This.ViewModel.TargetChannelNumber, _
+                    "The target channel number should equal the expected target channel number after triggered reading.")
+                    
+            End If
+            
+            If p_outcome.AssertSuccessful Then
+                
+                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, _
+                    This.Observer.TargetChannelNumber, _
+                    "The observer Target Channel Number should equals the view model target channel number.")
+                    
+            End If
 
         End If
     
@@ -2511,6 +2644,19 @@ Public Function TestShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = AssertExternalTriggerModeShouldStart(p_outcome)
+    
+    ' setup conditions for monitoring
+    
+    ' Multiple readings (auto increment on) is used for testing
+    ' trigger monitoring. The test checks that channel numbers change
+    ' with each trigger.
+    
+    ' With multiple readings (auto increment is on),
+    ' channel numbers start with the Target Channel Number.
+    ' Start with channel 1 and
+    
+    This.ViewModel.TargetChannelNumber = 1
+    This.ViewModel.AutoIncrementChannelNoEnabled = True
     
     ' start the monitoring mode
     

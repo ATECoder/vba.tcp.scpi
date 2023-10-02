@@ -62,7 +62,7 @@ Private Type this_
     ElapsedTimeCaption As String
     LastErrorMessage As String
     LastMessage As String
-    CurrentMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
+    MeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
 
     ' Winsock properties
     Host As String
@@ -110,7 +110,7 @@ Private Type this_
     FrontInputsCaption As String
     ChannelCount As Integer
     SelectedChannelNumber As Integer
-    CurrentChannelNumber As Integer
+    TargetChannelNumber As Integer
     MeasuredChannelNumber As Integer
     ContinuousSenseFunctionName As String
     ImmediateSenseFunctionName As String
@@ -213,7 +213,7 @@ Public Function Initialize() As K2700ViewModel
     Set m_k2700 = This.K2700
     Set m_socket = This.Session.Socket
     
-    Me.CurrentMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous
+    Me.MeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous
     
     ' update the executable settings
     Me.InitializeExecutablesState
@@ -2366,19 +2366,19 @@ Public Property Let BottomCardFunctionScanList(ByVal a_value As String)
     End If
 End Property
 
-''' <summary>   Gets the current measurement mode. </summary>
+''' <summary>   Gets the measurement mode. </summary>
 ''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
-Public Property Get CurrentMeasurementMode() As cc_isr_Tcp_Scpi.MeasurementModeOption
-    CurrentMeasurementMode = This.CurrentMeasurementMode
+Public Property Get MeasurementMode() As cc_isr_Tcp_Scpi.MeasurementModeOption
+    MeasurementMode = This.MeasurementMode
 End Property
 
-''' <summary>   Gets the current measurement mode. </summary>
+''' <summary>   Gets the measurement mode. </summary>
 ''' <param name=-"a_value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>] the value. </param>
 ''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
-Friend Property Let CurrentMeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementModeOption)
-    If This.CurrentMeasurementMode <> a_value Then
-        This.CurrentMeasurementMode = a_value
-        Me.OnPropertyChanged "CurrentMeasurementMode"
+Friend Property Let MeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementModeOption)
+    If This.MeasurementMode <> a_value Then
+        This.MeasurementMode = a_value
+        Me.OnPropertyChanged "MeasurementMode"
     End If
 End Property
 
@@ -2476,18 +2476,18 @@ Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
     End If
 End Property
 
-''' <summary>   Gets the Current Channel Number. </summary>
+''' <summary>   Gets the Target Channel Number. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get CurrentChannelNumber() As Integer
-    CurrentChannelNumber = This.CurrentChannelNumber
+Public Property Get TargetChannelNumber() As Integer
+    TargetChannelNumber = This.TargetChannelNumber
 End Property
 
-''' <summary>   Sets the Current Channel Number. </summary>
-''' <param name="a_value">   [Integer] the Current Channel Number value. </value>
-Public Property Let CurrentChannelNumber(ByVal a_value As Integer)
-    If This.CurrentChannelNumber <> a_value Then
-        This.CurrentChannelNumber = a_value
-        Me.OnPropertyChanged "CurrentChannelNumber"
+''' <summary>   Sets the Target Channel Number. </summary>
+''' <param name="a_value">   [Integer] the Target Channel Number value. </value>
+Public Property Let TargetChannelNumber(ByVal a_value As Integer)
+    If This.TargetChannelNumber <> a_value Then
+        This.TargetChannelNumber = a_value
+        Me.OnPropertyChanged "TargetChannelNumber"
     End If
 End Property
 
@@ -2551,13 +2551,13 @@ Public Property Let ExternalSenseFunctionName(ByVal a_value As String)
     End If
 End Property
 
-''' <summary>   Gets the current sense Function Name. </summary>
+''' <summary>   Gets the sense function Name. </summary>
 ''' <value>   [String]. </value>
 Public Property Get SenseFunctionName() As String
     SenseFunctionName = This.SenseFunctionName
 End Property
 
-''' <summary>   Internal. Sets the current Sense Function Name. </summary>
+''' <summary>   Internal. Sets the sense function Name. </summary>
 ''' <param name="a_value">   [String] the Sense Function Name. </value>
 Friend Property Let SenseFunctionName(ByVal a_value As String)
     If This.SenseFunctionName <> a_value Then
@@ -3034,7 +3034,7 @@ Friend Function TryConfigureIntitialTriggerMode(ByRef a_details As String) As Bo
     Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
     Dim p_details As String: p_details = VBA.vbNullString
     
-    If cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous <> This.CurrentMeasurementMode Then
+    If cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous <> This.MeasurementMode Then
         
         ' reset if changing modes.
         p_success = This.K2700.Device.TryResetKnownState(p_details)
@@ -3151,7 +3151,7 @@ Friend Function TryConfigureContinuousMode(ByRef a_details As String) As Boolean
     If p_success Then
     
         ' reset if changing modes.
-        If cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous <> This.CurrentMeasurementMode Then
+        If cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous <> This.MeasurementMode Then
             
             p_success = This.K2700.Device.TryResetKnownState(p_details)
         
@@ -3298,7 +3298,7 @@ Friend Function TryConfigureExternalTriggerReading(ByRef a_details As String) As
     If p_success Then
     
         ' reset if changing modes.
-        If cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous <> This.CurrentMeasurementMode Then
+        If cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous <> This.MeasurementMode Then
             
             p_success = This.K2700.Device.TryResetKnownState(p_details)
         
@@ -3485,7 +3485,7 @@ Public Function TryConfigureImmediateTriggerReadings(ByRef a_details As String) 
     If p_success Then
     
         ' reset if changing modes.
-        If cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate <> This.CurrentMeasurementMode Then
+        If cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate <> This.MeasurementMode Then
             
             p_success = This.K2700.Device.TryResetKnownState(p_details)
         
@@ -3685,8 +3685,8 @@ Public Function TryMeasureImmediately(ByRef a_details As String) As Boolean
             ' allow events to occur
             VBA.DoEvents
         
-            ' set the current channel number
-            Me.CurrentChannelNumber = p_channelNumber
+            ' set the Target Channel Number
+            Me.TargetChannelNumber = p_channelNumber
         
             Me.RestartStopper
             If Me.FrontInputsValue Then
@@ -3930,7 +3930,7 @@ End Property
 ''' <summary>   Internal. Starts monitoring the instrument for external triggered measurements. </summary>
 ''' <param name="a_timerControlled">   [Optional, Boolean, True] true time controlled; otherwise, the timer event
 ''' handler will be polled. </value>
-Friend Sub StartMonitoringExternalTriggers(Optional ByVal a_timerControlled As Boolean = True)
+Public Sub StartMonitoringExternalTriggers(Optional ByVal a_timerControlled As Boolean = True)
 
     Const p_procedureName = "StartMonitoringExternalTriggers"
 
@@ -3949,13 +3949,13 @@ Friend Sub StartMonitoringExternalTriggers(Optional ByVal a_timerControlled As B
     If Me.AutoIncrementChannelNoEnabled Then
     
         ' set the first channel number for manual scan
-        This.CurrentChannelNumber = 1
+        This.TargetChannelNumber = 1
     
     Else
 
         ' set the single reading channel number for manual scan
         ' to the channel number entered by the operator.
-        This.CurrentChannelNumber = This.SelectedChannelNumber
+        This.TargetChannelNumber = This.SelectedChannelNumber
     
     End If
    
@@ -4267,8 +4267,8 @@ Friend Sub OnMeasurementModeChanged(ByVal a_mode As cc_isr_Tcp_Scpi.MeasurementM
     ' turn off the flag handling a timer event.
     This.HandlingTimerEvent = False
     
-    ' set the current mode.
-    Me.CurrentMeasurementMode = a_mode
+    ' set the measurement mode.
+    Me.MeasurementMode = a_mode
 
     ' update the monitoring state
     Me.MonitoringState = a_infoMessage
@@ -4390,12 +4390,12 @@ Public Sub HandleTimerEvent()
     ' check if scan or single
     If Me.AutoIncrementChannelNoEnabled Then
   
-        ' in auto increment mode, use the current channel number
-        p_channelNumber = This.CurrentChannelNumber
+        ' in auto increment mode, use the Target Channel Number
+        p_channelNumber = This.TargetChannelNumber
       
     Else
 
-        ' in non auto increment mode, use the current channel number
+        ' in non auto increment mode, use the Target Channel Number
         p_channelNumber = This.SelectedChannelNumber
 
     End If
@@ -4665,6 +4665,7 @@ Friend Function TryConfigureInstrumentInitialState(ByRef a_errors As String, _
     
     Me.TopCard = This.K2700.RouteSystem.CardName(1)
     Me.BottomCard = This.K2700.RouteSystem.CardName(2)
+    Me.ChannelCount = This.K2700.RouteSystem.ChannelCount
     
     ' initialize the scan list for immediate trigger.
     If VBA.vbNullString <> This.ImmediateSenseFunctionName Then
@@ -4740,7 +4741,7 @@ Public Function ShouldRestoreSenseFunction(ByVal a_senseFunctionName As String, 
     If Not ((1 = InStr(1, This.ContinuousSenseFunctionName, a_senseFunctionName, vbTextCompare)) Or _
             (1 = InStr(1, This.ImmediateSenseFunctionName, a_senseFunctionName, vbTextCompare)) Or _
             (1 = InStr(1, This.ExternalSenseFunctionName, a_senseFunctionName, vbTextCompare))) Then
-        a_details = "The K2700 device current sense function '" & a_senseFunctionName & _
+        a_details = "The K2700 device sense function '" & a_senseFunctionName & _
             "' is not expected; it must be either " & _
             This.ContinuousSenseFunctionName & " or " & _
             This.ImmediateSenseFunctionName & " or " & _
@@ -4752,7 +4753,7 @@ Public Function ShouldRestoreSenseFunction(ByVal a_senseFunctionName As String, 
 
 End Function
 
-''' <summary>   Returns true and a message if the current state does not match the expected restore state. </summary>
+''' <summary>   Returns true and a message if the view model state does not match the expected restore state. </summary>
 ''' <remarks>   This is the expected state for making resistance measurements. In future releases
 ''' we could define a set of states. </remarks>
 ''' <param name="a_details">   [String] Details why the view model needs to be resotred
@@ -4984,7 +4985,7 @@ Private Sub m_k2700_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Channel
 
         ' increment the resistance for the next reading
         
-        This.CurrentChannelNumber = IIf(a_eventArgs.ChannelNumber < Me.ChannelCount, _
+        This.TargetChannelNumber = IIf(a_eventArgs.ChannelNumber < Me.ChannelCount, _
             a_eventArgs.ChannelNumber + 1, 1)
 
     End If

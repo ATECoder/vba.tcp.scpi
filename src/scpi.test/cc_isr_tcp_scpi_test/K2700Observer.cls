@@ -46,9 +46,12 @@ Private Const m_functionUnit As String = "D29"
 Private Const m_channelCount As String = "C30"
 Private Const m_externalTriggerStatus As String = "C31"
 
-Private Const m_measurementTopRow As Integer = 2
-Private Const m_measurementNoCol As String = "M"
-Private Const m_measurementValueCol As String = "N"
+Private Const m_measurementRow As Integer = 2
+Private Const m_measurementCol As Integer = 23
+Private Const m_channelRow As Integer = 2
+Private Const m_channelCol As Integer = 24
+Private Const m_byRow As Boolean = True
+Private Const m_displayIncrement As Integer = 1
 
 Private WithEvents m_viewModel As K2700ViewModel
 Attribute m_viewModel.VB_VarHelpID = -1
@@ -71,7 +74,7 @@ Private Type this_
     ElapsedTimeCaption As String
     LastErrorMessage As String
     LastMessage As String
-    CurrentMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
+    MeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
 
     ' Winsock properties
     Host As String
@@ -108,7 +111,7 @@ Private Type this_
     FrontInputsCaption As String
     ChannelCount As Integer
     SelectedChannelNumber As Integer
-    CurrentChannelNumber As Integer
+    TargetChannelNumber As Integer
     MeasuredChannelNumber As Integer
     ContinuousSenseFunctionName As String
     ImmediateSenseFunctionName As String
@@ -177,14 +180,12 @@ Private Type this_
     GpibLanReadTimeoutGetExecutable As Boolean
     GpibLanReadTimeoutSetExecutable As Boolean
         
-    MeasurementTopRow As Integer
     MeasurementRow As Integer
-    MeasurementColumn As String
-    ChannelColumn As String
-    ChannelCell As String
-    MeasurementCell As String
-    ChannelValue As String
-    MeasurementValue As String
+    MeasurementColumn As Integer
+    ChannelRow As Integer
+    ChannelColumn As Integer
+    ChannelCellValue As String
+    MeasurementCellValue As String
     
     LastCommandDetails As String
     LastCommandOutcome As Boolean
@@ -615,7 +616,7 @@ Friend Property Let SocketAddress(ByVal a_value As String)
     If This.SocketAddress <> a_value Then
         This.SocketAddress = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SocketAddress = This.SocketAddress
+            This.ViewModel.SocketAddress = a_value
     End If
 End Property
 
@@ -645,7 +646,7 @@ Public Property Let SessionTimeout(ByVal a_value As Integer)
     If This.SessionTimeout <> a_value Then
         This.SessionTimeout = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SessionTimeout = This.SessionTimeout
+            This.ViewModel.SessionTimeout = a_value
     End If
 End Property
 
@@ -667,7 +668,7 @@ Public Property Let MessageToSend(ByVal a_value As String)
     If This.MessageToSend <> a_value Then
         This.MessageToSend = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.MessageToSend = This.MessageToSend
+            This.ViewModel.MessageToSend = a_value
     End If
 End Property
 
@@ -683,7 +684,7 @@ Public Property Let SentMessage(ByVal a_value As String)
     If This.SentMessage <> a_value Then
         This.SentMessage = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SentMessage = This.SentMessage
+            This.ViewModel.SentMessage = a_value
     End If
 End Property
 
@@ -699,7 +700,7 @@ Public Property Let ReceivedMessage(ByVal a_value As String)
     If This.ReceivedMessage <> a_value Then
         This.ReceivedMessage = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ReceivedMessage = This.ReceivedMessage
+            This.ViewModel.ReceivedMessage = a_value
     End If
 End Property
 
@@ -715,7 +716,7 @@ Public Property Let ReceivedMessageLength(ByVal a_value As Integer)
     If This.ReceivedMessageLength <> a_value Then
         This.ReceivedMessageLength = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ReceivedMessageLength = This.ReceivedMessageLength
+            This.ViewModel.ReceivedMessageLength = a_value
     End If
 End Property
 
@@ -731,7 +732,7 @@ Public Property Let StatusByte(ByVal a_value As Integer)
     If This.StatusByte <> a_value Then
         This.StatusByte = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.StatusByte = This.StatusByte
+            This.ViewModel.StatusByte = a_value
     End If
 End Property
 
@@ -747,7 +748,7 @@ Public Property Let StandardByte(ByVal a_value As Integer)
     If This.StandardByte <> a_value Then
         This.StandardByte = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.StandardByte = This.StandardByte
+            This.ViewModel.StandardByte = a_value
     End If
 End Property
 
@@ -763,7 +764,7 @@ Public Property Let ReadStatusAfterWriteEnabled(ByVal a_value As Boolean)
     If This.ReadStatusAfterWriteEnabled <> a_value Then
         This.ReadStatusAfterWriteEnabled = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ReadStatusAfterWriteEnabled = This.ReadStatusAfterWriteEnabled
+            This.ViewModel.ReadStatusAfterWriteEnabled = a_value
     End If
 End Property
 
@@ -779,7 +780,7 @@ Public Property Let ScpiCommands(ByVal a_value As Collection)
     If Not cc_isr_Core.CollectionExtensions.AreEqual(This.ScpiCommands, a_value) Then
         Set This.ScpiCommands = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ScpiCommands = This.ScpiCommands
+            This.ViewModel.ScpiCommands = a_value
     End If
 End Property
 
@@ -801,7 +802,7 @@ Public Property Let SerialPollByte(ByVal a_value As Integer)
     If This.SerialPollByte <> a_value Then
         This.SerialPollByte = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SerialPollByte = This.SerialPollByte
+            This.ViewModel.SerialPollByte = a_value
     End If
 End Property
 
@@ -817,7 +818,7 @@ Public Property Let ServiceRequested(ByVal a_value As Integer)
     If This.ServiceRequested <> a_value Then
         This.ServiceRequested = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ServiceRequested = This.ServiceRequested
+            This.ViewModel.ServiceRequested = a_value
     End If
 End Property
 
@@ -833,7 +834,7 @@ Public Property Let GpibAddress(ByVal a_value As Integer)
     If This.GpibAddress <> a_value Then
         This.GpibAddress = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.GpibAddress = This.GpibAddress
+            This.ViewModel.GpibAddress = a_value
     End If
 End Property
 
@@ -849,7 +850,7 @@ Public Property Let AutoAssertTalk(ByVal a_value As Boolean)
     If This.AutoAssertTalk <> a_value Then
         This.AutoAssertTalk = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.AutoAssertTalk = This.AutoAssertTalk
+            This.ViewModel.AutoAssertTalk = a_value
     End If
 End Property
 
@@ -865,7 +866,7 @@ Public Property Let GpibLanControllerPort(ByVal a_value As Long)
     If This.GpibLanControllerPort <> a_value Then
         This.GpibLanControllerPort = a_value
         If Not This.ViewModel Is Nothing Then _
-                This.ViewModel.GpibLanControllerPort = This.GpibLanControllerPort
+                This.ViewModel.GpibLanControllerPort = a_value
     End If
 End Property
 
@@ -883,7 +884,7 @@ Public Property Let GpibLanReadTimeout(ByVal a_value As Integer)
     If This.GpibLanReadTimeout <> a_value Then
         This.GpibLanReadTimeout = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.GpibLanReadTimeout = This.GpibLanReadTimeout
+            This.ViewModel.GpibLanReadTimeout = a_value
     End If
 End Property
 
@@ -899,7 +900,7 @@ Public Property Let TopCard(ByVal a_value As String)
     If This.TopCard <> a_value Then
         This.TopCard = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.TopCard = This.TopCard
+            This.ViewModel.TopCard = a_value
     End If
 End Property
 
@@ -915,7 +916,7 @@ Public Property Let TopCardFunctionScanList(ByVal a_value As String)
     If This.TopCardFunctionScanList <> a_value Then
         This.TopCardFunctionScanList = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.TopCardFunctionScanList = This.TopCardFunctionScanList
+            This.ViewModel.TopCardFunctionScanList = a_value
     End If
 End Property
 
@@ -931,7 +932,7 @@ Public Property Let BottomCard(ByVal a_value As String)
     If This.BottomCard <> a_value Then
         This.BottomCard = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.BottomCard = This.BottomCard
+            This.ViewModel.BottomCard = a_value
     End If
 End Property
 
@@ -947,22 +948,22 @@ Public Property Let BottomCardFunctionScanList(ByVal a_value As String)
     If This.BottomCardFunctionScanList <> a_value Then
         This.BottomCardFunctionScanList = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.BottomCardFunctionScanList = This.BottomCardFunctionScanList
+            This.ViewModel.BottomCardFunctionScanList = a_value
     End If
 End Property
 
-''' <summary>   Gets the current measurement mode. </summary>
+''' <summary>   Gets the measurement mode. </summary>
 ''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
-Public Property Get CurrentMeasurementMode() As cc_isr_Tcp_Scpi.MeasurementModeOption
-    CurrentMeasurementMode = This.CurrentMeasurementMode
+Public Property Get MeasurementMode() As cc_isr_Tcp_Scpi.MeasurementModeOption
+    MeasurementMode = This.MeasurementMode
 End Property
 
-''' <summary>   Gets the current measurement mode. </summary>
+''' <summary>   Gets the measurement mode. </summary>
 ''' <param name=-"a_value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>] the value. </param>
 ''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
-Friend Property Let CurrentMeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementModeOption)
-    If This.CurrentMeasurementMode <> a_value Then
-        This.CurrentMeasurementMode = a_value
+Friend Property Let MeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementModeOption)
+    If This.MeasurementMode <> a_value Then
+        This.MeasurementMode = a_value
     End If
 End Property
 
@@ -979,7 +980,7 @@ Public Property Let FrontInputsRequired(ByVal a_value As Boolean)
     If This.FrontInputsRequired <> a_value Then
         This.FrontInputsRequired = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.FrontInputsRequired = This.FrontInputsRequired
+            This.ViewModel.FrontInputsRequired = a_value
     End If
 End Property
 
@@ -996,7 +997,7 @@ Public Property Let ReadingBeepEnabled(ByVal a_value As Boolean)
     If This.ReadingBeepEnabled <> a_value Then
         This.ReadingBeepEnabled = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ReadingBeepEnabled = This.ReadingBeepEnabled
+            This.ViewModel.ReadingBeepEnabled = a_value
     End If
 End Property
 
@@ -1013,7 +1014,7 @@ Public Property Let FrontInputsValue(ByVal a_value As Boolean)
     If This.FrontInputsValue <> a_value Then
         This.FrontInputsValue = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.FrontInputsValue = This.FrontInputsValue
+            This.ViewModel.FrontInputsValue = a_value
     End If
 End Property
 
@@ -1029,7 +1030,7 @@ Public Property Let FrontInputsCaption(ByVal a_value As String)
     If This.FrontInputsCaption <> a_value Then
         This.FrontInputsCaption = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.FrontInputsCaption = This.FrontInputsCaption
+            This.ViewModel.FrontInputsCaption = a_value
     End If
 End Property
 
@@ -1045,7 +1046,7 @@ Public Property Let ChannelCount(ByVal a_value As Integer)
     If This.ChannelCount <> a_value Then
         This.ChannelCount = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ChannelCount = This.ChannelCount
+            This.ViewModel.ChannelCount = a_value
     End If
 End Property
 
@@ -1061,23 +1062,23 @@ Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
     If This.SelectedChannelNumber <> a_value Then
         This.SelectedChannelNumber = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SelectedChannelNumber = This.SelectedChannelNumber
+            This.ViewModel.SelectedChannelNumber = a_value
     End If
 End Property
 
-''' <summary>   Gets the Current Channel Number. </summary>
+''' <summary>   Gets the Target Channel Number. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get CurrentChannelNumber() As Integer
-    CurrentChannelNumber = This.CurrentChannelNumber
+Public Property Get TargetChannelNumber() As Integer
+    TargetChannelNumber = This.TargetChannelNumber
 End Property
 
-''' <summary>   Sets the Current Channel Number. </summary>
-''' <param name="a_value">   [Integer] the Current Channel Number value. </value>
-Public Property Let CurrentChannelNumber(ByVal a_value As Integer)
-    If This.CurrentChannelNumber <> a_value Then
-        This.CurrentChannelNumber = a_value
+''' <summary>   Sets the Target Channel Number. </summary>
+''' <param name="a_value">   [Integer] the Target Channel Number value. </value>
+Public Property Let TargetChannelNumber(ByVal a_value As Integer)
+    If This.TargetChannelNumber <> a_value Then
+        This.TargetChannelNumber = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.CurrentChannelNumber = This.CurrentChannelNumber
+            This.ViewModel.TargetChannelNumber = a_value
     End If
 End Property
 
@@ -1093,7 +1094,7 @@ Public Property Let MeasuredChannelNumber(ByVal a_value As Integer)
     If This.MeasuredChannelNumber <> a_value Then
         This.MeasuredChannelNumber = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.MeasuredChannelNumber = This.MeasuredChannelNumber
+            This.ViewModel.MeasuredChannelNumber = a_value
     End If
 End Property
 
@@ -1109,7 +1110,7 @@ Public Property Let ContinuousSenseFunctionName(ByVal a_value As String)
     If This.ContinuousSenseFunctionName <> a_value Then
         This.ContinuousSenseFunctionName = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ContinuousSenseFunctionName = This.ContinuousSenseFunctionName
+            This.ViewModel.ContinuousSenseFunctionName = a_value
     End If
 End Property
 
@@ -1125,7 +1126,7 @@ Public Property Let ImmediateSenseFunctionName(ByVal a_value As String)
     If This.ImmediateSenseFunctionName <> a_value Then
         This.ImmediateSenseFunctionName = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ImmediateSenseFunctionName = This.ImmediateSenseFunctionName
+            This.ViewModel.ImmediateSenseFunctionName = a_value
     End If
 End Property
 
@@ -1141,7 +1142,7 @@ Public Property Let ExternalSenseFunctionName(ByVal a_value As String)
     If This.ExternalSenseFunctionName <> a_value Then
         This.ExternalSenseFunctionName = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ExternalSenseFunctionName = This.ExternalSenseFunctionName
+            This.ViewModel.ExternalSenseFunctionName = a_value
     End If
 End Property
 
@@ -1171,7 +1172,7 @@ Public Property Let SenseFunctionCaption(ByVal a_value As String)
     If This.SenseFunctionCaption <> a_value Then
         This.SenseFunctionCaption = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SenseFunctionCaption = This.SenseFunctionCaption
+            This.ViewModel.SenseFunctionCaption = a_value
     End If
 End Property
 
@@ -1187,7 +1188,7 @@ Public Property Let SenseFunctionUnit(ByVal a_value As String)
     If This.SenseFunctionUnit <> a_value Then
         This.SenseFunctionUnit = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SenseFunctionUnit = This.SenseFunctionUnit
+            This.ViewModel.SenseFunctionUnit = a_value
     End If
 End Property
 
@@ -1203,7 +1204,7 @@ Public Property Let MeasuredReading(ByVal a_value As String)
     If This.MeasuredReading <> a_value Then
         This.MeasuredReading = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.MeasuredReading = This.MeasuredReading
+            This.ViewModel.MeasuredReading = a_value
     End If
 End Property
 
@@ -1219,7 +1220,7 @@ Public Property Let MeasuredValueFormat(ByVal a_value As String)
     If This.MeasuredValueFormat <> a_value Then
         This.MeasuredValueFormat = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.MeasuredValueFormat = This.MeasuredValueFormat
+            This.ViewModel.MeasuredValueFormat = a_value
     End If
 End Property
 
@@ -1235,7 +1236,7 @@ Public Property Let MeasuredValue(ByVal a_value As Double)
     If This.MeasuredValue <> a_value Then
         This.MeasuredValue = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.MeasuredValue = This.MeasuredValue
+            This.ViewModel.MeasuredValue = a_value
     End If
 End Property
 
@@ -1251,7 +1252,7 @@ Public Property Let SenseFunctions(ByVal a_value As Collection)
     If Not cc_isr_Core.CollectionExtensions.AreEqual(This.SenseFunctions, a_value) Then
         Set This.SenseFunctions = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SenseFunctions = This.SenseFunctions
+            This.ViewModel.SenseFunctions = a_value
     End If
 End Property
 
@@ -1267,7 +1268,7 @@ Public Property Let ReadingOffset(ByVal a_value As Double)
     If This.ReadingOffset <> a_value Then
         This.ReadingOffset = a_value
         If Not This.ViewModel Is Nothing Then _
-                This.ViewModel.ReadingOffset = This.ReadingOffset
+                This.ViewModel.ReadingOffset = a_value
     End If
 End Property
 
@@ -1283,7 +1284,7 @@ Public Property Let MonitoringState(ByVal a_value As String)
     If This.MonitoringState <> a_value Then
         This.MonitoringState = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.MonitoringState = This.MonitoringState
+            This.ViewModel.MonitoringState = a_value
     End If
 End Property
 
@@ -1333,7 +1334,7 @@ Public Property Let SingleReadEnabled(ByVal a_value As Boolean)
     If This.SingleReadEnabled <> a_value Then
         This.SingleReadEnabled = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SingleReadEnabled = This.SingleReadEnabled
+            This.ViewModel.SingleReadEnabled = a_value
     End If
 End Property
 
@@ -1387,7 +1388,7 @@ Public Property Let TimerInterval(ByVal a_value As Integer)
     If This.TimerInterval <> a_value Then
         This.TimerInterval = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.TimerInterval = This.TimerInterval
+            This.ViewModel.TimerInterval = a_value
     End If
 End Property
 
@@ -1403,7 +1404,7 @@ Public Property Let ElapsedTime(ByVal a_value As Double)
     If This.ElapsedTime <> a_value Then
         This.ElapsedTime = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ElapsedTime = This.ElapsedTime
+            This.ViewModel.ElapsedTime = a_value
     End If
 End Property
 
@@ -1419,7 +1420,7 @@ Public Property Let ElapsedTimeFormat(ByVal a_value As String)
     If This.ElapsedTimeFormat <> a_value Then
         This.ElapsedTimeFormat = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ElapsedTimeFormat = This.ElapsedTimeFormat
+            This.ViewModel.ElapsedTimeFormat = a_value
     End If
 End Property
 
@@ -1435,7 +1436,7 @@ Public Property Let ElapsedTimeCaption(ByVal a_value As String)
     If This.ElapsedTimeCaption <> a_value Then
         This.ElapsedTimeCaption = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ElapsedTimeCaption = This.ElapsedTimeCaption
+            This.ViewModel.ElapsedTimeCaption = a_value
     End If
 End Property
 
@@ -1451,7 +1452,7 @@ Public Property Let LastErrorMessage(ByVal a_value As String)
     If This.LastErrorMessage <> a_value Then
         This.LastErrorMessage = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.LastErrorMessage = This.LastErrorMessage
+            This.ViewModel.LastErrorMessage = a_value
     End If
 End Property
 
@@ -1467,7 +1468,7 @@ Public Property Let LastMessage(ByVal a_value As String)
     If This.LastMessage <> a_value Then
         This.LastMessage = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.LastMessage = This.LastMessage
+            This.ViewModel.LastMessage = a_value
     End If
 End Property
 
@@ -1755,27 +1756,13 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Gets the Current Measurement Top Row. </summary>
-''' <value>   [Integer]. </value>
-Public Property Get MeasurementTopRow() As Integer
-    MeasurementTopRow = This.MeasurementTopRow
-End Property
-
-''' <summary>   Sets the Current Measurement Top Row. </summary>
-''' <param name="a_value">   [Integer] the Measurement Top Row. </value>
-Public Property Let MeasurementTopRow(ByVal a_value As Integer)
-    If This.MeasurementTopRow <> a_value Then
-        This.MeasurementTopRow = a_value
-    End If
-End Property
-
-''' <summary>   Gets the Current Measurement Row. </summary>
+''' <summary>   Gets the Measurement Row. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get MeasurementRow() As Integer
     MeasurementRow = This.MeasurementRow
 End Property
 
-''' <summary>   Sets the Current Measurement Row. </summary>
+''' <summary>   Sets the Measurement Row. </summary>
 ''' <param name="a_value">   [Integer] the Measurement Row. </value>
 Public Property Let MeasurementRow(ByVal a_value As Integer)
     If This.MeasurementRow <> a_value Then
@@ -1783,89 +1770,77 @@ Public Property Let MeasurementRow(ByVal a_value As Integer)
     End If
 End Property
 
-''' <summary>   Gets the Current Measurement Column. </summary>
-''' <value>   [String]. </value>
-Public Property Get MeasurementColumn() As String
+''' <summary>   Gets the Measurement Column. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get MeasurementColumn() As Integer
     MeasurementColumn = This.MeasurementColumn
 End Property
 
-''' <summary>   Sets the Current Measurement Column. </summary>
-''' <param name="a_value">   [String] the Measurement Column. </value>
-Public Property Let MeasurementColumn(ByVal a_value As String)
+''' <summary>   Sets the Measurement Column. </summary>
+''' <param name="a_value">   [Integer] the Measurement Column. </value>
+Public Property Let MeasurementColumn(ByVal a_value As Integer)
     If This.MeasurementColumn <> a_value Then
         This.MeasurementColumn = a_value
     End If
 End Property
 
-''' <summary>   Gets the Current Channel Column. </summary>
-''' <value>   [String]. </value>
-Public Property Get ChannelColumn() As String
+''' <summary>   Gets the Channel Row. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get ChannelRow() As Integer
+    ChannelRow = This.ChannelRow
+End Property
+
+''' <summary>   Sets the Channel Row. </summary>
+''' <param name="a_value">   [Integer] the Channel Row. </value>
+Public Property Let ChannelRow(ByVal a_value As Integer)
+    If This.ChannelRow <> a_value Then
+        This.ChannelRow = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Channel Column. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get ChannelColumn() As Integer
     ChannelColumn = This.ChannelColumn
 End Property
 
-''' <summary>   Sets the Current Channel Column. </summary>
-''' <param name="a_value">   [String] the Channel Column. </value>
-Public Property Let ChannelColumn(ByVal a_value As String)
+''' <summary>   Sets the Channel Column. </summary>
+''' <param name="a_value">   [Integer] the Channel Column. </value>
+Public Property Let ChannelColumn(ByVal a_value As Integer)
     If This.ChannelColumn <> a_value Then
         This.ChannelColumn = a_value
     End If
 End Property
 
-''' <summary>   Gets the Current Channel Cell. </summary>
+''' <summary>   Gets the Measurement Cell Value. </summary>
 ''' <value>   [String]. </value>
-Public Property Get ChannelCell() As String
-    ChannelCell = This.ChannelCell
+Public Property Get MeasurementCellValue() As String
+    MeasurementCellValue = This.MeasurementCellValue
+    ' MeasurementCellValue = Range(Cells(Me.MeasurementRow, Me.MeasurementColumn)).Value
 End Property
 
-''' <summary>   Sets the Current Channel Cell. </summary>
-''' <param name="a_value">   [String] the Current Channel Cell. </value>
-Public Property Let ChannelCell(ByVal a_value As String)
-    If This.ChannelCell <> a_value Then
-        This.ChannelCell = a_value
+''' <summary>   Sets the Measurement Cell Value. </summary>
+''' <param name="a_value">   [String] the Measurement Cell Value. </value>
+Public Property Let MeasurementCellValue(ByVal a_value As String)
+    If This.MeasurementCellValue <> a_value Then
+        This.MeasurementCellValue = a_value
+        ' Range(Cells(Me.MeasurementRow, Me.MeasurementColumn)).Value = a_value
     End If
 End Property
         
-''' <summary>   Gets the Current Measurement Cell. </summary>
+''' <summary>   Gets the channel cell Value. </summary>
 ''' <value>   [String]. </value>
-Public Property Get MeasurementCell() As String
-    MeasurementCell = This.MeasurementCell
+Public Property Get ChannelCellValue() As String
+    ChannelCellValue = This.ChannelCellValue
+    ' ChannelCellValue = Range(Cells(Me.ChannelRow, Me.ChannelColumn)).Value
 End Property
 
-''' <summary>   Sets the Current Measurement Cell. </summary>
-''' <param name="a_value">   [String] the Current Measurement Cell. </value>
-Public Property Let MeasurementCell(ByVal a_value As String)
-    If This.MeasurementCell <> a_value Then
-        This.MeasurementCell = a_value
-    End If
-End Property
-
-''' <summary>   Gets the Current Measurement Value. </summary>
-''' <value>   [String]. </value>
-Public Property Get MeasurementValue() As String
-    MeasurementValue = This.MeasurementValue
-End Property
-
-''' <summary>   Sets the Current Measurement Value. </summary>
-''' <param name="a_value">   [String] the last CurrentMeasurementValue. </value>
-Public Property Let MeasurementValue(ByVal a_value As String)
-    If This.MeasurementValue <> a_value Then
-        This.MeasurementValue = a_value
-        ' Range(Me.MeasurementCell).Value = a_value
-    End If
-End Property
-        
-''' <summary>   Gets the Current Channel Value. </summary>
-''' <value>   [String]. </value>
-Public Property Get ChannelValue() As String
-    ChannelValue = This.ChannelValue
-End Property
-
-''' <summary>   Sets the Current Channel Value. </summary>
-''' <param name="a_value">   [String] the last CurrentChannelValue. </value>
-Public Property Let ChannelValue(ByVal a_value As String)
-    If This.ChannelValue <> a_value Then
-        This.ChannelValue = a_value
-        ' Range(Me.ChannelCell).Value = a_value
+''' <summary>   Sets the channel cell value. </summary>
+''' <param name="a_value">   [String] the channel cell value. </value>
+Public Property Let ChannelCellValue(ByVal a_value As String)
+    If This.ChannelCellValue <> a_value Then
+        This.ChannelCellValue = a_value
+        ' Range(Cells(Me.ChannelRow, Me.ChannelColumn)).Value = a_value
     End If
 End Property
 
@@ -1873,15 +1848,19 @@ End Property
 ''' <summary>   Sets the Channel display. </summary>
 ''' <param name="a_channelNo">   [single] the channel number. </param>
 ''' <param name="a_value">       [double] the value. </param>
-Friend Sub SetReading(ByVal a_channelNo As Integer, ByVal a_value As Double)
+''' <param name="a_byRow">       [Boolean] true if the next reading goes to the next row. </param>
+''' <param name="a_increment">   [Integer] the row or column increment. </param>
+Friend Sub SetReading(ByVal a_channelNo As Integer, ByVal a_value As Double, _
+    ByVal a_byRow As Boolean, ByVal a_increment As Integer)
 
-    Me.MeasurementRow = Me.MeasurementTopRow + a_channelNo - 1
-    
-    Me.ChannelCell = Me.ChannelColumn & VBA.CStr(Me.MeasurementRow)
-    Me.ChannelValue = VBA.CStr(a_channelNo)
-
-    Me.MeasurementCell = Me.MeasurementColumn & VBA.CStr(Me.MeasurementRow)
-    Me.MeasurementValue = VBA.Format$(a_value, This.ViewModel.MeasuredValueFormat)
+    Me.MeasurementRow = IIf(a_byRow, m_measurementRow + a_increment * (a_channelNo - 1), m_measurementRow)
+    Me.MeasurementColumn = IIf(a_byRow, m_measurementCol, m_measurementCol + a_increment * (a_channelNo - 1))
+   
+    Me.ChannelRow = IIf(a_byRow, m_channelRow + a_increment * (a_channelNo - 1), m_channelRow)
+    Me.ChannelColumn = IIf(a_byRow, m_channelCol, m_channelCol + a_increment * (a_channelNo - 1))
+   
+    Me.ChannelCellValue = VBA.CStr(a_channelNo)
+    Me.MeasurementCellValue = VBA.Format$(a_value, This.ViewModel.MeasuredValueFormat)
     
 End Sub
 
@@ -1913,7 +1892,7 @@ Friend Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Chan
     End If
     Me.MeasuredValue = p_value
     
-    SetReading Me.MeasuredChannelNumber, Me.MeasuredValue
+    SetReading Me.MeasuredChannelNumber, Me.MeasuredValue, m_byRow, m_displayIncrement
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1936,21 +1915,11 @@ err_Handler:
     
 End Sub
 
-''' <summary>   Handles the <see cref="cc_isr_Tcp_Scpi.Demo.K2700ViewModel.ConnectionChanged"/> event. </summary>
-''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/>] event arguments. </param>
-Friend Sub m_viewModel_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
-End Sub
-
-''' <summary>   Handles the <see cref="cc_isr_Tcp_Scpi.Demo.K2700ViewModel.ConnectionChanging"/> event. </summary>
-''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangingEventArgs"/>] event arguments. </param>
-Friend Sub m_ViewModel_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
-End Sub
-
 ''' <summary>   Handles the property change event of the viwe model. </summary>
 ''' <param name="a_propertyName">   [String] the property name. </param>
 Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
 
-    Const p_procedureName = "m_K2700ViewModel_PropertyChanged"
+    Const p_procedureName = "HandleViewModelPropertyChanged"
 
     Select Case a_propertyName
 
@@ -2022,8 +1991,8 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
         Case "ChannelCount"
             Me.ChannelCount = This.ViewModel.ChannelCount
-        Case "CurrentChannelNumber"
-            Me.CurrentChannelNumber = This.ViewModel.CurrentChannelNumber
+        Case "TargetChannelNumber"
+            Me.TargetChannelNumber = This.ViewModel.TargetChannelNumber
         Case "MeasuredChannelNumber"
             Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
         Case "SenseFunctionName"
@@ -2051,8 +2020,8 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.SenseFunctions = This.ViewModel.SenseFunctions
         Case "ScpiCommands"
             Me.ScpiCommands = This.ViewModel.ScpiCommands
-        Case "CurrentMeasurementMode"
-            Me.CurrentMeasurementMode = This.ViewModel.CurrentMeasurementMode
+        Case "MeasurementMode"
+            Me.MeasurementMode = This.ViewModel.MeasurementMode
         Case "ReadStatusAfterWriteEnabled"
             Me.ReadStatusAfterWriteEnabled = This.ViewModel.ReadStatusAfterWriteEnabled
         Case "ReadingOffset"
@@ -2150,6 +2119,74 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
     
 End Sub
 
+''' <summary>   Synchronizes the view mode with the Observer. </summary>
+''' <remarks>   This is required becuase the view (observer) that is planned for this
+''' view model is a Sheet, which is a singleton class whereas the view model is a
+''' non-singleton class. As a resule, the observer retains values from previous
+''' instances of the View Model. </remarks>
+Friend Sub Synchronize()
+
+    Const p_procedureName = "Synchronize"
+
+    ' set the view model settings that come from the Observer user interface
+    This.ViewModel.SocketAddress = This.SocketAddress
+    This.ViewModel.ReadingOffset = This.ReadingOffset
+    This.ViewModel.GpibLanControllerPort = This.GpibLanControllerPort
+
+    Me.Host = This.ViewModel.Host
+    Me.Port = This.ViewModel.Port
+    Me.SocketAddress = This.ViewModel.SocketAddress
+    Me.SocketId = This.ViewModel.SocketId
+    Me.SessionTimeout = This.ViewModel.SessionTimeout
+    Me.PauseRequested = This.ViewModel.PauseRequested
+    Me.StopRequested = This.ViewModel.StopRequested
+    Me.TimerInterval = This.ViewModel.TimerInterval
+    Me.Connected = This.ViewModel.Connected
+    Me.MessageToSend = This.ViewModel.MessageToSend
+    Me.SentMessage = This.ViewModel.SentMessage
+    Me.ReceivedMessage = This.ViewModel.ReceivedMessage
+    Me.ReceivedMessageLength = This.ViewModel.ReceivedMessageLength
+    Me.ElapsedTime = This.ViewModel.ElapsedTime
+    Me.ElapsedTimeFormat = This.ViewModel.ElapsedTimeFormat
+    Me.ElapsedTimeCaption = This.ViewModel.ElapsedTimeCaption
+    Me.LastErrorMessage = This.ViewModel.LastErrorMessage
+    Me.LastMessage = This.ViewModel.LastMessage
+    Me.SerialPollByte = This.ViewModel.SerialPollByte
+    Me.StatusByte = This.ViewModel.StatusByte
+    Me.StandardByte = This.ViewModel.StandardByte
+    Me.ServiceRequested = This.ViewModel.ServiceRequested
+    Me.GpibAddress = This.ViewModel.GpibAddress
+    Me.AutoAssertTalk = This.ViewModel.AutoAssertTalk
+    Me.AutoAssertTalk = This.ViewModel.AutoAssertTalk
+    Me.TopCard = This.ViewModel.TopCard
+    Me.BottomCard = This.ViewModel.BottomCard
+    Me.TopCardFunctionScanList = This.ViewModel.TopCardFunctionScanList
+    Me.BottomCardFunctionScanList = This.ViewModel.BottomCardFunctionScanList
+    Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
+    Me.FrontInputsCaption = This.ViewModel.FrontInputsCaption
+    Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
+    Me.ChannelCount = This.ViewModel.ChannelCount
+    Me.TargetChannelNumber = This.ViewModel.TargetChannelNumber
+    Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
+    Me.SenseFunctionName = This.ViewModel.SenseFunctionName
+    Me.SenseFunctionCaption = This.ViewModel.SenseFunctionCaption
+    Me.SenseFunctionUnit = This.ViewModel.SenseFunctionUnit
+    Me.MeasuredReading = This.ViewModel.MeasuredReading
+    Me.MeasuredValueFormat = This.ViewModel.MeasuredValueFormat
+    Me.MeasuredValue = This.ViewModel.MeasuredValue
+    Me.ExternalTrigMonitoringEnabled = This.ViewModel.ExternalTrigMonitoringEnabled
+    Me.MonitoringState = This.ViewModel.MonitoringState
+    Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
+    Me.SingleReadEnabled = This.ViewModel.SingleReadEnabled
+    Me.SenseFunctions = This.ViewModel.SenseFunctions
+    Me.ScpiCommands = This.ViewModel.ScpiCommands
+    Me.MeasurementMode = This.ViewModel.MeasurementMode
+    Me.ReadStatusAfterWriteEnabled = This.ViewModel.ReadStatusAfterWriteEnabled
+    Me.ReadingOffset = This.ViewModel.ReadingOffset
+    Me.MonitoringState = This.ViewModel.MonitoringState
+    
+End Sub
+
 ''' <summary>   Handles the property change event of the viwe model. </summary>
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Core.PropertyChangedEventArgs"/>] event arguments. </param>
 Friend Sub m_viewModel_PropertyChanged(ByVal a_eventArgs As cc_isr_Core.PropertyChangedEventArgs)
@@ -2208,20 +2245,15 @@ Friend Function Initialize(ByVal a_viewModel As K2700ViewModel) As K2700Observer
     
     Set This.ViewModel = a_viewModel
     
-    ' set the view model settings that come from the Observer user interface
-    This.ViewModel.SocketAddress = This.SocketAddress
-    This.ViewModel.ReadingOffset = This.ReadingOffset
-    This.ViewModel.GpibLanControllerPort = This.GpibLanControllerPort
-
+    Me.Synchronize
+    
+    ' set reference to the view model event handler.
+    
     Set m_viewModel = a_viewModel
     
     If Not This.Initialized Then
     End If
     
-    Me.MeasurementTopRow = m_measurementTopRow
-    Me.ChannelColumn = m_measurementNoCol
-    Me.MeasurementColumn = m_measurementValueCol
-
     This.Initialized = True
         
     Set Initialize = Me
