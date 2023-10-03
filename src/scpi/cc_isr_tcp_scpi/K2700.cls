@@ -604,7 +604,7 @@ Public Function TryConfigureExternalTriggerReading(ByVal a_function As String, _
     This.Session.WriteLine ":TRIG:COUN 1"
     
     ' set the trigger source to external
-    This.TriggerSystem.SourceSetter TriggerSourceOption.External
+    This.TriggerSystem.SourceSetter TriggerSourceOption.external
     ' This.Session.WriteLine ":TRIG:SOUR EXT"
     
     ' enable the detection of externally triggered measurement available.
@@ -785,7 +785,7 @@ End Property
 Public Property Get CanTakeExternalTriggers() As Boolean
     
     CanTakeExternalTriggers = Me.Connected And _
-        This.TriggerSystem.Source = cc_isr_Tcp_Scpi.TriggerSourceOption.External
+        This.TriggerSystem.Source = cc_isr_Tcp_Scpi.TriggerSourceOption.external
                                     
 End Property
 

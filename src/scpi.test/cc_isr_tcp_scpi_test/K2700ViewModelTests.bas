@@ -65,19 +65,23 @@ Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
         Case 3
             Set p_outcome = TestShouldReadCards
         Case 4
-            Set p_outcome = TestShouldRestoreInitialState
+            Set p_outcome = TestInitialStateShouldRestore
         Case 5
-            Set p_outcome = TestShouldRecoverFromSyntaxError
+            Set p_outcome = TestSyntaxErrorShouldRecover
         Case 6
-            Set p_outcome = TestShouldRestoreFromClosedConnection
+            Set p_outcome = TestClosedConnectionShouldRestore
         Case 7
-            Set p_outcome = TestShouldConfigureImmediateMode
+            Set p_outcome = TestImmediateModeShouldConfigure
         Case 8
-            Set p_outcome = TestShouldConfigureExternalMode
+            Set p_outcome = TestExternalModeShouldConfigure
         Case 9
-            Set p_outcome = TestTriggersShouldPoll
+            Set p_outcome = TestTriggerPollingShouldStartStop
         Case 10
-            Set p_outcome = TestShouldMonitorTriggering
+            Set p_outcome = TestTriggerMonitoringShouldStartStop
+        Case 11
+            Set p_outcome = TestTriggerPollingShouldRead
+        Case 12
+            Set p_outcome = TestTriggerMonitoringShouldRead
         Case Else
     End Select
     AfterEach
@@ -87,7 +91,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 8
+    RunTest 10
     AfterAll
 End Sub
 
@@ -99,21 +103,21 @@ End Sub
 ''' Test 02 TestShouldBeConnected passed. Elapsed time: 31.4 ms.
 '''     Serial Poll is 16 in 11.8ms.
 ''' Test 03 TestShouldReadCards passed. Elapsed time: 14.9 ms.
-''' Test 04 TestShouldRestoreInitialState passed. Elapsed time: 12253.3 ms.
-''' Test 05 TestShouldRecoverFromSyntaxError passed. Elapsed time: 160.4 ms.
+''' Test 04 TestInitialStateShouldRestore passed. Elapsed time: 12253.3 ms.
+''' Test 05 TestSyntaxErrorShouldRecover passed. Elapsed time: 160.4 ms.
 '''    Serial Poll is 4 in 3.9 ms.
-''' Test 06 TestShouldRestoreFromClosedConnection passed. Elapsed time: 5745.9 ms.
-''' Test 07 TestShouldConfigureImmediateMode passed. Elapsed time: 5629.6 ms.
-''' Test 08 TestShouldConfigureExternalMode passed. Elapsed time: 4306.3 ms.
+''' Test 06 TestClosedConnectionShouldRestore passed. Elapsed time: 5745.9 ms.
+''' Test 07 TestImmediateModeShouldConfigure passed. Elapsed time: 5629.6 ms.
+''' Test 08 TestExternalModeShouldConfigure passed. Elapsed time: 4306.3 ms.
 '''
 ''' Test 01 TestShouldInitialize passed. Elapsed time: 11.6 ms.
 ''' Test 02 TestShouldBeConnected passed. Elapsed time: 35.5 ms.
 '''     Serial Poll is 80 in 12.5 ms.
 ''' Test 03 TestShouldReadCards passed. Elapsed time: 14.5 ms.
-''' Test 04 TestShouldRestoreInitialState passed. Elapsed time: 12232.9 ms.
-''' Test 05 TestShouldRecoverFromSyntaxError passed. Elapsed time: 157.1 ms.
+''' Test 04 TestInitialStateShouldRestore passed. Elapsed time: 12232.9 ms.
+''' Test 05 TestSyntaxErrorShouldRecover passed. Elapsed time: 157.1 ms.
 '''     Serial Poll is 68 in 4.3 ms.
-''' Test 06 TestShouldRestoreFromClosedConnection passed. Elapsed time: 5740.3 ms.
+''' Test 06 TestClosedConnectionShouldRestore passed. Elapsed time: 5740.3 ms.
 ''' Ran 6 out of 6 tests.
 ''' Passed: 6; Failed: 0; Inconclusive: 0.
 '''
@@ -121,12 +125,12 @@ End Sub
 ''' Test 02 TestShouldBeConnected passed. Elapsed time: 43.4 ms.
 '''     Serial Poll is 16 in 10.3 ms.
 ''' Test 03 TestShouldReadCards passed. Elapsed time: 14.0 ms.
-''' Test 04 TestShouldRestoreInitialState passed. Elapsed time: 12176.9 ms.
-''' Test 05 TestShouldRecoverFromSyntaxError passed. Elapsed time: 159.6 ms.
+''' Test 04 TestInitialStateShouldRestore passed. Elapsed time: 12176.9 ms.
+''' Test 05 TestSyntaxErrorShouldRecover passed. Elapsed time: 159.6 ms.
 '''     Serial Poll is 4 in 4.1 ms.
-''' Test 06 TestShouldRestoreFromClosedConnection passed. Elapsed time: 5730.3 ms.
-''' Test 07 TestShouldConfigureImmediateMode passed. Elapsed time: 5663.8 ms.
-''' Test 08 TestShouldConfigureExternalMode passed. Elapsed time: 5524.5 ms.
+''' Test 06 TestClosedConnectionShouldRestore passed. Elapsed time: 5730.3 ms.
+''' Test 07 TestImmediateModeShouldConfigure passed. Elapsed time: 5663.8 ms.
+''' Test 08 TestExternalModeShouldConfigure passed. Elapsed time: 5524.5 ms.
 ''' Ran 8 out of 8 tests.
 ''' Passed: 8; Failed: 0; Inconclusive: 0.
 '''
@@ -571,7 +575,7 @@ Public Function AssertExternalTriggerModeShouldStart(ByVal a_assert As cc_isr_Te
     If p_outcome.AssertSuccessful Then
         
         Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
-        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
+        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.external
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
             "External trigger reading mode should be as expected.")
     End If
@@ -600,7 +604,7 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_assert As cc_isr
     If p_outcome.AssertSuccessful Then
         
         Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
-        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
+        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.external
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
             "External trigger reading mode should be as expected.")
     End If
@@ -630,7 +634,7 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_assert As cc_isr
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(cc_isr_Tcp_Scpi.TriggerSourceOption.External, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(cc_isr_Tcp_Scpi.TriggerSourceOption.external, _
             This.ViewModel.K2700.TriggerSystem.SourceGetter(), _
             "External trigger source should be as expected.")
     End If
@@ -677,8 +681,8 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_assert As cc_isr
             "External trigger initiation should be off in external trigger reading mode.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.PauseRequested, _
-            "Pause requested should be off in external trigger reading mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.PauseRequested, _
+            "Pause requested should be on in external trigger reading mode before monitroing started.")
     
     If p_outcome.AssertSuccessful Then
         
@@ -1083,7 +1087,7 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
             This.Observer.SelectedChannelNumber, _
-            "The observer Selected Channel Number should equals the view model selected channel number.")
+            "The observer Selected Channel Number should equal the view model selected channel number.")
             
     End If
     
@@ -1131,7 +1135,7 @@ Public Function AssertMonitoringModeShouldStart(ByVal a_assert As cc_isr_Test_Fx
     If p_outcome.AssertSuccessful Then
         
         Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
-        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
+        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.external
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
             "External Trigger mode should be as expected.")
     End If
@@ -1193,7 +1197,7 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test
     If p_outcome.AssertSuccessful Then
         
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.PauseRequested, _
-            "Pause Requested should be off after starting the monitoring timer.")
+            "Pause Requested should be off after starting the monitoring.")
         
     End If
     
@@ -1203,10 +1207,19 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test
             "Stop requested should be off in trigger monitoring mode.")
     End If
     
-    If p_outcome.AssertSuccessful Then
+    If p_outcome.AssertSuccessful And This.ViewModel.TimerControlled Then
     
+        ' the external trigger is initiated immeidated when the timer is started in timer control
+        
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.K2700.ExtTrigInitiated, _
             "External trigger should get initiated after starting the monitoring timer.")
+        
+    End If
+    
+    If p_outcome.AssertSuccessful And This.ViewModel.TimerControlled Then
+    
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.TimerStarted, _
+            "Timer started should be True after monitoring started under timer control.")
         
     End If
     
@@ -1285,7 +1298,9 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test
     
     If p_outcome.AssertSuccessful Then
     
-        ' testing trigger montoring uses auto increment to detect changes in channel number as readings are triggered.
+        ' testing trigger montoring uses auto increment to detect changes
+        ' in channel number as readings are triggered.
+        
         Dim p_autoIncrementChannelNumber As Boolean: p_autoIncrementChannelNumber = True
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_autoIncrementChannelNumber, _
             This.ViewModel.AutoIncrementChannelNoEnabled, _
@@ -1297,7 +1312,9 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test
     
         ' with triggered mode and multiple reading, the Target Channel Number is used to set the
         ' measured channel after a reading is triggered and the measurement event is handled
-        ' by the observer.
+        ' by the observer. The target channel number must then be set to between 1 and the
+        ' channel count (see below).
+        
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.TargetChannelNumber > 0, _
             "The View Model Target channel number '" & VBA.CStr(This.ViewModel.TargetChannelNumber) & _
             "' should be positive.")
@@ -1314,7 +1331,8 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test
    
     If p_outcome.AssertSuccessful Then
     
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, This.Observer.TargetChannelNumber, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, _
+            This.Observer.TargetChannelNumber, _
             "Observer Target Channel Number should be set to the selected channel number.")
     
     End If
@@ -1324,12 +1342,12 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test
 End Function
 
 ''' summary>   Asserts that measurements should get triggered. </summary>
-''' <param name="a_assert">   [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
-''' <param name="a_timeoutSeconds">   [Optional, Double, 30] The time to wait for some triggered values. </param>
+''' <param name="a_assert">     [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
+''' <param name="a_duration">   [Optional, Double, 30] The time to wait for some triggered values. </param>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function AssertMeasurementsShouldGetTriggered(ByVal a_assert As cc_isr_Test_Fx.Assert, _
-    Optional ByVal a_timeoutSeconds As Double = 30) As cc_isr_Test_Fx.Assert
+    Optional ByVal a_duration As Double = 30) As cc_isr_Test_Fx.Assert
 
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
     
@@ -1348,7 +1366,7 @@ Public Function AssertMeasurementsShouldGetTriggered(ByVal a_assert As cc_isr_Te
     
     Dim p_endTime As Double
     p_endTime = cc_isr_Core_IO.CoreExtensions.DaysNow() + _
-        (a_timeoutSeconds / cc_isr_Core_IO.CoreExtensions.SecondsPerDay)
+        (a_duration / cc_isr_Core_IO.CoreExtensions.SecondsPerDay)
     While p_endTime > cc_isr_Core_IO.CoreExtensions.DaysNow()
         
         DoEvents
@@ -1415,6 +1433,14 @@ Public Function AssertMonitoringModeShouldStop(ByVal a_assert As cc_isr_Test_Fx.
             "Pause should be requested after monitoring stopped.")
         
     End If
+    
+    If p_outcome.AssertSuccessful Then
+    
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.TimerStarted, _
+            "Timer started should be false after monitoring stopped.")
+        
+    End If
+    
     
     If p_outcome.AssertSuccessful Then
         
@@ -1900,14 +1926,14 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' TestShouldRestoreInitialState passed. in 12234.4 ms.
+''' TestInitialStateShouldRestore passed. in 12234.4 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestShouldRestoreInitialState() As cc_isr_Test_Fx.Assert
+Public Function TestInitialStateShouldRestore() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestShouldRestoreInitialState"
+    Const p_procedureName As String = "TestInitialStateShouldRestore"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -2040,7 +2066,7 @@ exit_Handler:
     Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
-    Set TestShouldRestoreInitialState = p_outcome
+    Set TestInitialStateShouldRestore = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -2064,14 +2090,14 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' TestShouldRecoverFromSyntaxError passed. in 145.6 ms.
+''' TestSyntaxErrorShouldRecover passed. in 145.6 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestShouldRecoverFromSyntaxError() As Assert
+Public Function TestSyntaxErrorShouldRecover() As Assert
 
-    Const p_procedureName As String = "TestShouldRecoverFromSyntaxError"
+    Const p_procedureName As String = "TestSyntaxErrorShouldRecover"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -2154,7 +2180,7 @@ exit_Handler:
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     Debug.Print VBA.vbTab & p_serialPollDetails
     
-    Set TestShouldRecoverFromSyntaxError = p_outcome
+    Set TestSyntaxErrorShouldRecover = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -2178,14 +2204,14 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' TestShouldRestoreFromClosedConnection passed. in 5733.7 ms.
+''' TestClosedConnectionShouldRestore passed. in 5733.7 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestShouldRestoreFromClosedConnection() As Assert
+Public Function TestClosedConnectionShouldRestore() As Assert
 
-    Const p_procedureName As String = "TestShouldRestoreFromClosedConnection"
+    Const p_procedureName As String = "TestClosedConnectionShouldRestore"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -2240,7 +2266,7 @@ exit_Handler:
     Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
-    Set TestShouldRestoreFromClosedConnection = p_outcome
+    Set TestClosedConnectionShouldRestore = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -2268,9 +2294,9 @@ End Function
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestShouldConfigureImmediateMode() As cc_isr_Test_Fx.Assert
+Public Function TestImmediateModeShouldConfigure() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestShouldConfigureImmediateMode"
+    Const p_procedureName As String = "TestImmediateModeShouldConfigure"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -2326,7 +2352,7 @@ exit_Handler:
     Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
-    Set TestShouldConfigureImmediateMode = p_outcome
+    Set TestImmediateModeShouldConfigure = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -2354,9 +2380,9 @@ End Function
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestShouldConfigureExternalMode() As cc_isr_Test_Fx.Assert
+Public Function TestExternalModeShouldConfigure() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestShouldConfigureExternalMode"
+    Const p_procedureName As String = "TestExternalModeShouldConfigure"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -2392,7 +2418,7 @@ exit_Handler:
     Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
-    Set TestShouldConfigureExternalMode = p_outcome
+    Set TestExternalModeShouldConfigure = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -2412,76 +2438,15 @@ err_Handler:
 
 End Function
 
-''' summary>   Asserts that triggers should get polled. </summary>
-''' <param name="a_assert">   [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
-''' <param name="a_timeoutSeconds">   [Optional, Double, 30] The time to wait for some triggered values. </param>
+''' summary>   Asserts that triggered readings should get polled. </summary>
+''' <param name="a_assert">     [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
+''' <param name="a_duration">   [Optional, Double, 30] The time to wait for some triggered values. </param>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function AssertTriggersShouldPoll(ByVal a_assert As cc_isr_Test_Fx.Assert, _
-    Optional ByVal a_timeoutSeconds As Double = 30) As cc_isr_Test_Fx.Assert
+Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_Fx.Assert, _
+    Optional ByVal a_duration As Double = 30) As cc_isr_Test_Fx.Assert
 
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
-    
-    Set AssertTriggersShouldPoll = p_outcome
-
-End Function
-
-
-''' <summary>   Unit test. Asserts that view model should polltriggering. </summary>
-''' <remarks>
-''' <code>
-''' With 1ms read after write delay.
-''' </code>
-''' </remarks>
-''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
-''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestTriggersShouldPoll() As cc_isr_Test_Fx.Assert
-
-    Const p_procedureName As String = "TestTriggersShouldPoll"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Dim p_details As String: p_details = VBA.vbNullString
-    
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
-    
-    If p_outcome.AssertSuccessful Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
-    End If
-    
-    ' start the external trigger mode
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = AssertExternalTriggerModeShouldStart(p_outcome)
-    
-    ' validate the external trigger reading mode
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = AssertExternalTriggerModeShouldValidate(p_outcome)
-    
-    ' setup conditions for monitoring
-    
-    ' Multiple readings (auto increment on) is used for testing
-    ' trigger monitoring. The test checks that channel numbers change
-    ' with each trigger.
-    
-    ' With multiple readings (auto increment is on),
-    ' channel numbers start with the Target Channel Number.
-    ' Start with channel 1
-    
-    This.ViewModel.TargetChannelNumber = 1
-    This.ViewModel.AutoIncrementChannelNoEnabled = True
-    
-    ' start the monitoring mode turning timer monitoring off.
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = AssertMonitoringModeShouldStart(p_outcome, False)
-    
-    ' validate the monitoring mode
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = AssertMonitoringModeShouldValidate(p_outcome)
     
     ' get some data here.
     
@@ -2498,18 +2463,18 @@ Public Function TestTriggersShouldPoll() As cc_isr_Test_Fx.Assert
         ' prime triggering so that we can get the trigger state.
         This.ViewModel.HandleTimerEvent
     
-        ' after the first handle of timer event,
-        ' external trigger monitor should be initiated.
+        ' the external trigger monitor is initiated when the timer event is
+        ' handled using the above call
+        
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.K2700.ExtTrigInitiated, _
             "External trigger initiation should be on after first call to handle the timer event.")
     
     End If
     
     ' loop for some time waiting for triggered measurements.
-    Dim p_duration As Double: p_duration = 10 ' seconds
-    Dim p_endTime As Double
-    p_endTime = cc_isr_Core_IO.CoreExtensions.DaysNow() + _
-        (p_duration / cc_isr_Core_IO.CoreExtensions.SecondsPerDay)
+    Dim p_endTime As Double: p_endTime = cc_isr_Core_IO.CoreExtensions.DaysNow() + _
+        (a_duration / cc_isr_Core_IO.CoreExtensions.SecondsPerDay)
+        
     Do Until This.ViewModel.PauseRequested
         
         DoEvents
@@ -2521,10 +2486,32 @@ Public Function TestTriggersShouldPoll() As cc_isr_Test_Fx.Assert
             This.ViewModel.StopMonitoringExternalTriggersCommand
         
         ' on expiration, set stop request.
-        If p_endTime > cc_isr_Core_IO.CoreExtensions.DaysNow() Then _
-            This.ViewModel.StopRequested = True
+        If p_endTime > cc_isr_Core_IO.CoreExtensions.DaysNow() Then
         
-        ' invoke the event handler, which moves the moves the measurement mode to none when done.
+            If This.ViewModel.StopRequested Then
+            
+                Set p_outcome = cc_isr_Test_Fx.Assert.Fail( _
+                    "Trigger monitoring loop failed to terminate after stop was requested.")
+                    
+                ' force an exit from the loop as Pause requested fails to materialize,
+                ' which is a bug that needs to be fixed.
+                
+                Exit Do
+            Else
+                This.ViewModel.StopRequested = True
+                
+                ' set a new end time to timeout in one second if the loop does not exit
+                p_endTime = cc_isr_Core_IO.CoreExtensions.DaysNow() + _
+                    (1 / cc_isr_Core_IO.CoreExtensions.SecondsPerDay)
+            End If
+            
+        End If
+        
+        ' invoke the event handler, which either:
+        ' handles a trigger or
+        ' issues a pause request if stop was requested and
+        '   moves the measurement mode to none when done.
+
         On Error Resume Next
         This.ViewModel.HandleTimerEvent
         If Err.Number <> 0 Then
@@ -2559,7 +2546,7 @@ Public Function TestTriggersShouldPoll() As cc_isr_Test_Fx.Assert
                 
                 Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(ExpectedTargetChannelNumber(), _
                     This.ViewModel.TargetChannelNumber, _
-                    "The target channel number should equal the expected target channel number after triggered reading.")
+                    "The target channel number should equal the expected target channel number after a triggered reading.")
                     
             End If
             
@@ -2567,7 +2554,7 @@ Public Function TestTriggersShouldPoll() As cc_isr_Test_Fx.Assert
                 
                 Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, _
                     This.Observer.TargetChannelNumber, _
-                    "The observer Target Channel Number should equals the view model target channel number.")
+                    "The observer Target Channel Number should equal the view model target channel number.")
                     
             End If
 
@@ -2575,6 +2562,58 @@ Public Function TestTriggersShouldPoll() As cc_isr_Test_Fx.Assert
     
     Loop
     
+    Set AssertTriggeredReadingsShouldPoll = p_outcome
+
+End Function
+
+''' <summary>   Asserts that view model should poll triggered readings. </summary>
+''' <param name="a_assert">     [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
+''' <param name="a_enabled">    [Optional, Boolean, True] True to enable reading triggered values. </param>
+''' <param name="a_duration">   [Optional, Double, 30] The time to wait for some triggered values. </param>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
+Public Function AssetTriggersShouldPoll(ByVal a_assert As cc_isr_Test_Fx.Assert, _
+    Optional ByVal a_enabled As Boolean = True, _
+    Optional ByVal a_duration As Double = 30) As cc_isr_Test_Fx.Assert
+
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
+    Dim p_details As String: p_details = VBA.vbNullString
+    
+    ' start the external trigger mode
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = AssertExternalTriggerModeShouldStart(p_outcome)
+    
+    ' validate the external trigger reading mode
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = AssertExternalTriggerModeShouldValidate(p_outcome)
+    
+    ' setup conditions for monitoring
+    
+    ' Multiple readings (auto increment on) is used for testing
+    ' trigger monitoring. The test checks that channel numbers change
+    ' with each trigger.
+    
+    ' With multiple readings (auto increment is on),
+    ' channel numbers start with the Target Channel Number.
+    ' Start with channel 1
+    
+    This.ViewModel.TargetChannelNumber = 1
+    This.ViewModel.AutoIncrementChannelNoEnabled = True
+    
+    ' start the monitoring mode turning timer monitoring off.
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = AssertMonitoringModeShouldStart(p_outcome, False)
+    
+    ' validate the monitoring mode
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = AssertMonitoringModeShouldValidate(p_outcome)
+    
+    If p_outcome.AssertSuccessful And a_enabled Then _
+        Set p_outcome = AssertTriggeredReadingsShouldPoll(p_outcome, a_duration)
     
     ' stop monitoring here
     
@@ -2587,6 +2626,39 @@ Public Function TestTriggersShouldPoll() As cc_isr_Test_Fx.Assert
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
             "Last error message should be empty but found: '" & This.ViewModel.LastErrorMessage & "'.")
 
+    Set AssetTriggersShouldPoll = p_outcome
+
+End Function
+
+''' <summary>   Unit test. Asserts that view model should start and stop polling triggered readings. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
+Public Function TestTriggerPollingShouldStartStop() As cc_isr_Test_Fx.Assert
+
+    Const p_procedureName As String = "TestTriggerPollingShouldStartStop"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_details As String: p_details = VBA.vbNullString
+    
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    Dim p_enabled As Boolean: p_enabled = False ' for now
+    Dim p_duration As Double: p_duration = 30  ' in seconds
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = AssetTriggersShouldPoll(p_outcome, p_enabled, p_duration)
+        
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
@@ -2596,7 +2668,7 @@ exit_Handler:
     Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
-    Set TestTriggersShouldPoll = p_outcome
+    Set TestTriggerPollingShouldStartStop = p_outcome
     
     On Error GoTo 0
     Exit Function
@@ -2617,7 +2689,7 @@ err_Handler:
 End Function
 
 
-''' <summary>   Unit test. Asserts that view model should monitor triggering. </summary>
+''' <summary>   Unit test. Asserts that view model should polltriggering. </summary>
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
@@ -2625,9 +2697,9 @@ End Function
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
+Public Function TestTriggerPollingShouldRead() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestShouldMonitorTriggering"
+    Const p_procedureName As String = "TestTriggerPollingShouldRead"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -2639,6 +2711,55 @@ Public Function TestShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then
         Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
     End If
+    
+    Dim p_enabled As Boolean: p_enabled = True
+    Dim p_duration As Double: p_duration = 30  ' in seconds
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = AssetTriggersShouldPoll(p_outcome, p_enabled, p_duration)
+        
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
+    
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+        " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
+    
+    Set TestTriggerPollingShouldRead = p_outcome
+    
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
+    
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Function
+
+''' <summary>   Asserts that view model should monitor triggered readings. </summary>
+''' <param name="a_assert">     [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
+''' <param name="a_enabled">    [Optional, Boolean, True] True to enable reading triggered values. </param>
+''' <param name="a_duration">   [Optional, Double, 30] The time to wait for some triggered values. </param>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
+Public Function AssetTriggersShouldMonitor(ByVal a_assert As cc_isr_Test_Fx.Assert, _
+    Optional ByVal a_enabled As Boolean = True, _
+    Optional ByVal a_duration As Double = 30) As cc_isr_Test_Fx.Assert
+    
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
+    Dim p_details As String: p_details = VBA.vbNullString
+
     
     ' start the external trigger mode
     
@@ -2670,11 +2791,8 @@ Public Function TestShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
     
     ' get some data here.
 
-    ' start with no monitoring
-    Dim p_monitorSeconds As Double: p_monitorSeconds = 0.1
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = AssertMeasurementsShouldGetTriggered(p_outcome, p_monitorSeconds)
+    If p_outcome.AssertSuccessful And a_enabled Then _
+        Set p_outcome = AssertMeasurementsShouldGetTriggered(p_outcome, a_duration)
 
     ' stop monitoring here
     
@@ -2687,6 +2805,41 @@ Public Function TestShouldMonitorTriggering() As cc_isr_Test_Fx.Assert
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
             "Last error message should be empty but found: '" & This.ViewModel.LastErrorMessage & "'.")
 
+    Set AssetTriggersShouldMonitor = p_outcome
+    
+End Function
+
+''' <summary>   Unit test. Asserts that view model should start and stop trigger monitoring. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
+Public Function TestTriggerMonitoringShouldStartStop() As cc_isr_Test_Fx.Assert
+
+TestTriggerMonitoringShouldStartStop
+
+    Const p_procedureName As String = "TestTriggerMonitoringShouldStartStop"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_details As String: p_details = VBA.vbNullString
+    
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    Dim p_enabled As Boolean: p_enabled = False ' for now
+    Dim p_duration As Double: p_duration = 30  ' in seconds
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = AssetTriggersShouldMonitor(p_outcome, p_enabled, p_duration)
+        
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
@@ -2696,7 +2849,65 @@ exit_Handler:
     Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
-    Set TestShouldMonitorTriggering = p_outcome
+    Set TestTriggerMonitoringShouldStartStop = p_outcome
+    
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
+    
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Function
+
+''' <summary>   Unit test. Asserts that view model should monitor triggering. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
+Public Function TestTriggerMonitoringShouldRead() As cc_isr_Test_Fx.Assert
+    
+    Const p_procedureName As String = "TestTriggerMonitoringShouldRead"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_details As String: p_details = VBA.vbNullString
+    
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    Dim p_enabled As Boolean: p_enabled = False ' for now
+    Dim p_duration As Double: p_duration = 30  ' in seconds
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = AssetTriggersShouldMonitor(p_outcome, p_enabled, p_duration)
+        
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
+    
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+        " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
+    
+    Set TestTriggerMonitoringShouldRead = p_outcome
     
     On Error GoTo 0
     Exit Function

@@ -22,7 +22,7 @@ Public Enum MeasurementModeOption
     ''' <summary>   An enum constant representing the immediate trigger option. </summary>
     Immediate = 2
     ''' <summary>   An enum constant representing the external trigger option. </summary>
-    External = 3
+    external = 3
     ''' <summary>   An enum constant representing the external trigger monitoring option. </summary>
     Monitoring = 4
 End Enum
@@ -3366,7 +3366,7 @@ Friend Function TryConfigureExternalTriggerReading(ByRef a_details As String) As
 
     ' enable the mode executables and conditions.
     If p_success Then _
-        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.External, "external trigger mode"
+        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.external, "external trigger mode"
     
     If Not p_success Then _
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
@@ -3927,6 +3927,20 @@ Friend Property Let ExternalTrigMonitoringEnabled(ByVal a_value As Boolean)
     End If
 End Property
 
+''' <summary>   Gets the Timer Controlled condition. </summary>
+''' <value>   [Boolean] True if external trigger monitoring is timer controlled; otherwise,
+''' external trigger monitoring is polled, which is solely for testing purposes. </value>
+Public Property Get TimerControlled() As Boolean
+    TimerControlled = This.TimerControlled
+End Property
+
+''' <summary>   Gets the Timer Started condition. </summary>
+''' <value>   [Boolean] True if the timer is active. </value>
+Public Property Get TimerStarted() As Boolean
+    TimerStarted = This.TimerStarted
+End Property
+
+
 ''' <summary>   Internal. Starts monitoring the instrument for external triggered measurements. </summary>
 ''' <param name="a_timerControlled">   [Optional, Boolean, True] true time controlled; otherwise, the timer event
 ''' handler will be polled. </value>
@@ -4059,6 +4073,8 @@ Friend Sub StopMonitoringExternalTriggers()
     
         Dim p_stopper As cc_isr_Core_IO.Stopwatch
         Set p_stopper = cc_isr_Core_IO.Factory.NewStopwatch
+        
+        ' wait for the timer to stop over two timer intervals
         Dim p_timeout As Integer: p_timeout = 2 * Me.TimerInterval
         p_stopper.Restart
         
@@ -4068,12 +4084,21 @@ Friend Sub StopMonitoringExternalTriggers()
         Loop
         
         If This.TimerStarted Then
+        
             ' if timer has not stopped, force stop
             This.TimerStarted = False
             If Not m_eventTimer Is Nothing Then m_eventTimer.PauseTimer
             
         End If
 
+    Else
+    
+        ' pass throw one more time the timer event handler, which will
+        ' turn on the done flag, pause the timer and move the
+        ' measurement mode to none.
+        
+        Me.HandleTimerEvent
+        
     End If
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -4276,14 +4301,14 @@ Friend Sub OnMeasurementModeChanged(ByVal a_mode As cc_isr_Tcp_Scpi.MeasurementM
     ' turn on the stop requested in case the timer is still active except for monitoring mode.
     Me.StopRequested = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring <> a_mode
 
-    ' turn off the pause requested
-    Me.PauseRequested = False
+    ' turn off the pause requested when monitoring started
+    Me.PauseRequested = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring <> a_mode
 
     ' disable the stop monitoring action
     Me.StopMonitoringExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring = a_mode
     
     ' enable the start monitoring action in external mode
-    Me.StartMonitoringExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.External = a_mode
+    Me.StartMonitoringExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.external = a_mode
     
     ' enable immediate readings in immediate mode
     Me.MeasureExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate = a_mode
@@ -4417,7 +4442,6 @@ Public Sub HandleTimerEvent()
             " failed handling timer event; " & p_details
         Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     End If
-    
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -4509,7 +4533,7 @@ Private Sub m_eventTimer_Tick()
         If Not m_eventTimer Is Nothing Then m_eventTimer.PauseTimer
         Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.None, "Trigger monitoring done"
     Else
-        HandleTimerEvent
+        Me.HandleTimerEvent
     End If
     On Error GoTo 0
 

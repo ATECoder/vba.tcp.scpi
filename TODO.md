@@ -6,10 +6,13 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
+SCPI:
+
+
 ## TODO
 
 SCPI:
-View model: fix the monitoring test.
+View model: run the monitoring test.
 
 
 Flying
