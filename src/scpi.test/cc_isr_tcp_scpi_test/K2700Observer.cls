@@ -7,51 +7,11 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
+''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+''' <summary>    OThe K2700 Observer for interfacing the K2700 view witht eh View Model. </summary>
+''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 Option Explicit
-
-Private Const m_sessionTimeout As String = "B1"
-Private Const m_inputAddress As String = "B2"
-Private Const m_inputPort As String = "B3"
-Private Const m_socketAddress As String = "C2"
-Private Const m_socketId As String = "D2"
-Private Const m_connected As String = "E2"
-Private Const m_sentMessage As String = "F2"
-Private Const m_receivedMessageLength As String = "J2"
-Private Const m_receivedMessage As String = "K2"
-Private Const m_elapsedTime As String = "L2"
-Private Const m_elapsedTimeFormat As String = "0.0"
-Private Const m_lastMessage As String = "B4"
-Private Const m_lastErrorMessage As String = "B33"
-
-Private Const m_serialPoll As String = "E11"
-Private Const m_statusByte As String = "F11"
-Private Const m_standardByte As String = "H11"
-
-Private Const m_srq As String = "C10"
-Private Const m_gpibAddress As String = "C12"
-Private Const m_readTimeout As String = "C15"
-Private Const m_AutoAssertTalk As String = "C18"
-
-Private Const m_readingFormat As String = "C21"
-Private Const m_timerInterval As String = "C22"
-Private Const m_card1 As String = "C23"
-Private Const m_card2 As String = "C24"
-Private Const m_card1ScanList As String = "C25"
-Private Const m_card2ScanList As String = "C26"
-Private Const m_inputs As String = "C27"
-Private Const m_channelNumber As String = "C28"
-Private Const m_functionName As String = "B29"
-Private Const m_functionValue As String = "C29"
-Private Const m_functionUnit As String = "D29"
-Private Const m_channelCount As String = "C30"
-Private Const m_externalTriggerStatus As String = "C31"
-
-Private Const m_measurementRow As Integer = 2
-Private Const m_measurementCol As Integer = 23
-Private Const m_channelRow As Integer = 2
-Private Const m_channelCol As Integer = 24
-Private Const m_byRow As Boolean = True
-Private Const m_displayIncrement As Integer = 1
 
 Private WithEvents m_viewModel As K2700ViewModel
 Attribute m_viewModel.VB_VarHelpID = -1
@@ -180,15 +140,13 @@ Private Type this_
     GpibLanReadTimeoutGetExecutable As Boolean
     GpibLanReadTimeoutSetExecutable As Boolean
         
-    MeasurementRow As Integer
-    MeasurementColumn As Integer
-    ChannelRow As Integer
-    ChannelColumn As Integer
-    ChannelCellValue As String
-    MeasurementCellValue As String
-    
     LastCommandDetails As String
     LastCommandOutcome As Boolean
+    
+    K2700View As K2700View
+    Ieee488View As Ieee488View
+    GpibLanView As GpibLanView
+    DataAcquisitionView As DataAcquisitionView
 
 End Type
 
@@ -226,7 +184,7 @@ End Sub
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-Friend Sub CLSButton_Click()
+Public Sub OnClearExecutionState()
     If This.ClearExecutionStateExecutable Then
         Me.LastCommandOutcome = This.ViewModel.ClearExecutionStateCommand(Me.LastCommandDetails)
     Else
@@ -234,8 +192,6 @@ Friend Sub CLSButton_Click()
             ThisWorkbook.VBProject.Name & "." & TypeName(Me), "._Click", _
             " Command not enabled."
     End If
-        
-    
 End Sub
 
 ''' <summary>   Handles the Commands Combo Box change event. </summary>
@@ -461,11 +417,6 @@ End Sub
 ' K2700 Control
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
-''' <summary>   Handles the auto increment check box change and click events. </summary>
-Friend Sub AutoIncrementCheckBox_Change()
-    Me.AutoIncrementChannelNoEnabled = This.AutoIncrementChannelNoEnabled
-End Sub
 
 Friend Sub ClearReadingsButton_Click()
     If This.ClearReadingsExecutable Then
@@ -1318,6 +1269,8 @@ Public Property Let AutoIncrementChannelNoEnabled(ByVal a_value As Boolean)
         This.AutoIncrementChannelNoEnabled = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.AutoIncrementChannelNoEnabled = This.AutoIncrementChannelNoEnabled
+        If Not This.DataAcquisitionView Is Nothing Then _
+            This.DataAcquisitionView.AutoIncrementCheckBoxValue = a_value
     End If
 End Property
 
@@ -1749,123 +1702,20 @@ Public Property Get ToggleMonitoringExecutable() As Boolean
     ToggleMonitoringExecutable = This.StartMonitoringExecutable Or This.StopMonitoringExecutable
 End Property
 
-
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
-' View Model Event Handlers
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
-''' <summary>   Gets the Measurement Row. </summary>
-''' <value>   [Integer]. </value>
-Public Property Get MeasurementRow() As Integer
-    MeasurementRow = This.MeasurementRow
-End Property
-
-''' <summary>   Sets the Measurement Row. </summary>
-''' <param name="a_value">   [Integer] the Measurement Row. </value>
-Public Property Let MeasurementRow(ByVal a_value As Integer)
-    If This.MeasurementRow <> a_value Then
-        This.MeasurementRow = a_value
-    End If
-End Property
-
-''' <summary>   Gets the Measurement Column. </summary>
-''' <value>   [Integer]. </value>
-Public Property Get MeasurementColumn() As Integer
-    MeasurementColumn = This.MeasurementColumn
-End Property
-
-''' <summary>   Sets the Measurement Column. </summary>
-''' <param name="a_value">   [Integer] the Measurement Column. </value>
-Public Property Let MeasurementColumn(ByVal a_value As Integer)
-    If This.MeasurementColumn <> a_value Then
-        This.MeasurementColumn = a_value
-    End If
-End Property
-
-''' <summary>   Gets the Channel Row. </summary>
-''' <value>   [Integer]. </value>
-Public Property Get ChannelRow() As Integer
-    ChannelRow = This.ChannelRow
-End Property
-
-''' <summary>   Sets the Channel Row. </summary>
-''' <param name="a_value">   [Integer] the Channel Row. </value>
-Public Property Let ChannelRow(ByVal a_value As Integer)
-    If This.ChannelRow <> a_value Then
-        This.ChannelRow = a_value
-    End If
-End Property
-
-''' <summary>   Gets the Channel Column. </summary>
-''' <value>   [Integer]. </value>
-Public Property Get ChannelColumn() As Integer
-    ChannelColumn = This.ChannelColumn
-End Property
-
-''' <summary>   Sets the Channel Column. </summary>
-''' <param name="a_value">   [Integer] the Channel Column. </value>
-Public Property Let ChannelColumn(ByVal a_value As Integer)
-    If This.ChannelColumn <> a_value Then
-        This.ChannelColumn = a_value
-    End If
-End Property
-
-''' <summary>   Gets the Measurement Cell Value. </summary>
-''' <value>   [String]. </value>
-Public Property Get MeasurementCellValue() As String
-    MeasurementCellValue = This.MeasurementCellValue
-    ' MeasurementCellValue = Range(Cells(Me.MeasurementRow, Me.MeasurementColumn)).Value
-End Property
-
-''' <summary>   Sets the Measurement Cell Value. </summary>
-''' <param name="a_value">   [String] the Measurement Cell Value. </value>
-Public Property Let MeasurementCellValue(ByVal a_value As String)
-    If This.MeasurementCellValue <> a_value Then
-        This.MeasurementCellValue = a_value
-        ' Range(Cells(Me.MeasurementRow, Me.MeasurementColumn)).Value = a_value
-    End If
-End Property
-        
-''' <summary>   Gets the channel cell Value. </summary>
-''' <value>   [String]. </value>
-Public Property Get ChannelCellValue() As String
-    ChannelCellValue = This.ChannelCellValue
-    ' ChannelCellValue = Range(Cells(Me.ChannelRow, Me.ChannelColumn)).Value
-End Property
-
-''' <summary>   Sets the channel cell value. </summary>
-''' <param name="a_value">   [String] the channel cell value. </value>
-Public Property Let ChannelCellValue(ByVal a_value As String)
-    If This.ChannelCellValue <> a_value Then
-        This.ChannelCellValue = a_value
-        ' Range(Cells(Me.ChannelRow, Me.ChannelColumn)).Value = a_value
-    End If
-End Property
-
-
-''' <summary>   Sets the Channel display. </summary>
-''' <param name="a_channelNo">   [single] the channel number. </param>
-''' <param name="a_value">       [double] the value. </param>
-''' <param name="a_byRow">       [Boolean] true if the next reading goes to the next row. </param>
-''' <param name="a_increment">   [Integer] the row or column increment. </param>
-Friend Sub SetReading(ByVal a_channelNo As Integer, ByVal a_value As Double, _
-    ByVal a_byRow As Boolean, ByVal a_increment As Integer)
-
-    Me.MeasurementRow = IIf(a_byRow, m_measurementRow + a_increment * (a_channelNo - 1), m_measurementRow)
-    Me.MeasurementColumn = IIf(a_byRow, m_measurementCol, m_measurementCol + a_increment * (a_channelNo - 1))
-   
-    Me.ChannelRow = IIf(a_byRow, m_channelRow + a_increment * (a_channelNo - 1), m_channelRow)
-    Me.ChannelColumn = IIf(a_byRow, m_channelCol, m_channelCol + a_increment * (a_channelNo - 1))
-   
-    Me.ChannelCellValue = VBA.CStr(a_channelNo)
-    Me.MeasurementCellValue = VBA.Format$(a_value, This.ViewModel.MeasuredValueFormat)
-    
-End Sub
-
 Private Sub Class_Initialize()
     This.TopCard = VBA.vbNullString
+    Debug.Print "initializing " & TypeName(Me)
+    Set This.K2700View = cc_isr_Tcp_Scpi_Test.K2700View
+    Set This.Ieee488View = cc_isr_Tcp_Scpi_Test.Ieee488View
+    Set This.GpibLanView = cc_isr_Tcp_Scpi_Test.GpibLanView
+    Set This.DataAcquisitionView = cc_isr_Tcp_Scpi_Test.DataAcquisitionView
+End Sub
+
+Private Sub Class_Terminate()
+    Set This.K2700View = Nothing
+    Set This.Ieee488View = Nothing
+    Set This.GpibLanView = Nothing
+    Set This.DataAcquisitionView = Nothing
 End Sub
 
 ''' <summary>   Handles the K2700 <see cref="cc_isr_Tcp_Scpi.ChannelMeasured"/> event. </summary>
@@ -1892,7 +1742,7 @@ Friend Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Chan
     End If
     Me.MeasuredValue = p_value
     
-    SetReading Me.MeasuredChannelNumber, Me.MeasuredValue, m_byRow, m_displayIncrement
+    This.DataAcquisitionView.SetReading Me.MeasuredChannelNumber, Me.MeasuredValue, This.ViewModel.MeasuredValueFormat
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -2039,6 +1889,7 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             This.ResetKnownStateExecutable = This.ViewModel.ResetKnownStateExecutable
         Case "ClearExecutionStateExecutable"
             This.ClearExecutionStateExecutable = This.ViewModel.ClearExecutionStateExecutable
+            This.Ieee488View.CLSButtonEnabled = This.ViewModel.ClearExecutionStateExecutable
         Case "QueryExecutable"
             This.QueryExecutable = This.ViewModel.QueryExecutable
         Case "ReadExecutable"
