@@ -13,6 +13,18 @@ Attribute VB_Exposed = True
 
 Option Explicit
 
+Private Const m_sessionTimeout As String = "B1"
+Private Const m_inputAddress As String = "B2"
+Private Const m_inputPort As String = "B3"
+Private Const m_socketAddress As String = "C2"
+Private Const m_socketId As String = "D2"
+Private Const m_connected As String = "E2"
+
+Private Const m_timerInterval As String = "C22"
+
+Private Const m_lastMessage As String = "B4"
+Private Const m_lastErrorMessage As String = "B33"
+
 Private Const m_measurementRow As Integer = 2
 Private Const m_measurementCol As Integer = 23
 Private Const m_channelRow As Integer = 2
@@ -24,6 +36,8 @@ Private Const m_displayIncrement As Integer = 1
 
 Private WithEvents AutoIncrementCheckBox As MSForms.CheckBox
 Attribute AutoIncrementCheckBox.VB_VarHelpID = -1
+Private WithEvents ClearReadingsButton As MSForms.CommandButton
+Attribute ClearReadingsButton.VB_VarHelpID = -1
 
 Private Type this_
     MeasurementRow As Integer
@@ -38,6 +52,10 @@ Private Type this_
 End Type
 
 Private This As this_
+
+' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+' Construction and cleanup
+' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 Private Sub Class_Initialize()
     Set This.Observer = K2700Observer
@@ -67,6 +85,16 @@ End Property
 Public Property Let AutoIncrementCheckBoxValue(ByVal a_value As Boolean)
     If Not AutoIncrementCheckBox Is Nothing Then
         AutoIncrementCheckBox.Value = a_value
+    End If
+End Property
+
+Private Sub ClearReadingsButton_Click()
+    This.Observer.OnClearReadings
+End Sub
+
+Public Property Let ClearReadingsButtonEnabled(ByVal a_value As Boolean)
+    If Not ClearReadingsButton Is Nothing Then
+        ClearReadingsButton.Enabled = a_value
     End If
 End Property
 

@@ -6,13 +6,24 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
-SCPI:
+IEEE 488: 
+Add synchronize option to the selective device clear. 
 
+SCPI:
+Fix the init external triggering command.
+Add reset know state upon ending monitoring. 
+Remove selective device clear when terminating monitoring; this command fails to synchronize.
+
+
+
+Add views.
 
 ## TODO
 
 SCPI:
-View model: run the monitoring test.
+View model: run the monitoring tests and get readings.
+Finish the views. 
+Check that the views executables are set.
 
 
 Flying

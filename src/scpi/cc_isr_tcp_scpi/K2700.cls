@@ -202,18 +202,20 @@ Public Function InitializeLegacy(ByVal a_address As String, _
     
     If p_success Then
         
-        ' reset clear the device.
-        This.Session.SelectiveDeviceClear
-    
-    End If
-    
-    If p_success Then
-        
         p_success = This.Device.TryResetKnownState(p_details)
     
         If Not p_success Then _
             p_details = "Failed resetting the IEEE488 device to its known state; " & p_details
         
+    End If
+    
+    If p_success Then
+        
+        ' reset clear the device.
+        ' this is issued after *RST because SDC fails to synchronize if the instrument is in
+        ' it trigger mode (on the 2700).
+        This.Session.SelectiveDeviceClear
+    
     End If
     
     If p_success Then
@@ -420,7 +422,7 @@ Public Function TryConfigureContinuousFunctionAutoRange(ByVal a_function As Stri
     This.Session.WriteLine ":" & a_function & ":RANG:AUTO ON"
     This.Session.WriteLine ":" & a_function & ":NPLC " & Format(a_powerLineCycles, "#.###")
     
-    Dim p_command As String: p_command = ":INIT:CONT ON"
+    Dim p_command As String: p_command = ":INIT:CONT ON;*CLS"
     p_success = This.Device.TryApplyCommandAwaitOperationCompleted(p_command, p_details)
     If Not p_success Then _
         p_details = "Failed initiating continuous function mode; " & p_details
@@ -638,7 +640,48 @@ Public Function TryMonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVa
     ' allow other events to occur
     VBA.DoEvents
     
-    If This.ExtTrigInitiated Then
+    If a_isDone Then
+    
+        ' if we are done,
+        
+        ' and indicate that external triggering was not initiated
+        This.ExtTrigInitiated = False
+    
+        ' reset the instrument
+          
+        ' abort triggering
+        
+        ' reset known state.
+        p_success = This.Device.TryResetKnownState(p_details)
+        
+        If p_success Then
+            ' should we do system:preset here?
+            p_success = This.Device.TryClearExecutionState(p_details)
+        Else
+            p_details = "Failed resetting known state when ending external trigger monitoring; " & p_details
+        End If
+        
+        If p_success Then
+        
+            p_success = Me.TryRestoreContinuousReading(p_details)
+            ' these were replaced with restoration of
+            ' Continuous reading method above.
+            ' This.Session.WriteLine ":INIT:CONT OFF"
+            ' This.Session.WriteLine ":FUNC 'FRES'"
+            ' This.Session.WriteLine ":TRIG:SOUR IMM"
+            ' This.Session.WriteLine ":INIT:CONT ON"
+            
+        Else
+            p_details = "Failed clearing execution state when ending external trigger monitoring; " & p_details
+        End If
+        
+        If Not p_success Then _
+            p_details = "Failed restoring continuous reading when ending external trigger monitoring; " & p_details
+        
+        ' clear execution state and wait for operation completion.
+        ' This.Device.ClearExecutionState
+        
+    ElseIf This.ExtTrigInitiated Then
     
         ' if awaiting the external trigger (external trigger source
         ' was initiated), check if service is requested
@@ -672,7 +715,7 @@ Public Function TryMonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVa
                 
         End If
     
-    ElseIf Not a_isDone Then
+    Else
 
         ' we need to initiate the next wait for an external trigger.
         
@@ -689,51 +732,16 @@ Public Function TryMonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVa
         
         ' initiate awaiting for the external trigger
         
-        p_command = ":INIT"
-        p_success = This.Device.TryApplyCommandAwaitOperationCompleted(p_command, p_details)
-        If Not p_success Then _
+        p_command = ":INIT;*CLS"
+        p_success = This.Session.TryWriteLine(p_command, p_details)
+        If p_success Then
+            ' and indicate that external triggering was initiated
+            This.ExtTrigInitiated = True
+        Else
             p_details = "Failed preparing for the next external trigger; " & p_details
+        End If
         
-        ' and indicate that external triggering was initiated
-        
-        This.ExtTrigInitiated = True
     
-    End If
-    
-    ' check if done
-    If a_isDone Then
-    
-        ' if we are done,
-        
-        ' reset the instrument
-          
-        ' abort triggering
-        
-        This.Session.SelectiveDeviceClear
-        
-        ' should we do system:preset here?
-        
-        This.Device.ClearExecutionState
-        
-        p_success = Me.TryRestoreContinuousReading(p_details)
-        
-        If Not p_success Then _
-            a_details = "Failed restoring continuous reading; " & p_details
-        
-        ' these were replaced with restoration of
-        ' Continuous reading method above.
-        ' This.Session.WriteLine ":INIT:CONT OFF"
-        ' This.Session.WriteLine ":FUNC 'FRES'"
-        ' This.Session.WriteLine ":TRIG:SOUR IMM"
-        ' This.Session.WriteLine ":INIT:CONT ON"
-        
-        ' clear execution state and wait for operation completion.
-        
-        This.Device.ClearExecutionState
-        
-        ' and indicate that external triggering was not
-        This.ExtTrigInitiated = False
-            
     End If
     
     If Not p_success Then _

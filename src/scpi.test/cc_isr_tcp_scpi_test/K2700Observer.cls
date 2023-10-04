@@ -282,7 +282,7 @@ End Sub
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Handles the Go To Local button click event. </summary>
-Friend Sub GoToLocalButton_Click()
+Public Sub OnGoToLocal()
     If This.GoToLocalExecutable Then
         This.ViewModel.GoToLocalCommand
     Else
@@ -294,7 +294,8 @@ Friend Sub GoToLocalButton_Click()
 End Sub
 
 ''' <summary>   Handles the GPIB Address Get button click event. </summary>
-Friend Sub GpibAddressGetButton_Click()
+Public Sub OnGpibAddressGet()
+    
     If This.GpibAddressGetExecutable Then
         This.ViewModel.GpibAddressGetCommand
     Else
@@ -306,7 +307,7 @@ Friend Sub GpibAddressGetButton_Click()
 End Sub
 
 ''' <summary>   Handles the GPIB Address set button click event. </summary>
-Friend Sub GpibAddressSetButton_Click()
+Public Sub OnGpibAddressSet()
     If This.GpibAddressSetExecutable Then
         This.ViewModel.GpibAddressSetCommand
     Else
@@ -318,7 +319,7 @@ Friend Sub GpibAddressSetButton_Click()
 End Sub
 
 ''' <summary>   Handles the local lockout button click event. </summary>
-Friend Sub LocalLockoutButton_Click()
+Public Sub OnLocalLockout()
     If This.LocalLockoutExecutable Then
         This.ViewModel.LocalLockoutCommand
     Else
@@ -330,7 +331,7 @@ Friend Sub LocalLockoutButton_Click()
 End Sub
 
 ''' <summary>   Handles the Auto Asset TALK Set button click event. </summary>
-Friend Sub AutoAssertTalkSetButton_Click()
+Public Sub OnAutoAssertTalkSet()
     If This.AutoAssertTalkSetExecutable Then
         This.ViewModel.AutoAssertTalkSetCommand
     Else
@@ -338,11 +339,10 @@ Friend Sub AutoAssertTalkSetButton_Click()
             ThisWorkbook.VBProject.Name & "." & TypeName(Me), "._Click", _
             " Command not enabled."
     End If
-
 End Sub
 
 ''' <summary>   Handles the Auto Asset TALK get button click event. </summary>
-Friend Sub AutoAssertTalkGetButton_Click()
+Public Sub OnAutoAssertTalkGet()
     If This.AutoAssertTalkGetExecutable Then
         This.ViewModel.AutoAssertTalkGetCommand
     Else
@@ -350,11 +350,10 @@ Friend Sub AutoAssertTalkGetButton_Click()
             ThisWorkbook.VBProject.Name & "." & TypeName(Me), "._Click", _
             " Command not enabled."
     End If
-
 End Sub
 
 ''' <summary>   Handles the Read Timeout get button click event. </summary>
-Friend Sub ReadTimeoutGetButton_Click()
+Public Sub OnReadTimeoutGet()
     If This.GpibLanReadTimeoutGetExecutable Then
         This.ViewModel.GpibLanReadTimeoutGetCommand
     Else
@@ -366,7 +365,7 @@ Friend Sub ReadTimeoutGetButton_Click()
 End Sub
 
 ''' <summary>   Handles the Read Timeout set button click event. </summary>
-Friend Sub ReadTimeoutSetButton_Click()
+Public Sub OnReadTimeoutSet()
     If This.GpibLanReadTimeoutGetExecutable Then
         This.ViewModel.GpibLanReadTimeoutGetCommand
     Else
@@ -377,7 +376,7 @@ Friend Sub ReadTimeoutSetButton_Click()
 End Sub
 
 ''' <summary>   Handles the Selective device clear button click event. </summary>
-Friend Sub SDCButton_Click()
+Public Sub OnSDC()
     If This.SelectiveDeviceClearExecutable Then
         This.ViewModel.SelectiveDeviceClearCommand
     Else
@@ -388,8 +387,8 @@ Friend Sub SDCButton_Click()
    
 End Sub
 
-''' <summary>   Handles the serial poll button click event. </summary>
-Friend Sub ReadStatusByteButton_Click()
+''' <summary>   Handles the Read Status Byte (serial poll) button click event. </summary>
+Public Sub OnReadStatusByte()
     If This.ReadStatusByteExecutable Then
         This.ViewModel.ReadStatusByteCommand
     Else
@@ -401,7 +400,7 @@ Friend Sub ReadStatusByteButton_Click()
 End Sub
 
 ''' <summary>   Handles the SRQ button click event. </summary>
-Friend Sub SRQButton_Click()
+Public Sub OnSRQ()
     If This.ServiceRequestedExecutable Then
         This.ViewModel.ServiceRequestedQueryCommand
     Else
@@ -414,11 +413,11 @@ End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
-' K2700 Control
+' Data Acquisitoon View
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-Friend Sub ClearReadingsButton_Click()
+Public Sub OnClearReadings()
     If This.ClearReadingsExecutable Then
         This.ViewModel.ClearReadingsCommand
     Else
@@ -428,32 +427,33 @@ Friend Sub ClearReadingsButton_Click()
     End If
 End Sub
 
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' K2700 Control
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
 ''' <summary>   Handles the external trigger option button change and click events. </summary>
-Friend Sub ExternalTriggerOptionButton_Change()
+Public Sub OnExternalTriggerOptionChange(ByVal a_value As Boolean)
     If This.ExternalTriggerOptionExecutable Then
-         Me.LastCommandOutcome = This.ViewModel.ConfigureExternalTriggerReadingCommand(Me.LastCommandDetails)
+        If a_value Then _
+            Me.LastCommandOutcome = This.ViewModel.ConfigureExternalTriggerReadingCommand(Me.LastCommandDetails)
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me), "._Click", _
             " Command not enabled."
     End If
-End Sub
-
-''' <summary>   Selects the measurement function. </summary>
-Friend Sub FunctionComboBox_Change()
-    
-    ' Commands for click
-    Me.SenseFunctionName = This.SenseFunctionName
 End Sub
 
 ''' <summary>   Configure immediate trigger mode and enables the read button. </summary>
 ''' <remarks>   The check box change event also causes a click event.
 '''             This method issues the click event on actual click.
 '''             Note: Make sure to not implement the click event,
-Friend Sub ImmediateTriggerOptionButton_Change()
+Public Sub OnImmediateTriggerOptionChange(ByVal a_value As Boolean)
 
     If This.ImmediateTriggerOptionExecutable Then
-        Me.LastCommandOutcome = This.ViewModel.ConfigureImmediateTriggerReadingsCommand(Me.LastCommandDetails)
+        If a_value Then _
+            Me.LastCommandOutcome = This.ViewModel.ConfigureImmediateTriggerReadingsCommand(Me.LastCommandDetails)
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me), "._Click", _
@@ -461,14 +461,9 @@ Friend Sub ImmediateTriggerOptionButton_Change()
     End If
 End Sub
 
-''' <summary>   Handles the Inputs check box change event. </summary>
-Friend Sub InputsCheckBox_Change()
-    This.ViewModel.FrontInputsRequired = Me.FrontInputsRequired
-End Sub
-
 ''' <summary>   Handles the measure button click event. Takes a single or multiple
 '''             readings from the front or rear panel. </summary>
-Friend Sub MeasureButton_Click()
+Public Sub OnMeasure()
     If This.MeasureExecutable Then
         ' make an immediate measure of one or all channels.
         Me.LastCommandOutcome = This.ViewModel.MeasureImmediatelyCommand(Me.LastCommandDetails)
@@ -480,7 +475,7 @@ Friend Sub MeasureButton_Click()
 End Sub
 
 ''' <summary>   Handles the external trigger toggle button. </summary>
-Friend Sub MonitorExtTrigToggleButton_Change()
+Public Sub OnMonitorExtTrigToggleButtonChange(ByVal a_value As Boolean)
     If This.StartMonitoringExecutable Then
         This.ViewModel.StartMonitoringExternalTriggersCommand
     ElseIf This.StopMonitoringExecutable Then
@@ -493,7 +488,7 @@ Friend Sub MonitorExtTrigToggleButton_Change()
 End Sub
 
 ''' <summary> Queries the Inputs status. </summary>
-Friend Sub QueryInputsButton_Click()
+Friend Sub OnQueryInputs()
     If This.QueryInputsExecutable Then
         This.ViewModel.QueryInputsCommand
     Else
@@ -501,10 +496,6 @@ Friend Sub QueryInputsButton_Click()
             ThisWorkbook.VBProject.Name & "." & TypeName(Me), "._Click", _
             " Command not enabled."
     End If
-End Sub
-
-Friend Sub SingleMultipleCheckBox_Change()
-    Me.SingleReadEnabled = Me.SingleReadEnabled
 End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -1288,6 +1279,8 @@ Public Property Let SingleReadEnabled(ByVal a_value As Boolean)
         This.SingleReadEnabled = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.SingleReadEnabled = a_value
+        If Not This.K2700View Is Nothing Then _
+            This.K2700View.SingleMultipleCheckBoxValue = a_value
     End If
 End Property
 
@@ -1702,22 +1695,6 @@ Public Property Get ToggleMonitoringExecutable() As Boolean
     ToggleMonitoringExecutable = This.StartMonitoringExecutable Or This.StopMonitoringExecutable
 End Property
 
-Private Sub Class_Initialize()
-    This.TopCard = VBA.vbNullString
-    Debug.Print "initializing " & TypeName(Me)
-    Set This.K2700View = cc_isr_Tcp_Scpi_Test.K2700View
-    Set This.Ieee488View = cc_isr_Tcp_Scpi_Test.Ieee488View
-    Set This.GpibLanView = cc_isr_Tcp_Scpi_Test.GpibLanView
-    Set This.DataAcquisitionView = cc_isr_Tcp_Scpi_Test.DataAcquisitionView
-End Sub
-
-Private Sub Class_Terminate()
-    Set This.K2700View = Nothing
-    Set This.Ieee488View = Nothing
-    Set This.GpibLanView = Nothing
-    Set This.DataAcquisitionView = Nothing
-End Sub
-
 ''' <summary>   Handles the K2700 <see cref="cc_isr_Tcp_Scpi.ChannelMeasured"/> event. </summary>
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Tcp_Scpi.ChannelReadingEventArgs"/>] event arguments. </param>
 Friend Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.ChannelReadingEventArgs)
@@ -1887,77 +1864,83 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             ' Me.ToggleConnectionButton.Enabled = This.ViewModel.ToggleConnectionExecutable
         Case "ResetKnownStateExecutable"
             This.ResetKnownStateExecutable = This.ViewModel.ResetKnownStateExecutable
+            'WriteButton.Enabled = This.ViewModel.WriteExecutable
         Case "ClearExecutionStateExecutable"
             This.ClearExecutionStateExecutable = This.ViewModel.ClearExecutionStateExecutable
             This.Ieee488View.CLSButtonEnabled = This.ViewModel.ClearExecutionStateExecutable
         Case "QueryExecutable"
             This.QueryExecutable = This.ViewModel.QueryExecutable
+            'WriteButton.Enabled = This.ViewModel.WriteExecutable
         Case "ReadExecutable"
             This.ReadExecutable = This.ViewModel.ReadExecutable
+            'WriteButton.Enabled = This.ViewModel.WriteExecutable
         Case "QueryStatusByteExecutable"
             This.QueryStatusByteExecutable = This.ViewModel.QueryStatusByteExecutable
+            'WriteButton.Enabled = This.ViewModel.WriteExecutable
         Case "ReadStandardEventStatusExecutable"
             This.ReadStandardEventStatusExecutable = This.ViewModel.ReadStandardEventStatusExecutable
+            'WriteButton.Enabled = This.ViewModel.WriteExecutable
         Case "ReadStatusAfterWriteExecutable"
             This.ReadStatusAfterWriteExecutable = This.ViewModel.ReadStatusAfterWriteExecutable
+            'WriteButton.Enabled = This.ViewModel.WriteExecutable
         Case "WriteExecutable"
             This.WriteExecutable = This.ViewModel.WriteExecutable
             'WriteButton.Enabled = This.ViewModel.WriteExecutable
         Case "QueryInputsExecutable"
             This.QueryInputsExecutable = This.ViewModel.QueryInputsExecutable
-            'QueryInputsButton.Enabled = This.ViewModel.QueryInputsExecutable
+            This.K2700View.QueryInputsButtonEnabled = This.ViewModel.QueryInputsExecutable
         Case "ClearReadingsExecutable"
             This.ClearReadingsExecutable = This.ViewModel.ClearReadingsExecutable
-            'ClearReadingsButton.Enabled = This.ViewModel.ClearReadingsExecutable
+            This.DataAcquisitionView.ClearReadingsButtonEnabled = This.ViewModel.ClearReadingsExecutable
         Case "MeasureExecutable"
             This.MeasureExecutable = This.ViewModel.MeasureExecutable
-            'MeasureButton.Enabled = This.ViewModel.MeasureExecutable
+            This.K2700View.MeasureButtonEnabled = This.ViewModel.MeasureExecutable
         Case "StartMonitoringExecutable"
             This.StartMonitoringExecutable = This.ViewModel.StartMonitoringExecutable
-            'MonitorExtTrigButton.Enabled = This.ViewModel.MonitorExtTrigExecutable
+            This.K2700View.MonitorExtTrigToggleButtonEnabled = This.ViewModel.StartMonitoringExecutable
         Case "StopMonitoringExecutable"
             This.StopMonitoringExecutable = This.ViewModel.StopMonitoringExecutable
-            'MonitorExtTrigButton.Enabled = This.ViewModel.MonitorExtTrigExecutable
+            This.K2700View.MonitorExtTrigToggleButtonEnabled = This.ViewModel.StopMonitoringExecutable
         Case "ImmediateTriggerOptionExecutable"
             This.ImmediateTriggerOptionExecutable = This.ViewModel.ImmediateTriggerOptionExecutable
-            'ImmediateTriggerOptionButton.Enabled = This.ViewModel.ImmediateTriggerOptionExecutable
+            This.K2700View.ImmediateTriggerOptionButtonEnabled = This.ViewModel.ImmediateTriggerOptionExecutable
         Case "ExternalTriggerOptionExecutable"
             This.ExternalTriggerOptionExecutable = This.ViewModel.ExternalTriggerOptionExecutable
-            'ExternalTriggerOptionButton.Enabled = This.ViewModel.ExternalTriggerOptionExecutable
+            This.K2700View.ExternalTriggerOptionButtonEnabled = This.ViewModel.ExternalTriggerOptionExecutable
 
         Case "SelectiveDeviceClearExecutable"
             This.SelectiveDeviceClearExecutable = This.ViewModel.SelectiveDeviceClearExecutable
-            'SDCButton.Enabled = This.ViewModel.SelectiveDeviceClearExecutable
+            This.GpibLanView.SDCButtonEnabled = This.ViewModel.SelectiveDeviceClearExecutable
         Case "GoToLocalExecutable"
             This.GoToLocalExecutable = This.ViewModel.GoToLocalExecutable
-            'Button.Enabled = This.ViewModel.GoToLocalExecutable
+            This.GpibLanView.GoToLocalButtonEnabled = This.ViewModel.GoToLocalExecutable
         Case "LocalLockoutExecutable"
             This.LocalLockoutExecutable = This.ViewModel.LocalLockoutExecutable
-            'LocalLockoutButton.Enabled = This.ViewModel.LocalLockoutExecutable
+            This.GpibLanView.LocalLockoutButtonEnabled = This.ViewModel.LocalLockoutExecutable
         Case "AutoAssertTalkSetExecutable"
             This.AutoAssertTalkSetExecutable = This.ViewModel.AutoAssertTalkSetExecutable
-            'AutoAssertTalkSetButton.Enabled = This.ViewModel.AutoAssertTalkSetExecutable
+            This.GpibLanView.AutoAssertTalkSetButtonEnabled = This.ViewModel.AutoAssertTalkSetExecutable
         Case "AutoAssertTalkGetExecutable"
             This.AutoAssertTalkGetExecutable = This.ViewModel.AutoAssertTalkGetExecutable
-            'AutoAssertTalkGetButton.Enabled = This.ViewModel.AutoAssertTalkGetExecutable
+            This.GpibLanView.AutoAssertTalkGetButtonEnabled = This.ViewModel.AutoAssertTalkGetExecutable
         Case "ReadStatusByteExecutable"
             This.ReadStatusByteExecutable = This.ViewModel.ReadStatusByteExecutable
-            'ReadStatusByteButton.Enabled = This.ViewModel.ReadStatusByteExecutable
+            This.GpibLanView.ReadStatusByteButtonEnabled = This.ViewModel.ReadStatusByteExecutable
         Case "ServiceRequestedExecutable"
             This.ServiceRequestedExecutable = This.ViewModel.ServiceRequestedExecutable
-            'SRQButton.Enabled = This.ViewModel.ServiceRequestedExecutable
+            This.GpibLanView.SRQButtonEnabled = This.ViewModel.ServiceRequestedExecutable
         Case "GpibAddressGetExecutable"
             This.GpibAddressGetExecutable = This.ViewModel.GpibAddressGetExecutable
-            'GpibAddressGetButton.Enabled = This.ViewModel.GpibAddressGetExecutable
+            This.GpibLanView.GpibAddressGetButtonEnabled = This.ViewModel.GpibAddressGetExecutable
         Case "GpibAddressSetExecutable"
             This.GpibAddressSetExecutable = This.ViewModel.GpibAddressSetExecutable
-            'GpibAddressSetButton.Enabled = This.ViewModel.GpibAddressSetExecutable
+            This.GpibLanView.GpibAddressSetButtonEnabled = This.ViewModel.GpibAddressSetExecutable
         Case "GpibLanReadTimeoutGetExecutable"
             This.GpibLanReadTimeoutGetExecutable = This.ViewModel.GpibLanReadTimeoutGetExecutable
-            'ReadTimeoutGetButton.Enabled = This.ViewModel.GpibLanReadTimeoutGetExecutable
+            This.GpibLanView.ReadTimeoutGetButtonEnabled = This.ViewModel.GpibLanReadTimeoutGetExecutable
         Case "GpibLanReadTimeoutSetExecutable"
             This.GpibLanReadTimeoutSetExecutable = This.ViewModel.GpibLanReadTimeoutSetExecutable
-            'ReadTimeoutSetButton.Enabled = This.ViewModel.GpibLanReadTimeoutSetExecutable
+            This.GpibLanView.ReadTimeoutSetButtonEnabled = This.ViewModel.GpibLanReadTimeoutSetExecutable
         
         Case "MessageToSendExecutable"
             This.MessageToSendExecutable = This.ViewModel.MessageToSendExecutable
@@ -2083,6 +2066,22 @@ End Sub
 ' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ' Construction and cleanup
 ' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Private Sub Class_Initialize()
+    This.TopCard = VBA.vbNullString
+    ' Debug.Print "initializing " & TypeName(Me)
+    Set This.K2700View = cc_isr_Tcp_Scpi_Test.K2700View
+    Set This.Ieee488View = cc_isr_Tcp_Scpi_Test.Ieee488View
+    Set This.GpibLanView = cc_isr_Tcp_Scpi_Test.GpibLanView
+    Set This.DataAcquisitionView = cc_isr_Tcp_Scpi_Test.DataAcquisitionView
+End Sub
+
+Private Sub Class_Terminate()
+    Set This.K2700View = Nothing
+    Set This.Ieee488View = Nothing
+    Set This.GpibLanView = Nothing
+    Set This.DataAcquisitionView = Nothing
+End Sub
 
 ''' <summary>   Initialize this worksheet if not initialized. </summary>
 Friend Function Initialize(ByVal a_viewModel As K2700ViewModel) As K2700Observer

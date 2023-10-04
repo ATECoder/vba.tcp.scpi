@@ -4448,12 +4448,43 @@ exit_Handler:
 
     If p_isDone Then
     
-        'if done, request the pause of the timer.
+        ' if done, request the pause of the timer.
         Me.PauseTimer
         
         ' if not using the timer, go to none mode.
         If Not This.TimerControlled Then _
             Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.None, "Trigger monitoring done"
+        
+#If False Then
+        
+        ' this is done in the K2700 handler when done.
+
+        ' reset known state.
+        p_success = This.Device.TryResetKnownState(p_details)
+        
+        ' report an error on failure.
+        If Not p_success Then
+            cc_isr_Core_IO.UserDefinedErrors.EnqueueError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " failed resetting known state after handling timer event is done; " & p_details
+            Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        End If
+        
+        If p_success Then
+        
+            ' clear execution state.
+            p_success = This.Device.TryClearExecutionState(p_details)
+            
+            ' report an error on failure.
+            If Not p_success Then
+                cc_isr_Core_IO.UserDefinedErrors.EnqueueError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                    ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                    " failed clearing execution state after handling timer event is done; " & p_details
+                Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+            End If
+        
+        End If
+#End If
         
     ElseIf Not p_success Then
     
@@ -4662,7 +4693,6 @@ Public Function TryReadSessionState(ByRef a_details As String) As Boolean
 
 End Function
 
-
 ''' <summary>   Process the initial connection instrument actions. </summary>
 ''' <param name="a_errors">         [Out, String] contains any error information that existed before this
 '''                                 method. </param>
@@ -4683,8 +4713,10 @@ Friend Function TryConfigureInstrumentInitialState(ByRef a_errors As String, _
     If p_hasErrors Then _
         a_errors = "Error(s) occurred on session connection: " & VBA.vbCrLf & a_errors
 
-    This.Session.SelectiveDeviceClear
+    ' *RST is issued first in case the instrument is in external trigger mode
+    ' where *OPC? fails (on the 2700 instrument).
     This.Device.ResetKnownState
+    This.Session.SelectiveDeviceClear
     This.Device.ClearExecutionState
     
     Me.TopCard = This.K2700.RouteSystem.CardName(1)

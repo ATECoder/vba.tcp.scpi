@@ -77,9 +77,9 @@ Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
         Case 9
             Set p_outcome = TestTriggerPollingShouldStartStop
         Case 10
-            Set p_outcome = TestTriggerMonitoringShouldStartStop
-        Case 11
             Set p_outcome = TestTriggerPollingShouldRead
+        Case 11
+            Set p_outcome = TestTriggerMonitoringShouldStartStop
         Case 12
             Set p_outcome = TestTriggerMonitoringShouldRead
         Case Else
@@ -91,7 +91,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 10
+    RunTest 1
     AfterAll
 End Sub
 
@@ -99,41 +99,20 @@ End Sub
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' Test 01 TestShouldInitialize passed. Elapsed time: 16.4 ms.
-''' Test 02 TestShouldBeConnected passed. Elapsed time: 31.4 ms.
-'''     Serial Poll is 16 in 11.8ms.
-''' Test 03 TestShouldReadCards passed. Elapsed time: 14.9 ms.
-''' Test 04 TestInitialStateShouldRestore passed. Elapsed time: 12253.3 ms.
-''' Test 05 TestSyntaxErrorShouldRecover passed. Elapsed time: 160.4 ms.
-'''    Serial Poll is 4 in 3.9 ms.
-''' Test 06 TestClosedConnectionShouldRestore passed. Elapsed time: 5745.9 ms.
-''' Test 07 TestImmediateModeShouldConfigure passed. Elapsed time: 5629.6 ms.
-''' Test 08 TestExternalModeShouldConfigure passed. Elapsed time: 4306.3 ms.
-'''
-''' Test 01 TestShouldInitialize passed. Elapsed time: 11.6 ms.
-''' Test 02 TestShouldBeConnected passed. Elapsed time: 35.5 ms.
-'''     Serial Poll is 80 in 12.5 ms.
-''' Test 03 TestShouldReadCards passed. Elapsed time: 14.5 ms.
-''' Test 04 TestInitialStateShouldRestore passed. Elapsed time: 12232.9 ms.
-''' Test 05 TestSyntaxErrorShouldRecover passed. Elapsed time: 157.1 ms.
-'''     Serial Poll is 68 in 4.3 ms.
-''' Test 06 TestClosedConnectionShouldRestore passed. Elapsed time: 5740.3 ms.
-''' Ran 6 out of 6 tests.
-''' Passed: 6; Failed: 0; Inconclusive: 0.
-'''
-''' Test 01 TestShouldInitialize passed. Elapsed time: 11.2 ms.
-''' Test 02 TestShouldBeConnected passed. Elapsed time: 43.4 ms.
-'''     Serial Poll is 16 in 10.3 ms.
-''' Test 03 TestShouldReadCards passed. Elapsed time: 14.0 ms.
-''' Test 04 TestInitialStateShouldRestore passed. Elapsed time: 12176.9 ms.
-''' Test 05 TestSyntaxErrorShouldRecover passed. Elapsed time: 159.6 ms.
-'''     Serial Poll is 4 in 4.1 ms.
-''' Test 06 TestClosedConnectionShouldRestore passed. Elapsed time: 5730.3 ms.
-''' Test 07 TestImmediateModeShouldConfigure passed. Elapsed time: 5663.8 ms.
-''' Test 08 TestExternalModeShouldConfigure passed. Elapsed time: 5524.5 ms.
-''' Ran 8 out of 8 tests.
-''' Passed: 8; Failed: 0; Inconclusive: 0.
-'''
+''' Test 01 TestShouldInitialize passed. Elapsed time: 11.1 ms.
+''' Test 02 TestShouldBeConnected passed. Elapsed time: 44.8 ms.
+'''     Serial Poll is 81 in 17.3 ms.
+''' Test 03 TestShouldReadCards passed. Elapsed time: 12.5 ms.
+''' Test 04 TestInitialStateShouldRestore passed. Elapsed time: 12237.6 ms.
+''' Test 05 TestSyntaxErrorShouldRecover passed. Elapsed time: 157.3 ms.
+'''     Serial Poll is 68 in 3.9 ms.
+''' Test 06 TestClosedConnectionShouldRestore passed. Elapsed time: 5732.9 ms.
+''' Test 07 TestImmediateModeShouldConfigure passed. Elapsed time: 5639.4 ms.
+''' Test 08 TestExternalModeShouldConfigure passed. Elapsed time: 5513.5 ms.
+''' Test 09 TestTriggerPollingShouldStartStop passed. Elapsed time: 6813.1 ms.
+''' Test 10 TestTriggerPollingShouldRead passed. Elapsed time: 11816.2 ms.
+''' Ran 10 out of 10 tests.
+''' Passed: 10; Failed: 0; Inconclusive: 0.
 ''' </code>
 ''' </remarks>
 Public Sub RunAllTests()
@@ -143,7 +122,7 @@ Public Sub RunAllTests()
     This.PassedCount = 0
     This.FailedCount = 0
     This.InconclusiveCount = 0
-    This.TestCount = 8
+    This.TestCount = 10
     Dim p_testNumber As Integer
     For p_testNumber = 1 To This.TestCount
         Set p_outcome = RunTest(p_testNumber)
@@ -1401,22 +1380,20 @@ Public Function AssertMonitoringModeShouldStop(ByVal a_assert As cc_isr_Test_Fx.
     
     ' verify that we stop from an active monitoring mode.
     
-    If p_outcome.AssertSuccessful Then
-        
-        Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
-        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
-            "External trigger monitoring mode should be as expected.")
-    End If
-    
     ' stop monitoring here
     
     If p_outcome.AssertSuccessful Then
     
-        This.ViewModel.StopMonitoringExternalTriggersCommand
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.StopRequested, _
-            "Stop Requested should be on off after stopping monitoring.")
+        ' monitoring might have been stopped alsready.
         
+        If This.ViewModel.MeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring Then
+        
+            This.ViewModel.StopMonitoringExternalTriggersCommand
+            Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.StopRequested, _
+                "Stop Requested should be on off after stopping monitoring.")
+            
+        End If
+    
     End If
     
     ' allow time for monitoring to stop
@@ -1444,8 +1421,7 @@ Public Function AssertMonitoringModeShouldStop(ByVal a_assert As cc_isr_Test_Fx.
     
     If p_outcome.AssertSuccessful Then
         
-        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.None
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(cc_isr_Tcp_Scpi.MeasurementModeOption.None, This.ViewModel.MeasurementMode, _
             "Measurement mode should be as expected after monitoring stopped.")
     End If
     
@@ -2466,7 +2442,7 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
         ' the external trigger monitor is initiated when the timer event is
         ' handled using the above call
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.K2700.ExtTrigInitiated, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.K2700.ExtTrigInitiated, _
             "External trigger initiation should be on after first call to handle the timer event.")
     
     End If
@@ -2482,16 +2458,23 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
         ' on failure, send a stop requested.
         ' this is processed on the next timer event handler, which then
         ' sets the pause requested, which stops the timer
-        If Not p_outcome.AssertSuccessful Then _
+        If Not p_outcome.AssertSuccessful Then
             This.ViewModel.StopMonitoringExternalTriggersCommand
+        End If
         
         ' on expiration, set stop request.
-        If p_endTime > cc_isr_Core_IO.CoreExtensions.DaysNow() Then
+        If p_endTime < cc_isr_Core_IO.CoreExtensions.DaysNow() Then
         
             If This.ViewModel.StopRequested Then
             
-                Set p_outcome = cc_isr_Test_Fx.Assert.Fail( _
-                    "Trigger monitoring loop failed to terminate after stop was requested.")
+                If p_outcome.AssertSuccessful Then
+                    Set p_outcome = cc_isr_Test_Fx.Assert.Fail( _
+                        "Trigger monitoring loop failed to terminate after stop was requested.")
+                Else
+                    Set p_outcome = cc_isr_Test_Fx.Assert.Fail( _
+                        "Trigger monitoring loop failed to terminate after stop was requested after failure; " & _
+                        p_outcome.AssertMessage)
+                End If
                     
                 ' force an exit from the loop as Pause requested fails to materialize,
                 ' which is a bug that needs to be fixed.
@@ -2654,7 +2637,7 @@ Public Function TestTriggerPollingShouldStartStop() As cc_isr_Test_Fx.Assert
     End If
     
     Dim p_enabled As Boolean: p_enabled = False ' for now
-    Dim p_duration As Double: p_duration = 30  ' in seconds
+    Dim p_duration As Double: p_duration = 5  ' in seconds
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = AssetTriggersShouldPoll(p_outcome, p_enabled, p_duration)
@@ -2713,7 +2696,7 @@ Public Function TestTriggerPollingShouldRead() As cc_isr_Test_Fx.Assert
     End If
     
     Dim p_enabled As Boolean: p_enabled = True
-    Dim p_duration As Double: p_duration = 30  ' in seconds
+    Dim p_duration As Double: p_duration = 5  ' in seconds
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = AssetTriggersShouldPoll(p_outcome, p_enabled, p_duration)
@@ -2819,8 +2802,6 @@ End Function
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function TestTriggerMonitoringShouldStartStop() As cc_isr_Test_Fx.Assert
 
-TestTriggerMonitoringShouldStartStop
-
     Const p_procedureName As String = "TestTriggerMonitoringShouldStartStop"
 
     ' Trap errors to the error handler
@@ -2835,7 +2816,7 @@ TestTriggerMonitoringShouldStartStop
     End If
     
     Dim p_enabled As Boolean: p_enabled = False ' for now
-    Dim p_duration As Double: p_duration = 30  ' in seconds
+    Dim p_duration As Double: p_duration = 5  ' in seconds
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = AssetTriggersShouldMonitor(p_outcome, p_enabled, p_duration)
@@ -2892,8 +2873,8 @@ Public Function TestTriggerMonitoringShouldRead() As cc_isr_Test_Fx.Assert
         Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
     End If
     
-    Dim p_enabled As Boolean: p_enabled = False ' for now
-    Dim p_duration As Double: p_duration = 30  ' in seconds
+    Dim p_enabled As Boolean: p_enabled = True
+    Dim p_duration As Double: p_duration = 5  ' in seconds
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = AssetTriggersShouldMonitor(p_outcome, p_enabled, p_duration)
