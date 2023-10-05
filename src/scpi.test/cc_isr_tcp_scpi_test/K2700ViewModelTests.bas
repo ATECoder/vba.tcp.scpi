@@ -203,14 +203,12 @@ Public Sub BeforeAll()
     K2700Observer.SocketAddress = This.Address
     K2700Observer.ReadingOffset = This.ReadingOffset
     K2700Observer.GpibLanControllerPort = This.GpibLanControllerPort
+    K2700Observer.SessionTimeout = This.SessionTimeout
     
     ' initialize the observer before initializing the view mode
     ' but after the observer setting are set. The observer initial
     ' settings are then applied to the view model.
     Set This.Observer = K2700Observer.Initialize(This.ViewModel)
-    
-    ' set view model initial settings
-    This.ViewModel.SessionTimeout = This.SessionTimeout
     
     ' issue the open connection command. This initializes the view model.
     This.ViewModel.OpenConnectionCommand
@@ -1033,7 +1031,6 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
     Dim p_reading As String
     Dim p_channelNumber As Integer
     Dim p_readingValue As Double
-    
     
     If p_outcome.AssertSuccessful Then
         

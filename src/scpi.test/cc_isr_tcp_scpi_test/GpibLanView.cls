@@ -48,6 +48,11 @@ Private WithEvents SRQButton As MSForms.CommandButton
 Attribute SRQButton.VB_VarHelpID = -1
 
 Private Type this_
+    AutoAssertTalk As Boolean
+    GpibLanControllerPort As Long
+    StatusByte As Integer
+    ServiceRequested As Integer
+    GpibAddress As Integer
     Observer As K2700Observer
 End Type
 
@@ -70,7 +75,7 @@ Private Sub AutoAssertTalkGetButton_Click()
     This.Observer.OnAutoAssertTalkGet
 End Sub
 
-Public Property Let AutoAssertTalkGetButtonEnabled(ByVal a_value As Boolean)
+Public Property Let AutoAssertTalkGetExecutable(ByVal a_value As Boolean)
     If Not AutoAssertTalkGetButton Is Nothing Then
         AutoAssertTalkGetButton.Enabled = a_value
     End If
@@ -81,7 +86,7 @@ Private Sub AutoAssertTalkSetButton_Click()
     This.Observer.OnAutoAssertTalkSet
 End Sub
 
-Public Property Let AutoAssertTalkSetButtonEnabled(ByVal a_value As Boolean)
+Public Property Let AutoAssertTalkSetExecutable(ByVal a_value As Boolean)
     If Not AutoAssertTalkSetButton Is Nothing Then
         AutoAssertTalkSetButton.Enabled = a_value
     End If
@@ -92,7 +97,7 @@ Private Sub GoToLocalButton_Click()
     This.Observer.OnGoToLocal
 End Sub
 
-Public Property Let GoToLocalButtonEnabled(ByVal a_value As Boolean)
+Public Property Let GoToLocalExecutable(ByVal a_value As Boolean)
     If Not GoToLocalButton Is Nothing Then
         GoToLocalButton.Enabled = a_value
     End If
@@ -103,7 +108,7 @@ Private Sub GpibAddressGetButton_Click()
     This.Observer.OnGpibAddressGet
 End Sub
 
-Public Property Let GpibAddressGetButtonEnabled(ByVal a_value As Boolean)
+Public Property Let GpibAddressGetExecutable(ByVal a_value As Boolean)
     If Not GpibAddressGetButton Is Nothing Then
         GpibAddressGetButton.Enabled = a_value
     End If
@@ -114,7 +119,7 @@ Private Sub GpibAddressSetButton_Click()
     This.Observer.OnGpibAddressSet
 End Sub
 
-Public Property Let GpibAddressSetButtonEnabled(ByVal a_value As Boolean)
+Public Property Let GpibAddressSetExecutable(ByVal a_value As Boolean)
     If Not GpibAddressSetButton Is Nothing Then
         GpibAddressSetButton.Enabled = a_value
     End If
@@ -125,7 +130,7 @@ Private Sub LocalLockoutButton_Click()
     This.Observer.OnLocalLockout
 End Sub
 
-Public Property Let LocalLockoutButtonEnabled(ByVal a_value As Boolean)
+Public Property Let LocalLockoutExecutable(ByVal a_value As Boolean)
     If Not LocalLockoutButton Is Nothing Then
         LocalLockoutButton.Enabled = a_value
     End If
@@ -136,7 +141,7 @@ Private Sub ReadTimeoutGetButton_Click()
     This.Observer.OnReadTimeoutGet
 End Sub
 
-Public Property Let ReadTimeoutGetButtonEnabled(ByVal a_value As Boolean)
+Public Property Let ReadTimeoutGetExecutable(ByVal a_value As Boolean)
     If Not ReadTimeoutGetButton Is Nothing Then
         ReadTimeoutGetButton.Enabled = a_value
     End If
@@ -147,7 +152,7 @@ Private Sub ReadTimeoutSetButton_Click()
     This.Observer.OnReadTimeoutSet
 End Sub
 
-Public Property Let ReadTimeoutSetButtonEnabled(ByVal a_value As Boolean)
+Public Property Let ReadTimeoutSetExecutable(ByVal a_value As Boolean)
     If Not ReadTimeoutSetButton Is Nothing Then
         ReadTimeoutSetButton.Enabled = a_value
     End If
@@ -158,7 +163,7 @@ Private Sub ReadStatusByteButton_Click()
     This.Observer.OnReadStatusByte
 End Sub
 
-Public Property Let ReadStatusByteButtonEnabled(ByVal a_value As Boolean)
+Public Property Let ReadStatusByteExecutable(ByVal a_value As Boolean)
     If Not ReadStatusByteButton Is Nothing Then
         ReadStatusByteButton.Enabled = a_value
     End If
@@ -169,7 +174,7 @@ Private Sub SDCButton_Click()
     This.Observer.OnSDC
 End Sub
 
-Public Property Let SDCButtonEnabled(ByVal a_value As Boolean)
+Public Property Let SDCExecutable(ByVal a_value As Boolean)
     If Not SDCButton Is Nothing Then
         SDCButton.Enabled = a_value
     End If
@@ -180,9 +185,78 @@ Private Sub SRQButton_Click()
     This.Observer.OnSRQ
 End Sub
 
-Public Property Let SRQButtonEnabled(ByVal a_value As Boolean)
+Public Property Let SRQExecutable(ByVal a_value As Boolean)
     If Not SRQButton Is Nothing Then
         SRQButton.Enabled = a_value
     End If
 End Property
 
+''' <summary>   Gets the Read After Write Enabled. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get AutoAssertTalk() As Boolean
+    AutoAssertTalk = This.AutoAssertTalk
+End Property
+
+''' <summary>   Sets the Read After Write Enabled. </summary>
+''' <param name="a_value">   [Boolean] the value. </value>
+Public Property Let AutoAssertTalk(ByVal a_value As Boolean)
+    If This.AutoAssertTalk <> a_value Then
+        This.AutoAssertTalk = a_value
+    End If
+End Property
+
+''' <summary>   Gets the port number of the GPIB Lan controller. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get GpibLanControllerPort() As Long
+    GpibLanControllerPort = This.GpibLanControllerPort
+End Property
+
+''' <summary>   Sets the port number of the GPIB Lan controller. </summary>
+''' <param name="a_value">   [Long] the GPIB Lan controller port. </param>
+Public Property Let GpibLanControllerPort(ByVal a_value As Long)
+    If This.GpibLanControllerPort <> a_value Then
+        This.GpibLanControllerPort = a_value
+        If Not This.Observer Is Nothing Then _
+                This.Observer.GpibLanControllerPort = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Status Byte. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get StatusByte() As Integer
+    StatusByte = This.StatusByte
+End Property
+
+''' <summary>   Sets the Status Byte. </summary>
+''' <param name="a_value">   [Integer] the Status Byte value. </value>
+Public Property Let StatusByte(ByVal a_value As Integer)
+    If This.StatusByte <> a_value Then _
+        This.StatusByte = a_value
+End Property
+
+''' <summary>   Gets the Service Requested. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get ServiceRequested() As Integer
+    ServiceRequested = This.ServiceRequested
+End Property
+
+''' <summary>   Sets the Service Requested. </summary>
+''' <param name="a_value">   [Integer] the Service Requested value. </value>
+Public Property Let ServiceRequested(ByVal a_value As Integer)
+    If This.ServiceRequested <> a_value Then _
+        This.ServiceRequested = a_value
+End Property
+
+''' <summary>   Gets the Gpib Address. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get GpibAddress() As Integer
+    GpibAddress = This.GpibAddress
+End Property
+
+''' <summary>   Sets the Gpib Address. </summary>
+''' <param name="a_value">   [Integer] the Gpib Address value. </value>
+Public Property Let GpibAddress(ByVal a_value As Integer)
+    If This.GpibAddress <> a_value Then
+        This.GpibAddress = a_value
+    End If
+End Property

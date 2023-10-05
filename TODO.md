@@ -6,24 +6,22 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
-IEEE 488: 
-Add synchronize option to the selective device clear. 
-
 SCPI:
-Fix the init external triggering command.
-Add reset know state upon ending monitoring. 
-Remove selective device clear when terminating monitoring; this command fails to synchronize.
-
-
-
-Add views.
+Move all the control events from the observer to the views.
 
 ## TODO
 
 SCPI:
-View model: run the monitoring tests and get readings.
 Finish the views. 
+Go over the view enabling and value changes. 
+Go over start and stop monitoring in tests and see if the waits can be moved to the view model commands.
+
+
+View model: run the monitoring tests and get readings.
 Check that the views executables are set.
+
+
+Create interfaces for the views. Move the observer to the SCPI class and us interfaces so that we can define the view.
 
 
 Flying
