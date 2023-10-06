@@ -49,6 +49,16 @@ Private Type this_
     
     FocusedControlName As String
 
+    AutoScanToggleExecutable As Boolean
+    AutoSingleToggleExecutable As Boolean
+    ManualScanToggleExecutable As Boolean
+    ManualSingleToggleExecutable As Boolean
+
+    AutoScanToggleValue As Boolean
+    AutoSingleToggleValue As Boolean
+    ManualScanToggleValue As Boolean
+    ManualSingleToggleValue As Boolean
+
 End Type
 
 Private This As this_
@@ -101,7 +111,7 @@ err_Handler:
 End Sub
 
 ''' <summary>   Initialize this object. </summary>
-Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As DataAcquisitionView
+Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As UserSampleView
 
     Const p_procedureName = "Initialize"
 
@@ -165,7 +175,9 @@ End Sub
 Private Sub AutoScanToggleButton_Change()
 
     On Error GoTo err_Handler:
-
+    
+    This.AutoScanToggleValue = AutoScanToggleButton.Value
+    
     If This.FocusedControlName = AutoScanToggleButton.Name Then
 
         On Error GoTo 0
@@ -206,7 +218,7 @@ End Sub
 ''' Single Readings: False;
 ''' Triggering Mode: Immediate.
 ''' </remarks>
-Private Sub OnAutoScanToggleButtonChange()
+Public Sub OnAutoScanToggleButtonChange()
 
     Const p_procedureName As String = "OnAutoScanToggleButtonChange"
     
@@ -215,7 +227,7 @@ Private Sub OnAutoScanToggleButtonChange()
 
     If This.ViewModel Is Nothing Then Exit Sub
 
-    If AutoScanToggleButton.Value Then
+    If AutoScanToggleValue Then
     
         Me.AutoIncrementChannelNoEnabled = True
         Me.FrontInputsRequired = False
@@ -252,7 +264,7 @@ Private Sub OnAutoScanToggleButtonChange()
 exit_Handler:
 
     ' toggle the button state
-    AutoScanToggleButton.Value = False
+    Me.AutoScanToggleValue = False
     
     On Error GoTo 0
     Exit Sub
@@ -273,18 +285,26 @@ err_Handler:
 
 End Sub
 
-Public Property Get AutoScanExecutable() As Boolean
-    If AutoScanToggleButton Is Nothing Then
-        AutoScanExecutable = False
-    Else
-        AutoScanExecutable = AutoScanToggleButton.Enabled
-    End If
+Public Property Get AutoScanToggleExecutable() As Boolean
+    AutoScanToggleExecutable = This.AutoScanToggleExecutable
 End Property
 
-Public Property Let AutoScanExecutable(ByVal a_value As Boolean)
+Public Property Let AutoScanToggleExecutable(ByVal a_value As Boolean)
     If Not AutoScanToggleButton Is Nothing Then
         AutoScanToggleButton.Enabled = a_value
     End If
+    This.AutoScanToggleExecutable = a_value
+End Property
+
+Public Property Get AutoScanToggleValue() As Boolean
+    AutoScanToggleValue = This.AutoScanToggleValue
+End Property
+
+Public Property Let AutoScanToggleValue(ByVal a_value As Boolean)
+    If Not AutoScanToggleButton Is Nothing Then
+        AutoScanToggleButton.Value = a_value
+    End If
+    This.AutoScanToggleValue = a_value
 End Property
 
 Private Sub AutoSingleToggleButton_GotFocus()
@@ -304,6 +324,8 @@ End Sub
 Private Sub AutoSingleToggleButton_Change()
 
     On Error GoTo err_Handler:
+
+    This.AutoSingleToggleValue = AutoSingleToggleButton.Value
 
     If This.FocusedControlName = AutoSingleToggleButton.Name Then
 
@@ -345,7 +367,7 @@ End Sub
 ''' Single Readings: True;
 ''' Triggering Mode: Immediate.
 ''' </remarks>
-Private Sub OnAutoSingleToggleButtonChange()
+Public Sub OnAutoSingleToggleButtonChange()
 
     Const p_procedureName As String = "OnAutoSingleToggleButtonChange"
     
@@ -354,7 +376,7 @@ Private Sub OnAutoSingleToggleButtonChange()
     
     If This.ViewModel Is Nothing Then Exit Sub
 
-    If AutoScanToggleButton.Value Then
+    If AutoSingleToggleValue Then
     
         Me.AutoIncrementChannelNoEnabled = False
         Me.FrontInputsRequired = False
@@ -391,7 +413,7 @@ Private Sub OnAutoSingleToggleButtonChange()
 exit_Handler:
 
     ' toggle the button state
-    AutoSingleToggleButton.Value = False
+    Me.AutoSingleToggleValue = False
     
     On Error GoTo 0
     Exit Sub
@@ -412,19 +434,26 @@ err_Handler:
 
 End Sub
 
-Public Property Get AutoSingleExecutable() As Boolean
-    If AutoSingleToggleButton Is Nothing Then
-        AutoSingleExecutable = False
-    Else
-        AutoSingleExecutable = AutoSingleToggleButton.Enabled
-    End If
+Public Property Get AutoSingleToggleExecutable() As Boolean
+    AutoSingleToggleExecutable = This.AutoSingleToggleExecutable
 End Property
 
-
-Public Property Let AutoSingleExecutable(ByVal a_value As Boolean)
+Public Property Let AutoSingleToggleExecutable(ByVal a_value As Boolean)
     If Not AutoSingleToggleButton Is Nothing Then
         AutoSingleToggleButton.Enabled = a_value
     End If
+    This.AutoSingleToggleExecutable = a_value
+End Property
+
+Public Property Get AutoSingleToggleValue() As Boolean
+    AutoSingleToggleValue = This.AutoSingleToggleValue
+End Property
+
+Public Property Let AutoSingleToggleValue(ByVal a_value As Boolean)
+    If Not AutoSingleToggleButton Is Nothing Then
+        AutoSingleToggleButton.Value = a_value
+    End If
+    This.AutoSingleToggleValue = a_value
 End Property
 
 Private Sub ManualScanToggleButton_GotFocus()
@@ -445,6 +474,8 @@ Private Sub ManualScanToggleButton_Change()
 
     On Error GoTo err_Handler:
 
+    This.ManualScanToggleValue = ManualScanToggleButton.Value
+    
     If This.FocusedControlName = ManualScanToggleButton.Name Then
 
         On Error GoTo 0
@@ -485,7 +516,7 @@ End Sub
 ''' Single Readings: False;
 ''' Triggering Mode: External.
 ''' </remarks>
-Private Sub OnManualScanToggleButtonChange()
+Public Sub OnManualScanToggleButtonChange()
 
     Const p_procedureName As String = "OnManualScanToggleButtonChange"
     
@@ -494,7 +525,7 @@ Private Sub OnManualScanToggleButtonChange()
 
     If This.ViewModel Is Nothing Then Exit Sub
 
-    If ManualScanToggleButton.Value Then
+    If ManualScanToggleValue Then
     
         Me.AutoIncrementChannelNoEnabled = True
         Me.FrontInputsRequired = True
@@ -569,18 +600,26 @@ err_Handler:
 
 End Sub
 
-Public Property Get ManualScanExecutable() As Boolean
-    If ManualScanToggleButton Is Nothing Then
-        ManualScanExecutable = False
-    Else
-        ManualScanExecutable = ManualScanToggleButton.Enabled
-    End If
+Public Property Get ManualScanToggleExecutable() As Boolean
+    ManualScanToggleExecutable = This.ManualScanToggleExecutable
 End Property
 
-Public Property Let ManualScanExecutable(ByVal a_value As Boolean)
+Public Property Let ManualScanToggleExecutable(ByVal a_value As Boolean)
     If Not ManualScanToggleButton Is Nothing Then
         ManualScanToggleButton.Enabled = a_value
     End If
+    This.ManualScanToggleExecutable = a_value
+End Property
+
+Public Property Get ManualScanToggleValue() As Boolean
+    ManualScanToggleValue = This.ManualScanToggleValue
+End Property
+
+Public Property Let ManualScanToggleValue(ByVal a_value As Boolean)
+    If Not ManualScanToggleButton Is Nothing Then
+        ManualScanToggleButton.Value = a_value
+    End If
+    This.ManualScanToggleValue = a_value
 End Property
 
 Private Sub ManualSingleToggleButton_GotFocus()
@@ -600,6 +639,8 @@ End Sub
 Private Sub ManualSingleToggleButton_Change()
 
     On Error GoTo err_Handler:
+
+    This.ManualSingleToggleValue = ManualSingleToggleButton.Value
 
     If This.FocusedControlName = ManualSingleToggleButton.Name Then
 
@@ -640,7 +681,7 @@ End Sub
 ''' Single Readings: True;
 ''' Triggering Mode: External.
 ''' </remarks>
-Private Sub OnManualSingleToggleButtonChange()
+Public Sub OnManualSingleToggleButtonChange()
 
     Const p_procedureName As String = "OnManualSingleToggleButtonChange"
     
@@ -649,7 +690,7 @@ Private Sub OnManualSingleToggleButtonChange()
 
     If This.ViewModel Is Nothing Then Exit Sub
 
-    If ManualSingleToggleButton.Value Then
+    If ManualSingleToggleValue Then
     
         Me.AutoIncrementChannelNoEnabled = False
         Me.FrontInputsRequired = True
@@ -724,18 +765,26 @@ err_Handler:
 
 End Sub
 
-Public Property Get ManualSingleExecutable() As Boolean
-    If ManualSingleToggleButton Is Nothing Then
-        ManualSingleExecutable = False
-    Else
-        ManualSingleExecutable = ManualSingleToggleButton.Enabled
-    End If
+Public Property Get ManualSingleToggleExecutable() As Boolean
+    ManualSingleToggleExecutable = This.ManualSingleToggleExecutable
 End Property
 
-Public Property Let ManualSingleExecutable(ByVal a_value As Boolean)
+Public Property Let ManualSingleToggleExecutable(ByVal a_value As Boolean)
     If Not ManualSingleToggleButton Is Nothing Then
         ManualSingleToggleButton.Enabled = a_value
     End If
+    This.ManualSingleToggleExecutable = a_value
+End Property
+
+Public Property Get ManualSingleToggleValue() As Boolean
+    ManualSingleToggleValue = This.ManualSingleToggleValue
+End Property
+
+Public Property Let ManualSingleToggleValue(ByVal a_value As Boolean)
+    If Not ManualSingleToggleButton Is Nothing Then
+        ManualSingleToggleButton.Value = a_value
+    End If
+    This.ManualSingleToggleValue = a_value
 End Property
 
 ''' <summary>   Gets the Auto Increment Channel Number Enabled. </summary>
@@ -801,7 +850,7 @@ Public Property Let SelectedChannelNumberCaption(ByVal a_value As String)
             Dim p_details As String: p_details = VBA.vbNullString
             Dim p_channelNumber As Integer
             p_channelNumber = Me.TryParseSelectedChannelNumber(a_value, p_details)
-            If 1 > p_channelNumber Or This.ViewModel.ChannelCount < p_channelNumber Then
+            If 0 < p_channelNumber And This.ViewModel.ChannelCount >= p_channelNumber Then
                 Me.SelectedChannelNumber = p_channelNumber
             Else
                 MsgBox p_details, VBA.VbMsgBoxStyle.vbOKOnly Or VBA.VbMsgBoxStyle.vbExclamation, _
@@ -861,7 +910,9 @@ End Property
 Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
     If This.SelectedChannelNumber <> a_value Then
         This.SelectedChannelNumber = a_value
-        Me.SelectedChannelNumberCaption = This.ChannelNumberCaptionPrefix & VBA.CStr(a_value)
+        ' emulate selecting a channel number if within range.
+        If 0 < a_value And This.ViewModel.ChannelCount >= a_value Then _
+            Me.SelectedChannelNumberCaption = This.ChannelNumberCaptionPrefix & VBA.CStr(a_value)
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.SelectedChannelNumber = a_value
     End If
@@ -898,27 +949,39 @@ Public Property Let MeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.Measurement
     If This.MeasurementMode <> a_value Then
         This.MeasurementMode = a_value
         If cc_isr_Tcp_Scpi.MeasurementModeOption.None = a_value Then
-            If AutoScanToggleButton.Value Then _
-                AutoScanToggleButton.Value = False
-            If AutoSingleToggleButton.Value Then _
-                AutoSingleToggleButton.Value = False
-            If ManualScanToggleButton.Value Then _
-                ManualScanToggleButton.Value = False
-            If ManualSingleToggleButton.Value Then _
-                ManualSingleToggleButton.Value = False
+            Me.ManualScanToggleExecutable = True
+            Me.ManualSingleToggleExecutable = True
+            Me.AutoScanToggleExecutable = True
+            Me.AutoSingleToggleExecutable = True
+            If AutoScanToggleValue Then _
+                Me.AutoScanToggleValue = False
+            If AutoSingleToggleValue Then _
+                Me.AutoSingleToggleValue = False
+            If ManualScanToggleValue Then _
+                Me.ManualScanToggleValue = False
+            If ManualSingleToggleValue Then _
+                Me.ManualSingleToggleValue = False
         ElseIf cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate = a_value Then
-            If ManualScanToggleButton.Value Then _
-                ManualScanToggleButton.Value = False
-            If ManualSingleToggleButton.Value Then _
-                ManualSingleToggleButton.Value = False
+            Me.ManualScanToggleExecutable = False
+            Me.ManualSingleToggleExecutable = False
+            Me.AutoScanToggleExecutable = Not Me.SingleReadEnabled
+            Me.AutoSingleToggleExecutable = Me.SingleReadEnabled
+            If ManualScanToggleValue Then _
+                Me.ManualScanToggleValue = False
+            If ManualSingleToggleValue Then _
+                Me.ManualSingleToggleValue = False
         ElseIf cc_isr_Tcp_Scpi.MeasurementModeOption.External = a_value Or _
                cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring = a_value Then
-            If AutoScanToggleButton.Value Then _
-                AutoScanToggleButton.Value = False
-            If AutoSingleToggleButton.Value Then _
-                AutoSingleToggleButton.Value = False
+            Me.ManualScanToggleExecutable = Not Me.SingleReadEnabled
+            Me.ManualSingleToggleExecutable = Me.SingleReadEnabled
+            Me.AutoScanToggleExecutable = False
+            Me.AutoSingleToggleExecutable = False
+            If AutoScanToggleValue Then _
+                Me.AutoScanToggleValue = False
+            If AutoSingleToggleValue Then _
+                Me.AutoSingleToggleValue = False
         End If
-    
+        
     End If
 End Property
 
@@ -978,23 +1041,6 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.MeasurementMode = This.ViewModel.MeasurementMode
         Case "ReadingOffset"
             Me.ReadingOffset = This.ViewModel.ReadingOffset
-        
-        Case "StartMonitoringExecutable"
-            ManualScanExecutable = This.ViewModel.StartMonitoringExecutable
-            ManualSingleExecutable = This.ViewModel.StartMonitoringExecutable
-        Case "StopMonitoringExecutable"
-            ManualScanExecutable = This.ViewModel.StopMonitoringExecutable
-            ManualSingleExecutable = This.ViewModel.StopMonitoringExecutable
-        Case "ImmediateTriggerOptionExecutable"
-            AutoScanExecutable = This.ViewModel.ImmediateTriggerOptionExecutable
-            AutoSingleExecutable = This.ViewModel.ImmediateTriggerOptionExecutable
-        Case "MeasureExecutable"
-            AutoScanExecutable = This.ViewModel.MeasureExecutable
-            AutoSingleExecutable = This.ViewModel.MeasureExecutable
-        Case "ExternalTriggerOptionExecutable"
-            ManualScanExecutable = This.ViewModel.ExternalTriggerOptionExecutable
-            ManualSingleExecutable = This.ViewModel.ExternalTriggerOptionExecutable
-
     End Select
     
 End Sub

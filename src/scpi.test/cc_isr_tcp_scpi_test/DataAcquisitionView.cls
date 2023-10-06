@@ -33,8 +33,8 @@ Private Const m_displayIncrement As Integer = 1
 
 Private WithEvents ClearReadingsButton As MSForms.CommandButton
 Attribute ClearReadingsButton.VB_VarHelpID = -1
-Private WithEvents ClearMessagedButton As MSForms.CommandButton
-Attribute ClearMessagedButton.VB_VarHelpID = -1
+Private WithEvents ClearMessagesButton As MSForms.CommandButton
+Attribute ClearMessagesButton.VB_VarHelpID = -1
 
 Private Type this_
 
@@ -65,6 +65,8 @@ Private Type this_
     MeasuredReading As String
     MeasuredValue As Double
     
+    ClearReadingExecutable As Boolean
+    
 End Type
 
 Private This As this_
@@ -74,7 +76,9 @@ Private This As this_
 ' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 Private Sub Class_Initialize()
+
     This.ChannelNumberCaptionPrefix = "R"
+
 End Sub
 
 Private Sub Class_Terminate()
@@ -163,24 +167,35 @@ End Function
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-Private Sub ClearMessageadingsButton_Click()
-    If Not This.ViewModel Is Nothing Then
-        This.ViewModel.LastErrorMessage = VBA.vbNullString
-        This.ViewModel.LastMessage = VBA.vbNullString
-    End If
+Private Sub ClearMessagesButton_Click()
+    Me.OnClearMessages
 End Sub
 
 Private Sub ClearReadingsButton_Click()
-    If Not This.ViewModel Is Nothing Then
-        This.ViewModel.ClearReadingsCommand
-    End If
+    Me.OnClearReadings
 End Sub
 
 Public Property Let ClearReadingsExecutable(ByVal a_value As Boolean)
     If Not ClearReadingsButton Is Nothing Then
         ClearReadingsButton.Enabled = a_value
     End If
+    This.ClearReadingExecutable = a_value
 End Property
+
+''' <summary>   Handles the Clear Messages Button Click Event. </summary>
+Public Sub OnClearMessages()
+    If Not This.ViewModel Is Nothing Then
+        This.ViewModel.LastErrorMessage = VBA.vbNullString
+        This.ViewModel.LastMessage = VBA.vbNullString
+    End If
+End Sub
+
+''' <summary>   Handles the Clear Messages Button Click Event. </summary>
+Public Sub OnClearReadings()
+    If Not This.ViewModel Is Nothing Then
+        This.ViewModel.ClearReadingsCommand
+    End If
+End Sub
 
 ''' <summary>   Gets the port number of the GPIB Lan controller. </summary>
 ''' <value>   [Integer]. </value>
@@ -261,7 +276,6 @@ Public Property Let SocketAddress(ByVal a_value As String)
             This.ViewModel.SocketAddress = a_value
     End If
 End Property
-
 
 ''' <summary>   Gets the Timer Interval in milliseconds. </summary>
 ''' <value>   [Integer]. </value>

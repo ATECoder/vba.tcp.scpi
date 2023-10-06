@@ -1258,7 +1258,7 @@ Public Property Let ExternalTrigMonitoringEnabled(ByVal a_value As Boolean)
     If This.ExternalTrigMonitoringEnabled <> a_value Then
         This.ExternalTrigMonitoringEnabled = a_value
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ExternalTrigMonitoringEnabled = This.ExternalTrigMonitoringEnabled
+            This.ViewModel.ExternalTrigMonitoringEnabled = a_value
     End If
 End Property
 

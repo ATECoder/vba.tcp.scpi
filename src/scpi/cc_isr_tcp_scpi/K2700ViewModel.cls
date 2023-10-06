@@ -3921,7 +3921,7 @@ End Property
 
 ''' <summary>   Sets the External Trigger Monitoring Enabled condition. </summary>
 ''' <param name="a_value">   [Boolean] the External Trigger Monitoring Enabled value. </value>
-Friend Property Let ExternalTrigMonitoringEnabled(ByVal a_value As Boolean)
+Public Property Let ExternalTrigMonitoringEnabled(ByVal a_value As Boolean)
     If This.ExternalTrigMonitoringEnabled <> a_value Then
         This.ExternalTrigMonitoringEnabled = a_value
         Me.OnPropertyChanged "ExternalTrigMonitoringEnabled"
