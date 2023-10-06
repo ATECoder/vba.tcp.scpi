@@ -5045,7 +5045,10 @@ Private Sub m_k2700_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Channel
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    If Me.ReadingBeepEnabled Then This.K2700.ScpiSystem.Beep
+    If Me.ReadingBeepEnabled And _
+        (This.MeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring) Then
+        This.K2700.ScpiSystem.Beep
+    End If
 
     ' notify the observer of a channel measurements
     If VBA.vbNullString = a_eventArgs.Reading Then

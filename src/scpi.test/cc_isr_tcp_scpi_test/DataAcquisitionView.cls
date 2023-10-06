@@ -245,6 +245,23 @@ Public Property Let ReadingOffset(ByVal a_value As Double)
     End If
 End Property
 
+''' <summary>   Gets the instrument beep sound on each reading is enabled. </summary>
+''' <remarks>   True if instrument beep sound on each reading is enabled. </remarks>
+''' <value>   [Boolean]. </value>
+Public Property Get ReadingBeepEnabled() As Boolean
+    ReadingBeepEnabled = This.ReadingBeepEnabled
+End Property
+
+''' <summary>   Gets the instrument beep sound on each reading is enabled. </summary>
+''' <param name="a_value">   [Boolean] instrument beep sound on each reading is enabled. </value>
+Public Property Let ReadingBeepEnabled(ByVal a_value As Boolean)
+    If This.ReadingBeepEnabled <> a_value Then
+        This.ReadingBeepEnabled = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ReadingBeepEnabled = a_value
+    End If
+End Property
+
 ''' <summary>   Gets the socket and session timeout in milliseconds. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get SessionTimeout() As Integer
@@ -562,6 +579,7 @@ Friend Sub Synchronize()
     This.ViewModel.SessionTimeout = Me.SessionTimeout
     This.ViewModel.TimerInterval = Me.TimerInterval
     This.ViewModel.MaximumChannelNumber = Me.MaximumChannelNumber
+    This.ViewModel.ReadingBeepEnabled = Me.ReadingBeepEnabled
 
     Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
     Me.MeasuredReading = This.ViewModel.MeasuredReading

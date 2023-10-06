@@ -43,6 +43,7 @@ Private Type this_
     SessionTimeout As Integer
     TimerInterval As Integer
     MaximumChannelNumber As Integer
+    ReadingBeepEnabled As Boolean
     
     ' known information
     TopCard As String
@@ -97,7 +98,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 8
+    RunTest 12
     AfterAll
 End Sub
 
@@ -117,8 +118,14 @@ End Sub
 ''' Test 08 TestExternalModeShouldConfigure passed. Elapsed time: 5513.5 ms.
 ''' Test 09 TestTriggerPollingShouldStartStop passed. Elapsed time: 6813.1 ms.
 ''' Test 10 TestTriggerPollingShouldRead passed. Elapsed time: 11816.2 ms.
-''' Ran 10 out of 10 tests.
-''' Passed: 10; Failed: 0; Inconclusive: 0.
+''' Test 11 TestTriggerMonitoringShouldStartStop passed. Elapsed time: 7679.0 ms.
+''' Waiting for trigger....
+'''  1 : 100.118195
+'''  2 : 100.117058
+'''  3 : 100.117325
+''' Test 12 TestTriggerMonitoringShouldRead passed. Elapsed time: 12980.6 ms.
+''' Ran 12 out of 12 tests.
+''' Passed: 12; Failed: 0; Inconclusive: 0.
 ''' </code>
 ''' </remarks>
 Public Sub RunAllTests()
@@ -189,6 +196,7 @@ Public Sub BeforeAll()
     This.ImmediateSenseFunctionName = "RES"
     This.ExternalSenseFunctionName = "FRES"
     This.PrimaryGpibAddress = 16
+    This.ReadingBeepEnabled = True
     
     ' set a temporary error tracer
     Dim p_errTrace As New DeviceErrorsTracer
@@ -213,8 +221,10 @@ Public Sub BeforeAll()
     DataAcquisitionView.SessionTimeout = This.SessionTimeout
     DataAcquisitionView.TimerInterval = This.TimerInterval
     DataAcquisitionView.MaximumChannelNumber = This.MaximumChannelNumber
+    DataAcquisitionView.ReadingBeepEnabled = This.ReadingBeepEnabled
     
     UserSampleView.ReadingOffset = This.ReadingOffset
+
     
     ' set observer user interface settings
     K2700Observer.SocketAddress = This.Address
@@ -1589,6 +1599,9 @@ Public Function AssertMeasurementsShouldGetTriggered(ByVal a_assert As cc_isr_Te
     
     Dim p_reading As String
     p_reading = This.DataAcquisitionView.MeasuredReading
+    
+    DoEvents
+    Debug.Print "Waiting for trigger...."
     
     ' loop for some time waiting for triggered measurements.
     

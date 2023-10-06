@@ -1,7 +1,6 @@
 # TODO
 =IF(LEN(C4)>0,"ERR                               ","Module")
 
-
 https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
@@ -9,10 +8,7 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 ## TODO
 
 SCPI:
-View model: run the monitoring tests and get readings.
-Check that the views executables are set.
-
-Add unit tests for toggling tests using the views to ensure that tests can start and read values.
+Add unit tests for toggling tests using the user sample view.
 
 
 
