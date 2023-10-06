@@ -22,7 +22,7 @@ Public Enum MeasurementModeOption
     ''' <summary>   An enum constant representing the immediate trigger option. </summary>
     Immediate = 2
     ''' <summary>   An enum constant representing the external trigger option. </summary>
-    external = 3
+    External = 3
     ''' <summary>   An enum constant representing the external trigger monitoring option. </summary>
     Monitoring = 4
 End Enum
@@ -63,6 +63,7 @@ Private Type this_
     LastErrorMessage As String
     LastMessage As String
     MeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
+    MaximumChannelNumber As Integer
 
     ' Winsock properties
     Host As String
@@ -3366,7 +3367,7 @@ Friend Function TryConfigureExternalTriggerReading(ByRef a_details As String) As
 
     ' enable the mode executables and conditions.
     If p_success Then _
-        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.external, "external trigger mode"
+        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.External, "external trigger mode"
     
     If Not p_success Then _
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
@@ -3830,7 +3831,7 @@ Friend Sub ClearReadings()
     On Error GoTo err_Handler
 
     Dim p_channelNumber As Integer
-    For p_channelNumber = 1 To Me.ChannelCount
+    For p_channelNumber = 1 To Me.MaximumChannelNumber
         VBA.DoEvents
         OnChannelMeasured p_channelNumber, Me.ReadingOffset
     Next p_channelNumber
@@ -4278,6 +4279,22 @@ Public Property Let LastMessage(ByVal a_value As String)
     End If
 End Property
 
+''' <summary>   Gets the maximum Channel Number. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get MaximumChannelNumber() As Integer
+    MaximumChannelNumber = This.MaximumChannelNumber
+End Property
+
+''' <summary>   Sets the maximum Channel Number. </summary>
+''' <param name="a_value">   [Integer] the maximum Channel Number value. </value>
+Public Property Let MaximumChannelNumber(ByVal a_value As Integer)
+    If This.MaximumChannelNumber <> a_value Then
+        This.MaximumChannelNumber = a_value
+        Me.OnPropertyChanged "MaximumChannelNumber "
+    End If
+End Property
+
+
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' View Model Executables
@@ -4308,7 +4325,7 @@ Friend Sub OnMeasurementModeChanged(ByVal a_mode As cc_isr_Tcp_Scpi.MeasurementM
     Me.StopMonitoringExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring = a_mode
     
     ' enable the start monitoring action in external mode
-    Me.StartMonitoringExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.external = a_mode
+    Me.StartMonitoringExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.External = a_mode
     
     ' enable immediate readings in immediate mode
     Me.MeasureExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate = a_mode

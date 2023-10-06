@@ -8,22 +8,19 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-''' <summary>    The Data Acquisition View for linking the observer with the user interface. </summary>
+''' <summary>    The Data Acquisition View for the view model. </summary>
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 Option Explicit
 
-Private Const m_sessionTimeout As String = "B1"
-Private Const m_inputAddress As String = "B2"
-Private Const m_inputPort As String = "B3"
-Private Const m_socketAddress As String = "C2"
-Private Const m_socketId As String = "D2"
-Private Const m_connected As String = "E2"
+Private WithEvents m_viewModel As K2700ViewModel
+Attribute m_viewModel.VB_VarHelpID = -1
 
-Private Const m_timerInterval As String = "C22"
-
-Private Const m_lastMessage As String = "B4"
-Private Const m_lastErrorMessage As String = "B33"
+Private Const m_sessionTimeoutCell As String = "B1"
+Private Const m_socketAddressCell As String = "C2"
+Private Const m_timerIntervalCell As String = "C22"
+Private Const m_lastMessageCell As String = "B4"
+Private Const m_lastErrorMessageCell As String = "B33"
 
 Private Const m_measurementRow As Integer = 2
 Private Const m_measurementCol As Integer = 23
@@ -36,35 +33,38 @@ Private Const m_displayIncrement As Integer = 1
 
 Private WithEvents ClearReadingsButton As MSForms.CommandButton
 Attribute ClearReadingsButton.VB_VarHelpID = -1
-Private WithEvents AutoScanToggleButton As MSForms.ToggleButton
-Attribute AutoScanToggleButton.VB_VarHelpID = -1
-Private WithEvents AutoSingleToggleButton As MSForms.ToggleButton
-Attribute AutoSingleToggleButton.VB_VarHelpID = -1
-Private WithEvents ManualScanToggleButton As MSForms.ToggleButton
-Attribute ManualScanToggleButton.VB_VarHelpID = -1
-Private WithEvents ManualSingleToggleButton As MSForms.ToggleButton
-Attribute ManualSingleToggleButton.VB_VarHelpID = -1
+Private WithEvents ClearMessagedButton As MSForms.CommandButton
+Attribute ClearMessagedButton.VB_VarHelpID = -1
 
 Private Type this_
 
-    AutoIncrementChannelNoEnabled As Boolean
+    ViewModel As K2700ViewModel
+
+    GpibLanControllerPort As Long
+    MaximumChannelNumber As Integer
+    MeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
     ReadingOffset As Double
-    FrontInputsRequired As Boolean
-    FrontInputsValue As Boolean
-    FrontInputsCaption  As String
     ReadingBeepEnabled As Boolean
-    SelectedChannelNumber As Integer
-    SingleReadEnabled As Boolean
-    
+    SessionTimeout As Integer
+    SocketAddress As String
+    TimerInterval As Integer
+    LastMessage As String
+    LastErrorMessage As String
+    LastCommandDetails As String
+    LastCommandOutcome As Boolean
+        
     MeasurementRow As Integer
     MeasurementColumn As Integer
     ChannelRow As Integer
     ChannelColumn As Integer
     ChannelCellValue As String
     MeasurementCellValue As String
+    ChannelNumberCaptionPrefix As String
 
-    Observer As K2700Observer
-
+    MeasuredChannelNumber As Integer
+    MeasuredReading As String
+    MeasuredValue As Double
+    
 End Type
 
 Private This As this_
@@ -74,12 +74,88 @@ Private This As this_
 ' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 Private Sub Class_Initialize()
-    Set This.Observer = K2700Observer
+    This.ChannelNumberCaptionPrefix = "R"
 End Sub
 
 Private Sub Class_Terminate()
-    Set This.Observer = Nothing
+    Me.Dispose
 End Sub
+
+''' <summary>   Dispose of the worksheet objects. </summary>
+Public Sub Dispose()
+
+    Const p_procedureName As String = "Dispose"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Set m_viewModel = Nothing
+    
+    Set This.ViewModel = Nothing
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' display the error message
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+    
+End Sub
+
+''' <summary>   Initialize this object. </summary>
+Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As DataAcquisitionView
+
+    Const p_procedureName = "Initialize"
+
+    ' Error are trapped to prevent crashes because this method gets started when
+    ' the main workbook is activated.
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Set This.ViewModel = a_viewModel
+    
+    Me.Synchronize
+    
+    ' set reference to the view model event handler.
+    
+    Set m_viewModel = a_viewModel
+    
+    Set Initialize = Me
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' display the error message
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Function
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
@@ -87,274 +163,17 @@ End Sub
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Handles the Auto Scan toggle button. </summary>
-''' <remarks>   In auto scan we have the following settings:
-''' Auto Increment channel number: True;
-''' Front Inputs Required: False;
-''' Single Readings: False;
-''' Triggering Mode: Immediate.
-''' </remarks>
-Private Sub AutoScanToggleButton_Change()
-
-    Const p_procedureName As String = "AutoScanToggleButton_Change"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    If AutoScanToggleButton.Value Then
-    
-        Me.AutoIncrementChannelNoEnabled = True
-        Me.FrontInputsRequired = False
-        Me.SingleReadEnabled = False
-        
-        ' next set immediate triggering mode.
-        This.Observer.OnImmediateTriggerOptionChange AutoScanToggleButton.Value
-        
-        ' next the measurement
-        This.Observer.OnMeasure
-        
+Private Sub ClearMessageadingsButton_Click()
+    If Not This.ViewModel Is Nothing Then
+        This.ViewModel.LastErrorMessage = VBA.vbNullString
+        This.ViewModel.LastMessage = VBA.vbNullString
     End If
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    ' toggle the button state
-    AutoScanToggleButton.Value = False
-    
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-    
-    ' report the last error.
-    This.Observer.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
 End Sub
-
-Public Property Let AutoScanExecutable(ByVal a_value As Boolean)
-    If Not AutoScanToggleButton Is Nothing Then
-        AutoScanToggleButton.Enabled = a_value
-    End If
-End Property
-
-''' <summary>   Handles the Auto Single toggle button. </summary>
-''' <remarks>   In auto single we have the following settings:
-''' Auto Increment channel number: False;
-''' Front Inputs Required: False;
-''' Single Readings: True;
-''' Triggering Mode: Immediate.
-''' </remarks>
-Private Sub AutoSingleToggleButton_Change()
-
-    Const p_procedureName As String = "AutoScanToggleButton_Change"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    If AutoScanToggleButton.Value Then
-    
-        Me.AutoIncrementChannelNoEnabled = False
-        Me.FrontInputsRequired = False
-        Me.SingleReadEnabled = True
-        
-        ' next set immediate triggering mode.
-        This.Observer.OnImmediateTriggerOptionChange AutoScanToggleButton.Value
-        
-        ' next the measurement
-        This.Observer.OnMeasure
-        
-    End If
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    ' toggle the button state
-    AutoSingleToggleButton.Value = False
-    
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-    
-    ' report the last error.
-    This.Observer.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-Public Property Let AutoSingleExecutable(ByVal a_value As Boolean)
-    If Not AutoSingleToggleButton Is Nothing Then
-        AutoSingleToggleButton.Enabled = a_value
-    End If
-End Property
-
-''' <summary>   Handles the Manual Scan toggle button. </summary>
-''' <remarks>   In manual scan we have the following settings:
-''' Auto Increment channel number: True;
-''' Front Inputs Required: True;
-''' Single Readings: False;
-''' Triggering Mode: External.
-''' </remarks>
-Private Sub ManualScanToggleButton_Change()
-
-    Const p_procedureName As String = "ManualScanToggleButton_Change"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    If ManualScanToggleButton.Value Then
-    
-        Me.AutoIncrementChannelNoEnabled = True
-        Me.FrontInputsRequired = True
-        Me.SingleReadEnabled = False
-        
-        ' next set external triggering triggering mode.
-        This.Observer.OnExternalTriggerOptionChange ManualScanToggleButton.Value
-        
-        ' next start external trigger monitoring
-        ' this should wait for monitoring to commence or raise an error.
-        This.Observer.OnMonitorExtTrigToggleButtonChange True
-        
-    Else
-    
-        ' stop external trigger monitoring
-        ' this should wait for monitoring to stop
-        This.Observer.OnMonitorExtTrigToggleButtonChange False
-    
-        ' this should stop external triggering
-        This.Observer.OnImmediateTriggerOptionChange False
-        
-    End If
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-    
-    ' report the last error.
-    This.Observer.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' on error, stop monitoring
-    On Error Resume Next
-    
-    ' stop external trigger monitoring
-    ' this should wait for monitoring to stop
-    This.Observer.OnMonitorExtTrigToggleButtonChange False
-
-    ' this should stop external triggering
-    This.Observer.OnImmediateTriggerOptionChange False
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-Public Property Let ManualScanExecutable(ByVal a_value As Boolean)
-    If Not ManualScanToggleButton Is Nothing Then
-        ManualScanToggleButton.Enabled = a_value
-    End If
-End Property
-
-''' <summary>   Handles the Manual Single toggle button. </summary>
-''' <remarks>   In manual Single we have the following settings:
-''' Auto Increment channel number: False;
-''' Front Inputs Required = True;
-''' Single Readings: True;
-''' Triggering Mode: External.
-''' </remarks>
-Private Sub ManualSingleToggleButton_Change()
-
-    Const p_procedureName As String = "ManualSingleToggleButton_Change"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    If ManualSingleToggleButton.Value Then
-    
-        Me.AutoIncrementChannelNoEnabled = False
-        Me.FrontInputsRequired = True
-        Me.SingleReadEnabled = True
-        
-        ' next set external triggering triggering mode.
-        This.Observer.OnExternalTriggerOptionChange ManualSingleToggleButton.Value
-        
-        ' next start external trigger monitoring
-        ' this should wait for monitoring to commence or raise an error.
-        This.Observer.OnMonitorExtTrigToggleButtonChange True
-        
-    Else
-    
-        ' stop external trigger monitoring
-        ' this should wait for monitoring to stop
-        This.Observer.OnMonitorExtTrigToggleButtonChange False
-    
-        ' this should stop external triggering
-        This.Observer.OnImmediateTriggerOptionChange False
-        
-    End If
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-    
-    ' report the last error.
-    This.Observer.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' on error, stop monitoring
-    On Error Resume Next
-    
-    ' stop external trigger monitoring
-    ' this should wait for monitoring to stop
-    This.Observer.OnMonitorExtTrigToggleButtonChange False
-
-    ' this should stop external triggering
-    This.Observer.OnImmediateTriggerOptionChange False
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
-Public Property Let ManualSingleExecutable(ByVal a_value As Boolean)
-    If Not ManualSingleToggleButton Is Nothing Then
-        ManualSingleToggleButton.Enabled = a_value
-    End If
-End Property
 
 Private Sub ClearReadingsButton_Click()
-    This.Observer.OnClearReadings
+    If Not This.ViewModel Is Nothing Then
+        This.ViewModel.ClearReadingsCommand
+    End If
 End Sub
 
 Public Property Let ClearReadingsExecutable(ByVal a_value As Boolean)
@@ -363,38 +182,35 @@ Public Property Let ClearReadingsExecutable(ByVal a_value As Boolean)
     End If
 End Property
 
-''' <summary>   Gets the Auto Increment Channel Number Enabled. </summary>
-''' <remarks>   Indicates that front inputs are Value for this mode. </remarks>
-''' <value>   [Boolean]. </value>
-Public Property Get AutoIncrementChannelNoEnabled() As Boolean
-    AutoIncrementChannelNoEnabled = This.AutoIncrementChannelNoEnabled
+''' <summary>   Gets the port number of the GPIB Lan controller. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get GpibLanControllerPort() As Long
+    GpibLanControllerPort = This.GpibLanControllerPort
 End Property
 
-''' <summary>   Sets the Auto Increment Channel Number Enabled. </summary>
-''' <param name="a_value">   [Boolean] the Auto Increment Channel Number Enabled value. </value>
-Public Property Let AutoIncrementChannelNoEnabled(ByVal a_value As Boolean)
-    If This.AutoIncrementChannelNoEnabled <> a_value Then
-        This.AutoIncrementChannelNoEnabled = a_value
-        If Not This.Observer Is Nothing Then _
-            This.Observer.AutoIncrementChannelNoEnabled = a_value
+''' <summary>   Sets the port number of the GPIB Lan controller. </summary>
+''' <param name="a_value">   [Long] the GPIB Lan controller port. </param>
+Public Property Let GpibLanControllerPort(ByVal a_value As Long)
+    If This.GpibLanControllerPort <> a_value Then
+        This.GpibLanControllerPort = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.GpibLanControllerPort = a_value
     End If
 End Property
 
-''' <summary>   Gets the External Trig Monitoring Enabled condition. </summary>
-''' <remarks>   When true, a Stop request is sent to the timer so that the timer
-'''             event is not handled and the timer is Stopd on the next event. </remarks>
-''' <value>   [Boolean]. </value>
-Public Property Get ExternalTrigMonitoringEnabled() As Boolean
-    ExternalTrigMonitoringEnabled = ManualScanToggleButton.Value
+''' <summary>   Gets the maximum Channel Number. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get MaximumChannelNumber() As Integer
+    MaximumChannelNumber = This.MaximumChannelNumber
 End Property
 
-''' <summary>   Sets the External Trig Monitoring Enabled condition. </summary>
-''' <param name="a_value">   [Boolean] the External Trig Monitoring Enabled value. </value>
-Public Property Let ExternalTrigMonitoringEnabled(ByVal a_value As Boolean)
-    If Me.ExternalTrigMonitoringEnabled <> a_value Then
-        ManualScanToggleButton.Value = a_value
-        If Not This.Observer Is Nothing Then _
-            This.Observer.ExternalTrigMonitoringEnabled = a_value
+''' <summary>   Sets the maximum Channel Number. </summary>
+''' <param name="a_value">   [Integer] the maximum Channel Number value. </value>
+Public Property Let MaximumChannelNumber(ByVal a_value As Integer)
+    If This.MaximumChannelNumber <> a_value Then
+        This.MaximumChannelNumber = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.MaximumChannelNumber = a_value
     End If
 End Property
 
@@ -409,108 +225,148 @@ End Property
 Public Property Let ReadingOffset(ByVal a_value As Double)
     If This.ReadingOffset <> a_value Then
         This.ReadingOffset = a_value
-        If Not This.Observer Is Nothing Then _
-                This.Observer.ReadingOffset = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ReadingOffset = a_value
     End If
 End Property
 
-''' <summary>   Gets the Front Inputs Required. </summary>
-''' <remarks>   True if front inputs are Required; otherwise, Rear inputs. </remarks>
-''' <value>   [Boolean]. </value>
-Public Property Get FrontInputsRequired() As Boolean
-    FrontInputsRequired = This.FrontInputsRequired
-End Property
-
-''' <summary>   Sets the Front Inputs Required. </summary>
-''' <param name="a_value">   [Boolean] true if Front Inputs are Required. </value>
-Public Property Let FrontInputsRequired(ByVal a_value As Boolean)
-    If This.FrontInputsRequired <> a_value Then
-        This.FrontInputsRequired = a_value
-        If Not This.Observer Is Nothing Then _
-            This.Observer.FrontInputsRequired = a_value
-    End If
-End Property
-
-''' <summary>   Gets the instrument beep sound on each reading is enabled. </summary>
-''' <remarks>   True if instrument beep sound on each reading is enabled. </remarks>
-''' <value>   [Boolean]. </value>
-Public Property Get ReadingBeepEnabled() As Boolean
-    ReadingBeepEnabled = This.ReadingBeepEnabled
-End Property
-
-''' <summary>   Gets the instrument beep sound on each reading is enabled. </summary>
-''' <param name="a_value">   [Boolean] instrument beep sound on each reading is enabled. </value>
-Public Property Let ReadingBeepEnabled(ByVal a_value As Boolean)
-    If This.ReadingBeepEnabled <> a_value Then
-        This.ReadingBeepEnabled = a_value
-        If Not This.Observer Is Nothing Then _
-            This.Observer.ReadingBeepEnabled = a_value
-    End If
-End Property
-
-''' <summary>   Gets the Front Inputs Value. </summary>
-''' <remarks>   True if front inputs; otherwise, Rear inputs. </remarks>
-''' <value>   [Boolean]. </value>
-Public Property Get FrontInputsValue() As Boolean
-    FrontInputsValue = This.FrontInputsValue
-End Property
-
-''' <summary>   Sets the Front Inputs Value. </summary>
-''' <param name="a_value">   [Boolean] true if Front Inputs. </value>
-Public Property Let FrontInputsValue(ByVal a_value As Boolean)
-    If This.FrontInputsValue <> a_value Then
-        This.FrontInputsValue = a_value
-    End If
-End Property
-
-''' <summary>   Gets the Front Inputs Caption. </summary>
-''' <value>   [String]. </value>
-Public Property Get FrontInputsCaption() As String
-    FrontInputsCaption = This.FrontInputsCaption
-End Property
-
-''' <summary>   Sets the Front Inputs Caption. </summary>
-''' <param name="a_value">   [String] the Front Inputs Caption. </value>
-Public Property Let FrontInputsCaption(ByVal a_value As String)
-    If This.FrontInputsCaption <> a_value Then
-        This.FrontInputsCaption = a_value
-    End If
-End Property
-
-
-''' <summary>   Gets the Selected Channel Number. </summary>
+''' <summary>   Gets the socket and session timeout in milliseconds. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get SelectedChannelNumber() As Integer
-    SelectedChannelNumber = This.SelectedChannelNumber
+Public Property Get SessionTimeout() As Integer
+    SessionTimeout = This.SessionTimeout
 End Property
 
-''' <summary>   Sets the Selected Channel Number. </summary>
-''' <param name="a_value">   [Integer] the Selected Channel Number value. </value>
-Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
-    If This.SelectedChannelNumber <> a_value Then
-        This.SelectedChannelNumber = a_value
-        If Not This.Observer Is Nothing Then _
-            This.Observer.SelectedChannelNumber = a_value
+''' <summary>   Sets the socket and session timeout in milliseconds. </summary>
+''' <param name="a_value">   [Integer] the timeout value in milliseconds. </value>
+Public Property Let SessionTimeout(ByVal a_value As Integer)
+    If This.SessionTimeout <> a_value Then
+        This.SessionTimeout = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.SessionTimeout = a_value
     End If
 End Property
 
-''' <summary>   Gets the Single Read Enabled. </summary>
-''' <remarks>   Indicates that front inputs are Value for this mode. </remarks>
-''' <value>   [Boolean]. </value>
-Public Property Get SingleReadEnabled() As Boolean
-    SingleReadEnabled = This.SingleReadEnabled
+''' <summary>   Gets the Socket Address. </summary>
+''' <value>   [String]. </value>
+Public Property Get SocketAddress() As String
+    SocketAddress = This.SocketAddress
 End Property
 
-''' <summary>   Sets the Single Read Enabled. </summary>
-''' <param name="a_value">   [Boolean] the Single Read Enabled value. </value>
-Public Property Let SingleReadEnabled(ByVal a_value As Boolean)
-    If This.SingleReadEnabled <> a_value Then
-        This.SingleReadEnabled = a_value
-        If Not This.Observer Is Nothing Then _
-            This.Observer.SingleReadEnabled = a_value
+''' <summary>   Sets the Socket Address. </summary>
+''' <param name="a_value">   [String] the message value. </value>
+Public Property Let SocketAddress(ByVal a_value As String)
+    If This.SocketAddress <> a_value Then
+        This.SocketAddress = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.SocketAddress = a_value
     End If
 End Property
 
+
+''' <summary>   Gets the Timer Interval in milliseconds. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get TimerInterval() As Integer
+    TimerInterval = This.TimerInterval
+End Property
+
+''' <summary>   Sets the Timer Interval in milliseconds. </summary>
+''' <param name="a_value">   [Integer] the Timer Interval in milliseconds value. </value>
+Public Property Let TimerInterval(ByVal a_value As Integer)
+    If This.TimerInterval <> a_value Then
+        This.TimerInterval = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.TimerInterval = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Last Error Message. </summary>
+''' <value>   [String]. </value>
+Public Property Get LastErrorMessage() As String
+    LastErrorMessage = This.LastErrorMessage
+End Property
+
+''' <summary>   Sets the Last Error Message. </summary>
+''' <param name="a_value">   [String] the last error message value. </value>
+Public Property Let LastErrorMessage(ByVal a_value As String)
+    If This.LastErrorMessage <> a_value Then
+        This.LastErrorMessage = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.LastErrorMessage = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Last Message. </summary>
+''' <value>   [String]. </value>
+Public Property Get LastMessage() As String
+    LastMessage = This.LastMessage
+End Property
+
+''' <summary>   Sets the Last Message. </summary>
+''' <param name="a_value">   [String] the last message value. </value>
+Public Property Let LastMessage(ByVal a_value As String)
+    If This.LastMessage <> a_value Then
+        This.LastMessage = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.LastMessage = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Measured Channel Number. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get MeasuredChannelNumber() As Integer
+    MeasuredChannelNumber = This.MeasuredChannelNumber
+End Property
+
+''' <summary>   Sets the Measured Channel Number. </summary>
+''' <param name="a_value">   [Integer] the Measured Channel Number value. </value>
+Public Property Let MeasuredChannelNumber(ByVal a_value As Integer)
+    If This.MeasuredChannelNumber <> a_value Then
+        This.MeasuredChannelNumber = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Measured Reading. </summary>
+''' <value>   [String]. </value>
+Public Property Get MeasuredReading() As String
+    MeasuredReading = This.MeasuredReading
+End Property
+
+''' <summary>   Sets the Measured Reading. </summary>
+''' <param name="a_value">   [String] the Measured Reading value. </value>
+Public Property Let MeasuredReading(ByVal a_value As String)
+    If This.MeasuredReading <> a_value Then
+        This.MeasuredReading = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Measured Value. </summary>
+''' <value>   [Double]. </value>
+Public Property Get MeasuredValue() As Double
+    MeasuredValue = This.MeasuredValue
+End Property
+
+''' <summary>   Sets the Measured Value. </summary>
+''' <param name="a_value">   [Double] the Measured Value. </value>
+Public Property Let MeasuredValue(ByVal a_value As Double)
+    If This.MeasuredValue <> a_value Then
+        This.MeasuredValue = a_value
+    End If
+End Property
+
+''' <summary>   Gets the measurement mode. </summary>
+''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
+Public Property Get MeasurementMode() As cc_isr_Tcp_Scpi.MeasurementModeOption
+    MeasurementMode = This.MeasurementMode
+End Property
+
+''' <summary>   Gets the measurement mode. </summary>
+''' <param name=-"a_value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>] the value. </param>
+''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
+Public Property Let MeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementModeOption)
+    If This.MeasurementMode <> a_value Then
+        This.MeasurementMode = a_value
+    End If
+End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
@@ -609,9 +465,8 @@ End Property
 ''' <summary>   Sets the Channel display. </summary>
 ''' <param name="a_channelNo">   [single] the channel number. </param>
 ''' <param name="a_value">       [double] the value. </param>
-''' <param name="a_format">      [String] the format string for formatting the value. </param>
-Public Sub SetReading(ByVal a_channelNo As Integer, ByVal a_value As Double, a_format As String)
-    SetReading_ a_channelNo, a_value, m_byRow, m_displayIncrement, a_format
+Public Sub SetReading(ByVal a_channelNo As Integer, ByVal a_value As Double)
+    SetReading_ a_channelNo, a_value, m_byRow, m_displayIncrement
 End Sub
 
 ''' <summary>   Sets the Channel display. </summary>
@@ -619,9 +474,8 @@ End Sub
 ''' <param name="a_value">       [double] the value. </param>
 ''' <param name="a_byRow">       [Boolean] true if the next reading goes to the next row. </param>
 ''' <param name="a_increment">   [Integer] the row or column increment. </param>
-''' <param name="a_format">      [String] the format string for formatting the value. </param>
 Private Sub SetReading_(ByVal a_channelNo As Integer, ByVal a_value As Double, _
-    ByVal a_byRow As Boolean, ByVal a_increment As Integer, a_format As String)
+    ByVal a_byRow As Boolean, ByVal a_increment As Integer)
 
     Me.MeasurementRow = IIf(a_byRow, m_measurementRow + a_increment * (a_channelNo - 1), m_measurementRow)
     Me.MeasurementColumn = IIf(a_byRow, m_measurementCol, m_measurementCol + a_increment * (a_channelNo - 1))
@@ -629,8 +483,169 @@ Private Sub SetReading_(ByVal a_channelNo As Integer, ByVal a_value As Double, _
     Me.ChannelRow = IIf(a_byRow, m_channelRow + a_increment * (a_channelNo - 1), m_channelRow)
     Me.ChannelColumn = IIf(a_byRow, m_channelCol, m_channelCol + a_increment * (a_channelNo - 1))
    
-    Me.ChannelCellValue = VBA.CStr(a_channelNo)
-    Me.MeasurementCellValue = VBA.Format$(a_value, a_format)
+    Me.ChannelCellValue = This.ChannelNumberCaptionPrefix & VBA.CStr(a_channelNo)
+    Me.MeasurementCellValue = VBA.CStr(a_value)
+    
+End Sub
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' View Model Event Handlers
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Handles the property change event of the viwe model. </summary>
+''' <param name="a_propertyName">   [String] the property name. </param>
+Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
+
+    Const p_procedureName = "HandleViewModelPropertyChanged"
+
+    If This.ViewModel Is Nothing Then Exit Sub
+
+    Select Case a_propertyName
+
+        Case "SocketAddress"
+            Me.SocketAddress = This.ViewModel.SocketAddress
+        Case "SessionTimeout"
+            Me.SessionTimeout = This.ViewModel.SessionTimeout
+        Case "TimerInterval"
+            Me.TimerInterval = This.ViewModel.TimerInterval
+        Case "LastErrorMessage"
+            Me.LastErrorMessage = This.ViewModel.LastErrorMessage
+        Case "LastMessage"
+            Me.LastMessage = This.ViewModel.LastMessage
+            
+        Case "MeasuredChannelNumber"
+            Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
+        Case "MeasuredReading"
+            Me.MeasuredReading = This.ViewModel.MeasuredReading
+        Case "MeasuredValue"
+            Me.MeasuredValue = This.ViewModel.MeasuredValue
+        Case "MeasurementMode"
+            Me.MeasurementMode = This.ViewModel.MeasurementMode
+        Case "ReadingOffset"
+            Me.ReadingOffset = This.ViewModel.ReadingOffset
+        
+        Case "ClearReadingsExecutable"
+            Me.ClearReadingsExecutable = This.ViewModel.ClearReadingsExecutable
+
+    End Select
+    
+End Sub
+
+''' <summary>   Synchronizes the view mode with the View. </summary>
+''' <remarks>   This is required becuase the view (ViewModel) that is planned for this
+''' view model is a Sheet, which is a singleton class whereas the view model is a
+''' non-singleton class. As a resule, the ViewModel retains values from previous
+''' instances of the View Model. </remarks>
+Friend Sub Synchronize()
+
+    Const p_procedureName = "Synchronize"
+
+    ' set the view model settings that come from the ViewModel user interface
+    This.ViewModel.SocketAddress = This.SocketAddress
+    This.ViewModel.GpibLanControllerPort = This.GpibLanControllerPort
+    This.ViewModel.SessionTimeout = Me.SessionTimeout
+    This.ViewModel.TimerInterval = Me.TimerInterval
+    This.ViewModel.MaximumChannelNumber = Me.MaximumChannelNumber
+
+    Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
+    Me.MeasuredReading = This.ViewModel.MeasuredReading
+    Me.MeasuredValue = This.ViewModel.MeasuredValue
+    Me.MeasurementMode = This.ViewModel.MeasurementMode
+    Me.ReadingOffset = This.ViewModel.ReadingOffset
+    
+End Sub
+
+''' <summary>   Handles the property change event of the viwe model. </summary>
+''' <param name="a_eventArgs">   [<see cref="cc_isr_Core.PropertyChangedEventArgs"/>] event arguments. </param>
+Friend Sub m_viewModel_PropertyChanged(ByVal a_eventArgs As cc_isr_Core.PropertyChangedEventArgs)
+
+    Const p_procedureName = "m_K2700ViewModel_PropertyChanged"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    If Not a_eventArgs Is Nothing Then
+    
+        Dim p_propertyName As String
+        p_propertyName = a_eventArgs.PropertyName
+        HandleViewModelPropertyChanged p_propertyName
+    
+    End If
+
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' append a description
+    Err.Description = Err.Description & ". Property name: '" & p_propertyName & "'."
+    
+    ' display the error message
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+    
+End Sub
+
+
+''' <summary>   Handles the <see cref=cc_isr_Tcp_Scpi.K2700ViewModel"/>.<see cref="cc_isr_Tcp_Scpi.ChannelMeasured"/> event. </summary>
+''' <param name="a_eventArgs">   [<see cref="cc_isr_Tcp_Scpi.ChannelReadingEventArgs"/>] event arguments. </param>
+Friend Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.ChannelReadingEventArgs)
+
+    Const p_procedureName = "m_viewModel_ChannelMeasured"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Me.MeasuredReading = a_eventArgs.Reading
+    Me.MeasuredChannelNumber = a_eventArgs.ChannelNumber
+        
+    Dim p_value As Double
+    Dim p_details As String
+    
+    If VBA.vbNullString = a_eventArgs.Reading Then
+        p_value = -1#
+    Else
+        If Not cc_isr_Core.StringExtensions.TryParseDouble(a_eventArgs.Reading, p_value, p_details) Then
+            p_value = -1#
+        End If
+    End If
+    Me.MeasuredValue = p_value
+    
+    Me.SetReading This.MeasuredChannelNumber, This.MeasuredValue
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' display the error message
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
     
 End Sub
 

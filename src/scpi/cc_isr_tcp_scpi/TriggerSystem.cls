@@ -30,7 +30,7 @@ Public Enum TriggerSourceOption
     ''' <summary>   An enum constant representing the immediate trigger source. </summary>
     Immediate = 1
     ''' <summary>   An enum constant representing the external trigger source. </summary>
-    external = 2
+    External = 2
 End Enum
 
 ''' <summary>   Returns a reference to the <see cref="TriggerSystem"/>. </summary>
@@ -137,7 +137,7 @@ Public Sub SourceSetter(ByVal a_value As cc_isr_Tcp_Scpi.TriggerSourceOption)
 
     If cc_isr_Tcp_Scpi.TriggerSourceOption.Immediate = a_value Then
         This.Session.WriteLine ":TRIG:SOUR IMM"
-    ElseIf cc_isr_Tcp_Scpi.TriggerSourceOption.external = a_value Then
+    ElseIf cc_isr_Tcp_Scpi.TriggerSourceOption.External = a_value Then
         ' for some reason the old application had the trigger source toggled
         ' if requesting an external trigger source
         ' This.Session.WriteLine ":TRIG:SOUR IMM"
@@ -157,7 +157,7 @@ Public Function SourceGetter() As cc_isr_Tcp_Scpi.TriggerSourceOption
         Case "IMM"
             This.Source = TriggerSourceOption.Immediate
         Case "EXT"
-            This.Source = TriggerSourceOption.external
+            This.Source = TriggerSourceOption.External
         Case Else
             This.Source = TriggerSourceOption.None
     End Select

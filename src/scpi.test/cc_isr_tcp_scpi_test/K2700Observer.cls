@@ -8,7 +8,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-''' <summary>    OThe K2700 Observer for interfacing the K2700 view witht eh View Model. </summary>
+''' <summary>    The K2700 Observer for interfacing the K2700 view with the View Model. </summary>
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 Option Explicit
@@ -35,6 +35,7 @@ Private Type this_
     LastErrorMessage As String
     LastMessage As String
     MeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
+    MaximumChannelNumber As Integer
 
     ' Winsock properties
     Host As String
@@ -143,12 +144,6 @@ Private Type this_
     LastCommandDetails As String
     LastCommandOutcome As Boolean
     
-    K2700View As K2700View
-    Ieee488View As Ieee488View
-    GpibLanView As GpibLanView
-    DataAcquisitionView As DataAcquisitionView
-    WinsockView As WinsockView
-
 End Type
 
 Private This As this_
@@ -168,12 +163,12 @@ Public Sub OnConnect()
             This.ViewModel.CloseConnectionCommand
         Else
             cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-                ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnConnect", _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnConnect", _
                 " Both close and open connection are disabled."
         End If
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnConnect", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnConnect", _
             " Command not enabled."
     End If
 
@@ -190,7 +185,7 @@ Public Sub OnClearExecutionState()
         Me.LastCommandOutcome = This.ViewModel.ClearExecutionStateCommand(Me.LastCommandDetails)
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnClearExecutionState", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnClearExecutionState", _
             " Command not enabled."
     End If
 End Sub
@@ -201,7 +196,7 @@ Public Sub OnQuery()
         This.ViewModel.QueryCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnQuery", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnQuery", _
             " Command not enabled."
     End If
 End Sub
@@ -212,7 +207,7 @@ Public Sub OnRead()
         This.ViewModel.ReadCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnRead", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnRead", _
             " Command not enabled."
     End If
     
@@ -224,7 +219,7 @@ Public Sub OnQueryStatusByte()
         This.ViewModel.QueryStatusByteCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnQueryStatusByte", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnQueryStatusByte", _
             " Command not enabled."
     End If
 End Sub
@@ -235,7 +230,7 @@ Public Sub OnReadStandardEventStatus()
         This.ViewModel.ReadStandardEventStatusCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnReadStandardEventStatus", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnReadStandardEventStatus", _
             " Command not enabled."
     End If
     
@@ -248,7 +243,7 @@ Public Sub OnResetKnownState()
         This.ViewModel.ResetKnownStateCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnResetKnownState", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnResetKnownState", _
             " Command not enabled."
     End If
     
@@ -260,7 +255,7 @@ Public Sub OnWrite()
         This.ViewModel.WriteCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnWrite", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnWrite", _
             " Command not enabled."
     End If
     
@@ -278,7 +273,7 @@ Public Sub OnGoToLocal()
         This.ViewModel.GoToLocalCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnGoToLocal", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnGoToLocal", _
             " Command not enabled."
     End If
     
@@ -291,7 +286,7 @@ Public Sub OnGpibAddressGet()
         This.ViewModel.GpibAddressGetCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnGpibAddressGet", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnGpibAddressGet", _
             " Command not enabled."
     End If
 
@@ -303,7 +298,7 @@ Public Sub OnGpibAddressSet()
         This.ViewModel.GpibAddressSetCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnGpibAddressSet", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnGpibAddressSet", _
             " Command not enabled."
     End If
 
@@ -315,7 +310,7 @@ Public Sub OnLocalLockout()
         This.ViewModel.LocalLockoutCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnLocalLockout", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnLocalLockout", _
             " Command not enabled."
     End If
 
@@ -327,7 +322,7 @@ Public Sub OnAutoAssertTalkSet()
         This.ViewModel.AutoAssertTalkSetCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnAutoAssertTalkSet", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnAutoAssertTalkSet", _
             " Command not enabled."
     End If
 End Sub
@@ -338,7 +333,7 @@ Public Sub OnAutoAssertTalkGet()
         This.ViewModel.AutoAssertTalkGetCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnAutoAssertTalkGet", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnAutoAssertTalkGet", _
             " Command not enabled."
     End If
 End Sub
@@ -349,7 +344,7 @@ Public Sub OnReadTimeoutGet()
         This.ViewModel.GpibLanReadTimeoutGetCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnReadTimeoutGet", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnReadTimeoutGet", _
             " Command not enabled."
     End If
 
@@ -361,7 +356,7 @@ Public Sub OnReadTimeoutSet()
         This.ViewModel.GpibLanReadTimeoutGetCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnReadTimeoutSet", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnReadTimeoutSet", _
             " Command not enabled."
     End If
 End Sub
@@ -372,7 +367,7 @@ Public Sub OnSDC()
         This.ViewModel.SelectiveDeviceClearCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnSDC", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnSDC", _
             " Command not enabled."
     End If
    
@@ -384,7 +379,7 @@ Public Sub OnReadStatusByte()
         This.ViewModel.ReadStatusByteCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnReadStatusByte", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnReadStatusByte", _
             " Command not enabled."
     End If
 
@@ -396,7 +391,7 @@ Public Sub OnSRQ()
         This.ViewModel.ServiceRequestedQueryCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnSRQ", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnSRQ", _
             " Command not enabled."
     End If
 
@@ -413,7 +408,7 @@ Public Sub OnClearReadings()
         This.ViewModel.ClearReadingsCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnClearReadings", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnClearReadings", _
             " Command not enabled."
     End If
 End Sub
@@ -431,7 +426,7 @@ Public Sub OnExternalTriggerOptionChange(ByVal a_value As Boolean)
             Me.LastCommandOutcome = This.ViewModel.ConfigureExternalTriggerReadingCommand(Me.LastCommandDetails)
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnExternalTriggerOptionChange", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".OnExternalTriggerOptionChange", _
             " Command not enabled."
     End If
 End Sub
@@ -447,7 +442,7 @@ Public Sub OnImmediateTriggerOptionChange(ByVal a_value As Boolean)
             Me.LastCommandOutcome = This.ViewModel.ConfigureImmediateTriggerReadingsCommand(Me.LastCommandDetails)
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnImmediateTriggerOptionChange", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnImmediateTriggerOptionChange", _
             " Command not enabled."
     End If
 End Sub
@@ -460,7 +455,7 @@ Public Sub OnMeasure()
         Me.LastCommandOutcome = This.ViewModel.MeasureImmediatelyCommand(Me.LastCommandDetails)
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnMeasure", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnMeasure", _
             " Command not enabled."
     End If
 End Sub
@@ -473,7 +468,7 @@ Public Sub OnMonitorExtTrigToggleButtonChange(ByVal a_value As Boolean)
         This.ViewModel.StopMonitoringExternalTriggersCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnMonitorExtTrigToggleButtonChange", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnMonitorExtTrigToggleButtonChange", _
             " Command not enabled."
     End If
 End Sub
@@ -484,7 +479,7 @@ Public Sub OnQueryInputs()
         This.ViewModel.QueryInputsCommand
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me), ".OnQueryInputs", _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnQueryInputs", _
             " Command not enabled."
     End If
 End Sub
@@ -550,8 +545,6 @@ Public Property Let SocketAddress(ByVal a_value As String)
         This.SocketAddress = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.SocketAddress = a_value
-        If Not This.WinsockView Is Nothing Then _
-            This.WinsockView.SocketAddress = a_value
     End If
 End Property
 
@@ -582,8 +575,6 @@ Public Property Let SessionTimeout(ByVal a_value As Integer)
         This.SessionTimeout = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.SessionTimeout = a_value
-        If Not This.WinsockView Is Nothing Then _
-            This.WinsockView.SessionTimeout = a_value
     End If
 End Property
 
@@ -622,8 +613,6 @@ Public Property Let SentMessage(ByVal a_value As String)
         This.SentMessage = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.SentMessage = a_value
-        If Not This.Ieee488View Is Nothing Then _
-            This.Ieee488View.SentMessage = a_value
     End If
 End Property
 
@@ -672,10 +661,6 @@ Public Property Let StatusByte(ByVal a_value As Integer)
         This.StatusByte = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.StatusByte = a_value
-        If Not This.GpibLanView Is Nothing Then _
-            This.GpibLanView.StatusByte = a_value
-        If Not This.Ieee488View Is Nothing Then _
-            This.Ieee488View.StatusByte = a_value
     End If
 End Property
 
@@ -692,8 +677,6 @@ Public Property Let StandardByte(ByVal a_value As Integer)
         This.StandardByte = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.StandardByte = a_value
-        If Not This.Ieee488View Is Nothing Then _
-            This.Ieee488View.StandardByte = a_value
     End If
 End Property
 
@@ -710,8 +693,6 @@ Public Property Let ReadStatusAfterWriteEnabled(ByVal a_value As Boolean)
         This.ReadStatusAfterWriteEnabled = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.ReadStatusAfterWriteEnabled = a_value
-        If Not This.Ieee488View Is Nothing Then _
-            This.Ieee488View.ReadStatusAfterWriteEnabled = a_value
     End If
 End Property
 
@@ -728,8 +709,6 @@ Public Property Let ScpiCommands(ByVal a_value As Collection)
         Set This.ScpiCommands = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.ScpiCommands = a_value
-        If Not This.Ieee488View Is Nothing Then _
-            This.Ieee488View.ScpiCommands = a_value
     End If
 End Property
 
@@ -752,10 +731,6 @@ Public Property Let SerialPollByte(ByVal a_value As Integer)
         This.SerialPollByte = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.SerialPollByte = a_value
-        If Not This.GpibLanView Is Nothing Then _
-            This.GpibLanView.StatusByte = a_value
-        If Not This.Ieee488View Is Nothing Then _
-            This.Ieee488View.StatusByte = a_value
     End If
 End Property
 
@@ -772,8 +747,6 @@ Public Property Let ServiceRequested(ByVal a_value As Integer)
         This.ServiceRequested = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.ServiceRequested = a_value
-        If Not This.GpibLanView Is Nothing Then _
-            This.GpibLanView.ServiceRequested = a_value
     End If
 End Property
 
@@ -790,8 +763,6 @@ Public Property Let GpibAddress(ByVal a_value As Integer)
         This.GpibAddress = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.GpibAddress = a_value
-        If Not This.GpibLanView Is Nothing Then _
-            This.GpibLanView.GpibAddress = a_value
     End If
 End Property
 
@@ -808,8 +779,6 @@ Public Property Let AutoAssertTalk(ByVal a_value As Boolean)
         This.AutoAssertTalk = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.AutoAssertTalk = a_value
-        If Not This.GpibLanView Is Nothing Then _
-            This.GpibLanView.AutoAssertTalk = a_value
     End If
 End Property
 
@@ -826,8 +795,6 @@ Public Property Let GpibLanControllerPort(ByVal a_value As Long)
         This.GpibLanControllerPort = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.GpibLanControllerPort = a_value
-        If Not This.GpibLanView Is Nothing Then _
-            This.GpibLanView.GpibLanControllerPort = a_value
     End If
 End Property
 
@@ -925,6 +892,22 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
+''' <summary>   Gets the maximum Channel Number. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get MaximumChannelNumber() As Integer
+    MaximumChannelNumber = This.MaximumChannelNumber
+End Property
+
+''' <summary>   Sets the maximum Channel Number. </summary>
+''' <param name="a_value">   [Integer] the maximum Channel Number value. </value>
+Public Property Let MaximumChannelNumber(ByVal a_value As Integer)
+    If This.MaximumChannelNumber <> a_value Then
+        This.MaximumChannelNumber = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.MaximumChannelNumber = a_value
+    End If
+End Property
+
 ''' <summary>   Gets the measurement mode. </summary>
 ''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
 Public Property Get MeasurementMode() As cc_isr_Tcp_Scpi.MeasurementModeOption
@@ -954,8 +937,6 @@ Public Property Let FrontInputsRequired(ByVal a_value As Boolean)
         This.FrontInputsRequired = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.FrontInputsRequired = a_value
-        If Not This.DataAcquisitionView Is Nothing Then _
-            This.DataAcquisitionView.FrontInputsRequired = a_value
     End If
 End Property
 
@@ -973,8 +954,6 @@ Public Property Let ReadingBeepEnabled(ByVal a_value As Boolean)
         This.ReadingBeepEnabled = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.ReadingBeepEnabled = a_value
-        If Not This.DataAcquisitionView Is Nothing Then _
-            This.DataAcquisitionView.ReadingBeepEnabled = a_value
     End If
 End Property
 
@@ -992,8 +971,6 @@ Public Property Let FrontInputsValue(ByVal a_value As Boolean)
         This.FrontInputsValue = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.FrontInputsValue = a_value
-        If Not This.DataAcquisitionView Is Nothing Then _
-            This.DataAcquisitionView.FrontInputsValue = a_value
     End If
 End Property
 
@@ -1010,8 +987,6 @@ Public Property Let FrontInputsCaption(ByVal a_value As String)
         This.FrontInputsCaption = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.FrontInputsCaption = a_value
-        If Not This.DataAcquisitionView Is Nothing Then _
-            This.DataAcquisitionView.FrontInputsCaption = a_value
     End If
 End Property
 
@@ -1044,8 +1019,6 @@ Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
         This.SelectedChannelNumber = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.SelectedChannelNumber = a_value
-        If Not This.DataAcquisitionView Is Nothing Then _
-            This.DataAcquisitionView.SelectedChannelNumber = a_value
     End If
 End Property
 
@@ -1251,9 +1224,7 @@ Public Property Let ReadingOffset(ByVal a_value As Double)
     If This.ReadingOffset <> a_value Then
         This.ReadingOffset = a_value
         If Not This.ViewModel Is Nothing Then _
-                This.ViewModel.ReadingOffset = a_value
-        If Not This.DataAcquisitionView Is Nothing Then _
-                This.DataAcquisitionView.ReadingOffset = a_value
+            This.ViewModel.ReadingOffset = a_value
     End If
 End Property
 
@@ -1288,8 +1259,6 @@ Public Property Let ExternalTrigMonitoringEnabled(ByVal a_value As Boolean)
         This.ExternalTrigMonitoringEnabled = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.ExternalTrigMonitoringEnabled = This.ExternalTrigMonitoringEnabled
-        If Not This.DataAcquisitionView Is Nothing Then _
-            This.DataAcquisitionView.ExternalTrigMonitoringEnabled = This.ExternalTrigMonitoringEnabled
     End If
 End Property
 
@@ -1307,8 +1276,6 @@ Public Property Let AutoIncrementChannelNoEnabled(ByVal a_value As Boolean)
         This.AutoIncrementChannelNoEnabled = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.AutoIncrementChannelNoEnabled = This.AutoIncrementChannelNoEnabled
-        If Not This.DataAcquisitionView Is Nothing Then _
-            This.DataAcquisitionView.AutoIncrementChannelNoEnabled = a_value
     End If
 End Property
 
@@ -1326,10 +1293,6 @@ Public Property Let SingleReadEnabled(ByVal a_value As Boolean)
         This.SingleReadEnabled = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.SingleReadEnabled = a_value
-        If Not This.DataAcquisitionView Is Nothing Then _
-            This.DataAcquisitionView.SingleReadEnabled = a_value
-        If Not This.K2700View Is Nothing Then _
-            This.K2700View.SingleReadEnabled = a_value
     End If
 End Property
 
@@ -1744,7 +1707,7 @@ Public Property Get ToggleMonitoringExecutable() As Boolean
     ToggleMonitoringExecutable = This.StartMonitoringExecutable Or This.StopMonitoringExecutable
 End Property
 
-''' <summary>   Handles the K2700 <see cref="cc_isr_Tcp_Scpi.ChannelMeasured"/> event. </summary>
+''' <summary>   Handles the <see cref=cc_isr_Tcp_Scpi.K2700ViewModel"/>.<see cref="cc_isr_Tcp_Scpi.ChannelMeasured"/> event. </summary>
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Tcp_Scpi.ChannelReadingEventArgs"/>] event arguments. </param>
 Friend Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.ChannelReadingEventArgs)
 
@@ -1767,8 +1730,6 @@ Friend Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Chan
         End If
     End If
     Me.MeasuredValue = p_value
-    
-    This.DataAcquisitionView.SetReading Me.MeasuredChannelNumber, Me.MeasuredValue, This.ViewModel.MeasuredValueFormat
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1910,136 +1871,62 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
         Case "CloseConnectionExecutable"
             This.CloseConnectionExecutable = This.ViewModel.CloseConnectionExecutable
         Case "ToggleConnectionExecutable"
-            If Not This.WinsockView Is Nothing Then _
-                This.WinsockView.ConnectToggleExecutable = This.ToggleConnectionExecutable
         Case "ResetKnownStateExecutable"
             This.ResetKnownStateExecutable = This.ViewModel.ResetKnownStateExecutable
-            If Not This.Ieee488View Is Nothing Then _
-                This.Ieee488View.RSTExecutable = This.ViewModel.ResetKnownStateExecutable
         Case "ClearExecutionStateExecutable"
             This.ClearExecutionStateExecutable = This.ViewModel.ClearExecutionStateExecutable
-            If Not This.Ieee488View Is Nothing Then _
-                This.Ieee488View.CLSExecutable = This.ViewModel.ClearExecutionStateExecutable
         Case "QueryExecutable"
             This.QueryExecutable = This.ViewModel.QueryExecutable
-            If Not This.Ieee488View Is Nothing Then _
-                This.Ieee488View.QueryExecutable = This.ViewModel.QueryExecutable
         Case "ReadExecutable"
             This.ReadExecutable = This.ViewModel.ReadExecutable
-            If Not This.Ieee488View Is Nothing Then _
-                This.Ieee488View.ReadExecutable = This.ViewModel.ReadExecutable
         Case "QueryStatusByteExecutable"
             This.QueryStatusByteExecutable = This.ViewModel.QueryStatusByteExecutable
-            If Not This.Ieee488View Is Nothing Then _
-                This.Ieee488View.QueryStatsuByteExecutable = This.ViewModel.QueryStatusByteExecutable
         Case "ReadStandardEventStatusExecutable"
             This.ReadStandardEventStatusExecutable = This.ViewModel.ReadStandardEventStatusExecutable
-            If Not This.Ieee488View Is Nothing Then _
-                This.Ieee488View.ReadStandardEventStatusExecutable = This.ViewModel.ReadStandardEventStatusExecutable
         Case "ReadStatusAfterWriteExecutable"
             This.ReadStatusAfterWriteExecutable = This.ViewModel.ReadStatusAfterWriteExecutable
-            If Not This.Ieee488View Is Nothing Then _
-                This.Ieee488View.ReadStatusAfterWriteCheckBoxEnabled = This.ViewModel.ReadStatusAfterWriteExecutable
         Case "WriteExecutable"
             This.WriteExecutable = This.ViewModel.WriteExecutable
-            If Not This.Ieee488View Is Nothing Then _
-                This.Ieee488View.WriteExecutable = This.ViewModel.WriteExecutable
         Case "QueryInputsExecutable"
             This.QueryInputsExecutable = This.ViewModel.QueryInputsExecutable
-            This.K2700View.QueryInputsExecutable = This.ViewModel.QueryInputsExecutable
         Case "ClearReadingsExecutable"
             This.ClearReadingsExecutable = This.ViewModel.ClearReadingsExecutable
-            If Not This.DataAcquisitionView Is Nothing Then _
-                This.DataAcquisitionView.ClearReadingsExecutable = This.ViewModel.ClearReadingsExecutable
         Case "MeasureExecutable"
             This.MeasureExecutable = This.ViewModel.MeasureExecutable
-            If Not This.K2700View Is Nothing Then _
-                This.K2700View.MeasureExecutable = This.ViewModel.MeasureExecutable
         Case "StartMonitoringExecutable"
             This.StartMonitoringExecutable = This.ViewModel.StartMonitoringExecutable
-            If Not This.K2700View Is Nothing Then _
-                This.K2700View.MonitorExtTrigExecutable = This.ViewModel.StartMonitoringExecutable
-            If Not This.DataAcquisitionView Is Nothing Then
-                This.DataAcquisitionView.ManualScanExecutable = This.ViewModel.StartMonitoringExecutable
-                This.DataAcquisitionView.ManualSingleExecutable = This.ViewModel.StartMonitoringExecutable
-            End If
         Case "StopMonitoringExecutable"
             This.StopMonitoringExecutable = This.ViewModel.StopMonitoringExecutable
-            If Not This.K2700View Is Nothing Then _
-                This.K2700View.MonitorExtTrigExecutable = This.ViewModel.StopMonitoringExecutable
-            If Not This.DataAcquisitionView Is Nothing Then
-                This.DataAcquisitionView.ManualScanExecutable = This.ViewModel.StartMonitoringExecutable
-                This.DataAcquisitionView.ManualSingleExecutable = This.ViewModel.StartMonitoringExecutable
-            End If
         Case "ImmediateTriggerOptionExecutable"
             This.ImmediateTriggerOptionExecutable = This.ViewModel.ImmediateTriggerOptionExecutable
-            If Not This.K2700View Is Nothing Then _
-                This.K2700View.ImmediateTriggerOptionExecutable = This.ViewModel.ImmediateTriggerOptionExecutable
-            If Not This.DataAcquisitionView Is Nothing Then
-                This.DataAcquisitionView.AutoScanExecutable = This.ViewModel.StartMonitoringExecutable
-                This.DataAcquisitionView.AutoSingleExecutable = This.ViewModel.StartMonitoringExecutable
-            End If
         Case "ExternalTriggerOptionExecutable"
             This.ExternalTriggerOptionExecutable = This.ViewModel.ExternalTriggerOptionExecutable
-            If Not This.K2700View Is Nothing Then _
-                This.K2700View.ExternalTriggerOptionExecutable = This.ViewModel.ExternalTriggerOptionExecutable
-            If Not This.DataAcquisitionView Is Nothing Then
-                This.DataAcquisitionView.ManualScanExecutable = This.ViewModel.StartMonitoringExecutable
-                This.DataAcquisitionView.ManualSingleExecutable = This.ViewModel.StartMonitoringExecutable
-            End If
         Case "SelectiveDeviceClearExecutable"
             This.SelectiveDeviceClearExecutable = This.ViewModel.SelectiveDeviceClearExecutable
-            If Not This.GpibLanView Is Nothing Then _
-                This.GpibLanView.SDCExecutable = This.ViewModel.SelectiveDeviceClearExecutable
         Case "GoToLocalExecutable"
             This.GoToLocalExecutable = This.ViewModel.GoToLocalExecutable
-            If Not This.GpibLanView Is Nothing Then _
-                This.GpibLanView.GoToLocalExecutable = This.ViewModel.GoToLocalExecutable
         Case "LocalLockoutExecutable"
             This.LocalLockoutExecutable = This.ViewModel.LocalLockoutExecutable
-            If Not This.GpibLanView Is Nothing Then _
-                This.GpibLanView.LocalLockoutExecutable = This.ViewModel.LocalLockoutExecutable
         Case "AutoAssertTalkSetExecutable"
             This.AutoAssertTalkSetExecutable = This.ViewModel.AutoAssertTalkSetExecutable
-            If Not This.GpibLanView Is Nothing Then _
-                This.GpibLanView.AutoAssertTalkSetExecutable = This.ViewModel.AutoAssertTalkSetExecutable
         Case "AutoAssertTalkGetExecutable"
             This.AutoAssertTalkGetExecutable = This.ViewModel.AutoAssertTalkGetExecutable
-            If Not This.GpibLanView Is Nothing Then _
-                This.GpibLanView.AutoAssertTalkGetExecutable = This.ViewModel.AutoAssertTalkGetExecutable
         Case "ReadStatusByteExecutable"
             This.ReadStatusByteExecutable = This.ViewModel.ReadStatusByteExecutable
-            If Not This.GpibLanView Is Nothing Then _
-                This.GpibLanView.ReadStatusByteExecutable = This.ViewModel.ReadStatusByteExecutable
         Case "ServiceRequestedExecutable"
             This.ServiceRequestedExecutable = This.ViewModel.ServiceRequestedExecutable
-            If Not This.GpibLanView Is Nothing Then _
-                This.GpibLanView.SRQExecutable = This.ViewModel.ServiceRequestedExecutable
         Case "GpibAddressGetExecutable"
             This.GpibAddressGetExecutable = This.ViewModel.GpibAddressGetExecutable
-            If Not This.GpibLanView Is Nothing Then _
-                This.GpibLanView.GpibAddressGetExecutable = This.ViewModel.GpibAddressGetExecutable
         Case "GpibAddressSetExecutable"
             This.GpibAddressSetExecutable = This.ViewModel.GpibAddressSetExecutable
-            If Not This.GpibLanView Is Nothing Then _
-                This.GpibLanView.GpibAddressSetExecutable = This.ViewModel.GpibAddressSetExecutable
         Case "GpibLanReadTimeoutGetExecutable"
             This.GpibLanReadTimeoutGetExecutable = This.ViewModel.GpibLanReadTimeoutGetExecutable
-            If Not This.GpibLanView Is Nothing Then _
-                This.GpibLanView.ReadTimeoutGetExecutable = This.ViewModel.GpibLanReadTimeoutGetExecutable
         Case "GpibLanReadTimeoutSetExecutable"
             This.GpibLanReadTimeoutSetExecutable = This.ViewModel.GpibLanReadTimeoutSetExecutable
-            If Not This.GpibLanView Is Nothing Then _
-                This.GpibLanView.ReadTimeoutSetExecutable = This.ViewModel.GpibLanReadTimeoutSetExecutable
-        
         Case "MessageToSendExecutable"
             This.MessageToSendExecutable = This.ViewModel.MessageToSendExecutable
-            If Not This.Ieee488View Is Nothing Then _
-                This.Ieee488View.CommandsComboBoxEnabled = This.ViewModel.MessageToSendExecutable
         Case "FunctionNameExecutable"
             This.FunctionNameExecutable = This.ViewModel.FunctionNameExecutable
-            If Not This.K2700View Is Nothing Then _
-                K2700View.FunctionComboBoxEnabled = This.ViewModel.FunctionNameExecutable
 
     End Select
     
@@ -2059,57 +1946,56 @@ Friend Sub Synchronize()
     This.ViewModel.ReadingOffset = This.ReadingOffset
     This.ViewModel.GpibLanControllerPort = This.GpibLanControllerPort
     This.ViewModel.SessionTimeout = Me.SessionTimeout
+    This.ViewModel.TimerInterval = Me.TimerInterval
+    This.ViewModel.MaximumChannelNumber = Me.MaximumChannelNumber
 
-    Me.Host = This.ViewModel.Host
-    Me.Port = This.ViewModel.Port
-    Me.SocketAddress = This.ViewModel.SocketAddress
-    Me.SocketId = This.ViewModel.SocketId
-    Me.PauseRequested = This.ViewModel.PauseRequested
-    Me.StopRequested = This.ViewModel.StopRequested
-    Me.TimerInterval = This.ViewModel.TimerInterval
+    Me.AutoAssertTalk = This.ViewModel.AutoAssertTalk
+    Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
+    Me.BottomCard = This.ViewModel.BottomCard
+    Me.BottomCardFunctionScanList = This.ViewModel.BottomCardFunctionScanList
+    Me.ChannelCount = This.ViewModel.ChannelCount
     Me.Connected = This.ViewModel.Connected
-    Me.MessageToSend = This.ViewModel.MessageToSend
-    Me.SentMessage = This.ViewModel.SentMessage
-    Me.ReceivedMessage = This.ViewModel.ReceivedMessage
-    Me.ReceivedMessageLength = This.ViewModel.ReceivedMessageLength
     Me.ElapsedTime = This.ViewModel.ElapsedTime
     Me.ElapsedTimeFormat = This.ViewModel.ElapsedTimeFormat
     Me.ElapsedTimeCaption = This.ViewModel.ElapsedTimeCaption
-    Me.LastErrorMessage = This.ViewModel.LastErrorMessage
-    Me.LastMessage = This.ViewModel.LastMessage
-    Me.SerialPollByte = This.ViewModel.SerialPollByte
-    Me.StatusByte = This.ViewModel.StatusByte
-    Me.StandardByte = This.ViewModel.StandardByte
-    Me.ServiceRequested = This.ViewModel.ServiceRequested
-    Me.GpibAddress = This.ViewModel.GpibAddress
-    Me.AutoAssertTalk = This.ViewModel.AutoAssertTalk
-    Me.AutoAssertTalk = This.ViewModel.AutoAssertTalk
-    Me.TopCard = This.ViewModel.TopCard
-    Me.BottomCard = This.ViewModel.BottomCard
-    Me.TopCardFunctionScanList = This.ViewModel.TopCardFunctionScanList
-    Me.BottomCardFunctionScanList = This.ViewModel.BottomCardFunctionScanList
+    Me.ExternalTrigMonitoringEnabled = This.ViewModel.ExternalTrigMonitoringEnabled
     Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
     Me.FrontInputsCaption = This.ViewModel.FrontInputsCaption
-    Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
-    Me.ChannelCount = This.ViewModel.ChannelCount
-    Me.TargetChannelNumber = This.ViewModel.TargetChannelNumber
+    Me.GpibAddress = This.ViewModel.GpibAddress
+    Me.Host = This.ViewModel.Host
+    Me.LastErrorMessage = This.ViewModel.LastErrorMessage
+    Me.LastMessage = This.ViewModel.LastMessage
+    Me.MessageToSend = This.ViewModel.MessageToSend
     Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
-    Me.SenseFunctionName = This.ViewModel.SenseFunctionName
-    Me.SenseFunctionCaption = This.ViewModel.SenseFunctionCaption
-    Me.SenseFunctionUnit = This.ViewModel.SenseFunctionUnit
     Me.MeasuredReading = This.ViewModel.MeasuredReading
     Me.MeasuredValueFormat = This.ViewModel.MeasuredValueFormat
     Me.MeasuredValue = This.ViewModel.MeasuredValue
-    Me.ExternalTrigMonitoringEnabled = This.ViewModel.ExternalTrigMonitoringEnabled
-    Me.MonitoringState = This.ViewModel.MonitoringState
-    Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
-    Me.SingleReadEnabled = This.ViewModel.SingleReadEnabled
-    Me.SenseFunctions = This.ViewModel.SenseFunctions
-    Me.ScpiCommands = This.ViewModel.ScpiCommands
     Me.MeasurementMode = This.ViewModel.MeasurementMode
-    Me.ReadStatusAfterWriteEnabled = This.ViewModel.ReadStatusAfterWriteEnabled
-    Me.ReadingOffset = This.ViewModel.ReadingOffset
     Me.MonitoringState = This.ViewModel.MonitoringState
+    Me.PauseRequested = This.ViewModel.PauseRequested
+    Me.Port = This.ViewModel.Port
+    Me.ReadingOffset = This.ViewModel.ReadingOffset
+    Me.ReadStatusAfterWriteEnabled = This.ViewModel.ReadStatusAfterWriteEnabled
+    Me.ReceivedMessage = This.ViewModel.ReceivedMessage
+    Me.ReceivedMessageLength = This.ViewModel.ReceivedMessageLength
+    Me.ScpiCommands = This.ViewModel.ScpiCommands
+    Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
+    Me.SenseFunctionName = This.ViewModel.SenseFunctionName
+    Me.SenseFunctionCaption = This.ViewModel.SenseFunctionCaption
+    Me.SenseFunctions = This.ViewModel.SenseFunctions
+    Me.SenseFunctionUnit = This.ViewModel.SenseFunctionUnit
+    Me.SentMessage = This.ViewModel.SentMessage
+    Me.SerialPollByte = This.ViewModel.SerialPollByte
+    Me.ServiceRequested = This.ViewModel.ServiceRequested
+    Me.SingleReadEnabled = This.ViewModel.SingleReadEnabled
+    Me.SocketAddress = This.ViewModel.SocketAddress
+    Me.SocketId = This.ViewModel.SocketId
+    Me.StandardByte = This.ViewModel.StandardByte
+    Me.StatusByte = This.ViewModel.StatusByte
+    Me.StopRequested = This.ViewModel.StopRequested
+    Me.TargetChannelNumber = This.ViewModel.TargetChannelNumber
+    Me.TopCard = This.ViewModel.TopCard
+    Me.TopCardFunctionScanList = This.ViewModel.TopCardFunctionScanList
     
 End Sub
 
@@ -2161,20 +2047,6 @@ End Sub
 
 Private Sub Class_Initialize()
     This.TopCard = VBA.vbNullString
-    ' Debug.Print "initializing " & TypeName(Me)
-    Set This.K2700View = cc_isr_Tcp_Scpi_Test.K2700View
-    Set This.Ieee488View = cc_isr_Tcp_Scpi_Test.Ieee488View
-    Set This.GpibLanView = cc_isr_Tcp_Scpi_Test.GpibLanView
-    Set This.DataAcquisitionView = cc_isr_Tcp_Scpi_Test.DataAcquisitionView
-    Set This.WinsockView = cc_isr_Tcp_Scpi_Test.WinsockView
-End Sub
-
-Private Sub Class_Terminate()
-    Set This.K2700View = Nothing
-    Set This.Ieee488View = Nothing
-    Set This.GpibLanView = Nothing
-    Set This.DataAcquisitionView = Nothing
-    Set This.WinsockView = Nothing
 End Sub
 
 ''' <summary>   Initialize this worksheet if not initialized. </summary>
@@ -2223,7 +2095,6 @@ err_Handler:
 
 End Function
 
-
 ''' <summary>   Dispose of the worksheet objects. </summary>
 Public Sub Dispose()
 
@@ -2256,4 +2127,3 @@ err_Handler:
     GoTo exit_Handler
     
 End Sub
-

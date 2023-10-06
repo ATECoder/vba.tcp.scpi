@@ -25,18 +25,24 @@ Private Type this_
     
     ' initial observer settings
     Observer As K2700Observer
+    DataAcquisitionView As DataAcquisitionView
+    UserSampleView As UserSampleView
+    
     Address As String
     ReadingOffset As Double
     GpibLanControllerPort As Integer
     
     ' initial view model settings
     ViewModel As cc_isr_Tcp_Scpi.K2700ViewModel
-    SessionTimeout As Integer
     
+    ' initial observer settings
     ContinuousSenseFunctionName As String
     ImmediateSenseFunctionName As String
     ExternalSenseFunctionName As String
     PrimaryGpibAddress As Integer
+    SessionTimeout As Integer
+    TimerInterval As Integer
+    MaximumChannelNumber As Integer
     
     ' known information
     TopCard As String
@@ -171,8 +177,10 @@ Public Sub BeforeAll()
     This.ReadingOffset = 0.01
     This.GpibLanControllerPort = 1234
     
-    ' initialize view model settings
+    ' initialize observer settings
     This.SessionTimeout = 3000
+    This.TimerInterval = 500
+    This.MaximumChannelNumber = 48
     
     ' initialize known data.
     This.TopCard = "7700"
@@ -199,16 +207,29 @@ Public Sub BeforeAll()
     
     Set This.ErrTracer = p_errTrace.Initialize(This.ViewModel.Device)
     
+    ' set data acqusition view settings
+    DataAcquisitionView.SocketAddress = This.Address
+    DataAcquisitionView.GpibLanControllerPort = This.GpibLanControllerPort
+    DataAcquisitionView.SessionTimeout = This.SessionTimeout
+    DataAcquisitionView.TimerInterval = This.TimerInterval
+    DataAcquisitionView.MaximumChannelNumber = This.MaximumChannelNumber
+    
+    UserSampleView.ReadingOffset = This.ReadingOffset
+    
     ' set observer user interface settings
     K2700Observer.SocketAddress = This.Address
     K2700Observer.ReadingOffset = This.ReadingOffset
     K2700Observer.GpibLanControllerPort = This.GpibLanControllerPort
     K2700Observer.SessionTimeout = This.SessionTimeout
+    K2700Observer.TimerInterval = This.TimerInterval
+    K2700Observer.MaximumChannelNumber = This.MaximumChannelNumber
     
     ' initialize the observer before initializing the view mode
     ' but after the observer setting are set. The observer initial
     ' settings are then applied to the view model.
     Set This.Observer = K2700Observer.Initialize(This.ViewModel)
+    Set This.DataAcquisitionView = DataAcquisitionView.Initialize(This.ViewModel)
+    Set This.UserSampleView = UserSampleView.Initialize(This.ViewModel)
     
     ' issue the open connection command. This initializes the view model.
     This.ViewModel.OpenConnectionCommand
@@ -552,15 +573,44 @@ Public Function AssertExternalTriggerModeShouldStart(ByVal a_assert As cc_isr_Te
     If p_outcome.AssertSuccessful Then
         
         Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
-        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.external
+        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
             "External trigger reading mode should be as expected.")
     End If
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.Observer.MeasurementMode, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
+            This.Observer.MeasurementMode, _
             "Observer measurement mode should equal expected value for external trigger reading mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
+            This.UserSampleView.MeasurementMode, _
+            "User sample view measurement mode should equal expected value for external trigger reading mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
+            This.DataAcquisitionView.MeasurementMode, _
+            "Data acqusition view measurement mode should equal expected value for external trigger reading mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
+            This.DataAcquisitionView.MeasurementMode, _
+            "Data acquisirtion view measurement mode should equal expected value for external trigger reading mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
+            This.UserSampleView.MeasurementMode, _
+            "User sample view measurement mode should equal expected value for external trigger reading mode.")
     End If
     
     Set AssertExternalTriggerModeShouldStart = p_outcome
@@ -581,15 +631,27 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_assert As cc_isr
     If p_outcome.AssertSuccessful Then
         
         Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
-        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.external
+        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
             "External trigger reading mode should be as expected.")
     End If
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.Observer.MeasurementMode, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.Observer.MeasurementMode, _
             "Observer measurement mode should equal expected value for external trigger reading mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.DataAcquisitionView.MeasurementMode, _
+            "Data Acquisition View measurement mode should equal expected value for external trigger reading mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.UserSampleView.MeasurementMode, _
+            "User Sample View measurement mode should equal expected value for external trigger reading mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -611,7 +673,7 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_assert As cc_isr
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(cc_isr_Tcp_Scpi.TriggerSourceOption.external, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(cc_isr_Tcp_Scpi.TriggerSourceOption.External, _
             This.ViewModel.K2700.TriggerSystem.SourceGetter(), _
             "External trigger source should be as expected.")
     End If
@@ -674,9 +736,18 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_assert As cc_isr
     End If
     
     If p_outcome.AssertSuccessful Then
-        
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.Observer.MeasureExecutable, _
             "Observer Measure button should be disabled in external trigger reading mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserSampleView.AutoScanExecutable, _
+            "User sample view immediate scan button should be disabled in external trigger reading mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserSampleView.AutoSingleExecutable, _
+            "User sample view immediate single button should be disabled in external trigger reading mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -695,6 +766,16 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_assert As cc_isr
         
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.StartMonitoringExecutable, _
             "Start monitoring command should be enabled in external trigger reading mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserSampleView.ManualScanExecutable, _
+            "User sample view manual scan button should be disabled in external trigger reading mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserSampleView.ManualSingleExecutable, _
+            "User sample view manual single button should be disabled in external trigger reading mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -778,7 +859,19 @@ Public Function AssertImmediateModeShouldStart(ByVal a_assert As cc_isr_Test_Fx.
     If p_outcome.AssertSuccessful Then
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.Observer.MeasurementMode, _
-            "Observer measurement mode should equal view model immediate measurement mode upon start.")
+            "Observer measurement mode should equal expected value for immediate trigger reading mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.DataAcquisitionView.MeasurementMode, _
+            "Data Acquisition View measurement mode should equal expected value for immediate trigger reading mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.UserSampleView.MeasurementMode, _
+            "User Sample View measurement mode should equal expected value for immediate trigger reading mode.")
     End If
     
     Set AssertImmediateModeShouldStart = p_outcome
@@ -807,7 +900,19 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_assert As cc_isr_Test_
     If p_outcome.AssertSuccessful Then
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.Observer.MeasurementMode, _
-            "Observer measurement mode should equal view model measurement mode.")
+            "Observer measurement mode should equal expected value for immediate trigger reading mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.DataAcquisitionView.MeasurementMode, _
+            "Data Acquisition View measurement mode should equal expected value for immediate trigger reading mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.UserSampleView.MeasurementMode, _
+            "User Sample View measurement mode should equal expected value for immediate trigger reading mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -885,6 +990,30 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_assert As cc_isr_Test_
     
     If p_outcome.AssertSuccessful Then
         
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserSampleView.ManualScanExecutable, _
+            "User sample view manual scan button should be disabled in immediate mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserSampleView.ManualSingleExecutable, _
+            "User sample view manual single button should be disabled in immediate mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserSampleView.AutoScanExecutable, _
+            "User sample view auto scan button should be enabled in immediate mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserSampleView.AutoSingleExecutable, _
+            "User sample view auto single button should be enabled in immediate mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.ImmediateTriggerOptionExecutable, _
             "Immediate trigger option command should be enabled in immediate mode.")
     End If
@@ -954,6 +1083,14 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_assert As cc_isr_Test_
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
             This.Observer.SelectedChannelNumber, _
             "The Observer selected channel number should be set to the View Model selected channel number.")
+    
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+    
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
+            This.UserSampleView.SelectedChannelNumber, _
+            "The user sample view selected channel number should be set to the View Model selected channel number.")
     
     End If
     
@@ -1028,6 +1165,22 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
             
     End If
     
+    If p_outcome.AssertSuccessful Then
+    
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
+            This.UserSampleView.SelectedChannelNumber, _
+            "The user sample view selected channel number should be set to the View Model selected channel number.")
+    
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+    
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
+            This.DataAcquisitionView.MeasuredChannelNumber, _
+            "The data acqusition view measured channel number should be set to the View Model selected channel number.")
+    
+    End If
+    
     Dim p_reading As String
     Dim p_channelNumber As Integer
     Dim p_readingValue As Double
@@ -1035,12 +1188,20 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
     If p_outcome.AssertSuccessful Then
         
         ' get the reading from the observer.
-        p_reading = This.Observer.MeasuredReading
+        p_reading = This.DataAcquisitionView.MeasuredReading
         
-        p_channelNumber = This.Observer.MeasuredChannelNumber
+        p_channelNumber = This.DataAcquisitionView.MeasuredChannelNumber
 
-        p_readingValue = This.Observer.MeasuredValue
+        p_readingValue = This.DataAcquisitionView.MeasuredValue
         
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.DataAcquisitionView.MeasuredChannelNumber, _
+            This.ViewModel.MeasuredChannelNumber, _
+            "View Model measured channel number should equal the user sample view measured channel.")
+            
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1064,6 +1225,14 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
             This.Observer.SelectedChannelNumber, _
             "The observer Selected Channel Number should equal the view model selected channel number.")
+            
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
+            This.UserSampleView.SelectedChannelNumber, _
+            "The user sample view Selected Channel Number should equal the view model selected channel number.")
             
     End If
     
@@ -1111,7 +1280,7 @@ Public Function AssertMonitoringModeShouldStart(ByVal a_assert As cc_isr_Test_Fx
     If p_outcome.AssertSuccessful Then
         
         Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
-        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.external
+        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
             "External Trigger mode should be as expected.")
     End If
@@ -1136,8 +1305,20 @@ Public Function AssertMonitoringModeShouldStart(ByVal a_assert As cc_isr_Test_Fx
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
-            This.Observer.MeasurementMode, "Observer external trigger monitoring mode should be as expected.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.Observer.MeasurementMode, _
+            "Observer measurement mode should equal expected value for trigger monitoring mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.DataAcquisitionView.MeasurementMode, _
+            "Data Acquisition View measurement mode should equal expected value for  trigger monitoring mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.UserSampleView.MeasurementMode, _
+            "User Sample View measurement mode should equal expected value for  trigger monitoring mode.")
     End If
     
     Set AssertMonitoringModeShouldStart = p_outcome
@@ -1167,7 +1348,20 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test
     If p_outcome.AssertSuccessful Then
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
-            This.Observer.MeasurementMode, "Observer external trigger monitoring mode should be as expected.")
+            This.Observer.MeasurementMode, _
+            "Observer measurement mode should equal expected value for external trigger monitoring mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.DataAcquisitionView.MeasurementMode, _
+            "Data Acquisition View measurement mode should equal expected value for external trigger monitoring mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.UserSampleView.MeasurementMode, _
+            "User Sample View measurement mode should equal expected value for external trigger monitoring mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1221,6 +1415,30 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test
         
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.Observer.MeasureExecutable, _
             "Observer Measure button should be disabled in trigger monitoring mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserSampleView.AutoScanExecutable, _
+            "User sample view auto scan button should be disabled in trigger monitoring mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserSampleView.AutoSingleExecutable, _
+            "User sample view auto single button should be disabled in trigger monitoring mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserSampleView.ManualScanExecutable, _
+            "User sample view Manual scan button should be enabled in trigger monitoring mode.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserSampleView.ManualSingleExecutable, _
+            "User sample view Manual single button should be enabled in trigger monitoring mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1333,10 +1551,10 @@ Public Function AssertMeasurementsShouldGetTriggered(ByVal a_assert As cc_isr_Te
     
     ' get the first channel number
     Dim p_channel As Integer
-    p_channel = This.Observer.TargetChannelNumber
+    p_channel = This.DataAcquisitionView.MeasuredChannelNumber
     
     Dim p_reading As String
-    p_reading = This.Observer.MeasuredReading
+    p_reading = This.DataAcquisitionView.MeasuredReading
     
     ' loop for some time waiting for triggered measurements.
     
@@ -1347,13 +1565,13 @@ Public Function AssertMeasurementsShouldGetTriggered(ByVal a_assert As cc_isr_Te
         
         DoEvents
     
-        If p_channel <> This.Observer.TargetChannelNumber Then
+        If p_channel <> This.DataAcquisitionView.MeasuredChannelNumber Then
         
             DoEvents
-            p_channel = This.Observer.TargetChannelNumber
+            p_channel = This.DataAcquisitionView.MeasuredChannelNumber
             
             DoEvents
-            p_reading = This.Observer.MeasuredReading
+            p_reading = This.DataAcquisitionView.MeasuredReading
             
             DoEvents
             Debug.Print p_channel; ": "; p_reading
@@ -1470,7 +1688,7 @@ Public Function AssertMonitoringModeStopShouldValidate(ByVal a_assert As cc_isr_
     If p_outcome.AssertSuccessful Then
         
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.StopMonitoringExecutable, _
-            "Stop monitoring command should be diabled after monitoring stopped.")
+            "Stop monitoring command should be disabled after monitoring stopped.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1489,6 +1707,30 @@ Public Function AssertMonitoringModeStopShouldValidate(ByVal a_assert As cc_isr_
         
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.Observer.MeasureExecutable, _
             "Observer Measure button should be disabled after monitoring stopped.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserSampleView.AutoScanExecutable, _
+            "User sample view auto scan command should be enabled after monitoring stopped.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserSampleView.AutoSingleExecutable, _
+            "User sample view auto single command should be enabled after monitoring stopped.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserSampleView.ManualScanExecutable, _
+            "User sample view manual scan command should be enabled after monitoring stopped.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserSampleView.ManualSingleExecutable, _
+            "User sample view manual single command should be enabled after monitoring stopped.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1596,8 +1838,16 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
             "Observer 'SocketAddress' setting should equal initial setting.")
     
     If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Address, This.DataAcquisitionView.SocketAddress, _
+            "Data Acquisition View 'SocketAddress' setting should equal initial setting.")
+    
+    If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SocketAddress, This.Observer.SocketAddress, _
             "Observer and view model 'SocketAddress' setting should equal.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SocketAddress, This.DataAcquisitionView.SocketAddress, _
+            "Data Acquisition View and view model 'SocketAddress' setting should equal.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ReadingOffset, This.ViewModel.ReadingOffset, _
@@ -1711,6 +1961,22 @@ Public Function TestShouldBeConnected() As cc_isr_Test_Fx.Assert
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.StopMonitoringExecutable, _
             "Stop monitoning command should be disabled.")
         
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserSampleView.AutoScanExecutable, _
+            "user sample view auto scan button should be enabled.")
+        
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserSampleView.AutoSingleExecutable, _
+            "user sample view auto Single button should be enabled.")
+        
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserSampleView.ManualScanExecutable, _
+            "user sample view Manual scan button should be enabled.")
+        
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserSampleView.ManualSingleExecutable, _
+            "user sample view Manual Single button should be enabled.")
+        
     ' test serial polling
     If p_outcome.AssertSuccessful Then
             
@@ -1752,11 +2018,13 @@ Public Function TestShouldBeConnected() As cc_isr_Test_Fx.Assert
                 This.Observer.StatusByte, _
                 "Observer and view model status bytes should be equal.")
                 
-                        
-                
     End If
     
-        
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.LastErrorMessage, _
+            This.DataAcquisitionView.LastErrorMessage, _
+            "Data acqusition view Last error message should be the same as the view model.")
+    
     ' Finally, verify that no error message was recorded.
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
@@ -2425,11 +2693,11 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
     
     ' get the pre-trigger measured channel
     Dim p_channel As Integer
-    p_channel = This.Observer.MeasuredChannelNumber
+    p_channel = This.DataAcquisitionView.MeasuredChannelNumber
     
     ' get the pre-trigger reading
     Dim p_reading As String
-    p_reading = This.Observer.MeasuredReading
+    p_reading = This.DataAcquisitionView.MeasuredReading
     
     If p_outcome.AssertSuccessful Then
     
@@ -2457,11 +2725,9 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
         ' sets the pause requested, which stops the timer
         If Not p_outcome.AssertSuccessful Then
             This.ViewModel.StopMonitoringExternalTriggersCommand
-        End If
-        
-        ' on expiration, set stop request.
-        If p_endTime < cc_isr_Core_IO.CoreExtensions.DaysNow() Then
-        
+        ElseIf p_endTime < cc_isr_Core_IO.CoreExtensions.DaysNow() Then
+            
+            ' check if failed to stop on expiration.
             If This.ViewModel.StopRequested Then
             
                 If p_outcome.AssertSuccessful Then
@@ -2477,38 +2743,43 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
                 ' which is a bug that needs to be fixed.
                 
                 Exit Do
-            Else
-                This.ViewModel.StopRequested = True
                 
+            Else
+            
+                ' on expiration, set stop request.
+                This.ViewModel.StopMonitoringExternalTriggersCommand
+            
                 ' set a new end time to timeout in one second if the loop does not exit
                 p_endTime = cc_isr_Core_IO.CoreExtensions.DaysNow() + _
                     (1 / cc_isr_Core_IO.CoreExtensions.SecondsPerDay)
             End If
-            
+        
+        Else
+        
+            ' invoke the event handler, which either:
+            ' handles a trigger or
+            ' issues a pause request if stop was requested and
+            '   moves the measurement mode to none when done.
+    
+            On Error Resume Next
+            This.ViewModel.HandleTimerEvent
+            If Err.Number <> 0 Then
+                Set p_outcome = cc_isr_Test_Fx.Assert.Fail( _
+                    "Error #" & Err.Number & " handling timer event; " & Err.Description & ".")
+            End If
+            On Error GoTo 0
+        
         End If
         
-        ' invoke the event handler, which either:
-        ' handles a trigger or
-        ' issues a pause request if stop was requested and
-        '   moves the measurement mode to none when done.
-
-        On Error Resume Next
-        This.ViewModel.HandleTimerEvent
-        If Err.Number <> 0 Then
-            Set p_outcome = cc_isr_Test_Fx.Assert.Fail( _
-                "Error #" & Err.Number & " handling timer event; " & Err.Description & ".")
-        End If
-        On Error GoTo 0
-    
         ' record reading if the measured channel number changed.
         
-        If p_channel <> This.Observer.MeasuredChannelNumber Then
+        If p_channel <> This.DataAcquisitionView.MeasuredChannelNumber Then
         
             DoEvents
-            p_channel = This.Observer.MeasuredChannelNumber
+            p_channel = This.DataAcquisitionView.MeasuredChannelNumber
             
             DoEvents
-            p_reading = This.Observer.MeasuredReading
+            p_reading = This.DataAcquisitionView.MeasuredReading
             
             DoEvents
             Debug.Print p_channel; ": "; p_reading
@@ -2519,6 +2790,14 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
                 Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.MeasuredChannelNumber, _
                     This.ViewModel.MeasuredChannelNumber, _
                     "View Model measured channel number should equal the Observer measured channel.")
+                    
+            End If
+            
+            If p_outcome.AssertSuccessful Then
+                
+                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.DataAcquisitionView.MeasuredChannelNumber, _
+                    This.ViewModel.MeasuredChannelNumber, _
+                    "View Model measured channel number should equal the data acqusition view measured channel.")
                     
             End If
             

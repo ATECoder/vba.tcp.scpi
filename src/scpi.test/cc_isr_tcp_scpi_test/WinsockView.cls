@@ -13,6 +13,15 @@ Attribute VB_Exposed = True
 
 Option Explicit
 
+Private Const m_sessionTimeout As String = "B1"
+Private Const m_inputAddress As String = "B2"
+Private Const m_inputPort As String = "B3"
+Private Const m_socketAddress As String = "C2"
+Private Const m_socketId As String = "D2"
+Private Const m_connected As String = "E2"
+
+Private Const m_timerInterval As String = "C22"
+
 ' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ' Controls
 ' - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,0 +1,1063 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
+Attribute VB_Name = "UserSampleView"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+''' <summary>    The User Sample View for the view model. </summary>
+''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Option Explicit
+
+Private WithEvents m_viewModel As K2700ViewModel
+Attribute m_viewModel.VB_VarHelpID = -1
+
+' Controls
+
+Private WithEvents AutoScanToggleButton As MSForms.ToggleButton
+Attribute AutoScanToggleButton.VB_VarHelpID = -1
+Private WithEvents AutoSingleToggleButton As MSForms.ToggleButton
+Attribute AutoSingleToggleButton.VB_VarHelpID = -1
+Private WithEvents ManualScanToggleButton As MSForms.ToggleButton
+Attribute ManualScanToggleButton.VB_VarHelpID = -1
+Private WithEvents ManualSingleToggleButton As MSForms.ToggleButton
+Attribute ManualSingleToggleButton.VB_VarHelpID = -1
+
+Private Type this_
+
+    ViewModel As K2700ViewModel
+    
+    AutoIncrementChannelNoEnabled As Boolean
+    FrontInputsRequired As Boolean
+    SingleReadEnabled As Boolean
+    
+    ReadingOffset As Double
+    
+    SelectedChannelNumber As Integer
+    SelectedChannelNumberCaption As String
+    MeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
+    
+    ChannelNumberCaptionPrefix As String
+    ChannelNumberTitle As String
+        
+    LastCommandDetails As String
+    LastCommandOutcome As Boolean
+    
+    FocusedControlName As String
+
+End Type
+
+Private This As this_
+
+' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+' Construction and cleanup
+' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Private Sub Class_Initialize()
+    This.ChannelNumberCaptionPrefix = "R"
+    This.ChannelNumberTitle = "resistance number"
+End Sub
+
+Private Sub Class_Terminate()
+    Me.Dispose
+End Sub
+
+''' <summary>   Dispose of the worksheet objects. </summary>
+Public Sub Dispose()
+
+    Const p_procedureName As String = "Dispose"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Set m_viewModel = Nothing
+    
+    Set This.ViewModel = Nothing
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' display the error message
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+    
+End Sub
+
+''' <summary>   Initialize this object. </summary>
+Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As DataAcquisitionView
+
+    Const p_procedureName = "Initialize"
+
+    ' Error are trapped to prevent crashes because this method gets started when
+    ' the main workbook is activated.
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Set This.ViewModel = a_viewModel
+    
+    Me.Synchronize
+    
+    ' set reference to the view model event handler.
+    
+    Set m_viewModel = a_viewModel
+    
+    Set Initialize = Me
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' display the error message
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Function
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' Data Acquisition Controls
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+Private Sub AutoScanToggleButton_GotFocus()
+    This.FocusedControlName = AutoScanToggleButton.Name
+    DoEvents
+End Sub
+
+Private Sub AutoScanToggleButton_LostFocus()
+    This.FocusedControlName = VBA.vbNullString
+    DoEvents
+End Sub
+
+''' <summary>   Handles the Auto Scan toggle button. </summary>
+''' <remarks>   The button change event also causes a click event.
+''' This method issues the click event on actual click.
+''' Note: Make sure to not implement the click event,
+Private Sub AutoScanToggleButton_Change()
+
+    On Error GoTo err_Handler:
+
+    If This.FocusedControlName = AutoScanToggleButton.Name Then
+
+        On Error GoTo 0
+
+        ' Commands for click
+        OnAutoScanToggleButtonChange
+        
+    Else
+
+        On Error GoTo 0
+
+        ' Commands for change from within the sheet
+        OnAutoScanToggleButtonChange
+
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    On Error GoTo 0
+    
+    ' Commands for change from outside the sheet
+    OnAutoScanToggleButtonChange
+    
+End Sub
+
+
+''' <summary>   Handles the Auto Scan toggle button. </summary>
+''' <remarks>   In auto scan we have the following settings:
+''' Auto Increment channel number: True;
+''' Front Inputs Required: False;
+''' Single Readings: False;
+''' Triggering Mode: Immediate.
+''' </remarks>
+Private Sub OnAutoScanToggleButtonChange()
+
+    Const p_procedureName As String = "OnAutoScanToggleButtonChange"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    If This.ViewModel Is Nothing Then Exit Sub
+
+    If AutoScanToggleButton.Value Then
+    
+        Me.AutoIncrementChannelNoEnabled = True
+        Me.FrontInputsRequired = False
+        Me.SingleReadEnabled = False
+        
+        ' next set immediate triggering mode.
+        
+        If This.ViewModel.ImmediateTriggerOptionExecutable Then
+            Me.LastCommandOutcome = This.ViewModel.ConfigureImmediateTriggerReadingsCommand(Me.LastCommandDetails)
+        Else
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " Immediate trigger command not enabled."
+        End If
+        
+        If Me.LastCommandOutcome Then
+        
+            ' next takes the measurements
+        
+            If This.ViewModel.MeasureExecutable Then
+                ' make an immediate measure of one or all channels.
+                Me.LastCommandOutcome = This.ViewModel.MeasureImmediatelyCommand(Me.LastCommandDetails)
+            Else
+                cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                    ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                    " Measure command not enabled."
+            End If
+        
+        End If
+        
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    ' toggle the button state
+    AutoScanToggleButton.Value = False
+    
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' report the last error.
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+Public Property Get AutoScanExecutable() As Boolean
+    If AutoScanToggleButton Is Nothing Then
+        AutoScanExecutable = False
+    Else
+        AutoScanExecutable = AutoScanToggleButton.Enabled
+    End If
+End Property
+
+Public Property Let AutoScanExecutable(ByVal a_value As Boolean)
+    If Not AutoScanToggleButton Is Nothing Then
+        AutoScanToggleButton.Enabled = a_value
+    End If
+End Property
+
+Private Sub AutoSingleToggleButton_GotFocus()
+    This.FocusedControlName = AutoSingleToggleButton.Name
+    DoEvents
+End Sub
+
+Private Sub AutoSingleToggleButton_LostFocus()
+    This.FocusedControlName = VBA.vbNullString
+    DoEvents
+End Sub
+
+''' <summary>   Handles the Auto Single toggle button. </summary>
+''' <remarks>   The button change event also causes a click event.
+''' This method issues the click event on actual click.
+''' Note: Make sure to not implement the click event,
+Private Sub AutoSingleToggleButton_Change()
+
+    On Error GoTo err_Handler:
+
+    If This.FocusedControlName = AutoSingleToggleButton.Name Then
+
+        On Error GoTo 0
+
+        ' Commands for click
+        OnAutoSingleToggleButtonChange
+        
+    Else
+
+        On Error GoTo 0
+
+        ' Commands for change from within the sheet
+        OnAutoSingleToggleButtonChange
+
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    On Error GoTo 0
+    
+    ' Commands for change from outside the sheet
+    OnAutoSingleToggleButtonChange
+    
+End Sub
+
+
+''' <summary>   Handles the Auto Single toggle button. </summary>
+''' <remarks>   In auto single we have the following settings:
+''' Auto Increment channel number: False;
+''' Front Inputs Required: False;
+''' Single Readings: True;
+''' Triggering Mode: Immediate.
+''' </remarks>
+Private Sub OnAutoSingleToggleButtonChange()
+
+    Const p_procedureName As String = "OnAutoSingleToggleButtonChange"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    If This.ViewModel Is Nothing Then Exit Sub
+
+    If AutoScanToggleButton.Value Then
+    
+        Me.AutoIncrementChannelNoEnabled = False
+        Me.FrontInputsRequired = False
+        Me.SingleReadEnabled = True
+        
+        ' next set immediate triggering mode.
+        
+        If This.ViewModel.ImmediateTriggerOptionExecutable Then
+            Me.LastCommandOutcome = This.ViewModel.ConfigureImmediateTriggerReadingsCommand(Me.LastCommandDetails)
+        Else
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " Immediate trigger command not enabled."
+        End If
+        
+        If Me.LastCommandOutcome Then
+        
+            ' next takes the measurements
+        
+            If This.ViewModel.MeasureExecutable Then
+                ' make an immediate measure of one or all channels.
+                Me.LastCommandOutcome = This.ViewModel.MeasureImmediatelyCommand(Me.LastCommandDetails)
+            Else
+                cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                    ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                    " Measure command not enabled."
+            End If
+        
+        End If
+
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    ' toggle the button state
+    AutoSingleToggleButton.Value = False
+    
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' report the last error.
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+Public Property Get AutoSingleExecutable() As Boolean
+    If AutoSingleToggleButton Is Nothing Then
+        AutoSingleExecutable = False
+    Else
+        AutoSingleExecutable = AutoSingleToggleButton.Enabled
+    End If
+End Property
+
+
+Public Property Let AutoSingleExecutable(ByVal a_value As Boolean)
+    If Not AutoSingleToggleButton Is Nothing Then
+        AutoSingleToggleButton.Enabled = a_value
+    End If
+End Property
+
+Private Sub ManualScanToggleButton_GotFocus()
+    This.FocusedControlName = ManualScanToggleButton.Name
+    DoEvents
+End Sub
+
+Private Sub ManualScanToggleButton_LostFocus()
+    This.FocusedControlName = VBA.vbNullString
+    DoEvents
+End Sub
+
+''' <summary>   Handles the Manual Scan toggle button. </summary>
+''' <remarks>   The button change event also causes a click event.
+''' This method issues the click event on actual click.
+''' Note: Make sure to not implement the click event,
+Private Sub ManualScanToggleButton_Change()
+
+    On Error GoTo err_Handler:
+
+    If This.FocusedControlName = ManualScanToggleButton.Name Then
+
+        On Error GoTo 0
+
+        ' Commands for click
+        OnManualScanToggleButtonChange
+        
+    Else
+
+        On Error GoTo 0
+
+        ' Commands for change from within the sheet
+        OnManualScanToggleButtonChange
+
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    On Error GoTo 0
+    
+    ' Commands for change from outside the sheet
+    OnManualScanToggleButtonChange
+    
+End Sub
+
+
+''' <summary>   Handles the Manual Scan toggle button. </summary>
+''' <remarks>   In manual scan we have the following settings:
+''' Auto Increment channel number: True;
+''' Front Inputs Required: True;
+''' Single Readings: False;
+''' Triggering Mode: External.
+''' </remarks>
+Private Sub OnManualScanToggleButtonChange()
+
+    Const p_procedureName As String = "OnManualScanToggleButtonChange"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    If This.ViewModel Is Nothing Then Exit Sub
+
+    If ManualScanToggleButton.Value Then
+    
+        Me.AutoIncrementChannelNoEnabled = True
+        Me.FrontInputsRequired = True
+        Me.SingleReadEnabled = False
+        
+        ' next set external triggering triggering mode.
+        
+        If This.ViewModel.ExternalTriggerOptionExecutable Then
+            Me.LastCommandOutcome = This.ViewModel.ConfigureExternalTriggerReadingCommand(Me.LastCommandDetails)
+        Else
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " External trigger enable command not enabled."
+        End If
+        
+        If Me.LastCommandOutcome Then
+        
+            ' next start external trigger monitoring
+            ' this should wait for monitoring to commence or raise an error.
+            If This.ViewModel.StartMonitoringExecutable Then
+                This.ViewModel.StartMonitoringExternalTriggersCommand
+            Else
+                cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                    ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                    " Start monitoring command not enabled."
+            End If
+        
+        End If
+        
+    Else
+    
+        ' stop external trigger monitoring
+        ' this should wait for monitoring to stop
+        
+        If This.ViewModel.StopMonitoringExecutable Then
+            This.ViewModel.StopMonitoringExternalTriggersCommand
+        Else
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " Stop monitoring command not enabled."
+        End If
+            
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' report the last error.
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' on error, stop monitoring
+    On Error Resume Next
+    
+    ' stop external trigger monitoring
+    ' this should wait for monitoring to stop
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.StopMonitoringExternalTriggersCommand
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+Public Property Get ManualScanExecutable() As Boolean
+    If ManualScanToggleButton Is Nothing Then
+        ManualScanExecutable = False
+    Else
+        ManualScanExecutable = ManualScanToggleButton.Enabled
+    End If
+End Property
+
+Public Property Let ManualScanExecutable(ByVal a_value As Boolean)
+    If Not ManualScanToggleButton Is Nothing Then
+        ManualScanToggleButton.Enabled = a_value
+    End If
+End Property
+
+Private Sub ManualSingleToggleButton_GotFocus()
+    This.FocusedControlName = ManualSingleToggleButton.Name
+    DoEvents
+End Sub
+
+Private Sub ManualSingleToggleButton_LostFocus()
+    This.FocusedControlName = VBA.vbNullString
+    DoEvents
+End Sub
+
+''' <summary>   Handles the Manual Single toggle button. </summary>
+''' <remarks>   The button change event also causes a click event.
+''' This method issues the click event on actual click.
+''' Note: Make sure to not implement the click event,
+Private Sub ManualSingleToggleButton_Change()
+
+    On Error GoTo err_Handler:
+
+    If This.FocusedControlName = ManualSingleToggleButton.Name Then
+
+        On Error GoTo 0
+
+        ' Commands for click
+        OnManualSingleToggleButtonChange
+        
+    Else
+
+        On Error GoTo 0
+
+        ' Commands for change from within the sheet
+        OnManualSingleToggleButtonChange
+
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    On Error GoTo 0
+    
+    ' Commands for change from outside the sheet
+    OnManualSingleToggleButtonChange
+    
+End Sub
+
+''' <summary>   Handles the Manual Single toggle button. </summary>
+''' <remarks>   In manual Single we have the following settings:
+''' Auto Increment channel number: False;
+''' Front Inputs Required = True;
+''' Single Readings: True;
+''' Triggering Mode: External.
+''' </remarks>
+Private Sub OnManualSingleToggleButtonChange()
+
+    Const p_procedureName As String = "OnManualSingleToggleButtonChange"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    If This.ViewModel Is Nothing Then Exit Sub
+
+    If ManualSingleToggleButton.Value Then
+    
+        Me.AutoIncrementChannelNoEnabled = False
+        Me.FrontInputsRequired = True
+        Me.SingleReadEnabled = True
+        
+        ' next set external triggering triggering mode.
+        
+        If This.ViewModel.ExternalTriggerOptionExecutable Then
+            Me.LastCommandOutcome = This.ViewModel.ConfigureExternalTriggerReadingCommand(Me.LastCommandDetails)
+        Else
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " External trigger enable command not enabled."
+        End If
+        
+        If Me.LastCommandOutcome Then
+        
+            ' next start external trigger monitoring
+            ' this should wait for monitoring to commence or raise an error.
+            If This.ViewModel.StartMonitoringExecutable Then
+                This.ViewModel.StartMonitoringExternalTriggersCommand
+            Else
+                cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                    ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                    " Start monitoring command not enabled."
+            End If
+        
+        End If
+        
+    Else
+    
+        ' stop external trigger monitoring
+        ' this should wait for monitoring to stop
+        
+        If This.ViewModel.StopMonitoringExecutable Then
+            This.ViewModel.StopMonitoringExternalTriggersCommand
+        Else
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " Stop monitoring command not enabled."
+        End If
+            
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' report the last error.
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' on error, stop monitoring
+    On Error Resume Next
+    
+    ' stop external trigger monitoring
+    ' this should wait for monitoring to stop
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.StopMonitoringExternalTriggersCommand
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+Public Property Get ManualSingleExecutable() As Boolean
+    If ManualSingleToggleButton Is Nothing Then
+        ManualSingleExecutable = False
+    Else
+        ManualSingleExecutable = ManualSingleToggleButton.Enabled
+    End If
+End Property
+
+Public Property Let ManualSingleExecutable(ByVal a_value As Boolean)
+    If Not ManualSingleToggleButton Is Nothing Then
+        ManualSingleToggleButton.Enabled = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Auto Increment Channel Number Enabled. </summary>
+''' <remarks>   Indicates that front inputs are Value for this mode. </remarks>
+''' <value>   [Boolean]. </value>
+Public Property Get AutoIncrementChannelNoEnabled() As Boolean
+    AutoIncrementChannelNoEnabled = This.AutoIncrementChannelNoEnabled
+End Property
+
+''' <summary>   Sets the Auto Increment Channel Number Enabled. </summary>
+''' <param name="a_value">   [Boolean] the Auto Increment Channel Number Enabled value. </value>
+Public Property Let AutoIncrementChannelNoEnabled(ByVal a_value As Boolean)
+    If This.AutoIncrementChannelNoEnabled <> a_value Then
+        This.AutoIncrementChannelNoEnabled = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.AutoIncrementChannelNoEnabled = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Reading Offset. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get ReadingOffset() As Double
+    ReadingOffset = This.ReadingOffset
+End Property
+
+''' <summary>   Sets the Reading Offset. </summary>
+''' <param name="a_value">   [Double] the Reading Offset value. </value>
+Public Property Let ReadingOffset(ByVal a_value As Double)
+    If This.ReadingOffset <> a_value Then
+        This.ReadingOffset = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ReadingOffset = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Front Inputs Required. </summary>
+''' <remarks>   True if front inputs are Required; otherwise, Rear inputs. </remarks>
+''' <value>   [Boolean]. </value>
+Public Property Get FrontInputsRequired() As Boolean
+    FrontInputsRequired = This.FrontInputsRequired
+End Property
+
+''' <summary>   Sets the Front Inputs Required. </summary>
+''' <param name="a_value">   [Boolean] true if Front Inputs are Required. </value>
+Public Property Let FrontInputsRequired(ByVal a_value As Boolean)
+    If This.FrontInputsRequired <> a_value Then
+        This.FrontInputsRequired = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.FrontInputsRequired = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Selected Channel Number Caption. </summary>
+''' <value>   [String]. </value>
+Public Property Get SelectedChannelNumberCaption() As String
+    SelectedChannelNumberCaption = This.SelectedChannelNumberCaption
+End Property
+
+Public Property Let SelectedChannelNumberCaption(ByVal a_value As String)
+    If Not This.ViewModel Is Nothing Then
+        If This.SelectedChannelNumberCaption <> a_value Then
+            This.SelectedChannelNumberCaption = a_value
+            Dim p_details As String: p_details = VBA.vbNullString
+            Dim p_channelNumber As Integer
+            p_channelNumber = Me.TryParseSelectedChannelNumber(a_value, p_details)
+            If 1 > p_channelNumber Or This.ViewModel.ChannelCount < p_channelNumber Then
+                Me.SelectedChannelNumber = p_channelNumber
+            Else
+                MsgBox p_details, VBA.VbMsgBoxStyle.vbOKOnly Or VBA.VbMsgBoxStyle.vbExclamation, _
+                    "Invalid " & This.ChannelNumberTitle
+            End If
+        End If
+    End If
+End Property
+
+''' <summary>   Gets a channel number from the channel number caption. </summary>
+''' <param name="a_value">   [String] the selected channel number caption, e.g., R2. </value>
+''' <returns>   [Integer] Returns 0 if invalid channel number caption was selected. </returns>
+Public Function TryParseSelectedChannelNumber(ByVal a_value As String, ByRef a_details As String) As Integer
+
+    Const p_procedureName = "TryParseSelectedChannelNumber"
+    
+    Dim p_channelNo As Integer: p_channelNo = 0
+    
+    If VBA.Left$(a_value, 1) <> This.ChannelNumberCaptionPrefix Then
+    
+        a_details = "The selected value '" & a_value & _
+               "' is not a valid " & This.ChannelNumberTitle & _
+               ". Please select a valid " & This.ChannelNumberTitle & _
+               ", e.g., " & This.ChannelNumberCaptionPrefix & "2, and try again."
+  
+    Else
+    
+        p_channelNo = VBA.CInt(Mid$(a_value, 2))
+        
+        If 1 > p_channelNo Or This.ViewModel.ChannelCount < p_channelNo Then
+        
+            a_details = "The selected value '" & a_value & _
+                   "' yields an out of range " & This.ChannelNumberTitle & _
+                   "'. Valid " & This.ChannelNumberTitle & "s are between 1 and " & _
+                   VBA.CStr(This.ViewModel.ChannelCount) & _
+                   ". Please select a valid " & This.ChannelNumberTitle & _
+                   ", e.g., " & This.ChannelNumberCaptionPrefix & "2, and try again."
+            
+            p_channelNo = 0
+            
+        End If
+    
+    End If
+  
+    TryParseSelectedChannelNumber = p_channelNo
+  
+End Function
+
+''' <summary>   Gets the Selected Channel Number. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get SelectedChannelNumber() As Integer
+    SelectedChannelNumber = This.SelectedChannelNumber
+End Property
+
+''' <summary>   Sets the Selected Channel Number. </summary>
+''' <param name="a_value">   [Integer] the Selected Channel Number value. </value>
+Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
+    If This.SelectedChannelNumber <> a_value Then
+        This.SelectedChannelNumber = a_value
+        Me.SelectedChannelNumberCaption = This.ChannelNumberCaptionPrefix & VBA.CStr(a_value)
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.SelectedChannelNumber = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Single Read Enabled. </summary>
+''' <remarks>   Indicates that front inputs are Value for this mode. </remarks>
+''' <value>   [Boolean]. </value>
+Public Property Get SingleReadEnabled() As Boolean
+    SingleReadEnabled = This.SingleReadEnabled
+End Property
+
+''' <summary>   Sets the Single Read Enabled. </summary>
+''' <param name="a_value">   [Boolean] the Single Read Enabled value. </value>
+Public Property Let SingleReadEnabled(ByVal a_value As Boolean)
+    If This.SingleReadEnabled <> a_value Then
+        This.SingleReadEnabled = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.SingleReadEnabled = a_value
+    End If
+End Property
+
+''' <summary>   Gets the measurement mode. </summary>
+''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
+Public Property Get MeasurementMode() As cc_isr_Tcp_Scpi.MeasurementModeOption
+    MeasurementMode = This.MeasurementMode
+End Property
+
+''' <summary>   Sets the measurement mode. </summary>
+''' <remarks>   This property change is used to toggle the buttons if not toggles. </remarks>
+''' <param name=-"a_value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>] the value. </param>
+''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
+Public Property Let MeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementModeOption)
+    If This.MeasurementMode <> a_value Then
+        This.MeasurementMode = a_value
+        If cc_isr_Tcp_Scpi.MeasurementModeOption.None = a_value Then
+            If AutoScanToggleButton.Value Then _
+                AutoScanToggleButton.Value = False
+            If AutoSingleToggleButton.Value Then _
+                AutoSingleToggleButton.Value = False
+            If ManualScanToggleButton.Value Then _
+                ManualScanToggleButton.Value = False
+            If ManualSingleToggleButton.Value Then _
+                ManualSingleToggleButton.Value = False
+        ElseIf cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate = a_value Then
+            If ManualScanToggleButton.Value Then _
+                ManualScanToggleButton.Value = False
+            If ManualSingleToggleButton.Value Then _
+                ManualSingleToggleButton.Value = False
+        ElseIf cc_isr_Tcp_Scpi.MeasurementModeOption.External = a_value Or _
+               cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring = a_value Then
+            If AutoScanToggleButton.Value Then _
+                AutoScanToggleButton.Value = False
+            If AutoSingleToggleButton.Value Then _
+                AutoSingleToggleButton.Value = False
+        End If
+    
+    End If
+End Property
+
+''' <summary>   Gets the Last Command Details. </summary>
+''' <value>   [String]. </value>
+Public Property Get LastCommandDetails() As String
+    LastCommandDetails = This.LastCommandDetails
+End Property
+
+''' <summary>   Sets the Last Command Details. </summary>
+''' <param name="a_value">   [String] the last Command Details value. </value>
+Public Property Let LastCommandDetails(ByVal a_value As String)
+    If This.LastCommandDetails <> a_value Then
+        This.LastCommandDetails = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Last Command Outcome. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get LastCommandOutcome() As Boolean
+    LastCommandOutcome = This.LastCommandOutcome
+End Property
+
+''' <summary>   Sets the Last Command Outcome. </summary>
+''' <param name="a_value">   [Boolean] the last Command Outcome value. </value>
+Public Property Let LastCommandOutcome(ByVal a_value As Boolean)
+    If This.LastCommandOutcome <> a_value Then
+        This.LastCommandOutcome = a_value
+    End If
+End Property
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' View Model Event Handlers
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Handles the property change event of the viwe model. </summary>
+''' <param name="a_propertyName">   [String] the property name. </param>
+Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
+
+    Const p_procedureName = "HandleViewModelPropertyChanged"
+
+    If This.ViewModel Is Nothing Then Exit Sub
+
+    Select Case a_propertyName
+
+        Case "FrontInputsRequired"
+            Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
+        Case "SelectedChannelNumber"
+            Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
+        Case "AutoIncrementChannelNoEnabled"
+            Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
+        Case "SingleReadEnabled"
+            Me.SingleReadEnabled = This.ViewModel.SingleReadEnabled
+        Case "MeasurementMode"
+            Me.MeasurementMode = This.ViewModel.MeasurementMode
+        Case "ReadingOffset"
+            Me.ReadingOffset = This.ViewModel.ReadingOffset
+        
+        Case "StartMonitoringExecutable"
+            ManualScanExecutable = This.ViewModel.StartMonitoringExecutable
+            ManualSingleExecutable = This.ViewModel.StartMonitoringExecutable
+        Case "StopMonitoringExecutable"
+            ManualScanExecutable = This.ViewModel.StopMonitoringExecutable
+            ManualSingleExecutable = This.ViewModel.StopMonitoringExecutable
+        Case "ImmediateTriggerOptionExecutable"
+            AutoScanExecutable = This.ViewModel.ImmediateTriggerOptionExecutable
+            AutoSingleExecutable = This.ViewModel.ImmediateTriggerOptionExecutable
+        Case "MeasureExecutable"
+            AutoScanExecutable = This.ViewModel.MeasureExecutable
+            AutoSingleExecutable = This.ViewModel.MeasureExecutable
+        Case "ExternalTriggerOptionExecutable"
+            ManualScanExecutable = This.ViewModel.ExternalTriggerOptionExecutable
+            ManualSingleExecutable = This.ViewModel.ExternalTriggerOptionExecutable
+
+    End Select
+    
+End Sub
+
+''' <summary>   Synchronizes the view mode with the ViewModel. </summary>
+''' <remarks>   This is required becuase the view (ViewModel) that is planned for this
+''' view model is a Sheet, which is a singleton class whereas the view model is a
+''' non-singleton class. As a resule, the ViewModel retains values from previous
+''' instances of the View Model. </remarks>
+Friend Sub Synchronize()
+
+    Const p_procedureName = "Synchronize"
+
+    ' set the view model settings that come from the ViewModel user interface
+    This.ViewModel.ReadingOffset = This.ReadingOffset
+
+    Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
+    Me.MeasurementMode = This.ViewModel.MeasurementMode
+    Me.ReadingOffset = This.ViewModel.ReadingOffset
+    Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
+    Me.SingleReadEnabled = This.ViewModel.SingleReadEnabled
+    
+End Sub
+
+''' <summary>   Handles the property change event of the viwe model. </summary>
+''' <param name="a_eventArgs">   [<see cref="cc_isr_Core.PropertyChangedEventArgs"/>] event arguments. </param>
+Friend Sub m_viewModel_PropertyChanged(ByVal a_eventArgs As cc_isr_Core.PropertyChangedEventArgs)
+
+    Const p_procedureName = "m_K2700ViewModel_PropertyChanged"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    If Not a_eventArgs Is Nothing Then
+    
+        Dim p_propertyName As String
+        p_propertyName = a_eventArgs.PropertyName
+        HandleViewModelPropertyChanged p_propertyName
+    
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' append a description
+    Err.Description = Err.Description & ". Property name: '" & p_propertyName & "'."
+    
+    ' display the error message
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+    
+End Sub
+

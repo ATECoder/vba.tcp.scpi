@@ -200,7 +200,6 @@ Public Property Let ReceivedMessage(ByVal a_value As String)
     End If
 End Property
 
-
 ''' <summary>   Gets the Status Byte. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get StatusByte() As Integer
