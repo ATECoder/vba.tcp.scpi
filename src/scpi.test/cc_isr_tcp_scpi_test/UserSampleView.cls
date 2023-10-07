@@ -58,6 +58,8 @@ Private Type this_
     AutoSingleToggleValue As Boolean
     ManualScanToggleValue As Boolean
     ManualSingleToggleValue As Boolean
+    
+    AutoSampleFrontInputs As Boolean
 
 End Type
 
@@ -230,7 +232,7 @@ Public Sub OnAutoScanToggleButtonChange()
     If AutoScanToggleValue Then
     
         Me.AutoIncrementChannelNoEnabled = True
-        Me.FrontInputsRequired = False
+        Me.FrontInputsRequired = This.AutoSampleFrontInputs
         Me.SingleReadEnabled = False
         
         ' next set immediate triggering mode.
@@ -379,7 +381,7 @@ Public Sub OnAutoSingleToggleButtonChange()
     If AutoSingleToggleValue Then
     
         Me.AutoIncrementChannelNoEnabled = False
-        Me.FrontInputsRequired = False
+        Me.FrontInputsRequired = This.AutoSampleFrontInputs
         Me.SingleReadEnabled = True
         
         ' next set immediate triggering mode.
@@ -817,6 +819,21 @@ Public Property Let ReadingOffset(ByVal a_value As Double)
         This.ReadingOffset = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.ReadingOffset = a_value
+    End If
+End Property
+
+''' <summary>   Gets the condition for using front inputs for auto sampe. </summary>
+''' <remarks>   True if front inputs are Required; otherwise, Rear inputs. </remarks>
+''' <value>   [Boolean]. </value>
+Public Property Get AutoSampleFrontInputs() As Boolean
+    AutoSampleFrontInputs = This.AutoSampleFrontInputs
+End Property
+
+''' <summary>   Sets the condition for using front inputs for auto sampe. </summary>
+''' <param name="a_value">   [Boolean] true if Front Inputs are used for auto sampling. </value>
+Public Property Let AutoSampleFrontInputs(ByVal a_value As Boolean)
+    If This.AutoSampleFrontInputs <> a_value Then
+        This.AutoSampleFrontInputs = a_value
     End If
 End Property
 

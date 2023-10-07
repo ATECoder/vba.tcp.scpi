@@ -38,7 +38,7 @@ Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
     BeforeEach
     Select Case a_testNumber
         Case 1
-            Set p_outcome = TestInputsShouldBeFront
+            Set p_outcome = TestFrontInputStateShouldRead
         Case Else
     End Select
     AfterEach
@@ -56,7 +56,7 @@ End Sub
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' TestInputsShouldBeFront passed. in 32.5 ms.
+''' TestFrontInputStateShouldRead passed. in 32.5 ms.
 ''' Ran 1 out of 1 tests.
 ''' Passed: 1; Failed: 0; Inconclusive: 0.''' </code>
 ''' </remarks>
@@ -242,7 +242,7 @@ Public Sub BeforeEach()
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.Device.TryClearExecutionState(p_details), _
+        Set p_outcome = cc_isr_Test_Fx.Assert.istrue(This.Device.TryClearExecutionState(p_details), _
             p_details)
     End If
    
@@ -425,18 +425,18 @@ End Sub
 '  Tests
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Unit test. Asserts inputs should be front. </summary>
+''' <summary>   Unit test. Asserts that front inputs state should read consistently. </summary>
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' TestInputsShouldBeFront passed. in 32.5 ms.
+''' TestFrontInputStateShouldRead passed. in 32.5 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestInputsShouldBeFront() As cc_isr_Test_Fx.Assert
+Public Function TestFrontInputStateShouldRead() As cc_isr_Test_Fx.Assert
 
-    Const p_procedureName As String = "TestInputsShouldBeFront"
+    Const p_procedureName As String = "TestFrontInputStateShouldRead"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -447,14 +447,27 @@ Public Function TestInputsShouldBeFront() As cc_isr_Test_Fx.Assert
         Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
     End If
     
+    Dim p_isFrontInputs As Boolean
+    p_isFrontInputs = This.K2700.ScpiSystem.QueryFrontSwitch()
+    
     ' proceed with test assertions.
     
-    If p_outcome.AssertSuccessful Then
-        
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700.ScpiSystem.QueryFrontSwitch(), _
-            "Scpi System should query and report the correct state of the front switch.")
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_isFrontInputs, This.K2700.ScpiSystem.QueryFrontSwitch(), _
+            "#1. Scpi System should query and report the previous state of the front switch.")
 
-    End If
+    Dim p_details As String: p_details = VBA.vbNullString
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.istrue(This.K2700.Device.TryQueryOperationCompleted(p_details), _
+            "Device should query operaiton completion; " & p_details)
+        
+    ' validate inputs was returning false values until this cludge was added.
+    ' cc_isr_Core_IO.Factory.NewStopwatch.Wait 50 ' 10 this was not enough
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_isFrontInputs, This.K2700.ScpiSystem.QueryFrontSwitch(), _
+            "#2. Scpi System should query and report the previous state of the front switch ofter *OPC?.")
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -465,7 +478,7 @@ exit_Handler:
     Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
-    Set TestInputsShouldBeFront = p_outcome
+    Set TestFrontInputStateShouldRead = p_outcome
     
     On Error GoTo 0
     Exit Function

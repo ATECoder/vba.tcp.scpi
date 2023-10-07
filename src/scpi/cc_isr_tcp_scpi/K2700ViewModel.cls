@@ -2965,13 +2965,17 @@ End Property
 ''' <returns>   [Boolean]. </returns>
 Public Function ValidateInputs(ByRef a_userMessage As String) As Boolean
 
-
     ' synchronize.
     ' Me.Device.TryQueryOperationCompleted(p_details)
     
-    ' query front switch has been returning false values until this cludge was added.
-    cc_isr_Core_IO.Factory.NewStopwatch.Wait 10
+    ' query front switch has been returning false values
+    ' it seems this is occurring after the instrument is configured for its
+    ' triggering mode.
     
+    ' until this cludge was added.
+    ' cc_isr_Core_IO.Factory.NewStopwatch.Wait 10
+    ' Me.K2700.ScpiSystem.QueryFrontSwitch
+
     ' gets the front input condition: True is Front.
     This.FrontInputsValue = This.K2700.ScpiSystem.QueryFrontSwitch
     
@@ -3406,6 +3410,8 @@ Public Function ConfigureExternalTriggerReadingCommand(ByRef a_details As String
 
     If p_success Then
     
+        ' this validation does not cause issues with incorrect results.
+        
         p_success = Me.ValidateInputs(p_details)
         
         If p_success Then
@@ -3572,6 +3578,8 @@ Public Function ConfigureImmediateTriggerReadingsCommand(ByRef a_details As Stri
 
     If p_success Then
     
+        ' this validation does not cause issues with validation results.
+        
         p_success = Me.ValidateInputs(Me.LastMessage)
         
         If p_success Then
@@ -3756,11 +3764,14 @@ Public Function MeasureImmediatelyCommand(ByRef a_details As String) As Boolean
     ' synchronize.
     p_success = Me.Device.TryQueryOperationCompleted(p_details)
     
-    ' validate inputs was returning false values until this cludge was added.
-    cc_isr_Core_IO.Factory.NewStopwatch.Wait 10
-    
-    ' Validate inputs is returning an incorrect value quite often
+    ' validate inputs returns incorrect values at this point.
+    ' it must have something to do with the configuration
     p_success = Me.ValidateInputs(p_details)
+    If Not p_success Then
+        ' this cludge was added.
+        cc_isr_Core_IO.Factory.NewStopwatch.Wait 50 ' 25 this was not enough
+        p_success = Me.ValidateInputs(p_details)
+    End If
     
     If p_success Then
     

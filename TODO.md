@@ -5,13 +5,18 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
+IEEE4888:
+Test and validate query front inputs. this passes but we still get inconsistent values.
+
+SCPI:
+Use Sample View: Add Front inputs override for testing the auto mode.
+Add User Sample tests.
+Increase the delay for validating the inputs on the measure command to 50ms.
+
 ## TODO
 
 SCPI:
 Add unit tests for toggling tests using the user sample view.
-
-
-
 
 Create interfaces for the views. Move the observer to the SCPI class and us interfaces so that we can define the view.
 
