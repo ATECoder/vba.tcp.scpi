@@ -72,7 +72,6 @@ End Sub
 '  Properties
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-
 ''' <summary>   Gets the last set or get continuous enabled. </summary>
 ''' <value>   [Boolean]. </value>
 Public Property Get ContinuousEnabled() As Boolean

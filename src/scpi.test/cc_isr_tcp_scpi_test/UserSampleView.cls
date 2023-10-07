@@ -234,6 +234,7 @@ Public Sub OnAutoScanToggleButtonChange()
         Me.AutoIncrementChannelNoEnabled = True
         Me.FrontInputsRequired = This.AutoSampleFrontInputs
         Me.SingleReadEnabled = False
+        This.ViewModel.ReadingBeepEnabled = False
         
         ' next set immediate triggering mode.
         
@@ -383,6 +384,7 @@ Public Sub OnAutoSingleToggleButtonChange()
         Me.AutoIncrementChannelNoEnabled = False
         Me.FrontInputsRequired = This.AutoSampleFrontInputs
         Me.SingleReadEnabled = True
+        This.ViewModel.ReadingBeepEnabled = False
         
         ' next set immediate triggering mode.
         
@@ -532,6 +534,7 @@ Public Sub OnManualScanToggleButtonChange()
         Me.AutoIncrementChannelNoEnabled = True
         Me.FrontInputsRequired = True
         Me.SingleReadEnabled = False
+        This.ViewModel.ReadingBeepEnabled = DataAcquisitionView.BeepAllowed
         
         ' next set external triggering triggering mode.
         
@@ -697,6 +700,7 @@ Public Sub OnManualSingleToggleButtonChange()
         Me.AutoIncrementChannelNoEnabled = False
         Me.FrontInputsRequired = True
         Me.SingleReadEnabled = True
+        This.ViewModel.ReadingBeepEnabled = DataAcquisitionView.BeepAllowed
         
         ' next set external triggering triggering mode.
         
@@ -1074,6 +1078,7 @@ Friend Sub Synchronize()
     ' set the view model settings that come from the ViewModel user interface
     This.ViewModel.ReadingOffset = This.ReadingOffset
 
+    Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
     Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
     Me.MeasurementMode = This.ViewModel.MeasurementMode
     Me.ReadingOffset = This.ViewModel.ReadingOffset

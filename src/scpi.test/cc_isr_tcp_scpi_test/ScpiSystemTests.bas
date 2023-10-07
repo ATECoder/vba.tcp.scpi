@@ -242,7 +242,7 @@ Public Sub BeforeEach()
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.istrue(This.Device.TryClearExecutionState(p_details), _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.Device.TryClearExecutionState(p_details), _
             p_details)
     End If
    
@@ -459,7 +459,7 @@ Public Function TestFrontInputStateShouldRead() As cc_isr_Test_Fx.Assert
     Dim p_details As String: p_details = VBA.vbNullString
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.istrue(This.K2700.Device.TryQueryOperationCompleted(p_details), _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700.Device.TryQueryOperationCompleted(p_details), _
             "Device should query operaiton completion; " & p_details)
         
     ' validate inputs was returning false values until this cludge was added.

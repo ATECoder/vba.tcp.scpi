@@ -246,7 +246,7 @@ Public Sub BeforeEach()
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.istrue(This.K2700.Device.TryClearExecutionState(p_details), _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700.Device.TryClearExecutionState(p_details), _
             p_details)
     End If
         

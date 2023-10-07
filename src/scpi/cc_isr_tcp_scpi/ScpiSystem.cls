@@ -15,6 +15,7 @@ Option Explicit
 
 Private Type this_
     Session As cc_isr_Ieee488.TcpSession
+    BeeperEnabled As Boolean
     LastDeviceError As String
     LastDeviceErrors As String
 End Type
@@ -41,16 +42,31 @@ Public Property Get Connected() As Boolean
 
 End Property
 
-''' <summary>   Issues a beep. </summary>
-Public Sub Beep()
-    This.Session.WriteLine "SYST:BEEP"
-End Sub
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'  I/O
+' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
-'  Misc
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + +
+''' <summary>   Gets the last set or get Beeper enabled condition. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get BeeperEnabled() As Boolean
+    BeeperEnabled = This.BeeperEnabled
+End Property
+
+''' <summary>   Gets the Beeper enabled for continuit testing. </summary>
+''' <returns>   [Boolean]. </returns>
+Public Function BeeperEnabledGetter() As Boolean
+    Dim p_value As String
+    p_value = This.Session.QueryLine(":SYST:BEEP:STAT?")
+    This.BeeperEnabled = IIf(p_value = "ON", True, False)
+    BeeperEnabledGetter = This.BeeperEnabled
+End Function
+
+''' <summary>   Sets the Beeper enabled. </summary>
+''' <param name="a_value">   [Boolean] The Beeper enabled to set. </param >
+Public Sub BeeperEnabledSetter(ByVal a_value As Boolean)
+    This.Session.WriteLine ":SYST:BEEP:STAT " & IIf(a_value, "ON", "OFF")
+    This.BeeperEnabled = a_value
+End Sub
 
 ''' <summary>   Query INPUTS switch (0=rear, 1=front). </summary>
 ''' <value>   [Boolean] true if the inputs are set to the front panel. </value>

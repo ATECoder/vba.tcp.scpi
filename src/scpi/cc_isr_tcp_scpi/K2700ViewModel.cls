@@ -837,6 +837,7 @@ Public Sub PopulateScpiCommands()
                                 cc_isr_Ieee488.OperationCompletedQueryCommand
    
     p_scpiCommands.Add "SYST:BEEP OFF"
+    p_scpiCommands.Add "SYST:BEEP ON"
     p_scpiCommands.Add "SYST:CLE"
     p_scpiCommands.Add "SYST:ERR?"
     p_scpiCommands.Add "SYST:FRSW?"
@@ -3670,6 +3671,8 @@ err_Handler:
 End Sub
 
 ''' <summary>   Tries to measure immediately. </summary>
+''' <remarks>   This method assumes that the inputs were validated before configuring the
+''' measurement state. </remarks>
 ''' <param name="a_details">   [Out, String] Details the information of why the instrument
 '''                            failed to restore state. </param>
 ''' <returns>   [Boolean]. </returns>
@@ -3743,12 +3746,91 @@ Public Function TryMeasureImmediately(ByRef a_details As String) As Boolean
 End Function
 
 ''' <summary>   Takes a single or multiple readings from the front or rear panel. </summary>
+''' <remarks>   This method assumes that the inputs were verified upon configuring the
+''' measurement mode. </remarks>
 ''' <param name="a_details">   [Out, String] Details the information of why the instrument
 '''                            failed to restore state. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function MeasureImmediatelyCommand(ByRef a_details As String) As Boolean
 
     Const p_procedureName = "MeasureImmediatelyCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
+    Dim p_details As String: p_details = VBA.vbNullString
+
+    ' synchronize.
+    ' ?? p_success = Me.Device.TryQueryOperationCompleted(p_details)
+    
+    If p_success Then
+    
+        ' disable the relevant buttons.
+        Me.MeasureExecutable = False
+        Me.ImmediateTriggerOptionExecutable = False
+        Me.ExternalTriggerOptionExecutable = False
+    
+        ' throw an error if measurement failed
+        p_success = Me.TryMeasureImmediately(p_details)
+        
+        If Not p_success Then
+        
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " failed taking an immediate measurment; " & p_details
+        
+        End If
+    
+    Else
+    
+        Me.LastMessage = p_details
+        a_details = p_details
+        
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    MeasureImmediatelyCommand = p_success
+    
+    Me.MeasureExecutable = True
+    Me.ImmediateTriggerOptionExecutable = True
+    Me.ExternalTriggerOptionExecutable = True
+
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    p_success = False
+    
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' for unit testing
+    a_details = Me.LastErrorMessage
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Function
+
+''' <summary>   Validates the Inputs and takes a single or multiple readings from the front or rear panel. </summary>
+''' <param name="a_details">   [Out, String] Details the information of why the instrument
+'''                            failed to restore state. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function ValidateInputsAndMeasureCommand(ByRef a_details As String) As Boolean
+
+    Const p_procedureName = "ValidateInputsAndMeasureCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -3801,7 +3883,7 @@ Public Function MeasureImmediatelyCommand(ByRef a_details As String) As Boolean
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
-    MeasureImmediatelyCommand = p_success
+    ValidateInputsAndMeasureCommand = p_success
     
     Me.MeasureExecutable = True
     Me.ImmediateTriggerOptionExecutable = True
@@ -5056,10 +5138,8 @@ Private Sub m_k2700_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Channel
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    If Me.ReadingBeepEnabled And _
-        (This.MeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring) Then
-        This.K2700.ScpiSystem.Beep
-    End If
+    ' issue a beep if reading beep is enabled
+    If Me.ReadingBeepEnabled Then VBA.Beep
 
     ' notify the observer of a channel measurements
     If VBA.vbNullString = a_eventArgs.Reading Then

@@ -258,7 +258,7 @@ exit_Handler:
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.istrue(This.K2700.Device.TryClearExecutionState(p_details), _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700.Device.TryClearExecutionState(p_details), _
             p_details)
     End If
     
@@ -542,7 +542,7 @@ Public Function TestShouldRecoverFromSyntaxFromError() As cc_isr_Test_Fx.Assert
     
     Dim p_details As String
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.istrue(This.K2700.Device.TryClearExecutionState(p_details), _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700.Device.TryClearExecutionState(p_details), _
             p_details)
     End If
     
@@ -604,7 +604,7 @@ Public Function TestShouldRestoreFromClosedConnection() As cc_isr_Test_Fx.Assert
     
     Dim p_details As String
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.istrue(This.K2700.Session.Socket.TryCloseConnection(p_details), _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700.Session.Socket.TryCloseConnection(p_details), _
             "K2700 Device should be disconnect; " & p_details)
     End If
     
@@ -614,12 +614,12 @@ Public Function TestShouldRestoreFromClosedConnection() As cc_isr_Test_Fx.Assert
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.istrue(This.K2700.TryRestoreInitialState(p_details), _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700.TryRestoreInitialState(p_details), _
             "K2700 Device should restore its initial state; " & p_details)
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.istrue(This.K2700.Connected, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700.Connected, _
             "K2700 Device should be connected.")
     End If
     

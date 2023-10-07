@@ -44,7 +44,7 @@ Private Type this_
     MaximumChannelNumber As Integer
     MeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
     ReadingOffset As Double
-    ReadingBeepEnabled As Boolean
+    BeepAllowed As Boolean
     SessionTimeout As Integer
     SocketAddress As String
     TimerInterval As Integer
@@ -248,18 +248,15 @@ End Property
 ''' <summary>   Gets the instrument beep sound on each reading is enabled. </summary>
 ''' <remarks>   True if instrument beep sound on each reading is enabled. </remarks>
 ''' <value>   [Boolean]. </value>
-Public Property Get ReadingBeepEnabled() As Boolean
-    ReadingBeepEnabled = This.ReadingBeepEnabled
+Public Property Get BeepAllowed() As Boolean
+    BeepAllowed = This.BeepAllowed
 End Property
 
 ''' <summary>   Gets the instrument beep sound on each reading is enabled. </summary>
 ''' <param name="a_value">   [Boolean] instrument beep sound on each reading is enabled. </value>
-Public Property Let ReadingBeepEnabled(ByVal a_value As Boolean)
-    If This.ReadingBeepEnabled <> a_value Then
-        This.ReadingBeepEnabled = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ReadingBeepEnabled = a_value
-    End If
+Public Property Let BeepAllowed(ByVal a_value As Boolean)
+    If This.BeepAllowed <> a_value Then _
+        This.BeepAllowed = a_value
 End Property
 
 ''' <summary>   Gets the socket and session timeout in milliseconds. </summary>
@@ -579,13 +576,16 @@ Friend Sub Synchronize()
     This.ViewModel.SessionTimeout = Me.SessionTimeout
     This.ViewModel.TimerInterval = Me.TimerInterval
     This.ViewModel.MaximumChannelNumber = Me.MaximumChannelNumber
-    This.ViewModel.ReadingBeepEnabled = Me.ReadingBeepEnabled
 
+    Me.LastErrorMessage = This.ViewModel.LastErrorMessage
+    Me.LastMessage = This.ViewModel.LastMessage
     Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
     Me.MeasuredReading = This.ViewModel.MeasuredReading
     Me.MeasuredValue = This.ViewModel.MeasuredValue
     Me.MeasurementMode = This.ViewModel.MeasurementMode
     Me.ReadingOffset = This.ViewModel.ReadingOffset
+    
+    Me.ClearReadingsExecutable = This.ViewModel.ClearReadingsExecutable
     
 End Sub
 
