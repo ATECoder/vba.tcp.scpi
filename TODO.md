@@ -5,12 +5,9 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
-
 ## TODO
 
 SCPI:
-Add Data Acquisition Sheet and User Sample Sheets with the controls
-Add reference tot he sample sheets.
 Update the tests and see how things work now.
 
 Add unit tests for toggling tests using the user sample view.

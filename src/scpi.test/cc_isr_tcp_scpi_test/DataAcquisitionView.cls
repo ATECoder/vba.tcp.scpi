@@ -39,6 +39,7 @@ Attribute ClearMessagesButton.VB_VarHelpID = -1
 Private Type this_
 
     ViewModel As K2700ViewModel
+    DataAcquisitionSheet As DataSheet
 
     GpibLanControllerPort As Long
     MaximumChannelNumber As Integer
