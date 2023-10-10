@@ -16,6 +16,7 @@ Private Type this_
     Session As cc_isr_Ieee488.TcpSession
     Address As String
     SessionTimeout As Integer
+    SelectiveDeviceClearDelay As Integer
     TestStopper As cc_isr_Core_IO.Stopwatch
     ErrTracer As cc_isr_Test_Fx.IErrTracer
     TestCount As Integer
@@ -43,6 +44,8 @@ Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
             Set p_outcome = TestShouldRecoverFromSyntaxFromError
         Case 3
             Set p_outcome = TestShouldRestoreFromClosedConnection
+        Case 4
+            Set p_outcome = TestSelectiveDeviceShouldClear
         Case Else
     End Select
     AfterEach
@@ -52,7 +55,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 1
+    RunTest 4
     AfterAll
 End Sub
 
@@ -60,11 +63,12 @@ End Sub
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' TestOperationCompletionShouldQuery passed. in 18.2 ms.
-''' TestShouldRecoverFromSyntaxFromError passed. in 136.4 ms.
-''' TestShouldRestoreFromClosedConnection passed. in 148.8 ms.
-''' Ran 3 out of 3 tests.
-''' Passed: 3; Failed: 0; Inconclusive: 0.
+''' Test 01 TestOperationCompletionShouldQuery passed. Elapsed time: 18.2 ms.
+''' Test 02 TestShouldRecoverFromSyntaxFromError passed. Elapsed time: 143.6 ms.
+''' Test 03 TestShouldRestoreFromClosedConnection passed. Elapsed time: 109.3 ms.
+''' Test 04 TestSelectiveDeviceShouldClear passed. Elapsed time: 36.0 ms.
+''' Ran 4 out of 4 tests.
+''' Passed: 4; Failed: 0; Inconclusive: 0.
 ''' </code>
 ''' </remarks>
 Public Sub RunAllTests()
@@ -74,7 +78,7 @@ Public Sub RunAllTests()
     This.PassedCount = 0
     This.FailedCount = 0
     This.InconclusiveCount = 0
-    This.TestCount = 3
+    This.TestCount = 4
     Dim p_testNumber As Integer
     For p_testNumber = 1 To This.TestCount
         Set p_outcome = RunTest(p_testNumber)
@@ -117,6 +121,7 @@ Public Sub BeforeAll()
     
     This.Address = "192.168.0.252:1234"
     This.SessionTimeout = 3000
+    This.SelectiveDeviceClearDelay = 10
     
     Set This.TestStopper = cc_isr_Core_IO.Factory.NewStopwatch
     Dim p_errTracer As New DeviceErrorsTracer
@@ -658,5 +663,73 @@ err_Handler:
     GoTo exit_Handler
 
 End Function
+
+
+''' <summary>   Unit test. Asserts K2700 selective device should clear. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
+Public Function TestSelectiveDeviceShouldClear() As cc_isr_Test_Fx.Assert
+
+    Const p_procedureName As String = "TestSelectiveDeviceShouldClear"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    ' proceed with test assertions.
+    
+    Dim p_details As String: p_details = VBA.vbNullString
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700.Session.TrySelectiveDeviceClear(p_details, True, _
+                This.SelectiveDeviceClearDelay), _
+            "K2700 Selective device should clear and synchropnize with a delay of " & _
+                VBA.CStr(This.SelectiveDeviceClearDelay) & " ms; " & p_details)
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700.Device.TryQueryOperationCompleted(p_details), _
+            "K2700 Device should query operation completion; " & p_details)
+    End If
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
+    
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+        " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
+    
+    Set TestSelectiveDeviceShouldClear = p_outcome
+    
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
+    
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Function
+
+
 
 

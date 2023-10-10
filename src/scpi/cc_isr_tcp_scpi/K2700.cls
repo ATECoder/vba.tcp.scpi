@@ -214,7 +214,7 @@ Public Function InitializeLegacy(ByVal a_address As String, _
         ' reset clear the device.
         ' this is issued after *RST because SDC fails to synchronize if the instrument is in
         ' it trigger mode (on the 2700).
-        This.Session.SelectiveDeviceClear
+        p_success = This.Session.TrySelectiveDeviceClear(p_details, True, 500)
     
     End If
     

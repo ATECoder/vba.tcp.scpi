@@ -428,6 +428,138 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
+''' <summary>   Tries to issue power on reset. </summary>
+''' <param name="a_details">   [String] Details why the method failed. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function TryPowerOnReset(ByRef a_details As String) As Boolean
+
+    Const p_procedureName = "TryPowerOnReset"
+
+    Dim p_session As cc_isr_Ieee488.TcpSession
+    p_session = cc_isr_Ieee488.Factory.NewTcpSession()
+    p_session.Initialize cc_isr_Winsock.Factory.NewIPv4StreamSocket()
+    p_session.GpibLanControllerPort = This.Session.GpibLanControllerPort
+    p_session.Termination = This.Session.Termination
+    p_session.ReadAfterWriteDelay = This.Session.ReadAfterWriteDelay
+   
+    Dim p_details As String
+    Dim p_success As Boolean
+    p_success = p_session.Connectable.TryOpenConnection(This.SocketAddress, This.SessionTimeout, p_details)
+    
+    If p_success Then
+        This.Session.PowerOnReset
+    End If
+    
+    If p_success Then
+        p_success = p_session.Socket.TryCloseConnection(p_details)
+    End If
+
+    If Not p_success Then _
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                " " & p_details
+
+    TryPowerOnReset = p_success
+    
+End Function
+
+''' <summary>   Opens the connection and power on reset the GPIB Lan Controller. </summary>
+''' <param name="a_details">   [String] Details why the method failed. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function TryOpenConnectionPowerOnReset(ByRef a_details As String) As Boolean
+
+    Const p_procedureName = "OpenConnectionPowerOnReset"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    ' initialize all elements.
+    Me.Initialize
+    
+    Dim p_success As Boolean: p_success = True
+    Dim p_details As String: p_details = VBA.vbNullString
+    
+    If p_success Then _
+        p_success = Me.TryPowerOnReset(p_details)
+    
+    If p_success Then _
+        p_success = Me.Connectable.TryOpenConnection(This.SocketAddress, This.SessionTimeout, p_details)
+    
+    If Not p_success Then _
+        p_details = "Failed opening the connection after power on reset; " & p_details
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If Not p_success Then _
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                " " & p_details
+    
+    TryOpenConnectionPowerOnReset = p_success
+    
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+
+    p_success = False
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' save the error message
+    p_details = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Function
+
+
+''' <summary>   Handles the open connection power on reset command event. </summary>
+Public Sub OpenConnectionPowerOnResetCommand()
+
+    Const p_procedureName = "OpenConnectionPowerOnResetCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopper
+    
+    Dim p_details As String: p_details = VBA.vbNullString
+    If Not Me.TryOpenConnectionPowerOnReset(p_details) Then _
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.SocketConnectionError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " Failed opening the connection; " & p_details
+    
+    Me.ReadStopper
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+
 ''' <summary>   Opens the connection. </summary>
 Public Sub OpenConnection()
 
@@ -470,7 +602,7 @@ err_Handler:
 End Sub
 
 
-''' <summary>   Handles the open connection button click event. </summary>
+''' <summary>   Handles the open connection command event. </summary>
 Public Sub OpenConnectionCommand()
 
     Const p_procedureName = "OpenConnectionCommand"
@@ -572,7 +704,7 @@ err_Handler:
 End Sub
 
 
-''' <summary>   Handles the close connection button click event. </summary>
+''' <summary>   Handles the close connection command event. </summary>
 Public Sub CloseConnectionCommand()
 
     Const p_procedureName = "CloseConnectionCommand"
@@ -1059,7 +1191,7 @@ Public Function TryClearExecutionState(ByVal a_details As String) As Boolean
     
 End Function
 
-''' <summary>   Handles the Clear Execution State button click event; returns the
+''' <summary>   Handles the Clear Execution State command event; returns the
 ''' opertation completion reply. </summary>
 Public Function ClearExecutionStateCommand(ByVal a_details As String) As Boolean
 
@@ -1247,7 +1379,7 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Handles the Read Status Byte button click event. </summary>
+''' <summary>   Handles the Read Status Byte command event. </summary>
 Public Sub ReadStandardEventStatusCommand()
 
     Const p_procedureName = "ReadStandardEventStatusCommand"
@@ -1349,7 +1481,7 @@ Public Function TryQueryStatusByte(ByRef a_details As String) As Boolean
 End Function
 
 
-''' <summary>   Handles the Query Status Byte button click event and sets the status byte. </summary>
+''' <summary>   Handles the Query Status Byte command event and sets the status byte. </summary>
 ''' <remarks>   This method updates the <see cref="K2700ViewModel.StatusByte"/>.
 ''' Uses <c>*STB?</c> </remarks>
 Public Sub QueryStatusByteCommand()
@@ -1675,7 +1807,7 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Handles the Selective Device Clear button click event. </summary>
+''' <summary>   Handles the Selective Device Clear command event. </summary>
 Public Sub SelectiveDeviceClearCommand()
 
     Const p_procedureName = "SelectiveDeviceClearCommand"
@@ -1685,7 +1817,11 @@ Public Sub SelectiveDeviceClearCommand()
 
     Me.RestartStopper
 
-    This.Session.SelectiveDeviceClear
+    Dim p_details As String: p_details = VBA.vbNullString
+    If Not This.Session.TrySelectiveDeviceClear(p_details, True) Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " " & p_details
 
     Me.ReadStopper
 
@@ -1786,7 +1922,7 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Handles the Read Status Byte (srerial poll) button click event. </summary>
+''' <summary>   Handles the Read Status Byte (serial poll) command event. </summary>
 Public Sub ReadStatusByteCommand()
 
     Const p_procedureName = "ReadStatusByteCommand"
@@ -1970,7 +2106,7 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Handles the Go To Local button click event. </summary>
+''' <summary>   Handles the Go To Local command event. </summary>
 Public Sub GoToLocalCommand()
 
     Const p_procedureName = "GoToLocalCommand"
@@ -2008,7 +2144,7 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Handles the local lockout button click event. </summary>
+''' <summary>   Handles the Local Lockout command event. </summary>
 Public Sub LocalLockoutCommand()
 
     Const p_procedureName = "LocalLockoutCommand"
@@ -2046,7 +2182,7 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Handles the Auto Assert Talk Set button click event. </summary>
+''' <summary>   Handles the Auto Assert Talk Set command event. </summary>
 Public Sub AutoAssertTalkSetCommand()
 
     Const p_procedureName = "AutoAssertTalkSetCommand"
@@ -2092,7 +2228,7 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Handles the auto assert TALK get button click event. </summary>
+''' <summary>   Handles the auto assert TALK get command event. </summary>
 Public Sub AutoAssertTalkGetCommand()
 
     Const p_procedureName = "AutoAssertTalkGetCommand"
@@ -2130,7 +2266,7 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Handles the SRQ button click event. </summary>
+''' <summary>   Handles the SRQ command event. </summary>
 Public Sub ServiceRequestedQueryCommand()
 
     ' this does nothing
@@ -2141,7 +2277,7 @@ Public Sub ServiceRequestedQueryCommand()
 
 End Sub
 
-''' <summary>   Handles the GPIB Address Get button click event. </summary>
+''' <summary>   Handles the GPIB Address Get command event. </summary>
 Public Sub GpibAddressGetCommand()
 
     Const p_procedureName = "GpibAddressGetCommand"
@@ -2181,7 +2317,7 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Handles the GPIB Address set button click event. </summary>
+''' <summary>   Handles the GPIB Address set command event. </summary>
 Public Sub GpibAddressSetCommand()
 
     Const p_procedureName = "GpibAddressSetCommand"
@@ -2219,7 +2355,7 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Handles the Read Timeout get button click event. </summary>
+''' <summary>   Handles the Read Timeout get command event. </summary>
 Public Sub GpibLanReadTimeoutGetCommand()
 
     Const p_procedureName = "GpibLanReadTimeoutGetCommand"
@@ -2257,7 +2393,7 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Handles the Read Timeout set button click event. </summary>
+''' <summary>   Handles the Read Timeout set command event. </summary>
 Public Sub GpibLanReadTimeoutSetCommand()
 
     Const p_procedureName = "GpibLanReadTimeoutSetCommand"
@@ -3766,7 +3902,7 @@ Public Function MeasureImmediatelyCommand(ByRef a_details As String) As Boolean
     
     If p_success Then
     
-        ' disable the relevant buttons.
+        ' disable the relevant commands.
         Me.MeasureExecutable = False
         Me.ImmediateTriggerOptionExecutable = False
         Me.ExternalTriggerOptionExecutable = False
@@ -3857,7 +3993,7 @@ Public Function ValidateInputsAndMeasureCommand(ByRef a_details As String) As Bo
     
     If p_success Then
     
-        ' disable the relevant buttons.
+        ' disable the relevant commands.
         Me.MeasureExecutable = False
         Me.ImmediateTriggerOptionExecutable = False
         Me.ExternalTriggerOptionExecutable = False
@@ -4427,7 +4563,7 @@ Friend Sub OnMeasurementModeChanged(ByVal a_mode As cc_isr_Tcp_Scpi.MeasurementM
     Me.ImmediateTriggerOptionExecutable = a_mode <> cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
     Me.ExternalTriggerOptionExecutable = a_mode <> cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
     
-    ' finally, indicates that external trigger monitoring is enabled thus updating the related button.
+    ' finally, indicates that external trigger monitoring is enabled thus updating the related commands.
     Me.ExternalTrigMonitoringEnabled = a_mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
     
 End Sub
@@ -4823,11 +4959,14 @@ Friend Function TryConfigureInstrumentInitialState(ByRef a_errors As String, _
     If p_hasErrors Then _
         a_errors = "Error(s) occurred on session connection: " & VBA.vbCrLf & a_errors
 
+    Dim p_success As Boolean
+    Dim p_details As String
+    
     ' *RST is issued first in case the instrument is in external trigger mode
     ' where *OPC? fails (on the 2700 instrument).
-    This.Device.ResetKnownState
-    This.Session.SelectiveDeviceClear
-    This.Device.ClearExecutionState
+    p_success = This.Device.TryResetKnownState(p_details)
+    p_success = This.Session.TrySelectiveDeviceClear(p_details, True)
+    p_success = This.Device.TryClearExecutionState(p_details)
     
     Me.TopCard = This.K2700.RouteSystem.CardName(1)
     Me.BottomCard = This.K2700.RouteSystem.CardName(2)

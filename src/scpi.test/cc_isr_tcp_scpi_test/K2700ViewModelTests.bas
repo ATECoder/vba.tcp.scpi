@@ -86,6 +86,8 @@ Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
             Set p_outcome = TestUserViewMonitoringShouldStartStop
         Case 15
             Set p_outcome = TestUserViewMonitoringShouldRead
+        Case 16
+            Set p_outcome = TestOpenConnectionWithPowerOnResetShouldConnect
         Case Else
     End Select
     AfterEach
@@ -95,7 +97,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 15
+    RunTest 1
     AfterAll
 End Sub
 
@@ -150,7 +152,7 @@ Public Sub RunAllTests()
     This.PassedCount = 0
     This.FailedCount = 0
     This.InconclusiveCount = 0
-    This.TestCount = 10
+    This.TestCount = 15
     Dim p_testNumber As Integer
     For p_testNumber = 1 To This.TestCount
         Set p_outcome = RunTest(p_testNumber)
@@ -3781,5 +3783,100 @@ err_Handler:
     GoTo exit_Handler
 
 End Function
+
+
+''' <summary>   Unit test. Asserts that view model should connect after power on reset. </summary>
+''' <remarks>
+''' <code>
+''' With 1ms read after write delay.
+''' </code>
+''' </remarks>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
+Public Function TestOpenConnectionWithPowerOnResetShouldConnect() As Assert
+
+    Const p_procedureName As String = "TestOpenConnectionWithPowerOnResetShouldConnect"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    Dim p_actualReply As String
+    Dim p_expectedReply As String
+    
+    Dim p_details As String
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.Session.Socket.TryCloseConnection(p_details), _
+            "View Model should close connection.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.Device.Connected, _
+            "View Model should be disconnected.")
+    End If
+
+    If p_outcome.AssertSuccessful Then
+        Debug.Print VBA.Format$(Now, "h:mm:ss"); " Power on reset starting. This could take "; _
+            VBA.CStr(This.ViewModel.Session.PowerOnResetDelay); " seconds. Please wait..."
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.TryOpenConnectionPowerOnReset(p_details), _
+            "View Model should open connection with power on reset; " & p_details)
+        Debug.Print VBA.Format$(Now, "h:mm:ss"); " done power on reset."
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.Session.Connected, _
+            "View Model session should be connected after restoring its initial state.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.Device.Connected, _
+            "View Model device should be connected after restoring its initial state.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        p_expectedReply = "1"
+        p_actualReply = This.ViewModel.Device.QueryOperationCompleted()
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedReply, p_actualReply, _
+            "View Model should query operation completion.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = AssertShouldReadCards()
+    End If
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
+    
+    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+        " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
+    
+    Set TestOpenConnectionWithPowerOnResetShouldConnect = p_outcome
+    
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
+    
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+    
+End Function
+
 
 
