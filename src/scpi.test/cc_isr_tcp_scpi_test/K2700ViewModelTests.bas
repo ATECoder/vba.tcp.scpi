@@ -95,7 +95,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 13
+    RunTest 15
     AfterAll
 End Sub
 
@@ -123,6 +123,8 @@ End Sub
 ''' Test 12 TestTriggerMonitoringShouldRead passed. Elapsed time: 12980.6 ms.
 '''  1 : 100.15197
 ''' Test 13 TestUserViewShouldMeasureImmediately passed. Elapsed time: 5598.4 ms.
+'''  1 : 100.135483
+''' Test 13 TestUserViewShouldMeasureImmediately passed. Elapsed time: 5616.6 ms.
 ''' Test 14 TestUserViewMonitoringShouldStartStop passed. Elapsed time: 7602.9 ms.
 ''' Waiting for trigger....
 '''  1 : 100.125839
@@ -130,6 +132,13 @@ End Sub
 '''  3 : 100.125
 '''  4 : 100.124367
 ''' Test 15 TestUserViewMonitoringShouldRead passed. Elapsed time: 12905.7 ms.
+''' Test 14 TestUserViewMonitoringShouldStartStop passed. Elapsed time: 7964.9 ms.
+''' Waiting for trigger....
+'''  1 : 100.122002
+'''  2 : 100.122925
+'''  3 : 100.122353
+'''  4 : 100.123596
+''' Test 15 TestUserViewMonitoringShouldRead passed. Elapsed time: 12975.6 ms.
 ''' Ran 10 out of 10 tests.
 ''' Passed: 10; Failed: 0; Inconclusive: 0.
 ''' </code>

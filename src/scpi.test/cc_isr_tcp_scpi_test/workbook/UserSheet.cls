@@ -126,28 +126,26 @@ End Function
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Gets the executable (Can Execute) status of the Auto Scan Toggle Button. </summary>
+''' <summary>   Sets the execution Can Execute) status of the Auto Scan Toggle command. </summary>
 ''' <value>   [Boolean]. </value>
 Public Property Get AutoScanToggleExecutable() As Boolean
     AutoScanToggleExecutable = Me.AutoScanToggleButton.Enabled
 End Property
 
-''' <summary>   Sets the executable (Can Execute) status of the Auto Scan Toggle Button. </summary>
-''' <param name="a_value">   [Boolean] the executable (Can Execute) status. </value>
+''' <summary>   Sets the execution Can Execute) status of the Auto Scan Toggle command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is executable. </param>
 Public Property Let AutoScanToggleExecutable(ByVal a_value As Boolean)
     Me.AutoScanToggleButton.Enabled = a_value
 End Property
 
-''' <summary>   Gets the state (true if depresed or false if released) of the
-''' Auto Scan Toggle Button. </summary>
-''' <value>   [Boolean]. </value>
+''' <summary>   Gets the action state of the Auto Scan Toggle command. </summary>
+''' <value>   [Boolean] true if the command is active. </value>
 Public Property Get AutoScanToggleValue() As Boolean
     AutoScanToggleValue = Me.AutoScanToggleButton.Value
 End Property
 
-''' <summary>   Sets the toggle state (true if depresed or false if released) of the
-''' Auto Scan Toggle Button. </summary>
-''' <param name="a_value">   [Boolean] the toggler state (true if depresed or false if released). </value>
+''' <summary>   Sets the action state of the Auto Scan Toggle command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let AutoScanToggleValue(ByVal a_value As Boolean)
     Me.AutoScanToggleButton.Value = a_value
 End Property
@@ -207,28 +205,26 @@ err_Handler:
     
 End Sub
 
-''' <summary>   Gets the executable (Can Execute) status of the Auto Single Toggle Button. </summary>
-''' <value>   [Boolean]. </value>
+''' <summary>   Gets the execution (Can Execute) status of the Auto Single Toggle command. </summary>
+''' <value>   [Boolean] true if the command is executable. </value>
 Public Property Get AutoSingleToggleExecutable() As Boolean
     AutoSingleToggleExecutable = Me.AutoSingleToggleButton.Enabled
 End Property
 
-''' <summary>   Sets the executable (Can Execute) status of the Auto Single Toggle Button. </summary>
-''' <param name="a_value">   [Boolean] the executable (Can Execute) status. </value>
+''' <summary>   Sets the execution (Can Execute) status of the Auto Single Toggle command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is executable. </param>
 Public Property Let AutoSingleToggleExecutable(ByVal a_value As Boolean)
     Me.AutoSingleToggleButton.Enabled = a_value
 End Property
 
-''' <summary>   Gets the state (true if depresed or false if released) of the
-''' Auto Single Toggle Button. </summary>
-''' <value>   [Boolean]. </value>
+''' <summary>   Gets the action state of the Auto Single Toggle command. </summary>
+''' <value>   [Boolean] true if the command is active. </value>
 Public Property Get AutoSingleToggleValue() As Boolean
     AutoSingleToggleValue = Me.AutoSingleToggleButton.Value
 End Property
 
-''' <summary>   Sets the toggle state (true if depresed or false if released) of the
-''' Auto Single Toggle Button. </summary>
-''' <param name="a_value">   [Boolean] the toggler state (true if depresed or false if released). </value>
+''' <summary>   Sets the action state of the Auto Single Toggle command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let AutoSingleToggleValue(ByVal a_value As Boolean)
     Me.AutoSingleToggleButton.Value = a_value
 End Property
@@ -288,28 +284,26 @@ err_Handler:
     
 End Sub
 
-''' <summary>   Gets the executable (Can Execute) status of the Manual Scan Toggle Button. </summary>
+''' <summary>   Gets the execution (Can Execute) status of the Manual Scan Toggle Button. </summary>
 ''' <value>   [Boolean]. </value>
 Public Property Get ManualScanToggleExecutable() As Boolean
     ManualScanToggleExecutable = Me.ManualScanToggleButton.Enabled
 End Property
 
-''' <summary>   Sets the executable (Can Execute) status of the Manual Scan Toggle Button. </summary>
-''' <param name="a_value">   [Boolean] the executable (Can Execute) status. </value>
+''' <summary>   Sets the execution (Can Execute) status of the Manual Scan Toggle Button. </summary>
+''' <param name="a_value">   [Boolean] true if the command is executable. </param>
 Public Property Let ManualScanToggleExecutable(ByVal a_value As Boolean)
     Me.ManualScanToggleButton.Enabled = a_value
 End Property
 
-''' <summary>   Gets the state (true if depresed or false if released) of the
-''' Manual Scan Toggle Button. </summary>
-''' <value>   [Boolean]. </value>
+''' <summary>   Gets the action state of the Manual Scan Toggle command. </summary>
+''' <value>   [Boolean] true if the command is active. </value>
 Public Property Get ManualScanToggleValue() As Boolean
     ManualScanToggleValue = Me.ManualScanToggleButton.Value
 End Property
 
-''' <summary>   Sets the toggle state (true if depresed or false if released) of the
-''' Manual Scan Toggle Button. </summary>
-''' <param name="a_value">   [Boolean] the toggler state (true if depresed or false if released). </value>
+''' <summary>   Sets the action state of the Manual Scan Toggle command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let ManualScanToggleValue(ByVal a_value As Boolean)
     Me.ManualScanToggleButton.Value = a_value
 End Property
@@ -369,28 +363,26 @@ err_Handler:
     
 End Sub
 
-''' <summary>   Gets the executable (Can Execute) status of the Manual Single Toggle Button. </summary>
+''' <summary>   Gets the execution (Can Execute) status of the Manual Single Toggle command. </summary>
 ''' <value>   [Boolean]. </value>
 Public Property Get ManualSingleToggleExecutable() As Boolean
     ManualSingleToggleExecutable = Me.ManualSingleToggleButton.Enabled
 End Property
 
-''' <summary>   Sets the executable (Can Execute) status of the Manual Single Toggle Button. </summary>
-''' <param name="a_value">   [Boolean] the executable (Can Execute) status. </value>
+''' <summary>   Sets the execution (Can Execute) status of the Manual Single Toggle command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is executable. </param>
 Public Property Let ManualSingleToggleExecutable(ByVal a_value As Boolean)
     Me.ManualSingleToggleButton.Enabled = a_value
 End Property
 
-''' <summary>   Gets the state (true if depresed or false if released) of the
-''' Manual Single Toggle Button. </summary>
-''' <value>   [Boolean]. </value>
+''' <summary>   Gets the action state of the Manual Single Toggle command. </summary>
+''' <value>   [Boolean] true if the command is active. </value>
 Public Property Get ManualSingleToggleValue() As Boolean
     ManualSingleToggleValue = Me.ManualSingleToggleButton.Value
 End Property
 
-''' <summary>   Sets the toggle state (true if depresed or false if released) of the
-''' Manual Single Toggle Button. </summary>
-''' <param name="a_value">   [Boolean] the toggler state (true if depresed or false if released). </value>
+''' <summary>   Sets the action state of the Manual Single Toggle command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let ManualSingleToggleValue(ByVal a_value As Boolean)
     Me.ManualSingleToggleButton.Value = a_value
 End Property

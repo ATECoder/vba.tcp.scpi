@@ -5,14 +5,12 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
+
 ## TODO
 
 SCPI:
-Update the tests and see how things work now.
-
-Add unit tests for toggling tests using the user sample view.
-
-Create interfaces for the views. Move the observer to the SCPI class and us interfaces so that we can define the view.
+Run all unit tests.
+Move to flying.
 
 
 Flying

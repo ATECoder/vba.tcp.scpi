@@ -2045,6 +2045,7 @@ End Sub
 ' Construction and cleanup
 ' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+''' <summary>   Handles the Class Initialize event. </summary>
 Private Sub Class_Initialize()
     This.TopCard = VBA.vbNullString
 End Sub

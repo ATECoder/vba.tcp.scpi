@@ -29,13 +29,6 @@ Private Const m_channelCol As Integer = 1 '  24
 Private Const m_byRow As Boolean = False ' True
 Private Const m_displayIncrement As Integer = 2
 
-' Controls
-
-Private WithEvents ClearReadingsButton As MSForms.CommandButton
-Attribute ClearReadingsButton.VB_VarHelpID = -1
-Private WithEvents ClearMessagesButton As MSForms.CommandButton
-Attribute ClearMessagesButton.VB_VarHelpID = -1
-
 Private Type this_
 
     ViewModel As K2700ViewModel
@@ -77,12 +70,14 @@ Private This As this_
 ' Construction and cleanup
 ' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+''' <summary>   Handles the Class Initialize event. </summary>
 Private Sub Class_Initialize()
 
     This.ChannelNumberCaptionPrefix = "R"
 
 End Sub
 
+''' <summary>   Handles the Class Terminate event. </summary>
 Private Sub Class_Terminate()
     Me.Dispose
 End Sub
@@ -173,6 +168,8 @@ End Function
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
+''' <summary>   Sets the execution (Can Execute) status of the Clear Reading command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is executable. </param>
 Public Property Let ClearReadingsExecutable(ByVal a_value As Boolean)
     If Not This.DataAcquisitionSheet.ClearReadingsButton Is Nothing Then
         This.DataAcquisitionSheet.ClearReadingsButton.Enabled = a_value
