@@ -5152,7 +5152,7 @@ Private Sub m_k2700_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Channel
 
         ' increment the resistance for the next reading
         
-        This.TargetChannelNumber = IIf(a_eventArgs.ChannelNumber < Me.ChannelCount, _
+        Me.TargetChannelNumber = IIf(a_eventArgs.ChannelNumber < Me.ChannelCount, _
             a_eventArgs.ChannelNumber + 1, 1)
 
     End If

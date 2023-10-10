@@ -95,9 +95,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 7
-    RunTest 8
-    RunTest 9
+    RunTest 13
     AfterAll
 End Sub
 
@@ -1620,6 +1618,40 @@ Public Function AssertMeasurementsShouldGetTriggered(ByVal a_assert As cc_isr_Te
             
             DoEvents
             Debug.Print p_channel; ": "; p_reading
+            
+            ' verify that measured channel numbers propagated correctly.
+            
+            If p_outcome.AssertSuccessful Then
+                
+                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.MeasuredChannelNumber, _
+                    This.ViewModel.MeasuredChannelNumber, _
+                    "View Model measured channel number should equal the Observer measured channel.")
+                    
+            End If
+            
+            If p_outcome.AssertSuccessful Then
+                
+                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.DataView.MeasuredChannelNumber, _
+                    This.ViewModel.MeasuredChannelNumber, _
+                    "View Model measured channel number should equal the Data View measured channel.")
+                    
+            End If
+            
+            If p_outcome.AssertSuccessful Then
+                
+                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(ExpectedTargetChannelNumber(), _
+                    This.ViewModel.TargetChannelNumber, _
+                    "The target channel number should equal the expected target channel number after a triggered reading.")
+                    
+            End If
+            
+            If p_outcome.AssertSuccessful Then
+                
+                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, _
+                    This.Observer.TargetChannelNumber, _
+                    "The observer Target Channel Number should equal the view model target channel number.")
+                    
+            End If
 
         End If
     
@@ -2757,6 +2789,9 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
     
     End If
     
+    If p_outcome.AssertSuccessful Then _
+        Debug.Print "Awaiting triggers..."
+    
     ' loop for some time waiting for triggered measurements.
     Dim p_endTime As Double: p_endTime = cc_isr_Core_IO.CoreExtensions.DaysNow() + _
         (a_duration / cc_isr_Core_IO.CoreExtensions.SecondsPerDay)
@@ -2829,7 +2864,8 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
             DoEvents
             Debug.Print p_channel; ": "; p_reading
 
-            ' check if measured channel numbers propagate correctly.
+            ' verify that measured channel numbers propagated correctly.
+            
             If p_outcome.AssertSuccessful Then
                 
                 Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.MeasuredChannelNumber, _
@@ -2883,16 +2919,6 @@ Public Function AssetTriggersShouldPoll(ByVal a_assert As cc_isr_Test_Fx.Assert,
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
     Dim p_details As String: p_details = VBA.vbNullString
     
-    ' start the external trigger mode
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = AssertExternalTriggerModeShouldStart(p_outcome)
-    
-    ' validate the external trigger reading mode
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = AssertExternalTriggerModeShouldValidate(p_outcome)
-    
     ' setup conditions for monitoring
     
     ' Multiple readings (auto increment on) is used for testing
@@ -2906,6 +2932,16 @@ Public Function AssetTriggersShouldPoll(ByVal a_assert As cc_isr_Test_Fx.Assert,
     This.ViewModel.TargetChannelNumber = 1
     This.ViewModel.AutoIncrementChannelNoEnabled = True
     This.ViewModel.SingleReadEnabled = False
+    
+    ' start the external trigger mode
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = AssertExternalTriggerModeShouldStart(p_outcome)
+    
+    ' validate the external trigger reading mode
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = AssertExternalTriggerModeShouldValidate(p_outcome)
     
     ' start the monitoring mode turning timer monitoring off.
     
