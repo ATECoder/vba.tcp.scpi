@@ -435,25 +435,14 @@ Public Function TryPowerOnReset(ByRef a_details As String) As Boolean
 
     Const p_procedureName = "TryPowerOnReset"
 
-    Dim p_session As cc_isr_Ieee488.TcpSession
-    p_session = cc_isr_Ieee488.Factory.NewTcpSession()
-    p_session.Initialize cc_isr_Winsock.Factory.NewIPv4StreamSocket()
-    p_session.GpibLanControllerPort = This.Session.GpibLanControllerPort
-    p_session.Termination = This.Session.Termination
-    p_session.ReadAfterWriteDelay = This.Session.ReadAfterWriteDelay
-   
     Dim p_details As String
     Dim p_success As Boolean
-    p_success = p_session.Connectable.TryOpenConnection(This.SocketAddress, This.SessionTimeout, p_details)
+    p_success = This.Session.TryPowerOnReset(This.SocketAddress, p_details)
     
     If p_success Then
-        This.Session.PowerOnReset
+        p_success = 0 = cc_isr_Core_IO.UserDefinedErrors.QueuedErrorCount
     End If
     
-    If p_success Then
-        p_success = p_session.Socket.TryCloseConnection(p_details)
-    End If
-
     If Not p_success Then _
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
                 " " & p_details

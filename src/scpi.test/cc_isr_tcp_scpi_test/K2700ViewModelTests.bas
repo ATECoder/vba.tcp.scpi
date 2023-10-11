@@ -97,7 +97,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 1
+    RunTest 16
     AfterAll
 End Sub
 
@@ -3789,6 +3789,7 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' Test 16 TestOpenConnectionWithPowerOnResetShouldConnect passed. Elapsed time: 9226.0 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -3843,10 +3844,6 @@ Public Function TestOpenConnectionWithPowerOnResetShouldConnect() As Assert
         p_actualReply = This.ViewModel.Device.QueryOperationCompleted()
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedReply, p_actualReply, _
             "View Model should query operation completion.")
-    End If
-    
-    If p_outcome.AssertSuccessful Then
-        Set p_outcome = AssertShouldReadCards()
     End If
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .

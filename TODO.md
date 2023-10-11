@@ -6,9 +6,22 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 ## GIT:
 
 
+IEEE488:
+Tcp Session: Add try power on reset method.
+
+SCPI:
+Update try power on reset method.
+Test # 16 passed.
+
+
+
+
 ## TODO
 
 SCPI:
+Work on restoring connection after error. 
+Test power on reset.
+
 Run all unit tests.
 Move to flying.
 
