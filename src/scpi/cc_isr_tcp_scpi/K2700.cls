@@ -202,7 +202,11 @@ Public Function InitializeLegacy(ByVal a_address As String, _
     
     If p_success Then
         
-        p_success = This.Device.TryResetKnownState(p_details)
+        Dim p_tries As Integer
+        Dim p_repeatCount As Integer: p_repeatCount = 3
+        
+        p_success = This.Device.TryResetClears(p_details, p_tries, p_repeatCount)
+        If p_tries > 1 Then Debug.Print "Reset clear try count= "; p_tries
     
         If Not p_success Then _
             p_details = "Failed resetting the IEEE488 device to its known state; " & p_details
@@ -652,13 +656,10 @@ Public Function TryMonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVa
         ' abort triggering
         
         ' reset known state.
-        p_success = This.Device.TryResetKnownState(p_details)
+        p_success = This.Device.TryResetClear(p_details)
         
-        If p_success Then
-            ' should we do system:preset here?
-            p_success = This.Device.TryClearExecutionState(p_details)
-        Else
-            p_details = "Failed resetting known state when ending external trigger monitoring; " & p_details
+        If Not p_success Then
+            p_details = "Failed resetting and clearing the instrument when ending external trigger monitoring; " & p_details
         End If
         
         If p_success Then

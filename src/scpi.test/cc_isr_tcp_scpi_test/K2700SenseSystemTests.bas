@@ -9,6 +9,7 @@ Option Explicit
 Private Type this_
     Name As String
     TestNumber As Integer
+    PreviousTestNumber As Integer
     BeforeAllAssert As cc_isr_Test_Fx.Assert
     BeforeEachAssert As cc_isr_Test_Fx.Assert
     K2700 As cc_isr_Tcp_Scpi.K2700
@@ -108,6 +109,10 @@ Public Sub BeforeAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
+    ' initialize the current and previous test numbers.
+    This.TestNumber = 0
+    This.PreviousTestNumber = 0
+
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Primed to run all tests.")
 
     This.Name = "ScpiSystemTests"
@@ -197,7 +202,13 @@ Public Sub BeforeEach()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
+    ' increment the test number if running under the test executive.
+    If This.TestNumber = This.PreviousTestNumber Then This.TestNumber = This.PreviousTestNumber + 1
+    
     Dim p_outcome As cc_isr_Test_Fx.Assert
+
+    ' increment the test number if running under the test executive.
+    If This.TestNumber = This.PreviousTestNumber Then This.TestNumber = This.PreviousTestNumber + 1
 
     If This.BeforeAllAssert.AssertSuccessful Then
         Set p_outcome = IIf(This.K2700.Connected, _
@@ -337,6 +348,9 @@ Public Sub AfterEach()
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
+
+    ' set the previous test number to the current test number.
+    This.PreviousTestNumber = This.TestNumber
 
     ' release the 'Before Each' assert.
     Set This.BeforeEachAssert = Nothing

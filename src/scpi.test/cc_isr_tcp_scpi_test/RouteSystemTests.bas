@@ -9,6 +9,7 @@ Option Explicit
 Private Type this_
     Name As String
     TestNumber As Integer
+    PreviousTestNumber As Integer
     BeforeAllAssert As cc_isr_Test_Fx.Assert
     BeforeEachAssert As cc_isr_Test_Fx.Assert
     TestStopper As cc_isr_Core_IO.Stopwatch
@@ -113,8 +114,12 @@ Public Sub BeforeAll()
 
     Const p_procedureName As String = "BeforeAll"
     
-    ' Trap errors to the error handler
+    ' Trap errors to the error handler.
     On Error GoTo err_Handler
+
+    ' initialize the current and previous test numbers.
+    This.TestNumber = 0
+    This.PreviousTestNumber = 0
 
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Primed to run all tests.")
 
@@ -173,6 +178,9 @@ Public Sub BeforeEach()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
+    ' increment the test number if running under the test executive.
+    If This.TestNumber = This.PreviousTestNumber Then This.TestNumber = This.PreviousTestNumber + 1
+    
     Dim p_outcome As cc_isr_Test_Fx.Assert
 
     If This.BeforeAllAssert.AssertSuccessful Then
@@ -266,6 +274,9 @@ exit_Handler:
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 err_Handler:
   
+    ' set the previous test number to the current test number.
+    This.PreviousTestNumber = This.TestNumber
+    
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
     

@@ -13,6 +13,7 @@ Private Type this_
     ' unit test settings
     Name As String
     TestNumber As Integer
+    PreviousTestNumber As Integer
     BeforeAllAssert As cc_isr_Test_Fx.Assert
     BeforeEachAssert As cc_isr_Test_Fx.Assert
     TestStopper As cc_isr_Core_IO.Stopwatch
@@ -189,6 +190,10 @@ Public Sub BeforeAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
+    ' initialize the current and previous test numbers.
+    This.TestNumber = 0
+    This.PreviousTestNumber = 0
+    
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Primed to run all tests.")
 
     This.Name = "K2700ViewModelTests"
@@ -282,6 +287,9 @@ Public Sub BeforeEach()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
+    ' increment the test number if running under the test executive.
+    If This.TestNumber = This.PreviousTestNumber Then This.TestNumber = This.PreviousTestNumber + 1
+    
     Dim p_outcome As cc_isr_Test_Fx.Assert
 
     If This.BeforeAllAssert.AssertSuccessful Then
@@ -413,6 +421,9 @@ Public Sub AfterEach()
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
+    ' set the previous test number to the current test number.
+    This.PreviousTestNumber = This.TestNumber
+    
     ' release the 'Before Each' assert.
     Set This.BeforeEachAssert = Nothing
 
@@ -461,7 +472,8 @@ Public Sub AfterAll()
     
     ' cleanup after all tests.
     If This.BeforeAllAssert.AssertSuccessful Then
-        This.ViewModel.ResetKnownStateCommand
+        Dim p_details As String
+        This.ViewModel.ResetKnownStateCommand p_details
     End If
     
     ' disconnect if connected
@@ -3803,6 +3815,9 @@ Public Function TestOpenConnectionWithPowerOnResetShouldConnect() As Assert
     
     Dim p_outcome As Assert: Set p_outcome = This.BeforeEachAssert
     
+    Dim p_details As String
+    Dim p_success As Boolean
+    
     If p_outcome.AssertSuccessful Then
         Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
     End If
@@ -3810,7 +3825,6 @@ Public Function TestOpenConnectionWithPowerOnResetShouldConnect() As Assert
     Dim p_actualReply As String
     Dim p_expectedReply As String
     
-    Dim p_details As String
     If p_outcome.AssertSuccessful Then
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.Session.Socket.TryCloseConnection(p_details), _
             "View Model should close connection.")
@@ -3822,10 +3836,16 @@ Public Function TestOpenConnectionWithPowerOnResetShouldConnect() As Assert
     End If
 
     If p_outcome.AssertSuccessful Then
+    
+        Dim p_delay As Double: p_delay = 3
         Debug.Print VBA.Format$(Now, "h:mm:ss"); " Power on reset starting. This could take "; _
-            VBA.CStr(This.ViewModel.Session.PowerOnResetDelay); " seconds. Please wait..."
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.TryOpenConnectionPowerOnReset(p_details), _
+            VBA.CStr(p_delay); " seconds. Please wait..."
+        
+        p_success = This.ViewModel.TryOpenConnectionPowerOnReset(p_details, p_delay)
+
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(p_success, _
             "View Model should open connection with power on reset; " & p_details)
+            
         Debug.Print VBA.Format$(Now, "h:mm:ss"); " done power on reset."
     End If
     

@@ -9,6 +9,7 @@ Option Explicit
 Private Type this_
     Name As String
     TestNumber As Integer
+    PreviousTestNumber As Integer
     BeforeAllAssert As cc_isr_Test_Fx.Assert
     BeforeEachAssert As cc_isr_Test_Fx.Assert
     K2700 As cc_isr_Tcp_Scpi.K2700
@@ -104,6 +105,10 @@ Public Sub BeforeAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
+    ' initialize the current and previous test numbers.
+    This.TestNumber = 0
+    This.PreviousTestNumber = 0
+    
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Primed to run all tests.")
 
     This.Name = "ScpiSystemTests"
@@ -193,6 +198,9 @@ Public Sub BeforeEach()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
+    ' increment the test number if running under the test executive.
+    If This.TestNumber = This.PreviousTestNumber Then This.TestNumber = This.PreviousTestNumber + 1
+    
     Dim p_outcome As cc_isr_Test_Fx.Assert
 
     If This.BeforeAllAssert.AssertSuccessful Then
@@ -326,6 +334,9 @@ Public Sub AfterEach()
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
+    ' set the previous test number to the current test number.
+    This.PreviousTestNumber = This.TestNumber
+    
     ' release the 'Before Each' assert.
     Set This.BeforeEachAssert = Nothing
 
@@ -441,34 +452,43 @@ Public Function TestFrontInputStateShouldRead() As cc_isr_Test_Fx.Assert
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
+    Dim p_details As String: p_details = VBA.vbNullString
+    Dim p_reply As String
+    Dim p_success As Boolean
+    
+    
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then
         Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
     End If
     
-    Dim p_isFrontInputs As Boolean
-    p_isFrontInputs = This.K2700.ScpiSystem.QueryFrontSwitch()
+    Dim p_expectedFrontInputs As Boolean
+    p_expectedFrontInputs = This.K2700.ScpiSystem.QueryFrontSwitch()
+    
+    Dim p_actualFrontInputs As Boolean
     
     ' proceed with test assertions.
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_isFrontInputs, This.K2700.ScpiSystem.QueryFrontSwitch(), _
+        p_actualFrontInputs = This.K2700.ScpiSystem.QueryFrontSwitch()
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedFrontInputs, p_actualFrontInputs, _
             "#1. Scpi System should query and report the previous state of the front switch.")
 
-    Dim p_details As String: p_details = VBA.vbNullString
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700.Device.TryQueryOperationCompleted(p_details), _
+    If p_outcome.AssertSuccessful Then
+        p_success = This.K2700.Device.TryQueryOperationCompleted(p_reply, p_details)
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(p_success, _
             "Device should query operaiton completion; " & p_details)
+    End If
         
     ' validate inputs was returning false values until this cludge was added.
     ' cc_isr_Core_IO.Factory.NewStopwatch.Wait 50 ' 10 this was not enough
     
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_isFrontInputs, This.K2700.ScpiSystem.QueryFrontSwitch(), _
+    If p_outcome.AssertSuccessful Then
+        p_actualFrontInputs = This.K2700.ScpiSystem.QueryFrontSwitch()
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedFrontInputs, p_actualFrontInputs, _
             "#2. Scpi System should query and report the previous state of the front switch ofter *OPC?.")
-    
+    End If
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 

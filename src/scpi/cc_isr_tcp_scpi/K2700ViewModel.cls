@@ -13,7 +13,7 @@ Attribute VB_Exposed = True
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Option Explicit
 
-''' <summary>   Values that represent mesaurment mode options. </summary>
+''' <summary>   Values that represent mesaurement mode options. </summary>
 Public Enum MeasurementModeOption
     ''' <summary>   An enum constant representing the none option. </summary>
     None = 0
@@ -430,14 +430,15 @@ End Property
 
 ''' <summary>   Tries to issue power on reset. </summary>
 ''' <param name="a_details">   [String] Details why the method failed. </param>
+''' <param name="a_delay">     [Double] the post seset delay. </param>
 ''' <returns>   [Boolean]. </returns>
-Public Function TryPowerOnReset(ByRef a_details As String) As Boolean
+Public Function TryPowerOnReset(ByRef a_details As String, ByVal a_delay As Double) As Boolean
 
     Const p_procedureName = "TryPowerOnReset"
 
     Dim p_details As String
     Dim p_success As Boolean
-    p_success = This.Session.TryPowerOnReset(This.SocketAddress, p_details)
+    p_success = This.Session.TryPowerOnReset(This.SocketAddress, p_details, a_delay)
     
     If p_success Then
         p_success = 0 = cc_isr_Core_IO.UserDefinedErrors.QueuedErrorCount
@@ -452,9 +453,10 @@ Public Function TryPowerOnReset(ByRef a_details As String) As Boolean
 End Function
 
 ''' <summary>   Opens the connection and power on reset the GPIB Lan Controller. </summary>
+''' <param name="a_delay">     [Double] the post seset delay. </param>
 ''' <param name="a_details">   [String] Details why the method failed. </param>
 ''' <returns>   [Boolean]. </returns>
-Public Function TryOpenConnectionPowerOnReset(ByRef a_details As String) As Boolean
+Public Function TryOpenConnectionPowerOnReset(ByRef a_details As String, ByVal a_delay As Double) As Boolean
 
     Const p_procedureName = "OpenConnectionPowerOnReset"
 
@@ -468,7 +470,7 @@ Public Function TryOpenConnectionPowerOnReset(ByRef a_details As String) As Bool
     Dim p_details As String: p_details = VBA.vbNullString
     
     If p_success Then _
-        p_success = Me.TryPowerOnReset(p_details)
+        p_success = Me.TryPowerOnReset(p_details, a_delay)
     
     If p_success Then _
         p_success = Me.Connectable.TryOpenConnection(This.SocketAddress, This.SessionTimeout, p_details)
@@ -516,8 +518,9 @@ Public Sub OpenConnectionPowerOnResetCommand()
 
     Me.RestartStopper
     
+    Dim p_delay As Double: p_delay = 3
     Dim p_details As String: p_details = VBA.vbNullString
-    If Not Me.TryOpenConnectionPowerOnReset(p_details) Then _
+    If Not Me.TryOpenConnectionPowerOnReset(p_details, p_delay) Then _
             cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.SocketConnectionError, _
                 ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
                 " Failed opening the connection; " & p_details
@@ -1154,7 +1157,7 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Sends the instrument to is Clear Executiopn State and returns
+''' <summary>   Sends the instrument to is Clear Execution State and returns
 ''' success or failure. </summary>
 ''' <param name="a_details">   [String] Details why the method failed. </param>
 ''' <returns>   [Boolean]. </returns>
@@ -1180,8 +1183,9 @@ Public Function TryClearExecutionState(ByVal a_details As String) As Boolean
     
 End Function
 
-''' <summary>   Handles the Clear Execution State command event; returns the
-''' opertation completion reply. </summary>
+''' <summary>   Handles the Clear Execution State command event. </summary>
+''' <param name="a_details">   [String] Details why the method failed. </param>
+''' <returns>   [Boolean]. </returns>
 Public Function ClearExecutionStateCommand(ByVal a_details As String) As Boolean
 
     Const p_procedureName = "ClearExecutionStateCommand"
@@ -1204,7 +1208,6 @@ Public Function ClearExecutionStateCommand(ByVal a_details As String) As Boolean
     End If
 
     Me.ReadStopper
-
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1407,29 +1410,71 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Resets Known State and returns the operationcompletion reply of '1'. </summary>
-Public Function ResetKnownStateCommand() As String
+''' <summary>   Sends the instrument to is reset known State and returns
+''' success or failure. </summary>
+''' <param name="a_details">   [String] Details why the method failed. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function TryResetKnownState(ByVal a_details As String) As Boolean
+
+    Const p_procedureName = "TryResetKnownState"
+
+    Dim p_success As Boolean: p_success = True
+    Dim p_details As String: p_details = VBA.vbNullString
+    
+    Me.LastErrorMessage = VBA.vbNullString
+
+    ' clear execution state and check the operation completion reply.
+    p_success = This.Device.TryResetKnownState(p_details)
+    If p_success Then
+        a_details = VBA.vbNullString
+    Else
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            " failed reseting the IEEE488 device to its known state; " & p_details
+    End If
+
+    TryResetKnownState = p_success
+    
+End Function
+
+''' <summary>   Handles the Reset Known State command event. </summary>
+''' <param name="a_details">   [String] Details why the method failed. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function ResetKnownStateCommand(ByVal a_details As String) As Boolean
 
     Const p_procedureName = "ResetKnownStateCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
+    Dim p_success As Boolean: p_success = True
+    Dim p_details As String: p_details = VBA.vbNullString
+
     Me.RestartStopper
 
-    ResetKnownStateCommand = This.Device.ResetKnownState(True)
+    p_success = Me.TryResetKnownState(p_details)
+    
+    If Not p_success Then
+    
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " " & p_details
+    End If
 
     Me.ReadStopper
 
+    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
+    ResetKnownStateCommand = p_success
     On Error GoTo 0
     Exit Function
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 err_Handler:
   
+    p_success = False
+    
     ' append the error source
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
 
@@ -1439,6 +1484,9 @@ err_Handler:
     ' display the error message
     Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
 
+    ' for unit testing.
+    a_details = Me.LastErrorMessage
+    
     ' exit this procedure (not an active handler)
     On Error Resume Next
     GoTo exit_Handler
@@ -3165,25 +3213,11 @@ Friend Function TryConfigureIntitialTriggerMode(ByRef a_details As String) As Bo
     Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
     Dim p_details As String: p_details = VBA.vbNullString
     
-    If cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous <> This.MeasurementMode Then
-        
-        ' reset if changing modes.
-        p_success = This.K2700.Device.TryResetKnownState(p_details)
-        
-        If Not p_success Then _
-            p_details = "Failed resetting the IEEE488 device to its known state; " & p_details
+    ' reset and clear the instrument
+    p_success = This.K2700.Device.TryResetClear(p_details)
     
-    End If
-    
-    If p_success Then
-    
-        ' clear execution state
-        p_success = This.K2700.Device.TryClearExecutionState(p_details)
-        
-        If Not p_success Then _
-            p_details = "Failed clearing the IEEE488 device execution state; " & p_details
-    
-    End If
+    If Not p_success Then _
+        p_details = "Failed resetting and clearing the IEEE488 device to its known state; " & p_details
     
     If p_success Then
     
@@ -3281,29 +3315,14 @@ Friend Function TryConfigureContinuousMode(ByRef a_details As String) As Boolean
 
     If p_success Then
     
-        ' reset if changing modes.
-        If cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous <> This.MeasurementMode Then
-            
-            p_success = This.K2700.Device.TryResetKnownState(p_details)
+        ' reset and clear the instrument
+        p_success = This.K2700.Device.TryResetClear(p_details)
         
-            If Not p_success Then _
-                p_details = "Failed resetting the IEEE488 device to its known state; " & p_details
-        
-        End If
-    
-    End If
-    
-    ' clear execution state
-    
-    If p_success Then
-        
-        p_success = This.K2700.Device.TryClearExecutionState(p_details)
-    
         If Not p_success Then _
-            p_details = "Failed clearing the IEEE488 device execution state; " & p_details
+            p_details = "Failed resetting and clearing the IEEE488 device; " & p_details
     
     End If
-
+    
     If p_success Then
         
         Me.SenseFunctionName = This.ContinuousSenseFunctionName
@@ -3431,26 +3450,22 @@ Friend Function TryConfigureExternalTriggerReading(ByRef a_details As String) As
         ' reset if changing modes.
         If cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous <> This.MeasurementMode Then
             
-            p_success = This.K2700.Device.TryResetKnownState(p_details)
+            p_success = This.K2700.Device.TryResetClear(p_details)
         
             If Not p_success Then _
-                p_details = "Failed resetting the IEEE488 device to its known state; " & p_details
+                p_details = "Failed resetting and clearing the IEEE488 device; " & p_details
+        
+        Else
+        
+            p_success = This.K2700.Device.TryClearExecutionState(p_details)
+        
+            If Not p_success Then _
+                p_details = "Failed clearing the IEEE488 device execution state; " & p_details
         
         End If
     
     End If
     
-    ' clear execution state
-    
-    If p_success Then
-    
-        p_success = This.K2700.Device.TryClearExecutionState(p_details)
-    
-        If Not p_success Then _
-            p_details = "Failed clearing the IEEE488 device execution state; " & p_details
-    
-    End If
-
     If p_success Then
     
         ' Configure external triggering reading requiring the front panel
@@ -3620,27 +3635,23 @@ Public Function TryConfigureImmediateTriggerReadings(ByRef a_details As String) 
         ' reset if changing modes.
         If cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate <> This.MeasurementMode Then
             
-            p_success = This.K2700.Device.TryResetKnownState(p_details)
+            p_success = This.K2700.Device.TryResetClear(p_details)
         
             If Not p_success Then _
-                p_details = "Failed resetting the IEEE488 device to its known state; " & p_details
+                p_details = "Failed resetting and clearing the IEEE488 device state; " & p_details
+        
+        Else
+        
+            ' clear execution state
+            p_success = This.K2700.Device.TryClearExecutionState(p_details)
+        
+            If Not p_success Then _
+                p_details = "Failed clearing the IEEE488 device execution state; " & p_details
         
         End If
     
     End If
     
-    
-    ' clear execution state
-    
-    If p_success Then
-    
-        p_success = This.K2700.Device.TryClearExecutionState(p_details)
-    
-        If Not p_success Then _
-            p_details = "Failed clearing the IEEE488 device execution state; " & p_details
-    
-    End If
-
     If p_success Then
     
         Me.SenseFunctionName = This.ImmediateSenseFunctionName
@@ -3969,7 +3980,8 @@ Public Function ValidateInputsAndMeasureCommand(ByRef a_details As String) As Bo
     End If
 
     ' synchronize.
-    p_success = Me.Device.TryQueryOperationCompleted(p_details)
+    Dim p_reply As String
+    p_success = Me.Device.TryQueryOperationCompleted(p_reply, p_details)
     
     ' validate inputs returns incorrect values at this point.
     ' it must have something to do with the configuration
@@ -4695,7 +4707,7 @@ exit_Handler:
         ' this is done in the K2700 handler when done.
 
         ' reset known state.
-        p_success = This.Device.TryResetKnownState(p_details)
+        p_success = This.Device.TryResetClear(p_details)
         
         ' report an error on failure.
         If Not p_success Then
@@ -4953,9 +4965,10 @@ Friend Function TryConfigureInstrumentInitialState(ByRef a_errors As String, _
     
     ' *RST is issued first in case the instrument is in external trigger mode
     ' where *OPC? fails (on the 2700 instrument).
-    p_success = This.Device.TryResetKnownState(p_details)
-    p_success = This.Session.TrySelectiveDeviceClear(p_details, True)
-    p_success = This.Device.TryClearExecutionState(p_details)
+    ' this is done on configuration using the TryResetClear method.
+    ' p_success = This.Device.Try Reset Known State(p_details)
+    ' p_success = This.Session.Try Selective Device Clear(p_details, True)
+    ' p_success = This.Device.Try Clear Execution State(p_details)
     
     Me.TopCard = This.K2700.RouteSystem.CardName(1)
     Me.BottomCard = This.K2700.RouteSystem.CardName(2)
@@ -5127,9 +5140,10 @@ Public Function TryRestoreInitialState(ByRef a_details As String)
     
     If p_success Then
         ' reset the IEEE488 device state reading the operation completion reply of '1'.
-        p_success = This.Device.TryResetKnownState(p_details)
-        If Not p_success Then _
-            p_details = "The IEEE488 device failed reseting its known state; " & p_details
+        ' this is done on try to configure initial state.
+        ' p_success = This.Device.TryResetClear(p_details)
+        ' If Not p_success Then _
+        '    p_details = "The IEEE488 device failed reseting its known state; " & p_details
     End If
 
     If p_success Then

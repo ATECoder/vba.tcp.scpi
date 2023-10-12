@@ -240,7 +240,11 @@ End Sub
 Public Sub OnResetKnownState()
 
     If This.ResetKnownStateExecutable Then
-        This.ViewModel.ResetKnownStateCommand
+        Dim p_details As String
+        If Not This.ViewModel.ResetKnownStateCommand(p_details) Then _
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnResetKnownState", _
+                " Command failed; " & p_details
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnResetKnownState", _

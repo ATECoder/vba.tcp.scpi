@@ -9,6 +9,7 @@ Option Explicit
 Private Type this_
     Name As String
     TestNumber As Integer
+    PreviousTestNumber As Integer
     BeforeAllAssert As cc_isr_Test_Fx.Assert
     BeforeEachAssert As cc_isr_Test_Fx.Assert
     K2700 As cc_isr_Tcp_Scpi.K2700
@@ -115,6 +116,10 @@ Public Sub BeforeAll()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
+    ' initialize the current and previous test numbers.
+    This.TestNumber = 0
+    This.PreviousTestNumber = 0
+    
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Primed to run all tests.")
 
     This.Name = "K2700Tests"
@@ -200,6 +205,9 @@ Public Sub BeforeEach()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
+    ' increment the test number if running under the test executive.
+    If This.TestNumber = This.PreviousTestNumber Then This.TestNumber = This.PreviousTestNumber + 1
+    
     Dim p_outcome As cc_isr_Test_Fx.Assert
 
     If This.BeforeAllAssert.AssertSuccessful Then
@@ -333,6 +341,9 @@ Public Sub AfterEach()
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
+    ' set the previous test number to the current test number.
+    This.PreviousTestNumber = This.TestNumber
+    
     ' release the 'Before Each' assert.
     Set This.BeforeEachAssert = Nothing
 
@@ -680,6 +691,10 @@ Public Function TestSelectiveDeviceShouldClear() As cc_isr_Test_Fx.Assert
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
+    Dim p_details As String: p_details = VBA.vbNullString
+    Dim p_reply As String
+    Dim p_success As Boolean
+    
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
     
     If p_outcome.AssertSuccessful Then
@@ -688,16 +703,17 @@ Public Function TestSelectiveDeviceShouldClear() As cc_isr_Test_Fx.Assert
     
     ' proceed with test assertions.
     
-    Dim p_details As String: p_details = VBA.vbNullString
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700.Session.TrySelectiveDeviceClear(p_details, True, _
-                This.SelectiveDeviceClearDelay), _
+        p_success = This.K2700.Session.TrySelectiveDeviceClear(p_details, True, _
+                This.SelectiveDeviceClearDelay)
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(p_success, _
             "K2700 Selective device should clear and synchropnize with a delay of " & _
                 VBA.CStr(This.SelectiveDeviceClearDelay) & " ms; " & p_details)
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700.Device.TryQueryOperationCompleted(p_details), _
+        p_success = This.K2700.Device.TryQueryOperationCompleted(p_reply, p_details)
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(p_success, _
             "K2700 Device should query operation completion; " & p_details)
     End If
 
