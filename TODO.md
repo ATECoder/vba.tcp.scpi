@@ -5,9 +5,14 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
-SCPI:
-
 ## TODO
+
+ 1 : 100.12796
+Test 13 TestUserViewShouldMeasureImmediately passed. Elapsed time: 6118.0 ms.
+Test 14 TestUserViewMonitoringShouldStartStop failed. User View Manual Scan toggle button should be depressed (Value = True). Elapsed time: 5697.3 ms.
+Status byte:  68 ; SRQ: True; Cleared status byte:  4 
+Test 15 TestUserViewMonitoringShouldRead failed. User View Manual Scan toggle button should be depressed (Value = True). Elapsed time: 10526.7 ms.
+
 
 
 Run all unit tests.

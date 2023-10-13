@@ -154,7 +154,8 @@ End Property
 ''' <summary>   Sets the action state of the Auto Scan Toggle command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let AutoScanToggleValue(ByVal a_value As Boolean)
-    Me.AutoScanToggleButton.Value = a_value
+    If Me.AutoScanToggleButton.Value <> a_value Then _
+        Me.AutoScanToggleButton.Value = a_value
 End Property
 
 ''' <summary>   Handles the Got Focus event of the Auto Scan toggle button.  </summary>
@@ -233,7 +234,8 @@ End Property
 ''' <summary>   Sets the action state of the Auto Single Toggle command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let AutoSingleToggleValue(ByVal a_value As Boolean)
-    Me.AutoSingleToggleButton.Value = a_value
+    If Me.AutoSingleToggleButton.Value <> a_value Then _
+        Me.AutoSingleToggleButton.Value = a_value
 End Property
 
 ''' <summary>   Handles the Got Focus event of the Auto Single toggle button.  </summary>
@@ -312,7 +314,8 @@ End Property
 ''' <summary>   Sets the action state of the Manual Scan Toggle command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let ManualScanToggleValue(ByVal a_value As Boolean)
-    Me.ManualScanToggleButton.Value = a_value
+    If Me.ManualScanToggleButton.Value <> a_value Then _
+        Me.ManualScanToggleButton.Value = a_value
 End Property
 
 ''' <summary>   Handles the Got Focus event of the Manual Scan toggle button.  </summary>
@@ -391,7 +394,8 @@ End Property
 ''' <summary>   Sets the action state of the Manual Single Toggle command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let ManualSingleToggleValue(ByVal a_value As Boolean)
-    Me.ManualSingleToggleButton.Value = a_value
+    If Me.ManualSingleToggleButton.Value <> a_value Then _
+        Me.ManualSingleToggleButton.Value = a_value
 End Property
 
 ''' <summary>   Handles the Got Focus event of the Manual Single toggle button.  </summary>

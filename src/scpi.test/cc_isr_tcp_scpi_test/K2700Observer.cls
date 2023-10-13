@@ -35,7 +35,9 @@ Private Type this_
     LastErrorMessage As String
     LastMessage As String
     MeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
+    Measuring As Boolean
     MaximumChannelNumber As Integer
+    
 
     ' Winsock properties
     Host As String
@@ -909,6 +911,20 @@ Public Property Let MaximumChannelNumber(ByVal a_value As Integer)
         This.MaximumChannelNumber = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.MaximumChannelNumber = a_value
+    End If
+End Property
+
+''' <summary>   Gets the measuring state. True when measurements are collected. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get Measuring() As Boolean
+    Measuring = This.Measuring
+End Property
+
+''' <summary>   Sets the measuring state. True when measurements are collected. </summary>
+''' <param name="a_value">   [Boolean] the measuring state; true when measuring is active. </value>
+Public Property Let Measuring(ByVal a_value As Boolean)
+    If This.Measuring <> a_value Then
+        This.Measuring = a_value
     End If
 End Property
 
@@ -1861,6 +1877,8 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.SenseFunctions = This.ViewModel.SenseFunctions
         Case "ScpiCommands"
             Me.ScpiCommands = This.ViewModel.ScpiCommands
+        Case "Measuring"
+            Me.Measuring = This.ViewModel.Measuring
         Case "MeasurementMode"
             Me.MeasurementMode = This.ViewModel.MeasurementMode
         Case "ReadStatusAfterWriteEnabled"

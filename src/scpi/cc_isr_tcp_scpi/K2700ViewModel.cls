@@ -63,6 +63,7 @@ Private Type this_
     LastErrorMessage As String
     LastMessage As String
     MeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
+    Measuring As Boolean
     MaximumChannelNumber As Integer
 
     ' Winsock properties
@@ -2572,6 +2573,21 @@ Public Property Let BottomCardFunctionScanList(ByVal a_value As String)
     End If
 End Property
 
+''' <summary>   Gets the measuring state. True when measurements are collected. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get Measuring() As Boolean
+    Measuring = This.Measuring
+End Property
+
+''' <summary>   Sets the measuring state. True when measurements are collected. </summary>
+''' <param name="a_value">   [Boolean] the measuring state; true when measuring is active. </value>
+Public Property Let Measuring(ByVal a_value As Boolean)
+    If This.Measuring <> a_value Then
+        This.Measuring = a_value
+        Me.OnPropertyChanged "Measuring"
+    End If
+End Property
+
 ''' <summary>   Gets the measurement mode. </summary>
 ''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
 Public Property Get MeasurementMode() As cc_isr_Tcp_Scpi.MeasurementModeOption
@@ -3933,6 +3949,9 @@ Public Function MeasureImmediatelyCommand(ByRef a_details As String) As Boolean
     
     If p_success Then
     
+        ' turn on the measuring state
+        Me.Measuring = True
+    
         ' disable the relevant commands.
         Me.MeasureExecutable = False
         Me.ImmediateTriggerOptionExecutable = False
@@ -3958,6 +3977,9 @@ Public Function MeasureImmediatelyCommand(ByRef a_details As String) As Boolean
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
+
+    ' turn off the measuring state
+    Me.Measuring = True
 
     MeasureImmediatelyCommand = p_success
     
@@ -4212,6 +4234,9 @@ Public Sub StartMonitoringExternalTriggers(Optional ByVal a_timerControlled As B
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
+    
+    ' turn on measuring state
+    Me.Measuring = True
 
     If Me.AutoIncrementChannelNoEnabled Then
     
@@ -4365,6 +4390,9 @@ Friend Sub StopMonitoringExternalTriggers()
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
+
+    ' turn off measuring state
+    Me.Measuring = False
 
     On Error GoTo 0
     Exit Sub

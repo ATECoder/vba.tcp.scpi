@@ -98,7 +98,8 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 15
+    RunTest 13
+    RunTest 14
     AfterAll
 End Sub
 
