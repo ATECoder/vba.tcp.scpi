@@ -66,7 +66,7 @@ Public Property Let Deployed(ByVal a_value As Boolean)
     For Each p_workbook In Me.ProjectWorkbooks
         If p_workbook.Name <> ThisWorkbook.Name Then _
             p_workbook.Deployed = a_value
-        DoEvents
+        VBA.DoEvents
     Next p_workbook
 
 End Property
@@ -157,7 +157,7 @@ Private Sub Workbook_BeforeClose(ByRef a_cancel As Boolean)
     Dim p_workbook As Workbook
     For Each p_workbook In Me.ProjectWorkbooks
         cc_isr_Core_IO.WorkbookExtensions.MarkAsSaved p_workbook, Me.Deployed
-        DoEvents
+        VBA.DoEvents
     Next p_workbook
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -200,7 +200,7 @@ Private Sub Workbook_Open()
         ' hide the workbook
         cc_isr_Core_IO.WorkbookExtensions.Hide p_workbook
         
-        DoEvents
+        VBA.DoEvents
     
     Next p_workbook
     

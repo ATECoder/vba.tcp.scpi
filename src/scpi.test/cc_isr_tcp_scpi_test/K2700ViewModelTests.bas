@@ -160,7 +160,7 @@ Public Sub RunAllTests()
     This.PassedCount = 0
     This.FailedCount = 0
     This.InconclusiveCount = 0
-    This.TestCount = 9
+    This.TestCount = 16
     Dim p_testNumber As Integer
     For p_testNumber = 1 To This.TestCount
         Set p_outcome = RunTest(p_testNumber)
@@ -174,7 +174,7 @@ Public Sub RunAllTests()
                 This.FailedCount = This.FailedCount + 1
             End If
         End If
-        DoEvents
+        VBA.DoEvents
     Next p_testNumber
     AfterAll
     Debug.Print "Ran " & VBA.CStr(This.RunCount) & " out of " & VBA.CStr(This.TestCount) & " tests."
@@ -1626,7 +1626,7 @@ Public Function AssertMeasurementsShouldGetTriggered(ByVal a_assert As cc_isr_Te
     Dim p_reading As String
     p_reading = This.DataView.MeasuredReading
     
-    DoEvents
+    VBA.DoEvents
     Debug.Print "Waiting for trigger...."
     
     ' loop for some time waiting for triggered measurements.
@@ -1636,17 +1636,17 @@ Public Function AssertMeasurementsShouldGetTriggered(ByVal a_assert As cc_isr_Te
         (a_duration / cc_isr_Core_IO.CoreExtensions.SecondsPerDay)
     While p_endTime > cc_isr_Core_IO.CoreExtensions.DaysNow()
         
-        DoEvents
+        VBA.DoEvents
     
         If p_channel <> This.DataView.MeasuredChannelNumber Then
         
-            DoEvents
+            VBA.DoEvents
             p_channel = This.DataView.MeasuredChannelNumber
             
-            DoEvents
+            VBA.DoEvents
             p_reading = This.DataView.MeasuredReading
             
-            DoEvents
+            VBA.DoEvents
             Debug.Print p_channel; ": "; p_reading
             
             ' verify that measured channel numbers propagated correctly.
@@ -2502,7 +2502,7 @@ Public Function TestSyntaxErrorShouldRecover() As Assert
         ' clear the error state
         cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
         
-        DoEvents
+        VBA.DoEvents
         cc_isr_Core_IO.Factory.NewStopwatch().Wait 100
         
     
@@ -2828,7 +2828,7 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
         
     Do Until This.ViewModel.PauseRequested
         
-        DoEvents
+        VBA.DoEvents
     
         ' on failure, send a stop requested.
         ' this is processed on the next timer event handler, which then
@@ -2887,13 +2887,13 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
         
         If p_channel <> This.DataView.MeasuredChannelNumber Then
         
-            DoEvents
+            VBA.DoEvents
             p_channel = This.DataView.MeasuredChannelNumber
             
-            DoEvents
+            VBA.DoEvents
             p_reading = This.DataView.MeasuredReading
             
-            DoEvents
+            VBA.DoEvents
             Debug.Print p_channel; ": "; p_reading
 
             ' delay processing the next event by the presumed timer interval.
@@ -3413,12 +3413,12 @@ Public Function TestUserViewShouldMeasureImmediately() As cc_isr_Test_Fx.Assert
             (p_duration / cc_isr_Core_IO.CoreExtensions.SecondsPerDay)
         Do While p_endTime > cc_isr_Core_IO.CoreExtensions.DaysNow()
             
-            DoEvents
+            VBA.DoEvents
         
             ' report reading if the selected channel number was measured
             If This.ViewModel.SelectedChannelNumber = This.DataView.MeasuredChannelNumber Then
             
-                DoEvents
+                VBA.DoEvents
                 Debug.Print This.DataView.MeasuredChannelNumber; ": "; This.DataView.MeasuredReading
     
                 Exit Do
@@ -3583,7 +3583,7 @@ Public Function AssetUserViewShouldMonitor(ByVal a_assert As cc_isr_Test_Fx.Asse
         p_endTime = cc_isr_Core_IO.CoreExtensions.DaysNow() + _
             (p_duration / cc_isr_Core_IO.CoreExtensions.SecondsPerDay)
         Do Until This.ViewModel.TimerStarted Or (p_endTime < cc_isr_Core_IO.CoreExtensions.DaysNow())
-            DoEvents
+            VBA.DoEvents
         Loop
     
     End If
@@ -3658,7 +3658,7 @@ Public Function AssetUserViewShouldMonitor(ByVal a_assert As cc_isr_Test_Fx.Asse
         p_endTime = cc_isr_Core_IO.CoreExtensions.DaysNow() + _
             (p_duration / cc_isr_Core_IO.CoreExtensions.SecondsPerDay)
         Do Until Not This.ViewModel.TimerStarted Or (p_endTime < cc_isr_Core_IO.CoreExtensions.DaysNow())
-            DoEvents
+            VBA.DoEvents
         Loop
     
     End If
@@ -3846,7 +3846,9 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' Test 16 TestOpenConnectionWithPowerOnResetShouldConnect passed. Elapsed time: 9226.0 ms.
+''' 8:40:13 Power on reset starting. This could take 3 seconds. Please wait...
+''' 8:40:19 done power on reset.
+''' Test 16 TestOpenConnectionWithPowerOnResetShouldConnect passed. Elapsed time: 6517.1 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where

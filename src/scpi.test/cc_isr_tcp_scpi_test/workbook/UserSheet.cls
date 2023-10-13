@@ -21,9 +21,9 @@ Private Const m_probesResistanceCell As String = "C10"
 Private Const m_compensationFactorCell As String = "C9"
 
 Private Const m_measurementRow As Integer = 2
-Private Const m_measurementCol As Integer = 23
+Private Const m_measurementCol As Integer = 14
 Private Const m_channelRow As Integer = 2
-Private Const m_channelCol As Integer = 24
+Private Const m_channelCol As Integer = 13
 Private Const m_byRow As Boolean = True
 Private Const m_displayIncrement As Integer = 1
 
@@ -97,6 +97,10 @@ End Property
 Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
     
     If Not Me.ProtectContents Then
+        If ThisWorkbook.ActiveSheet.Name <> UserSheet.Name Then
+            UserSheet.Activate
+            VBA.DoEvents
+        End If
         ActiveCell = Me.GetSelectedChannelNumberRange(a_value)
         ActiveCell.Value = "R" & VBA.CStr(a_value)
     End If
@@ -155,13 +159,13 @@ End Property
 ''' <remarks>   Identifies the active toggle button by saving the button name. </remarks>
 Private Sub AutoScanToggleButton_GotFocus()
     This.FocusedControlName = AutoScanToggleButton.Name
-    DoEvents
+    VBA.DoEvents
 End Sub
 
 ''' <summary>   Handles the Lost Focus event of the Auto Scan toggle button.  </summary>
 Private Sub AutoScanToggleButton_LostFocus()
     This.FocusedControlName = VBA.vbNullString
-    DoEvents
+    VBA.DoEvents
 End Sub
 
 ''' <summary>   Handles the Auto Scan toggle button. </summary>
@@ -234,13 +238,13 @@ End Property
 ''' <remarks>   Identifies the active toggle button by saving the button name. </remarks>
 Private Sub AutoSingleToggleButton_GotFocus()
     This.FocusedControlName = AutoSingleToggleButton.Name
-    DoEvents
+    VBA.DoEvents
 End Sub
 
 ''' <summary>   Handles the Lost Focus event of the Auto Single toggle button.  </summary>
 Private Sub AutoSingleToggleButton_LostFocus()
     This.FocusedControlName = VBA.vbNullString
-    DoEvents
+    VBA.DoEvents
 End Sub
 
 ''' <summary>   Handles the Auto Single toggle button. </summary>
@@ -313,13 +317,13 @@ End Property
 ''' <remarks>   Identifies the active toggle button by saving the button name. </remarks>
 Private Sub ManualScanToggleButton_GotFocus()
     This.FocusedControlName = ManualScanToggleButton.Name
-    DoEvents
+    VBA.DoEvents
 End Sub
 
 ''' <summary>   Handles the Lost Focus event of the Manual Scan toggle button.  </summary>
 Private Sub ManualScanToggleButton_LostFocus()
     This.FocusedControlName = VBA.vbNullString
-    DoEvents
+    VBA.DoEvents
 End Sub
 
 ''' <summary>   Handles the Manual Scan toggle button. </summary>
@@ -392,13 +396,13 @@ End Property
 ''' <remarks>   Identifies the active toggle button by saving the button name. </remarks>
 Private Sub ManualSingleToggleButton_GotFocus()
     This.FocusedControlName = ManualSingleToggleButton.Name
-    DoEvents
+    VBA.DoEvents
 End Sub
 
 ''' <summary>   Handles the Lost Focus event of the Manual Single toggle button.  </summary>
 Private Sub ManualSingleToggleButton_LostFocus()
     This.FocusedControlName = VBA.vbNullString
-    DoEvents
+    VBA.DoEvents
 End Sub
 
 ''' <summary>   Handles the Manual Single toggle button. </summary>

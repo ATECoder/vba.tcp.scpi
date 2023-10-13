@@ -94,7 +94,7 @@ Public Sub RunAllTests()
                 This.FailedCount = This.FailedCount + 1
             End If
         End If
-        DoEvents
+        VBA.DoEvents
     Next p_testNumber
     AfterAll
     Debug.Print "Ran " & VBA.CStr(This.RunCount) & " out of " & VBA.CStr(This.TestCount) & " tests."

@@ -9,10 +9,8 @@ SCPI:
 
 
 
-
 ## TODO
 
-data sheet: check why we get ro on the active cell.
 check last error message does not get to the display.
 
 

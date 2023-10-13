@@ -93,7 +93,7 @@ Public Sub RunAllTests()
                 This.FailedCount = This.FailedCount + 1
             End If
         End If
-        DoEvents
+        VBA.DoEvents
     Next p_testNumber
     AfterAll
     Debug.Print "Ran " & VBA.CStr(This.RunCount) & " out of " & VBA.CStr(This.TestCount) & " tests."
@@ -551,7 +551,7 @@ Public Function TestShouldRecoverFromSyntaxFromError() As cc_isr_Test_Fx.Assert
         ' clear the error state
         cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
         
-        DoEvents
+        VBA.DoEvents
         cc_isr_Core_IO.Factory.NewStopwatch().Wait 100
         
     End If
