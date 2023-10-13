@@ -171,7 +171,7 @@ Public Sub OnAutoScanToggleButtonChange()
 
     If This.ViewModel Is Nothing Then Exit Sub
 
-    If AutoScanToggleValue Then
+    If Me.AutoScanToggleValue Then
     
         This.UserSampleSheet.DisplayStartDateTime
         Me.AutoIncrementChannelNoEnabled = True
@@ -234,20 +234,23 @@ End Sub
 ''' <summary>   Gets the execution (Can Execute) status of the Auto Scan Toggle command. </summary>
 ''' <value>   [Boolean] true if the command is executable. </value>
 Public Property Get AutoScanToggleExecutable() As Boolean
-    If Not This.UserSampleSheet Is Nothing Then
-        AutoScanToggleExecutable = This.UserSampleSheet.AutoScanToggleExecutable
-    Else
+    
+    If This.UserSampleSheet Is Nothing Then
         AutoScanToggleExecutable = This.AutoScanToggleExecutable
+    Else
+        AutoScanToggleExecutable = This.UserSampleSheet.AutoScanToggleExecutable
     End If
+
 End Property
 
 ''' <summary>   Sets the execution (Can Execute) status of the Auto Scan Toggle command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is executable. </param>
 Public Property Let AutoScanToggleExecutable(ByVal a_value As Boolean)
     If Me.AutoScanToggleExecutable <> a_value Then
-        If Not This.UserSampleSheet Is Nothing Then
+        
+        If Not This.UserSampleSheet Is Nothing Then _
             This.UserSampleSheet.AutoScanToggleExecutable = a_value
-        End If
+        
         This.AutoScanToggleExecutable = a_value
     End If
 End Property
@@ -255,22 +258,27 @@ End Property
 ''' <summary>   Gets the action state of the Auto Scan Toggle command. </summary>
 ''' <value>   [Boolean] true if the command is active. </value>
 Public Property Get AutoScanToggleValue() As Boolean
-    If Not This.UserSampleSheet Is Nothing Then
-        AutoScanToggleValue = This.UserSampleSheet.AutoScanToggleValue
-    Else
+    
+    If This.UserSampleSheet Is Nothing Then
         AutoScanToggleValue = This.AutoScanToggleValue
+    Else
+        AutoScanToggleValue = This.UserSampleSheet.AutoScanToggleValue
     End If
+
 End Property
 
 ''' <summary>   Sets the action state of the Auto Scan Toggle command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let AutoScanToggleValue(ByVal a_value As Boolean)
+    
     If Me.AutoScanToggleValue <> a_value Then
-        If Not This.UserSampleSheet Is Nothing Then
+    
+        If Not This.UserSampleSheet Is Nothing Then _
             This.UserSampleSheet.AutoScanToggleValue = a_value
-        End If
+
         This.AutoScanToggleValue = a_value
     End If
+
 End Property
 
 ''' <summary>   Handles the Auto Single toggle button. </summary>
@@ -289,7 +297,7 @@ Public Sub OnAutoSingleToggleButtonChange()
     
     If This.ViewModel Is Nothing Then Exit Sub
 
-    If AutoSingleToggleValue Then
+    If Me.AutoSingleToggleValue Then
     
         Me.SelectedChannelNumber = This.UserSampleSheet.SelectedChannelNumber
         This.UserSampleSheet.DisplayStartDateTime
@@ -354,45 +362,54 @@ End Sub
 ''' <summary>   Gets the execution (Can Execute) status of the Auto Single Toggle command. </summary>
 ''' <value>   [Boolean] true if the command is executable. </value>
 Public Property Get AutoSingleToggleExecutable() As Boolean
-    If Not This.UserSampleSheet Is Nothing Then
-        AutoSingleToggleExecutable = This.UserSampleSheet.AutoSingleToggleExecutable
-    Else
+    
+    If This.UserSampleSheet Is Nothing Then
         AutoSingleToggleExecutable = This.AutoSingleToggleExecutable
+    Else
+        AutoSingleToggleExecutable = This.UserSampleSheet.AutoSingleToggleExecutable
     End If
+
 End Property
 
 ''' <summary>   Sets the execution (Can Execute) status of the Auto Single Toggle command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is executable. </param>
 Public Property Let AutoSingleToggleExecutable(ByVal a_value As Boolean)
+    
     If Me.AutoSingleToggleExecutable <> a_value Then
-        If Not This.UserSampleSheet Is Nothing Then
+        
+        If Not This.UserSampleSheet Is Nothing Then _
             This.UserSampleSheet.AutoSingleToggleExecutable = a_value
-        End If
+
         This.AutoSingleToggleExecutable = a_value
     End If
+
 End Property
 
 ''' <summary>   Gets the action state of the Auto Single Toggle command. </summary>
 ''' <value>   [Boolean] true if the command is active. </value>
 Public Property Get AutoSingleToggleValue() As Boolean
-    If Not This.UserSampleSheet Is Nothing Then
-        AutoSingleToggleValue = This.UserSampleSheet.AutoSingleToggleValue
-    Else
+    
+    If This.UserSampleSheet Is Nothing Then
         AutoSingleToggleValue = This.AutoSingleToggleValue
+    Else
+        AutoSingleToggleValue = This.UserSampleSheet.AutoSingleToggleValue
     End If
+
 End Property
 
 ''' <summary>   Sets the action state of the Auto Single Toggle command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let AutoSingleToggleValue(ByVal a_value As Boolean)
+    
     If Me.AutoSingleToggleValue <> a_value Then
-        If Not This.UserSampleSheet Is Nothing Then
+        
+        If Not This.UserSampleSheet Is Nothing Then _
             This.UserSampleSheet.AutoSingleToggleValue = a_value
-        End If
+
         This.AutoSingleToggleValue = a_value
     End If
-End Property
 
+End Property
 
 ''' <summary>   Handles the Manual Scan toggle button. </summary>
 ''' <remarks>   In manual scan we have the following settings:
@@ -410,7 +427,7 @@ Public Sub OnManualScanToggleButtonChange()
 
     If This.ViewModel Is Nothing Then Exit Sub
 
-    If ManualScanToggleValue Then
+    If Me.ManualScanToggleValue Then
     
         This.UserSampleSheet.DisplayStartDateTime
     
@@ -491,10 +508,10 @@ End Sub
 ''' <summary>   Gets the execution (Can Execute) status of the Manual Scan Toggle command. </summary>
 ''' <value>   [Boolean] true if the command is executable. </value>
 Public Property Get ManualScanToggleExecutable() As Boolean
-    If Not This.UserSampleSheet Is Nothing Then
-        ManualScanToggleExecutable = This.UserSampleSheet.ManualScanToggleExecutable
-    Else
+    If This.UserSampleSheet Is Nothing Then
         ManualScanToggleExecutable = This.ManualScanToggleExecutable
+    Else
+        ManualScanToggleExecutable = This.UserSampleSheet.ManualScanToggleExecutable
     End If
 End Property
 
@@ -502,9 +519,10 @@ End Property
 ''' <param name="a_value">   [Boolean] true if the command is executable. </param>
 Public Property Let ManualScanToggleExecutable(ByVal a_value As Boolean)
     If Me.ManualScanToggleExecutable <> a_value Then
-        If Not This.UserSampleSheet Is Nothing Then
+        
+        If Not This.UserSampleSheet Is Nothing Then _
             This.UserSampleSheet.ManualScanToggleExecutable = a_value
-        End If
+
         This.ManualScanToggleExecutable = a_value
     End If
 End Property
@@ -512,10 +530,10 @@ End Property
 ''' <summary>   Gets the action state of the Manuam Scan Toggle command. </summary>
 ''' <value>   [Boolean] true if the command is active. </value>
 Public Property Get ManualScanToggleValue() As Boolean
-    If Not This.UserSampleSheet Is Nothing Then
-        ManualScanToggleValue = This.UserSampleSheet.ManualScanToggleValue
-    Else
+    If This.UserSampleSheet Is Nothing Then
         ManualScanToggleValue = This.ManualScanToggleValue
+    Else
+        ManualScanToggleValue = This.UserSampleSheet.ManualScanToggleValue
     End If
 End Property
 
@@ -523,9 +541,10 @@ End Property
 ''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let ManualScanToggleValue(ByVal a_value As Boolean)
     If Me.ManualScanToggleValue <> a_value Then
-        If Not This.UserSampleSheet Is Nothing Then
+        
+        If Not This.UserSampleSheet Is Nothing Then _
             This.UserSampleSheet.ManualScanToggleValue = a_value
-        End If
+
         This.ManualScanToggleValue = a_value
     End If
 End Property
@@ -546,7 +565,7 @@ Public Sub OnManualSingleToggleButtonChange()
 
     If This.ViewModel Is Nothing Then Exit Sub
 
-    If ManualSingleToggleValue Then
+    If Me.ManualSingleToggleValue Then
     
         Me.SelectedChannelNumber = This.UserSampleSheet.SelectedChannelNumber
         This.UserSampleSheet.DisplayStartDateTime
@@ -628,10 +647,10 @@ End Sub
 ''' <summary>   Gets the execution (Can Execute) status of the Manual Single Toggle command. </summary>
 ''' <value>   [Boolean] true if the command is executable. </value>
 Public Property Get ManualSingleToggleExecutable() As Boolean
-    If Not This.UserSampleSheet Is Nothing Then
-        ManualSingleToggleExecutable = This.UserSampleSheet.ManualSingleToggleExecutable
-    Else
+    If This.UserSampleSheet Is Nothing Then
         ManualSingleToggleExecutable = This.ManualSingleToggleExecutable
+    Else
+        ManualSingleToggleExecutable = This.UserSampleSheet.ManualSingleToggleExecutable
     End If
 End Property
 
@@ -639,9 +658,10 @@ End Property
 ''' <param name="a_value">   [Boolean] true if the command is executable. </param>
 Public Property Let ManualSingleToggleExecutable(ByVal a_value As Boolean)
     If Me.ManualSingleToggleExecutable <> a_value Then
-        If Not This.UserSampleSheet Is Nothing Then
+    
+        If Not This.UserSampleSheet Is Nothing Then _
             This.UserSampleSheet.ManualSingleToggleExecutable = a_value
-        End If
+
         This.ManualSingleToggleExecutable = a_value
     End If
 End Property
@@ -649,10 +669,10 @@ End Property
 ''' <summary>   Gets the action state of the Manuam Single Toggle command. </summary>
 ''' <value>   [Boolean] true if the command is active. </value>
 Public Property Get ManualSingleToggleValue() As Boolean
-    If Not This.UserSampleSheet Is Nothing Then
-        ManualSingleToggleValue = This.UserSampleSheet.ManualSingleToggleValue
-    Else
+    If This.UserSampleSheet Is Nothing Then
         ManualSingleToggleValue = This.ManualSingleToggleValue
+    Else
+        ManualSingleToggleValue = This.UserSampleSheet.ManualSingleToggleValue
     End If
 End Property
 
@@ -660,9 +680,10 @@ End Property
 ''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let ManualSingleToggleValue(ByVal a_value As Boolean)
     If Me.ManualSingleToggleValue <> a_value Then
-        If Not This.UserSampleSheet Is Nothing Then
+    
+        If Not This.UserSampleSheet Is Nothing Then _
             This.UserSampleSheet.ManualSingleToggleValue = a_value
-        End If
+
         This.ManualSingleToggleValue = a_value
     End If
 End Property
@@ -810,18 +831,23 @@ End Property
 ''' <summary>   Sets the Selected Channel Number. </summary>
 ''' <param name="a_value">   [Integer] the Selected Channel Number value. </value>
 Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
+    
     If This.SelectedChannelNumber <> a_value Then
+        
         This.SelectedChannelNumber = a_value
+        
         ' emulate selecting a channel number if within range.
         If Me.IsValidChannelNumber(a_value) Then _
             Me.SelectedChannelNumberCaption = This.ChannelNumberCaptionPrefix & VBA.CStr(a_value)
+        
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.SelectedChannelNumber = a_value
         
-        If Not This.UserSampleSheet Is Nothing Then
+        If Not This.UserSampleSheet Is Nothing Then _
             This.UserSampleSheet.SelectedChannelNumber = a_value
-        End If
+
     End If
+
 End Property
 
 ''' <summary>   Gets the Single Read Enabled. </summary>

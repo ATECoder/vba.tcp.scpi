@@ -754,13 +754,14 @@ Public Function TryMonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVa
                 p_command = ":FETCH?"
                 Dim p_reading As String
                 p_length = This.Session.TryQueryLine(p_command, p_reading, p_details)
-                p_success = 0 < p_length
+                p_success = 0 <= p_length
                 If p_success Then
                 
                     Debug.Print "Reading: '"; p_reading; "'."
                 
                     ' raise the channel measured event.
-                    OnChannelMeasured a_channelNumber, p_reading
+                    If 0 < VBA.Len(p_reading) Then _
+                        OnChannelMeasured a_channelNumber, p_reading
                     
                 Else
                 

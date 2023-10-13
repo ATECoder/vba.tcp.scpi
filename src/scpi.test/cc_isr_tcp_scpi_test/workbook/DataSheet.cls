@@ -22,6 +22,12 @@ Private Const m_maxResistanceCount As Integer = 48
 Private Const m_gpibLanControllerPort As Long = 1234
 Private Const m_primaryGpibAddress As Integer = 16
 
+Private Type this_
+    FocusedControlName As String
+End Type
+
+Private This As this_
+
 ''' <summary>   Initializes and returns an instance of this object. </summary>
 Public Function Initialize() As DataSheet
     
@@ -110,6 +116,108 @@ End Sub
 Private Sub ClearReadingsButton_Click()
     DataView.OnClearReadings
 End Sub
+
+''' <summary>   Sets the execution Can Execute) status of the Toggle Connection command. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get ToggleConnectionExecutable() As Boolean
+    ToggleConnectionExecutable = Me.ToggleConnectionButton.Enabled
+End Property
+
+''' <summary>   Sets the execution Can Execute) status of the Toggle Connection command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is executable. </param>
+Public Property Let ToggleConnectionExecutable(ByVal a_value As Boolean)
+    Me.ToggleConnectionButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets the action state of the Toggle Connection command. </summary>
+''' <value>   [Boolean] true if the command is active. </value>
+Public Property Get ToggleConnectionValue() As Boolean
+    ToggleConnectionValue = Me.ToggleConnectionButton.Value
+End Property
+
+''' <summary>   Sets the action state of the Toggle Connection command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is active. </param>
+Public Property Let ToggleConnectionValue(ByVal a_value As Boolean)
+    Me.ToggleConnectionButton.Value = a_value
+End Property
+
+''' <summary>   Handles the Got Focus event of the Toggle Connectionbutton.  </summary>
+''' <remarks>   Identifies the active toggle button by saving the button name. </remarks>
+Private Sub ToggleConnectionButton_GotFocus()
+    This.FocusedControlName = Me.ToggleConnectionButton.Name
+    VBA.DoEvents
+End Sub
+
+''' <summary>   Handles the Lost Focus event of the Toggle Connectionbutton.  </summary>
+Private Sub ToggleConnectionButton_LostFocus()
+    This.FocusedControlName = VBA.vbNullString
+    VBA.DoEvents
+End Sub
+
+''' <summary>   Handles the Toggle Connectionbutton. </summary>
+''' <remarks>   The button change event also causes a click event.
+''' This method issues the click event on actual click.
+''' Note: Make sure to not implement the click event,
+Private Sub ToggleConnectionButton_Change()
+
+    On Error GoTo err_Handler:
+    
+    If This.FocusedControlName = Me.ToggleConnectionButton.Name Then
+
+        On Error GoTo 0
+
+        ' Commands for click
+        Me.OnConnectionChange
+        
+    Else
+
+        On Error GoTo 0
+
+        ' Commands for change from within the sheet
+        Me.OnConnectionChange
+
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    On Error GoTo 0
+    
+    ' Commands for change from outside the sheet
+    Me.OnConnectionChange
+    
+End Sub
+
+Friend Sub OnConnectionChange()
+
+    If Me.ToggleConnectionButton.Value Then
+    
+        Dim p_viewModel As cc_isr_Tcp_Scpi.K2700ViewModel
+        
+        Set p_viewModel = cc_isr_Tcp_Scpi.Factory.NewK2700ViewModel
+        
+        ' initialize the views before initializing the view model
+        ' the view model gets initialized upon connecting.
+        DataView.Initialize p_viewModel
+        UserView.Initialize p_viewModel
+    
+    End If
+    
+    Me.ToggleConnectionButton.Caption = IIf(Me.ToggleConnectionButton.Value, "Tap to Disconnect", "Tap to Connect")
+
+    DataView.ToggleConnectionValue = Me.ToggleConnectionButton.Value
+    
+    ' Commands for change from outside the sheet
+    DataView.OnToggleConnectionButtonChange
+
+End Sub
+
 
 ''' <summary>   Handles the change event of the spreadsheet. </summary>
 ''' <remarks>   Updates the relevant values of the <see cref="DataView"/> </remarks>

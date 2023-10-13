@@ -101,7 +101,9 @@ Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
             UserSheet.Activate
             VBA.DoEvents
         End If
-        ActiveCell = Me.GetSelectedChannelNumberRange(a_value)
+        ' select this cell as the active cell
+        Me.GetSelectedChannelNumberRange(a_value).Activate
+        ' set the active cell number.
         ActiveCell.Value = "R" & VBA.CStr(a_value)
     End If
 
@@ -158,7 +160,7 @@ End Property
 ''' <summary>   Handles the Got Focus event of the Auto Scan toggle button.  </summary>
 ''' <remarks>   Identifies the active toggle button by saving the button name. </remarks>
 Private Sub AutoScanToggleButton_GotFocus()
-    This.FocusedControlName = AutoScanToggleButton.Name
+    This.FocusedControlName = Me.AutoScanToggleButton.Name
     VBA.DoEvents
 End Sub
 
@@ -176,9 +178,9 @@ Private Sub AutoScanToggleButton_Change()
 
     On Error GoTo err_Handler:
     
-    UserView.AutoScanToggleValue = AutoScanToggleButton.Value
+    UserView.AutoScanToggleValue = Me.AutoScanToggleButton.Value
     
-    If This.FocusedControlName = AutoScanToggleButton.Name Then
+    If This.FocusedControlName = Me.AutoScanToggleButton.Name Then
 
         On Error GoTo 0
 
@@ -237,7 +239,7 @@ End Property
 ''' <summary>   Handles the Got Focus event of the Auto Single toggle button.  </summary>
 ''' <remarks>   Identifies the active toggle button by saving the button name. </remarks>
 Private Sub AutoSingleToggleButton_GotFocus()
-    This.FocusedControlName = AutoSingleToggleButton.Name
+    This.FocusedControlName = Me.AutoSingleToggleButton.Name
     VBA.DoEvents
 End Sub
 
@@ -255,9 +257,9 @@ Private Sub AutoSingleToggleButton_Change()
 
     On Error GoTo err_Handler:
     
-    UserView.AutoSingleToggleValue = AutoSingleToggleButton.Value
+    UserView.AutoSingleToggleValue = Me.AutoSingleToggleButton.Value
     
-    If This.FocusedControlName = AutoSingleToggleButton.Name Then
+    If This.FocusedControlName = Me.AutoSingleToggleButton.Name Then
 
         On Error GoTo 0
         
@@ -316,7 +318,7 @@ End Property
 ''' <summary>   Handles the Got Focus event of the Manual Scan toggle button.  </summary>
 ''' <remarks>   Identifies the active toggle button by saving the button name. </remarks>
 Private Sub ManualScanToggleButton_GotFocus()
-    This.FocusedControlName = ManualScanToggleButton.Name
+    This.FocusedControlName = Me.ManualScanToggleButton.Name
     VBA.DoEvents
 End Sub
 
@@ -334,9 +336,9 @@ Private Sub ManualScanToggleButton_Change()
 
     On Error GoTo err_Handler:
     
-    UserView.ManualScanToggleValue = ManualScanToggleButton.Value
+    UserView.ManualScanToggleValue = Me.ManualScanToggleButton.Value
     
-    If This.FocusedControlName = ManualScanToggleButton.Name Then
+    If This.FocusedControlName = Me.ManualScanToggleButton.Name Then
 
         On Error GoTo 0
 
@@ -395,7 +397,7 @@ End Property
 ''' <summary>   Handles the Got Focus event of the Manual Single toggle button.  </summary>
 ''' <remarks>   Identifies the active toggle button by saving the button name. </remarks>
 Private Sub ManualSingleToggleButton_GotFocus()
-    This.FocusedControlName = ManualSingleToggleButton.Name
+    This.FocusedControlName = Me.ManualSingleToggleButton.Name
     VBA.DoEvents
 End Sub
 
@@ -413,9 +415,9 @@ Private Sub ManualSingleToggleButton_Change()
 
     On Error GoTo err_Handler:
     
-    UserView.ManualSingleToggleValue = ManualSingleToggleButton.Value
+    UserView.ManualSingleToggleValue = Me.ManualSingleToggleButton.Value
     
-    If This.FocusedControlName = ManualSingleToggleButton.Name Then
+    If This.FocusedControlName = Me.ManualSingleToggleButton.Name Then
 
         On Error GoTo 0
 

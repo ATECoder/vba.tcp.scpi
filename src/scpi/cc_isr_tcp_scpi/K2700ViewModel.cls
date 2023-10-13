@@ -71,6 +71,7 @@ Private Type this_
     SocketAddress As String
     SocketId As Integer
     SessionTimeout As Integer
+    HasValidSocketAddress As Boolean
 
     ' session settings
     Session As cc_isr_Ieee488.TcpSession
@@ -299,6 +300,28 @@ End Sub
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
+''' <summary>   Gets the has valid socket address condition indicating that the socket address
+''' was parsed and has the expected port numbers. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get HasValidSocketAddress() As Boolean
+    HasValidSocketAddress = This.HasValidSocketAddress
+End Property
+
+''' <summary>   Parses the current socket address and sets the host and port values. </summary>
+''' <param name="a_value">   [String] the socket address. </param>
+Friend Sub ParseSocketAddress(ByVal a_value As String)
+    This.HasValidSocketAddress = False
+    This.SocketAddress = a_value
+    This.Host = VBA.vbNullString
+    This.Port = cc_isr_Winsock.ws32_INVALID_SOCKET
+    If cc_isr_Winsock.Winsock.TryParseAddress(This.SocketAddress, This.Host, This.Port, Me.LastErrorMessage) Then _
+        This.HasValidSocketAddress = VBA.vbNullString <> This.Host _
+            And (5025 = This.Port Or 1234 = This.Port)
+    Me.OnPropertyChanged "Port"
+    Me.OnPropertyChanged "Host"
+    Me.OnPropertyChanged "SocketAddress"
+End Sub
+
 ''' <summary>   Gets the host dotted IP Address. </summary>
 ''' <value>   [String]. </value>
 Public Property Get Host() As String
@@ -321,8 +344,7 @@ End Property
 ''' <param name="a_value">   [String] the message value. </value>
 Public Property Let SocketAddress(ByVal a_value As String)
     If This.SocketAddress <> a_value Then
-        This.SocketAddress = a_value
-        Me.OnPropertyChanged "SocketAddress"
+        Me.ParseSocketAddress (a_value)
         Me.ConnectionExecutableSetter
     End If
 End Property
@@ -354,6 +376,7 @@ Public Property Let SessionTimeout(ByVal a_value As Integer)
     If This.SessionTimeout <> a_value Then
         This.SessionTimeout = a_value
         Me.OnPropertyChanged "SessionTimeout"
+        ' connection executable require a positive timeout
         Me.ConnectionExecutableSetter
     End If
 End Property
@@ -404,13 +427,7 @@ End Property
 '''             can be executed. </summary>
 Friend Sub ConnectionExecutableSetter()
     Dim p_canExecute As Boolean
-    If cc_isr_Winsock.Winsock.TryParseAddress(This.SocketAddress, This.Host, This.Port, Me.LastErrorMessage) Then _
-        p_canExecute = VBA.vbNullString <> This.Host _
-            And (5025 = This.Port Or 1234 = This.Port) _
-            And 0 < This.SessionTimeout
-    Me.OnPropertyChanged "Port"
-    Me.OnPropertyChanged "Host"
-    Me.OnPropertyChanged "SocketAddress"
+    p_canExecute = This.HasValidSocketAddress And 0 < This.SessionTimeout
     Me.OpenConnectionExecutable = p_canExecute And Not Me.Connected
     Me.CloseConnectionExecutable = p_canExecute And Me.Connected
 End Sub
@@ -563,6 +580,10 @@ Public Sub OpenConnection()
     ' initialize all elements.
     Me.Initialize
     
+    ' disable the connectibles
+    Me.OpenConnectionExecutable = False
+    Me.CloseConnectionExecutable = False
+    
     Dim p_details As String
     If Not Me.Connectable.TryOpenConnection(This.SocketAddress, This.SessionTimeout, p_details) Then _
             cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.SocketConnectionError, _
@@ -572,6 +593,9 @@ Public Sub OpenConnection()
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
+    ' ensure that either connection or disconnections are allowed
+    Me.ConnectionExecutableSetter
+    
     On Error GoTo 0
     Exit Sub
 
@@ -640,6 +664,10 @@ Public Sub CloseConnection()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
+    ' disable the connectibles
+    Me.OpenConnectionExecutable = False
+    Me.CloseConnectionExecutable = False
+
     ' clear the last error message
     Me.LastErrorMessage = VBA.vbNullString
 
@@ -673,6 +701,9 @@ Public Sub CloseConnection()
         
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
+    
+    ' ensure that either connection or disconnections are allowed
+    Me.ConnectionExecutableSetter
 
     On Error GoTo 0
     Exit Sub
@@ -5345,6 +5376,7 @@ Private Sub Class_Initialize()
     This.GpibLanControllerPort = 1234
     This.ReadAfterWriteDelay = 1
     This.Termination = VBA.vbLf
+    This.SelectedChannelNumber = 1
     
     ' service request monitoring timer control
     This.TimerInterval = 500

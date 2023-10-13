@@ -61,6 +61,8 @@ Private Type this_
     MeasuredValue As Double
     
     ClearReadingExecutable As Boolean
+    ToggleConnectionValue As Boolean
+    ToggleConnectionExecutable As Boolean
     
 End Type
 
@@ -167,6 +169,96 @@ End Function
 ' Data Acquisition Controls
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Handles the Toggle Connection button change event. </summary>
+Public Sub OnToggleConnectionButtonChange()
+
+    Const p_procedureName As String = "OnToggleConnectionButtonChange"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    If This.ViewModel Is Nothing Then Exit Sub
+
+    ' exit if already connected or disconnected
+    If Me.ToggleConnectionValue = This.ViewModel.Connected Then Exit Sub
+    
+    If Me.ToggleConnectionValue Then
+    
+        This.ViewModel.OpenConnectionCommand
+        
+    Else
+    
+        This.ViewModel.CloseConnectionCommand
+        
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' report the last error.
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Gets the execution (Can Execute) status of the Toggle Connection command. </summary>
+''' <value>   [Boolean] true if the command is executable. </value>
+Public Property Get ToggleConnectionExecutable() As Boolean
+    If This.DataAcquisitionSheet Is Nothing Then
+        ToggleConnectionExecutable = This.ToggleConnectionExecutable
+    Else
+        ToggleConnectionExecutable = This.DataAcquisitionSheet.ToggleConnectionExecutable
+    End If
+End Property
+
+''' <summary>   Sets the execution (Can Execute) status of the Toggle Connection command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is executable. </param>
+Public Property Let ToggleConnectionExecutable(ByVal a_value As Boolean)
+    If Me.ToggleConnectionExecutable <> a_value Then
+        
+        If Not This.DataAcquisitionSheet Is Nothing Then _
+            This.DataAcquisitionSheet.ToggleConnectionExecutable = a_value
+        
+        This.ToggleConnectionExecutable = a_value
+    
+    End If
+End Property
+
+''' <summary>   Gets the action state of the Toggle Connection command. </summary>
+''' <value>   [Boolean] true if the command is active. </value>
+Public Property Get ToggleConnectionValue() As Boolean
+    If This.DataAcquisitionSheet Is Nothing Then
+        ToggleConnectionValue = This.ToggleConnectionValue
+    Else
+        ToggleConnectionValue = This.DataAcquisitionSheet.ToggleConnectionValue
+    End If
+End Property
+
+''' <summary>   Sets the action state of the Toggle Connection command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is active. </param>
+Public Property Let ToggleConnectionValue(ByVal a_value As Boolean)
+    If Me.ToggleConnectionValue <> a_value Then
+        
+        If Not This.DataAcquisitionSheet Is Nothing Then _
+            This.DataAcquisitionSheet.ToggleConnectionValue = a_value
+        
+        This.ToggleConnectionValue = a_value
+    End If
+End Property
 
 ''' <summary>   Sets the execution (Can Execute) status of the Clear Reading command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is executable. </param>
@@ -328,9 +420,15 @@ End Property
 ''' <param name="a_value">   [String] the last error message value. </value>
 Public Property Let LastErrorMessage(ByVal a_value As String)
     If This.LastErrorMessage <> a_value Then
+        
         This.LastErrorMessage = a_value
+        
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.LastErrorMessage = a_value
+            
+        If Not This.DataAcquisitionSheet Is Nothing Then _
+            This.DataAcquisitionSheet.LastErrorMessage = a_value
+            
     End If
 End Property
 
@@ -345,8 +443,13 @@ End Property
 Public Property Let LastMessage(ByVal a_value As String)
     If This.LastMessage <> a_value Then
         This.LastMessage = a_value
+        
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.LastMessage = a_value
+    
+        If Not This.DataAcquisitionSheet Is Nothing Then _
+            This.DataAcquisitionSheet.LastMessage = a_value
+            
     End If
 End Property
 
@@ -484,9 +587,11 @@ End Property
 Public Property Let MeasurementCellValue(ByVal a_value As String)
     If Me.MeasurementCellValue <> a_value Then
         This.MeasurementCellValue = a_value
-        If Not This.DataAcquisitionSheet Is Nothing Then
+        
+        If Not This.DataAcquisitionSheet Is Nothing Then _
             This.DataAcquisitionSheet.Cells(Me.MeasurementRow, Me.MeasurementColumn).Value = a_value
-        End If
+        
+        
     End If
 End Property
         
@@ -504,10 +609,12 @@ End Property
 ''' <param name="a_value">   [String] the channel cell value. </value>
 Public Property Let ChannelCellValue(ByVal a_value As String)
     If Me.ChannelCellValue <> a_value Then
+        
         This.ChannelCellValue = a_value
-        If Not This.DataAcquisitionSheet Is Nothing Then
+        
+        If Not This.DataAcquisitionSheet Is Nothing Then _
             This.DataAcquisitionSheet.Cells(Me.ChannelRow, Me.ChannelColumn).Value = a_value
-        End If
+        
     End If
 End Property
 
@@ -577,6 +684,10 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
         
         Case "ClearReadingsExecutable"
             Me.ClearReadingsExecutable = This.ViewModel.ClearReadingsExecutable
+        Case "ToggleConnectionExecutable"
+            Me.ToggleConnectionExecutable = This.ViewModel.ToggleConnectionExecutable
+        Case "Connected"
+            Me.ToggleConnectionValue = This.ViewModel.Connected
 
     End Select
     
@@ -617,6 +728,7 @@ Friend Sub Synchronize()
     Me.ReadingOffset = This.ViewModel.ReadingOffset
     
     Me.ClearReadingsExecutable = This.ViewModel.ClearReadingsExecutable
+    Me.ToggleConnectionExecutable = This.ViewModel.ToggleConnectionExecutable
     
 End Sub
 

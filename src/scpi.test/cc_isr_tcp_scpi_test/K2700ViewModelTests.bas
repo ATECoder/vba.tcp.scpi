@@ -98,7 +98,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 14
+    RunTest 15
     AfterAll
 End Sub
 
@@ -3787,6 +3787,17 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' Waiting for trigger....
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00121651E+02'.
+'''  1 : 100.121651
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00121086E+02'.
+'''  2 : 100.121086
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00121704E+02'.
+'''  3 : 100.121704
+''' Test 15 TestUserViewMonitoringShouldRead passed. Elapsed time: 13514.2 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where

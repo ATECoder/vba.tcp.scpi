@@ -7,12 +7,7 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 SCPI:
 
-
-
 ## TODO
-
-check last error message does not get to the display.
-
 
 
 Run all unit tests.
