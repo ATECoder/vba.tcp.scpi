@@ -14,6 +14,7 @@ Attribute VB_Exposed = True
 Option Explicit
 
 Private Const m_timeFormat As String = "h:mm"
+Private Const m_dateFormat As String = "mm/dd/yyyy"
 Private Const m_dateCell As String = "G10"
 Private Const m_timeCell As String = "G11"
 Private Const m_probesResistanceCell As String = "C10"
@@ -81,7 +82,7 @@ Public Function GetSelectedChannelNumberRange(ByVal a_channelNo As Integer) As E
     p_row = IIf(m_byRow, m_channelRow + m_displayIncrement * (a_channelNo - 1), m_channelRow)
     Dim p_col As Integer
     p_col = IIf(m_byRow, m_channelCol, m_channelCol + m_displayIncrement * (a_channelNo - 1))
-    Set GetSelectedChannelNumberRange = Cells(p_row, p_col)
+    Set GetSelectedChannelNumberRange = UserSheet.Cells(p_row, p_col)
     
 End Function
 

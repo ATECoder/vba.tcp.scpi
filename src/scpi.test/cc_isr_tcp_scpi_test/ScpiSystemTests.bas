@@ -59,7 +59,8 @@ End Sub
 ''' With 1ms read after write delay.
 ''' TestFrontInputStateShouldRead passed. in 32.5 ms.
 ''' Ran 1 out of 1 tests.
-''' Passed: 1; Failed: 0; Inconclusive: 0.''' </code>
+''' Passed: 1; Failed: 0; Inconclusive: 0.
+''' </code>
 ''' </remarks>
 Public Sub RunAllTests()
     BeforeAll

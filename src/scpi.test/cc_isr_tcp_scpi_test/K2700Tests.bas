@@ -64,10 +64,10 @@ End Sub
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' Test 01 TestOperationCompletionShouldQuery passed. Elapsed time: 18.2 ms.
-''' Test 02 TestShouldRecoverFromSyntaxFromError passed. Elapsed time: 143.6 ms.
-''' Test 03 TestShouldRestoreFromClosedConnection passed. Elapsed time: 109.3 ms.
-''' Test 04 TestSelectiveDeviceShouldClear passed. Elapsed time: 36.0 ms.
+''' Test 01 TestOperationCompletionShouldQuery passed. Elapsed time: 23.6 ms.
+''' Test 02 TestShouldRecoverFromSyntaxFromError passed. Elapsed time: 138.4 ms.
+''' Test 03 TestShouldRestoreFromClosedConnection passed. Elapsed time: 2964.4 ms.
+''' Test 04 TestSelectiveDeviceShouldClear passed. Elapsed time: 36.4 ms.
 ''' Ran 4 out of 4 tests.
 ''' Passed: 4; Failed: 0; Inconclusive: 0.
 ''' </code>

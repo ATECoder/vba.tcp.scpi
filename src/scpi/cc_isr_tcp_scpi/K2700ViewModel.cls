@@ -1510,7 +1510,7 @@ Public Function TryQueryStatusByte(ByRef a_details As String) As Boolean
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
                 p_details
     Else
-        This.StatusByte = p_statusByte
+        Me.StatusByte = p_statusByte
     End If
     
     TryQueryStatusByte = 0 <= p_statusByte

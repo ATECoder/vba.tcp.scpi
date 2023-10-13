@@ -310,12 +310,14 @@ Public Function TryTakeFrontReading(ByRef a_reading As String, ByRef a_details A
     
     Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
     Dim p_details As String: p_details = VBA.vbNullString
+    Dim p_length As Long
     a_reading = VBA.vbNullString
 
     ' trigger and fetch a reading
     
     Dim p_command As String: p_command = ":INIT;*WAI;:READ?"
-    p_success = This.Session.TryQueryLine(p_command, a_reading, p_details)
+    p_length = This.Session.TryQueryLine(p_command, a_reading, p_details)
+    p_success = 0 < p_length
     If p_success Then
         OnChannelMeasured a_channelNumber, a_reading
     Else
@@ -344,6 +346,7 @@ Public Function TryTakeRearReading(ByVal a_channelNumber As Integer, _
     
     Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
     Dim p_details As String: p_details = VBA.vbNullString
+    Dim p_length As Long
     Dim p_command As String
     
     ' get the channel close command
@@ -360,7 +363,8 @@ Public Function TryTakeRearReading(ByVal a_channelNumber As Integer, _
     
         ' close the rear channel
         p_command = p_routeCloseCommand & ";*WAI;*OPC?"
-        p_success = This.Session.TryQueryLine(p_command, a_reading, p_details)
+        p_length = This.Session.TryQueryLine(p_command, a_reading, p_details)
+        p_success = 0 < p_length
         If Not p_success Then _
             p_details = "Failed closing channel #" & VBA.CStr(a_channelNumber) & _
                 " using the command '" & p_command & "; " & p_details
@@ -370,7 +374,8 @@ Public Function TryTakeRearReading(ByVal a_channelNumber As Integer, _
             ' trigger and fetch a reading
             
             p_command = ":INIT;*WAI;:READ?"
-            p_success = This.Session.TryQueryLine(p_command, a_reading, p_details)
+            p_length = This.Session.TryQueryLine(p_command, a_reading, p_details)
+            p_success = 0 < p_length
             If p_success Then
                 OnChannelMeasured a_channelNumber, a_reading
             Else
@@ -536,7 +541,8 @@ Public Function TryEnableMeasurementAvailableMonitoring(ByRef a_details As Strin
 
     Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
     Dim p_details As String: p_details = VBA.vbNullString
-
+    Dim p_statusByte As Integer
+    
     ' setup the status register so that we get a RQS
     ' on measurement available
     
@@ -544,7 +550,6 @@ Public Function TryEnableMeasurementAvailableMonitoring(ByRef a_details As Strin
     This.Session.WriteLine "*SRE 63"
     
     ' clear the measurement event enable register
-    
     This.Session.WriteLine "STAT:PRES"
     
     ' enable the reading available bit of the measurement event register.
@@ -565,7 +570,7 @@ Public Function TryEnableMeasurementAvailableMonitoring(ByRef a_details As Strin
 
     ' clear the service registered bit
     
-    This.Device.ReadStatusByte True
+    p_statusByte = This.Device.TryReadStatusByte(p_details, True)
     
     ' clear the flag indicating that the external
     ' trigger source was not initiated
@@ -625,7 +630,32 @@ Public Function TryConfigureExternalTriggerReading(ByVal a_function As String, _
 End Function
 
 ''' <summary>   Monitors an external trigger taking a reading from the front panel. </summary>
-''' <remarks>   Call this method from a timer event. </remarks>
+''' <remarks>   Call this method from a timer event.
+''' Note that each trigger causes the instrument to place a measurement to be fetched. Debouncing
+''' is required to ensure that only a single reading is taken upon each trigger.
+''' For example, here is a sequence of triggered readings where a single button press causes
+''' three triggers. In this case, the reading was processed if the status byte was non-zero.
+''' The new code will not process these readings. Notice, that the 5t-th reading is empty.
+''' <code>
+''' Awaiting triggers...
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00118553E+02'.
+'''  1 : 100.118553
+''' Status byte:  1 ; SRQ: False; Cleared status byte:  1
+''' Reading: '+1.00118332E+02'.
+'''  2 : 100.118332
+''' Status byte:  1 ; SRQ: False; Cleared status byte:  1
+''' Reading: '+1.00118118E+02'.
+''' 3 : 100.118118
+''' Status byte:  1 ; SRQ: False; Cleared status byte:  1
+''' Reading: '+1.00117813E+02'.
+'''  4 : 100.117813
+''' Status byte:  1 ; SRQ: False; Cleared status byte:  0
+''' Reading: ''.
+'''  5 : -1
+''' </code>
+''' Test 10 TestTriggerPollingShouldRead passed. Elapsed time: 20856.2 ms.
+''' </remarks>
 ''' <param name="a_channelNumber">     [Integer] The channel number. </param>
 ''' <param name="a_isDone">            [Boolean] True if done. </param>
 ''' <param name="a_details">           [Out, String] Details the information of why the instrument
@@ -638,7 +668,12 @@ Public Function TryMonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVa
 
     Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
     Dim p_details As String: p_details = VBA.vbNullString
-
+    Dim p_length As Long
+    Dim p_statusByte As Integer
+    Dim p_clearedStatusByte As Integer
+    Dim p_clearedStatusByte2 As Integer
+    Dim p_isServiceRequested As Boolean
+    
     Dim p_command As String
 
     ' allow other events to occur
@@ -687,32 +722,54 @@ Public Function TryMonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVa
         ' if awaiting the external trigger (external trigger source
         ' was initiated), check if service is requested
         ' check if we can use this instead:
+        p_statusByte = This.Device.TryReadStatusByte(p_details)
         
-        If 0 <> This.Device.ReadStatusByte(True) Then
+        If 0 > p_statusByte Then
+        
+            ' ignore error reading status byte
+            
+        ElseIf 0 <> p_statusByte Then
       
-            ' clear the trigger initiation status to indicate
-            ' that it needs to be primed on the next timer event
-            This.ExtTrigInitiated = False
-        
             ' clear the serial poll bit of this device
             ' the Service request bit might already be cleared at this point
-            This.Device.ReadStatusByte True
+            p_clearedStatusByte = This.Device.TryReadStatusByte(p_details)
+            
+            ' this solved the multiple reading issues to a large extent.
+            ' now each new triggered reading has the RQS bit enabled.
+            p_length = This.Session.TryWriteLine("*CLS", p_details)
+            
+            p_isServiceRequested = cc_isr_Ieee488.ServiceRequestFlags.RequestingService = _
+                (cc_isr_Ieee488.ServiceRequestFlags.RequestingService And p_statusByte)
+            
+            Debug.Print "Status byte: "; p_statusByte; "; SRQ: "; p_isServiceRequested; "; Cleared status byte: "; p_clearedStatusByte
             
             ' fetch and read the data
-          
-            p_command = ":FETCH?"
-            Dim p_reading As String
-            p_success = This.Session.TryQueryLine(p_command, p_reading, p_details)
-            If p_success Then
             
-                ' raise the channel measured event.
-                OnChannelMeasured a_channelNumber, p_reading
+            If p_isServiceRequested Then
             
-            Else
+                ' clear the trigger initiation status to indicate
+                ' that it needs to be primed on the next timer event
+                This.ExtTrigInitiated = False
             
-                a_details = "Failed fetching a reading; " & a_details
+                p_command = ":FETCH?"
+                Dim p_reading As String
+                p_length = This.Session.TryQueryLine(p_command, p_reading, p_details)
+                p_success = 0 < p_length
+                If p_success Then
+                
+                    Debug.Print "Reading: '"; p_reading; "'."
+                
+                    ' raise the channel measured event.
+                    OnChannelMeasured a_channelNumber, p_reading
+                    
+                Else
+                
+                    a_details = "Failed fetching a reading; " & p_details
+                
+                End If
             
             End If
+          
                 
         End If
     
@@ -723,25 +780,25 @@ Public Function TryMonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVa
         ' toggle external trigger source.
         
         ' These commands are already set when the instrument is confitured.
-        ' This.Session.WriteLine ":TRIG:SOUR IMM"
-        ' This.Session.WriteLine ":TRIG:SOUR EXT"
-        ' This.Session.WriteLine ":FRES:NPLC 1"
+        'This.Session.WriteLine ":TRIG:SOUR IMM"
+        'This.Session.WriteLine ":TRIG:SOUR EXT"
+        'This.Session.WriteLine ":FRES:NPLC 1"
           
         ' clear the serial poll register
         
-        This.Device.ReadStatusByte True
+        p_clearedStatusByte2 = This.Device.TryReadStatusByte(p_details)
         
-        ' initiate awaiting for the external trigger
+        ' initiate awaiting for the external trigger. This cannot include an opc query.
         
         p_command = ":INIT;*CLS"
-        p_success = This.Session.TryWriteLine(p_command, p_details)
+        p_length = This.Session.TryWriteLine(p_command, p_details)
+        p_success = 0 < p_length
         If p_success Then
             ' and indicate that external triggering was initiated
             This.ExtTrigInitiated = True
         Else
             p_details = "Failed preparing for the next external trigger; " & p_details
         End If
-        
     
     End If
     

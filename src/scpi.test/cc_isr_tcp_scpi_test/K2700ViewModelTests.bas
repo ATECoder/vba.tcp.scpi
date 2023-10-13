@@ -98,7 +98,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 16
+    RunTest 14
     AfterAll
 End Sub
 
@@ -117,7 +117,14 @@ End Sub
 ''' Test 07 TestImmediateModeShouldConfigure passed. Elapsed time: 5639.4 ms.
 ''' Test 08 TestExternalModeShouldConfigure passed. Elapsed time: 5513.5 ms.
 ''' Test 09 TestTriggerPollingShouldStartStop passed. Elapsed time: 6813.1 ms.
-''' Test 10 TestTriggerPollingShouldRead passed. Elapsed time: 11816.2 ms.
+'''  1 : 100.115234
+'''  2 : 100.114975
+'''  3 : 100.116783
+'''  4 : 100.117149
+'''  5 : 100.115334
+'''  6 : 100.115814
+'''  7 : 100.116417
+''' Test 10 TestTriggerPollingShouldRead passed. Elapsed time: 11113.5 ms.
 ''' Test 11 TestTriggerMonitoringShouldStartStop passed. Elapsed time: 7679.0 ms.
 ''' Waiting for trigger....
 '''  1 : 100.118195
@@ -153,7 +160,7 @@ Public Sub RunAllTests()
     This.PassedCount = 0
     This.FailedCount = 0
     This.InconclusiveCount = 0
-    This.TestCount = 15
+    This.TestCount = 9
     Dim p_testNumber As Integer
     For p_testNumber = 1 To This.TestCount
         Set p_outcome = RunTest(p_testNumber)
@@ -2827,7 +2834,9 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
         ' this is processed on the next timer event handler, which then
         ' sets the pause requested, which stops the timer
         If Not p_outcome.AssertSuccessful Then
+        
             This.ViewModel.StopMonitoringExternalTriggersCommand
+        
         ElseIf p_endTime < cc_isr_Core_IO.CoreExtensions.DaysNow() Then
             
             ' check if failed to stop on expiration.
@@ -2871,7 +2880,7 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
                     "Error #" & Err.Number & " handling timer event; " & Err.Description & ".")
             End If
             On Error GoTo 0
-        
+            
         End If
         
         ' record reading if the measured channel number changed.
@@ -2887,6 +2896,9 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
             DoEvents
             Debug.Print p_channel; ": "; p_reading
 
+            ' delay processing the next event by the presumed timer interval.
+            ' cc_isr_Core_IO.Factory.NewStopwatch().Wait 500
+            
             ' verify that measured channel numbers propagated correctly.
             
             If p_outcome.AssertSuccessful Then
@@ -3057,6 +3069,27 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' Awaiting triggers...
+'''  1 : 100.115234
+'''  2 : 100.114975
+'''  3 : 100.116783
+'''  4 : 100.117149
+'''  5 : 100.115334
+'''  6 : 100.115814
+'''  7 : 100.116417
+''' Test 10 TestTriggerPollingShouldRead passed. Elapsed time: 11113.5 ms.
+''' This was recorded after adding *CLS after receiving the trigger.
+''' Awaiting triggers...
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00121643E+02'.
+'''  1 : 100.121643
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00123245E+02'.
+'''  2 : 100.123245
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00122681E+02'.
+'''  3 : 100.122681
+''' Test 10 TestTriggerPollingShouldRead passed. Elapsed time: 16133.3 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -3077,7 +3110,7 @@ Public Function TestTriggerPollingShouldRead() As cc_isr_Test_Fx.Assert
     End If
     
     Dim p_enabled As Boolean: p_enabled = True
-    Dim p_duration As Double: p_duration = 5  ' in seconds
+    Dim p_duration As Double: p_duration = 10  ' in seconds
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = AssetTriggersShouldPoll(p_outcome, p_enabled, p_duration)
@@ -3178,6 +3211,7 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' Test 11 TestTriggerMonitoringShouldStartStop passed. Elapsed time: 8220.0 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -3236,6 +3270,14 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' Waiting for trigger....
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00122772E+02'.
+'''  1 : 100.122772
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00122467E+02'.
+'''  2 : 100.122467
+''' Test 12 TestTriggerMonitoringShouldRead passed. Elapsed time: 13419.9 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -3296,6 +3338,8 @@ End Function
 ''' With 1ms read after write delay.
 '''  1 : 100.104454
 ''' Test 13 TestUserViewShouldMeasureImmediately passed. Elapsed time: 14728.3 ms.
+'''  1 : 100.133842
+''' Test 13 TestUserViewShouldMeasureImmediately passed. Elapsed time: 6138.5 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -3684,6 +3728,7 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
+''' Test 14 TestUserViewMonitoringShouldStartStop passed. Elapsed time: 8259.8 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where

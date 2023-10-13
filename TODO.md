@@ -5,19 +5,15 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
-IEEE488:
-Add reset clear method.
-Add reset clear to configuring initial state.
-Add tests for recovery from query errors.
-All tests passed.
+SCPI:
+
+
+
 
 ## TODO
 
-SCPI:
-mesaurment spelling
-Update how test number gets incremented so that the test number is correct with using the test executive.
-Work on restoring connection after error. 
-fix errors on test 10.
+data sheet: check why we get ro on the active cell.
+check last error message does not get to the display.
 
 
 
