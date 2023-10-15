@@ -98,8 +98,8 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 13
-    RunTest 14
+    RunTest 1
+    ' RunTest 14
     AfterAll
 End Sub
 
@@ -1923,6 +1923,7 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     On Error GoTo err_Handler
     
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
+    Dim p_details As String
     
     If p_outcome.AssertSuccessful Then
         Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
@@ -1943,27 +1944,304 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SocketAddress, This.Observer.SocketAddress, _
-            "Observer 'SocketAddress' setting should equal the view model value.")
+            "Observer 'Socket Address' setting should equal the view model value.")
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SocketAddress, This.DataView.SocketAddress, _
-            "Data View 'SocketAddress' setting should equal the view model initial setting.")
+            "Data View 'Socket Address' setting should equal the view model initial setting.")
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SocketAddress, This.Observer.SocketAddress, _
-            "Observer and view model 'SocketAddress' setting should equal.")
+            "Observer and view model 'Socket Address' setting should equal.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SocketAddress, This.DataView.SocketAddress, _
-            "Data View and view model 'SocketAddress' setting should equal.")
+            "Data View and view model 'Socket Address' setting should equal.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(UserSheet.InitialResistance, This.ViewModel.ReadingOffset, _
-            "View Model 'ReadingOffset' setting should equal user sheet value.")
+            "View Model 'Readin gOffset' setting should equal user sheet value.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(DataSheet.GpibLanControllerPort, This.ViewModel.GpibLanControllerPort, _
             "View Model 'GpibLanControllerPort' setting should equal data sheet value.")
+            
+    ' check the Data View Status
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.Connected, _
+            "View Model Connected state should be true.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, _
+            This.DataView.ToggleConnectionValue, _
+            "Data View toggle connection value and View Model connection state should equal when connected.")
+            
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.ToggleConnectionExecutable, _
+            "View Model Toggle Connection Executable should be true.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.ToggleConnectionExecutable, _
+            This.DataView.ToggleConnectionExecutable, _
+            "Data View and View Model Toggle Connection Executables should equal.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SocketAddress, This.DataView.SocketAddress, _
+            "Data View and View Model Socket Addresses should equal.")
+   
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SessionTimeout, This.DataView.SessionTimeout, _
+            "Data View and View Model Session Timeouts should equal.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
+            "Last error message should be empty.")
+
+    This.ViewModel.LastErrorMessage = "test: no error"
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.LastErrorMessage, This.DataView.LastErrorMessage, _
+            "Data View and View Model Last Error Messages should equal.")
+    This.ViewModel.LastErrorMessage = VBA.vbNullString
+
+    This.ViewModel.LastMessage = "test message"
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.LastMessage, This.DataView.LastMessage, _
+            "Data View and View Model Last Messages should equal.")
+    This.ViewModel.LastMessage = VBA.vbNullString
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(0, This.ViewModel.MeasuredChannelNumber, _
+            "View Model Measured Channel Number should be zero.")
+    
+    This.ViewModel.MeasuredChannelNumber = 1
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredChannelNumber, This.DataView.MeasuredChannelNumber, _
+            "Data View and View Model Measured Channel Numbers should equal.")
+    This.ViewModel.MeasuredChannelNumber = 0
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(VBA.vbNullString, This.ViewModel.MeasuredReading, _
+            "Measured Reading should be empty.")
+
+    This.ViewModel.MeasuredReading = "0.0"
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredReading, This.DataView.MeasuredReading, _
+            "Data View and View Model Measured Readings should equal.")
+    This.ViewModel.MeasuredReading = VBA.vbNullString
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(cc_isr_Ieee488.Syntax.NotANumber, This.ViewModel.MeasuredValue, _
+            "Measured Value should be not a number.")
+
+    This.ViewModel.MeasuredValue = 0.1
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredValue, This.DataView.MeasuredValue, _
+            "Data View and View Model Measured Values should equal.")
+    This.ViewModel.MeasuredValue = 0#
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous, _
+            This.ViewModel.MeasurementMode, _
+            "Measurement Model should be continuous.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.DataView.MeasurementMode, _
+            "Data View and View Model Measurement Modes should equal.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.ClearReadingsExecutable, _
+            "View Model Clear Reading executable should be true.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.ClearReadingsExecutable, This.DataView.ClearReadingsExecutable, _
+            "Data View and View Model Clear Readings Executables should equal.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MaximumChannelNumber, This.DataView.MaximumChannelNumber, _
+            "Data View and View Model Maximum Channel Numbers should equal.")
+
+    ' check the User View Status
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, This.UserView.Connected, _
+            "Data View and View Model connection state should equal when connected.")
+            
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, This.UserView.FrontInputsRequired, _
+            "Data View and View Model Front Inputs Required should equal.")
+
+    This.ViewModel.FrontInputsRequired = Not This.ViewModel.FrontInputsRequired
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, This.UserView.FrontInputsRequired, _
+            "Data View and View Model Front Inputs Required should equal after toggling value.")
+    
+    This.UserView.FrontInputsRequired = Not This.ViewModel.FrontInputsRequired
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, This.UserView.FrontInputsRequired, _
+            "Data View and View Model Front Inputs Required should equal after restoring the value.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(1, This.ViewModel.SelectedChannelNumber, _
+            "View Model Selected Channel Numbers should equal 1.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, This.UserView.SelectedChannelNumber, _
+            "Data View and View Model Selected Channel Numbers should equal.")
+
+    This.ViewModel.SelectedChannelNumber = 2
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, This.UserView.SelectedChannelNumber, _
+            "Data View and View Model Selected Channel Numbers should equal after change.")
+    
+    This.UserView.SelectedChannelNumber = 1
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, This.UserView.SelectedChannelNumber, _
+            "Data View and View Model Selected Channel Numbers should equal after restoring the value.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.AutoIncrementChannelNoEnabled, This.UserView.AutoIncrementChannelNoEnabled, _
+            "Data View and View Model Auto Increment Channel No Enabled should equal.")
+
+    This.ViewModel.AutoIncrementChannelNoEnabled = Not This.ViewModel.AutoIncrementChannelNoEnabled
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.AutoIncrementChannelNoEnabled, This.UserView.AutoIncrementChannelNoEnabled, _
+            "Data View and View Model Auto Increment Channel No Enabled should equal after change.")
+
+    This.UserView.AutoIncrementChannelNoEnabled = Not This.ViewModel.AutoIncrementChannelNoEnabled
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.AutoIncrementChannelNoEnabled, This.UserView.AutoIncrementChannelNoEnabled, _
+            "Data View and View Model Auto Increment Channel No Enabled should equal after restoring the value.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SingleReadEnabled, This.UserView.SingleReadEnabled, _
+            "Data View and View Model Single Read Enabled should equal.")
+
+    This.ViewModel.SingleReadEnabled = Not This.ViewModel.SingleReadEnabled
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SingleReadEnabled, This.UserView.SingleReadEnabled, _
+            "Data View and View Model Single Read Enabled should equal after change.")
+
+    This.UserView.SingleReadEnabled = Not This.ViewModel.SingleReadEnabled
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SingleReadEnabled, This.UserView.SingleReadEnabled, _
+            "Data View and View Model Single Read Enabled should equal after restoring the value.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.UserView.MeasurementMode, _
+            "User View and View Model Measurement Modes should equal.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.Measuring, _
+            "Measuring state should be false.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Measuring, This.UserView.Measuring, _
+            "User View and View Model Measuring state should equal.")
+
+    This.ViewModel.Measuring = True
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Measuring, This.UserView.Measuring, _
+            "User View and View Model Measuring state should equal.")
+    This.ViewModel.Measuring = False
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(UserView.ReadingOffset, This.ViewModel.ReadingOffset, _
+            "View Model and User View 'Reading Offset' should equal.")
+
+    ' check how measurment mode changes the values
+    
+    If p_outcome.AssertSuccessful Then
+        'On Error Resume Next
+        ' get into design mode.
+        ' these cause error 91 althow these work form the
+        ' immediate window.
+        ' CommandBars("Exit Design Mode").Controls(1).Execute
+        'If CommandBars.GetEnabledMso("DesignMode") Then _
+        '    CommandBars.ExecuteMso "DesignMode"
+        'On Error GoTo exit_Handler:
+        UserSheet.DesignMode = True
+        DataSheet.DesignMode = True
+    End If
+    
+    This.ViewModel.MeasurementModeUnitTestSetter cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.UserView.MeasurementMode, _
+            "User View and View Model Measurement Modes should equal.")
+            
+    Dim i As Integer, j As Integer, k As Integer
+    For i = 1 To 4
+        If i = 1 Then
+            This.ViewModel.MeasurementModeUnitTestSetter cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous
+        ElseIf i = 2 Then
+            This.ViewModel.MeasurementModeUnitTestSetter cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
+        ElseIf i = 3 Then
+            This.ViewModel.MeasurementModeUnitTestSetter cc_isr_Tcp_Scpi.MeasurementModeOption.External
+        ElseIf i = 4 Then
+            This.ViewModel.MeasurementModeUnitTestSetter cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
+        End If
+        
+        For j = 1 To 2
+            If j = 1 Then
+                This.ViewModel.SingleReadEnabled = False
+            Else
+                This.ViewModel.SingleReadEnabled = True
+            End If
+            
+            For k = 1 To 2
+                If k = 1 Then
+                    This.ViewModel.Measuring = False
+                Else
+                    This.ViewModel.Measuring = True
+                End If
+                
+                If p_outcome.AssertSuccessful Then _
+                   Set p_outcome = AssertUserInterfaceState(p_outcome)
+                   
+            Next
+        
+        Next
+        
+    Next
+    
+    ' make sure to restore the none measurement mode.
+    This.ViewModel.MeasurementModeUnitTestSetter cc_isr_Tcp_Scpi.MeasurementModeOption.None
+    This.ViewModel.Measuring = False
+    
+    'On Error Resume Next
+    ' exit design mode
+    ' CommandBars.GetPressedMso ("DesignMode")
+    'CommandBars("Exit Design Mode").Controls(1).Reset
+    'On Error GoTo exit_Handler:
+
+    UserSheet.DesignMode = False
+    DataSheet.DesignMode = False
+
+    ' close connection and check status of user interface.
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.Session.Socket.TryCloseConnection(p_details), _
+            "View Model should close connection.")
+    End If
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.Device.Connected, _
+            "View Model device should be disconnected.")
+    End If
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.ToggleConnectionExecutable, This.DataView.ToggleConnectionExecutable, _
+            "Data View and View Model Toggle Connection Executables should equal after disconnection.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, This.DataView.ToggleConnectionValue, _
+            "Data View toggle connection value and View Model Connected states should equal after disconnection.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, This.UserView.Connected, _
+            "User View and View Model Connected states should equal after disconnection.")
+
+    If p_outcome.AssertSuccessful Then _
+       Set p_outcome = AssertUserInterfaceState(p_outcome)
 
     ' Finally, verify that no error message was recorded.
     If p_outcome.AssertSuccessful Then _
@@ -1998,6 +2276,465 @@ err_Handler:
     GoTo exit_Handler
 
 End Function
+
+
+Public Function AssertUserInterfaceState(ByVal a_outcome As cc_isr_Test_Fx.Assert) As cc_isr_Test_Fx.Assert
+    
+    Dim p_outcome As cc_isr_Test_Fx.Assert
+    Set p_outcome = a_outcome
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.UserView.MeasurementMode, _
+            "User View and View Model Measurement Modes should equal for testing user interface controls.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, This.UserView.Connected, _
+            "User View and View Model Connected states should equal for testing user interface controls.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SingleReadEnabled, This.UserView.SingleReadEnabled, _
+            "User View and View Model single read enabled should equal for testing user interface controls.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Measuring, This.UserView.Measuring, _
+            "User View and View Model Measuring states should equal for testing user interface controls.")
+    
+    If Not This.ViewModel.Connected Then
+    
+        If p_outcome.AssertSuccessful Then _
+            Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoScanToggleExecutable, _
+                "User view Auto Scan Toggle should not be executable when connected.")
+    
+        If p_outcome.AssertSuccessful Then _
+            Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoSingleToggleExecutable, _
+                "User view Auto Single Toggle should not be executable when connected.")
+    
+        If p_outcome.AssertSuccessful Then _
+            Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualScanToggleExecutable, _
+                "User view Manual Scan Toggle should not be executable when connected.")
+    
+        If p_outcome.AssertSuccessful Then _
+            Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualSingleToggleExecutable, _
+                "User view Manual Single Toggle should not be executable when connected.")
+    
+    ElseIf cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous = This.ViewModel.MeasurementMode Or _
+           cc_isr_Tcp_Scpi.MeasurementModeOption.None = This.ViewModel.MeasurementMode Then
+
+        If p_outcome.AssertSuccessful Then _
+            Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.AutoScanToggleExecutable, _
+                "User view Auto Scan Toggle should be executable where " & _
+                "Measurement Mode is Continuous, Single Read, and Measuring.")
+    
+        If p_outcome.AssertSuccessful Then _
+            Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.AutoSingleToggleExecutable, _
+                "User view Auto Single Toggle should be executable where " & _
+                "Measurement Mode is Continuous, Single Read, and Measuring.")
+    
+        If p_outcome.AssertSuccessful Then _
+            Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.ManualScanToggleExecutable, _
+                "User view Manual Scan Toggle should be executable where " & _
+                "Measurement Mode is Continuous, Single Read, and Measuring.")
+    
+        If p_outcome.AssertSuccessful Then _
+            Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.ManualSingleToggleExecutable, _
+                "User view Manual Single Toggle should be executable where " & _
+                "Measurement Mode is Continuous, Single Read, and Measuring.")
+    
+        If p_outcome.AssertSuccessful Then _
+            Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoScanToggleValue, _
+                "User view Auto Scan Toggle should be released (false) where " & _
+                "Measurement Mode is Continuous, Single Read, and Measuring.")
+    
+        If p_outcome.AssertSuccessful Then _
+            Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoSingleToggleValue, _
+                "User view Auto Single Toggle should be released (false) where " & _
+                "Measurement Mode is Continuous, Single Read, and Measuring.")
+    
+        If p_outcome.AssertSuccessful Then _
+            Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualScanToggleValue, _
+                "User view Manual Scan Toggle should be released (false) where " & _
+                "Measurement Mode is Continuous, Single Read, and Measuring.")
+    
+        If p_outcome.AssertSuccessful Then _
+            Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualSingleToggleValue, _
+                "User view Manual Single Toggle should be released (false) where " & _
+                "Measurement Mode is Continuous, Single Read, and Measuring.")
+        
+    ElseIf This.ViewModel.Measuring Then
+    
+        If This.ViewModel.SingleReadEnabled Then
+        
+            Select Case This.ViewModel.MeasurementMode
+                
+                Case cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoScanToggleExecutable, _
+                            "User view Auto Scan Toggle should not be executable where " & _
+                            "Measurement Mode is Immediate, Single Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.AutoSingleToggleExecutable, _
+                            "User view Auto Single Toggle should be executable where " & _
+                            "Measurement Mode is Immediate, Single Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualScanToggleExecutable, _
+                            "User view Manual Scan Toggle should not be executable where " & _
+                            "Measurement Mode is Immediate, Single Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualSingleToggleExecutable, _
+                            "User view Manual Single Toggle should not be executable where " & _
+                            "Measurement Mode is Immediate, Single Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoScanToggleValue, _
+                            "User view Auto Scan Toggle should be released (false) where " & _
+                            "Measurement Mode is Immediate, Single Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.AutoSingleToggleValue, _
+                            "User view Auto Single Toggle should be pressed (true) where " & _
+                            "Measurement Mode is Immediate, Single Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualScanToggleValue, _
+                            "User view Manual Scan Toggle should be released (false) where " & _
+                            "Measurement Mode is Immediate, Single Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualSingleToggleValue, _
+                            "User view Manual Single Toggle should be released (false) where " & _
+                            "Measurement Mode is Immediate, Single Read, and Measuring.")
+                
+                Case cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring, cc_isr_Tcp_Scpi.MeasurementModeOption.External
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoScanToggleExecutable, _
+                            "User view Auto Scan Toggle should not be executable where " & _
+                            "Measurement Mode is external or monitoring, Single Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoSingleToggleExecutable, _
+                            "User view Auto Single Toggle should not be executable where " & _
+                            "Measurement Mode is external or monitoring, Single Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualScanToggleExecutable, _
+                            "User view Manual Scan Toggle should not be executable where " & _
+                            "Measurement Mode is external or monitoring, Single Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.ManualSingleToggleExecutable, _
+                            "User view Manual Single Toggle should be executable where " & _
+                            "Measurement Mode is external or monitoring, Single Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoScanToggleValue, _
+                            "User view Auto Scan Toggle should be released (false) where " & _
+                            "Measurement Mode is external or monitoring, Single Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoSingleToggleValue, _
+                            "User view Auto Single Toggle should be released (false) where " & _
+                            "Measurement Mode is external or monitoring, Single Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualScanToggleValue, _
+                            "User view Manual Scan Toggle should be released (false) where " & _
+                            "Measurement Mode is external or monitoring, Single Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.ManualSingleToggleValue, _
+                            "User view Manual Single Toggle should be pressed (true) where " & _
+                            "Measurement Mode is external or monitoring, Single Read, and Measuring.")
+                
+            End Select
+            
+        Else
+        
+            Select Case This.ViewModel.MeasurementMode
+                
+                Case cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.AutoScanToggleExecutable, _
+                            "User view Auto Scan Toggle should be executable where " & _
+                            "Measurement Mode is Immediate, Multi-Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoSingleToggleExecutable, _
+                            "User view Auto Single Toggle should not be executable where " & _
+                            "Measurement Mode is Immediate, Multi-Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualScanToggleExecutable, _
+                            "User view Manual Scan Toggle should not be executable where " & _
+                            "Measurement Mode is Immediate, Multi-Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualSingleToggleExecutable, _
+                            "User view Manual Single Toggle should not be executable where " & _
+                            "Measurement Mode is Immediate, Multi-Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.AutoScanToggleValue, _
+                            "User view Auto Scan Toggle should be pressed (true) where " & _
+                            "Measurement Mode is Immediate, Multi-Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoSingleToggleValue, _
+                            "User view Auto Single Toggle should be released (false) where " & _
+                            "Measurement Mode is Immediate, Multi-Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualScanToggleValue, _
+                            "User view Manual Scan Toggle should be released (falsoe) where " & _
+                            "Measurement Mode is Immediate, Multi-Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualSingleToggleValue, _
+                            "User view Manual Single Toggle should be released (false) where " & _
+                            "Measurement Mode is Immediate, Multi-Read, and Measuring.")
+                
+                Case cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring, cc_isr_Tcp_Scpi.MeasurementModeOption.External
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoScanToggleExecutable, _
+                            "User view Auto Scan Toggle should not be executable where " & _
+                            "Measurement Mode is external or monitoring, Multi-Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoSingleToggleExecutable, _
+                            "User view Auto Single Toggle should not be executable where " & _
+                            "Measurement Mode is external or monitoring, Multi-Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.ManualScanToggleExecutable, _
+                            "User view Manual Scan Toggle should be executable where " & _
+                            "Measurement Mode is external or monitoring, Multi-Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualSingleToggleExecutable, _
+                            "User view Manual Single Toggle should not be executable where " & _
+                            "Measurement Mode is external or monitoring, Multi-Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoScanToggleValue, _
+                            "User view Auto Scan Toggle should be released (false) where " & _
+                            "Measurement Mode is external or monitoring, Multi-Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoSingleToggleValue, _
+                            "User view Auto Single Toggle should be released (false) where " & _
+                            "Measurement Mode is external or monitoring, Multi-Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.ManualScanToggleValue, _
+                            "User view Manual Scan Toggle should be pressed (true) where " & _
+                            "Measurement Mode is external or monitoring, Multi-Read, and Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualSingleToggleValue, _
+                            "User view Manual Single Toggle should be released (false) where " & _
+                            "Measurement Mode is external or monitoring, Multi-Read, and Measuring.")
+                
+            End Select
+        
+        End If
+    
+    Else
+    
+        If This.ViewModel.SingleReadEnabled Then
+        
+            Select Case This.ViewModel.MeasurementMode
+                
+                Case cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.AutoScanToggleExecutable, _
+                            "User view Auto Scan Toggle should be executable where " & _
+                            "Measurement Mode is Immediate, Single Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.AutoSingleToggleExecutable, _
+                            "User view Auto Single Toggle should be executable where " & _
+                            "Measurement Mode is Immediate, Single Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.ManualScanToggleExecutable, _
+                            "User view Manual Scan Toggle should be executable where " & _
+                            "Measurement Mode is Immediate, Single Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.ManualSingleToggleExecutable, _
+                            "User view Manual Single Toggle should be executable where " & _
+                            "Measurement Mode is Immediate, Single Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoScanToggleValue, _
+                            "User view Auto Scan Toggle should be released (false) where " & _
+                            "Measurement Mode is Immediate, Single Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoSingleToggleValue, _
+                            "User view Auto Single Toggle should be released (false) where " & _
+                            "Measurement Mode is Immediate, Single Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualScanToggleValue, _
+                            "User view Manual Scan Toggle should be released (false) where " & _
+                            "Measurement Mode is Immediate, Single Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualSingleToggleValue, _
+                            "User view Manual Single Toggle should be released (false) where " & _
+                            "Measurement Mode is Immediate, Single Read, and not Measuring.")
+                
+                Case cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring, cc_isr_Tcp_Scpi.MeasurementModeOption.External
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.AutoScanToggleExecutable, _
+                            "User view Auto Scan Toggle should be executable where " & _
+                            "Measurement Mode is external or monitoring, Single Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.AutoSingleToggleExecutable, _
+                            "User view Auto Single Toggle should be executable where " & _
+                            "Measurement Mode is external or monitoring, Single Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.ManualScanToggleExecutable, _
+                            "User view Manual Scan Toggle should be executable where " & _
+                            "Measurement Mode is external or monitoring, Single Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.ManualSingleToggleExecutable, _
+                            "User view Manual Single Toggle should be executable where " & _
+                            "Measurement Mode is external or monitoring, Single Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoScanToggleValue, _
+                            "User view Auto Scan Toggle should be released (false) where " & _
+                            "Measurement Mode is external or monitoring, Single Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoSingleToggleValue, _
+                            "User view Auto Single Toggle should be released (false) where " & _
+                            "Measurement Mode is external or monitoring, Single Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualScanToggleValue, _
+                            "User view Manual Scan Toggle should be released (false) where " & _
+                            "Measurement Mode is external or monitoring, Single Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualSingleToggleValue, _
+                            "User view Manual Single Toggle should be released (false) where " & _
+                            "Measurement Mode is external or monitoring, Single Read, and not Measuring.")
+                
+            End Select
+            
+        Else
+        
+            Select Case This.ViewModel.MeasurementMode
+                
+                Case cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.AutoScanToggleExecutable, _
+                            "User view Auto Scan Toggle should be executable where " & _
+                            "Measurement Mode is Immediate, Multi-Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.AutoSingleToggleExecutable, _
+                            "User view Auto Single Toggle should be executable where " & _
+                            "Measurement Mode is Immediate, Multi-Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.ManualScanToggleExecutable, _
+                            "User view Manual Scan Toggle should be executable where " & _
+                            "Measurement Mode is Immediate, Multi-Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.ManualSingleToggleExecutable, _
+                            "User view Manual Single Toggle should be executable where " & _
+                            "Measurement Mode is Immediate, Multi-Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoScanToggleValue, _
+                            "User view Auto Scan Toggle should be released (false) where " & _
+                            "Measurement Mode is Immediate, Multi-Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoSingleToggleValue, _
+                            "User view Auto Single Toggle should be released (false) where " & _
+                            "Measurement Mode is Immediate, Multi-Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualScanToggleValue, _
+                            "User view Manual Scan Toggle should be released (false) where " & _
+                            "Measurement Mode is Immediate, Multi-Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualSingleToggleValue, _
+                            "User view Manual Single Toggle should be released (false) where " & _
+                            "Measurement Mode is Immediate, Multi-Read, and not Measuring.")
+                
+                Case cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring, cc_isr_Tcp_Scpi.MeasurementModeOption.External
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.AutoScanToggleExecutable, _
+                            "User view Auto Scan Toggle should be executable where " & _
+                            "Measurement Mode is external or monitoring, Multi-Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.AutoSingleToggleExecutable, _
+                            "User view Auto Single Toggle should be executable where " & _
+                            "Measurement Mode is external or monitoring, Multi-Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.ManualScanToggleExecutable, _
+                            "User view Manual Scan Toggle should executable where " & _
+                            "Measurement Mode is external or monitoring, Multi-Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.ManualSingleToggleExecutable, _
+                            "User view Manual Single Toggle should be executable where " & _
+                            "Measurement Mode is external or monitoring, Multi-Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoScanToggleValue, _
+                            "User view Auto Scan Toggle should be released (false) where " & _
+                            "Measurement Mode is external or monitoring, Multi-Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.AutoSingleToggleValue, _
+                            "User view Auto Single Toggle should be released (false) where " & _
+                            "Measurement Mode is external or monitoring, Multi-Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualScanToggleValue, _
+                            "User view Manual Scan Toggle should be released (false) where " & _
+                            "Measurement Mode is external or monitoring, Multi-Read, and not Measuring.")
+                
+                    If p_outcome.AssertSuccessful Then _
+                        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualSingleToggleValue, _
+                            "User view Manual Single Toggle should be released (false) where " & _
+                            "Measurement Mode is external or monitoring, Multi-Read, and not Measuring.")
+                
+            End Select
+        
+        End If
+    
+    End If
+    
+    Set AssertUserInterfaceState = p_outcome
+    
+End Function
+
+
 
 ''' <summary>   Unit test. Asserts that view model should connect. </summary>
 ''' <remarks>

@@ -29,6 +29,7 @@ Private Const m_displayIncrement As Integer = 1
 
 Private Type this_
     FocusedControlName As String
+    DesignMode As Boolean
 End Type
 
 Private This As this_
@@ -36,9 +37,31 @@ Private This As this_
 ''' <summary>   Initializes and returns an instance of this object. </summary>
 Public Function Initialize() As UserSheet
     
+    Me.AutoScanToggleButton.Enabled = False
+    Me.AutoScanToggleButton.Value = False
+    Me.AutoSingleToggleButton.Enabled = False
+    Me.AutoSingleToggleButton.Value = False
+    Me.ManualScanToggleButton.Enabled = False
+    Me.ManualScanToggleButton.Value = False
+    Me.ManualSingleToggleButton.Enabled = False
+    Me.ManualSingleToggleButton.Value = False
+    
+    ' initialize the state of the command buttons
     Set Initialize = Me
 
 End Function
+
+''' <summary>   Gets the design mode for unit testing. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get DesignMode() As Boolean
+    DesignMode = Me.DesignMode
+End Property
+
+''' <summary>   Sets the design mode for unit testing. </summary>
+''' <param name="a_value">   [Boolean] true if in design mode. </param>
+Public Property Let DesignMode(ByVal a_value As Boolean)
+    This.DesignMode = a_value
+End Property
 
 ''' <summary>   Set the sheet date and time display. </summary>
 Public Sub DisplayStartDateTime()
@@ -179,6 +202,10 @@ Private Sub AutoScanToggleButton_Change()
 
     On Error GoTo err_Handler:
     
+    ' this prevents execution when the button is disabled, which is required in order
+    ' to correctly initialize the state of the button.
+    If This.DesignMode Or Not Me.AutoScanToggleButton.Enabled Then Exit Sub
+    
     UserView.AutoScanToggleValue = Me.AutoScanToggleButton.Value
     
     If This.FocusedControlName = Me.AutoScanToggleButton.Name Then
@@ -258,6 +285,10 @@ End Sub
 Private Sub AutoSingleToggleButton_Change()
 
     On Error GoTo err_Handler:
+    
+    ' this prevents execution when the button is disabled, which is required in order
+    ' to correctly initialize the state of the button.
+    If This.DesignMode Or Not Me.AutoSingleToggleButton.Enabled Then Exit Sub
     
     UserView.AutoSingleToggleValue = Me.AutoSingleToggleButton.Value
     
@@ -339,6 +370,10 @@ Private Sub ManualScanToggleButton_Change()
 
     On Error GoTo err_Handler:
     
+    ' this prevents execution when the button is disabled, which is required in order
+    ' to correctly initialize the state of the button.
+    If This.DesignMode Or Not Me.ManualScanToggleButton.Enabled Then Exit Sub
+    
     UserView.ManualScanToggleValue = Me.ManualScanToggleButton.Value
     
     If This.FocusedControlName = Me.ManualScanToggleButton.Name Then
@@ -418,6 +453,10 @@ End Sub
 Private Sub ManualSingleToggleButton_Change()
 
     On Error GoTo err_Handler:
+    
+    ' this prevents execution when the button is disabled, which is required in order
+    ' to correctly initialize the state of the button.
+    If This.DesignMode Or Not Me.ManualSingleToggleButton.Enabled Then Exit Sub
     
     UserView.ManualSingleToggleValue = Me.ManualSingleToggleButton.Value
     

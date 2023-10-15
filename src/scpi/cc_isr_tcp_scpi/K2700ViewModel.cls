@@ -431,6 +431,11 @@ Friend Sub ConnectionExecutableSetter()
     p_canExecute = This.HasValidSocketAddress And 0 < This.SessionTimeout
     Me.OpenConnectionExecutable = p_canExecute And Not Me.Connected
     Me.CloseConnectionExecutable = p_canExecute And Me.Connected
+    
+    ' notify of connection state.
+    Me.OnPropertyChanged "Connected"
+    Me.OnPropertyChanged "CanConnect"
+    
 End Sub
 
 ''' <summary>   Gets the condition indicating that the toggle Connection command
@@ -2594,7 +2599,7 @@ Public Property Get MeasurementMode() As cc_isr_Tcp_Scpi.MeasurementModeOption
     MeasurementMode = This.MeasurementMode
 End Property
 
-''' <summary>   Gets the measurement mode. </summary>
+''' <summary>   Sets the measurement mode. </summary>
 ''' <param name=-"a_value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>] the value. </param>
 ''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
 Friend Property Let MeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementModeOption)
@@ -2603,6 +2608,15 @@ Friend Property Let MeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.Measurement
         Me.OnPropertyChanged "MeasurementMode"
     End If
 End Property
+
+''' <summary>   Sets the measurement mode for unit testing. </summary>
+''' <param name=-"a_value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>] the value. </param>
+Public Sub MeasurementModeUnitTestSetter(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementModeOption)
+    If This.MeasurementMode <> a_value Then
+        This.MeasurementMode = a_value
+        Me.OnPropertyChanged "MeasurementMode"
+    End If
+End Sub
 
 ''' <summary>   Gets the Front Inputs Required. </summary>
 ''' <remarks>   True if front inputs are Required; otherwise, Rear inputs. </remarks>
@@ -2895,7 +2909,17 @@ Public Property Let MeasuredReading(ByVal a_value As String)
     If This.MeasuredReading <> a_value Then
         This.MeasuredReading = a_value
         Me.OnPropertyChanged "MeasuredReading"
-        Me.MeasuredValue = CDbl(a_value)
+        If 0 < VBA.Len(a_value) Then
+            Dim p_value As Double
+            Dim p_details As String
+            If cc_isr_Core.StringExtensions.TryParseDouble(a_value, p_value, p_details) Then
+                Me.MeasuredValue = cc_isr_Ieee488.Syntax.NotANumber
+            Else
+                Me.MeasuredValue = p_value
+            End If
+        Else
+            Me.MeasuredValue = cc_isr_Ieee488.Syntax.NotANumber
+        End If
     End If
 End Property
 
@@ -4886,7 +4910,11 @@ End Sub
 ''' <see cref="cc_isr_Ieee488.Ieee488Session"/> object . </summary>
 ''' <value>   [<see cref="cc_isr_Winsock.IConnectable"/>]. </value>
 Public Property Get Connectable() As cc_isr_Winsock.IConnectable
-    Set Connectable = This.Session.Socket
+    If This.Session Is Nothing Then
+        Set Connectable = Nothing
+    Else
+        Set Connectable = This.Session.Socket
+    End If
 End Property
 
 ''' <summary>   Returns the connection state of the <see cref="cc_isr_Winsock.IConnectable"/>. </summary>
@@ -5266,6 +5294,9 @@ Private Sub m_socket_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Conne
         Me.SocketId = 0
     
     End If
+    
+    ' notify of connection state.
+    Me.ConnectionExecutableSetter
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:

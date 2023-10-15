@@ -5,18 +5,25 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
+Sheets and views: Initialize user interface state.
+View Model: Add property change on connection and can connect.
+Tests: Validate user interface state on initialize.
+
+
 ## TODO
-
- 1 : 100.12796
-Test 13 TestUserViewShouldMeasureImmediately passed. Elapsed time: 6118.0 ms.
-Test 14 TestUserViewMonitoringShouldStartStop failed. User View Manual Scan toggle button should be depressed (Value = True). Elapsed time: 5697.3 ms.
-Status byte:  68 ; SRQ: True; Cleared status byte:  4 
-Test 15 TestUserViewMonitoringShouldRead failed. User View Manual Scan toggle button should be depressed (Value = True). Elapsed time: 10526.7 ms.
-
-
-
 Run all unit tests.
+Test running from the User Sheet.
+Use open with reset to open the connection.
+
+ 1 : 100.096039
+Test 13 TestUserViewShouldMeasureImmediately passed. Elapsed time: 6218.8 ms.
+Test 14 TestUserViewMonitoringShouldStartStop failed. User View Manual Scan toggle button should be depressed (Value = True). Elapsed time: 22132.9 ms.
+
+
+
+
 Move to flying.
+
 
 
 Flying

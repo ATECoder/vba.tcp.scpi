@@ -21,6 +21,8 @@ Private Type this_
     ViewModel As K2700ViewModel
     UserSampleSheet As UserSheet
     
+    Connected As Boolean
+    
     AutoIncrementChannelNoEnabled As Boolean
     FrontInputsRequired As Boolean
     SingleReadEnabled As Boolean
@@ -148,6 +150,31 @@ err_Handler:
     GoTo exit_Handler
 
 End Function
+
+''' <summary>    Gets the Initialization condition of this object. </summary>
+''' <value>   [Boolean] True if initialized. </value>
+Public Property Get Initialized() As Boolean
+    Initialized = Not This.ViewModel Is Nothing
+End Property
+
+''' <summary>   Gets the selected state. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get Connected() As Boolean
+    Connected = This.Connected
+End Property
+
+''' <summary>   Sets the connected state. </summary>
+''' <param name="a_value">   [Boolean] the connected state. </param>
+Public Property Let Connected(ByVal a_value As Boolean)
+    
+    If Me.Connected <> a_value Then
+        This.Connected = a_value
+    
+        ' ensure that the measurement status is set.
+        Me.OnMeasurementModeChanged
+    
+    End If
+End Property
 
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -885,7 +912,7 @@ Public Property Let SingleReadEnabled(ByVal a_value As Boolean)
         This.SingleReadEnabled = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.SingleReadEnabled = a_value
-        Me.OnMeasurementModeChanged This.MeasurementMode, a_value, This.Measuring
+        Me.OnMeasurementModeChanged
     End If
 End Property
 
@@ -900,7 +927,7 @@ End Property
 Public Property Let Measuring(ByVal a_value As Boolean)
     If This.Measuring <> a_value Then
         This.Measuring = a_value
-        Me.OnMeasurementModeChanged This.MeasurementMode, This.SingleReadEnabled, a_value
+        Me.OnMeasurementModeChanged
     End If
 End Property
 
@@ -917,46 +944,44 @@ End Property
 Public Property Let MeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementModeOption)
     If This.MeasurementMode <> a_value Then
         This.MeasurementMode = a_value
-        Me.OnMeasurementModeChanged a_value, This.SingleReadEnabled, This.Measuring
+        Me.OnMeasurementModeChanged
     End If
 End Property
 
 ''' <summary>   Handles the change of measurment mode or single read enabled. </summary>
 ''' <remarks>   This enableds or disables the buttons and toggles the buttons
 ''' state if not toggled. </remarks>
-''' <param name=-"a_measurementMode>     [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>] the value. </param>
-''' <param name=-"a_singleReadEnabled>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>] the value. </param>
-Friend Sub OnMeasurementModeChanged(ByVal a_measurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption, _
-    ByVal a_singleReadEnabled As Boolean, ByVal a_measuring As Boolean)
+Friend Sub OnMeasurementModeChanged()
 
-    If cc_isr_Tcp_Scpi.MeasurementModeOption.None = a_measurementMode Then
-        Me.AutoScanToggleExecutable = True
-        Me.AutoSingleToggleExecutable = True
+    If cc_isr_Tcp_Scpi.MeasurementModeOption.None = This.MeasurementMode Or _
+        cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous = This.MeasurementMode Then
+        Me.AutoScanToggleExecutable = This.Connected
+        Me.AutoSingleToggleExecutable = This.Connected
         Me.AutoScanToggleValue = False
         Me.AutoSingleToggleValue = False
-        Me.ManualScanToggleExecutable = True
-        Me.ManualSingleToggleExecutable = True
+        Me.ManualScanToggleExecutable = This.Connected
+        Me.ManualSingleToggleExecutable = This.Connected
         Me.ManualScanToggleValue = False
         Me.ManualSingleToggleValue = False
-    ElseIf cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate = a_measurementMode Then
-        Me.AutoScanToggleExecutable = Not (a_singleReadEnabled And a_measuring)
-        Me.AutoSingleToggleExecutable = a_singleReadEnabled Or Not a_measuring
-        Me.AutoScanToggleValue = Not a_singleReadEnabled And a_measuring
-        Me.AutoSingleToggleValue = a_singleReadEnabled And a_measuring
-        Me.ManualScanToggleExecutable = Not a_measuring
-        Me.ManualSingleToggleExecutable = Not a_measuring
+    ElseIf cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate = This.MeasurementMode Then
+        Me.AutoScanToggleExecutable = This.Connected And (Not (This.SingleReadEnabled And This.Measuring))
+        Me.AutoSingleToggleExecutable = This.Connected And (This.SingleReadEnabled Or Not This.Measuring)
+        Me.AutoScanToggleValue = Not This.SingleReadEnabled And This.Measuring
+        Me.AutoSingleToggleValue = This.SingleReadEnabled And This.Measuring
+        Me.ManualScanToggleExecutable = This.Connected And Not This.Measuring
+        Me.ManualSingleToggleExecutable = This.Connected And Not This.Measuring
         Me.ManualScanToggleValue = False
         Me.ManualSingleToggleValue = False
-    ElseIf cc_isr_Tcp_Scpi.MeasurementModeOption.External = a_measurementMode Or _
-           cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring = a_measurementMode Then
-        Me.AutoScanToggleExecutable = Not a_measuring
-        Me.AutoSingleToggleExecutable = Not a_measuring
+    ElseIf cc_isr_Tcp_Scpi.MeasurementModeOption.External = This.MeasurementMode Or _
+           cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring = This.MeasurementMode Then
+        Me.AutoScanToggleExecutable = This.Connected And Not This.Measuring
+        Me.AutoSingleToggleExecutable = This.Connected And Not This.Measuring
         Me.AutoScanToggleValue = False
         Me.AutoSingleToggleValue = False
-        Me.ManualScanToggleExecutable = Not (a_singleReadEnabled And a_measuring)
-        Me.ManualSingleToggleExecutable = a_singleReadEnabled Or Not a_measuring
-        Me.ManualScanToggleValue = Not a_singleReadEnabled And a_measuring
-        Me.ManualSingleToggleValue = a_singleReadEnabled And a_measuring
+        Me.ManualScanToggleExecutable = This.Connected And (Not (This.SingleReadEnabled And This.Measuring))
+        Me.ManualSingleToggleExecutable = This.Connected And (This.SingleReadEnabled Or Not This.Measuring)
+        Me.ManualScanToggleValue = Not This.SingleReadEnabled And This.Measuring
+        Me.ManualSingleToggleValue = This.SingleReadEnabled And This.Measuring
     End If
 
 End Sub
@@ -1019,6 +1044,8 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.Measuring = This.ViewModel.Measuring
         Case "ReadingOffset"
             Me.ReadingOffset = This.ViewModel.ReadingOffset
+        Case "Connected"
+            Me.Connected = This.ViewModel.Connected
     End Select
     
 End Sub
@@ -1040,10 +1067,13 @@ Friend Sub Synchronize()
     Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
     Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
     Me.MeasurementMode = This.ViewModel.MeasurementMode
-    Me.ReadingOffset = This.ViewModel.ReadingOffset
     Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
     Me.SingleReadEnabled = This.ViewModel.SingleReadEnabled
     Me.Measuring = This.ViewModel.Measuring
+    Me.Connected = This.ViewModel.Connected
+    
+    ' ensure that the measurement status is set.
+    Me.OnMeasurementModeChanged
     
 End Sub
 
@@ -1056,11 +1086,11 @@ Friend Sub m_viewModel_PropertyChanged(ByVal a_eventArgs As cc_isr_Core.Property
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
+    Dim p_propertyName As String: p_propertyName = VBA.vbNullString
     If Not a_eventArgs Is Nothing Then
     
-        Dim p_propertyName As String
         p_propertyName = a_eventArgs.PropertyName
-        HandleViewModelPropertyChanged p_propertyName
+        Me.HandleViewModelPropertyChanged p_propertyName
     
     End If
     

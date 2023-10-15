@@ -164,6 +164,12 @@ err_Handler:
 
 End Function
 
+''' <summary>    Gets the Initialization condition of this object. </summary>
+''' <value>   [Boolean] True if initialized. </value>
+Public Property Get Initialized() As Boolean
+    Initialized = Not This.ViewModel Is Nothing
+End Property
+
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' Data Acquisition Controls
@@ -257,6 +263,16 @@ Public Property Let ToggleConnectionValue(ByVal a_value As Boolean)
             This.DataAcquisitionSheet.ToggleConnectionValue = a_value
         
         This.ToggleConnectionValue = a_value
+    End If
+End Property
+
+''' <summary>   Gets the execution (Can Execute) status of the Clear Reading command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is executable. </param>
+Public Property Get ClearReadingsExecutable() As Boolean
+    If This.DataAcquisitionSheet.ClearReadingsButton Is Nothing Then
+        ClearReadingsExecutable = This.ClearReadingExecutable
+    Else
+        ClearReadingsExecutable = This.DataAcquisitionSheet.ClearReadingsButton.Enabled
     End If
 End Property
 
@@ -729,6 +745,7 @@ Friend Sub Synchronize()
     
     Me.ClearReadingsExecutable = This.ViewModel.ClearReadingsExecutable
     Me.ToggleConnectionExecutable = This.ViewModel.ToggleConnectionExecutable
+    Me.ToggleConnectionValue = This.ViewModel.Connected
     
 End Sub
 

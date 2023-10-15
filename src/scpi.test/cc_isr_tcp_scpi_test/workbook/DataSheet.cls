@@ -24,12 +24,16 @@ Private Const m_primaryGpibAddress As Integer = 16
 
 Private Type this_
     FocusedControlName As String
+    DesignMode As Boolean
 End Type
 
 Private This As this_
 
 ''' <summary>   Initializes and returns an instance of this object. </summary>
 Public Function Initialize() As DataSheet
+    
+    ' initialize the state of user interface.
+    Me.ToggleConnectionButton.Value = False
     
     Set Initialize = Me
 
@@ -117,7 +121,19 @@ Private Sub ClearReadingsButton_Click()
     DataView.OnClearReadings
 End Sub
 
-''' <summary>   Sets the execution Can Execute) status of the Toggle Connection command. </summary>
+''' <summary>   Gets the design mode for unit testing. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get DesignMode() As Boolean
+    DesignMode = Me.DesignMode
+End Property
+
+''' <summary>   Sets the design mode for unit testing. </summary>
+''' <param name="a_value">   [Boolean] true if in design mode. </param>
+Public Property Let DesignMode(ByVal a_value As Boolean)
+    This.DesignMode = a_value
+End Property
+
+''' <summary>   Gets the execution Can Execute) status of the Toggle Connection command. </summary>
 ''' <value>   [Boolean]. </value>
 Public Property Get ToggleConnectionExecutable() As Boolean
     ToggleConnectionExecutable = Me.ToggleConnectionButton.Enabled
@@ -154,13 +170,17 @@ Private Sub ToggleConnectionButton_LostFocus()
     VBA.DoEvents
 End Sub
 
-''' <summary>   Handles the Toggle Connectionbutton. </summary>
+''' <summary>   Handles the Toggle Connection button change event. </summary>
 ''' <remarks>   The button change event also causes a click event.
 ''' This method issues the click event on actual click.
 ''' Note: Make sure to not implement the click event,
 Private Sub ToggleConnectionButton_Change()
 
     On Error GoTo err_Handler:
+    
+    ' prevent execution so that the state of this can be toggled
+    ' when this data sheet is initialized.
+    If This.DesignMode Or Not Me.ToggleConnectionButton.Enabled Then Exit Sub
     
     If This.FocusedControlName = Me.ToggleConnectionButton.Name Then
 
@@ -194,9 +214,10 @@ err_Handler:
     
 End Sub
 
+''' <summary>   Handles the Toggle Connection command event. </summary>
 Friend Sub OnConnectionChange()
 
-    If Me.ToggleConnectionButton.Value Then
+    If Me.ToggleConnectionButton.Value And Not DataView.Initialized Then
     
         Dim p_viewModel As cc_isr_Tcp_Scpi.K2700ViewModel
         
