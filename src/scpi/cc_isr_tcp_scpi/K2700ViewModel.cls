@@ -16,7 +16,7 @@ Option Explicit
 ''' <summary>   Values that represent mesaurement mode options. </summary>
 Public Enum MeasurementModeOption
     ''' <summary>   An enum constant representing the none option. </summary>
-    none = 0
+    None = 0
     ''' <summary>   An enum constant representing the continuous trigger option. </summary>
     Continuous = 1
     ''' <summary>   An enum constant representing the immediate trigger option. </summary>
@@ -45,6 +45,12 @@ Public Event ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.ChannelReading
 ''' <param name="a_eventArgs">   An <see cref="cc_isr_Tcp_Scpi.StateChangedEventArgs"/> event args. </param>
 Public Event MeasurementStateChanged(ByVal a_eventArgs As cc_isr_Tcp_Scpi.StateChangedEventArgs)
 
+''' <summary>   Notifies all registered handlers that a measurement state is about to change. </summary>
+''' <remarks>   This method is used to disable controls and control value changes while the new measurement
+''' state is established. The control states are restored once the state change is completed. </remarks>
+''' <param name="a_eventArgs">   An <see cref="cc_isr_Core.EventArgs"/> event args. </param>
+Public Event MeasurementStateChanging(ByVal a_eventArgs As cc_isr_Core.EventArgs)
+
 ' defines the standard event timer.
 Private WithEvents m_eventTimer As cc_isr_Core.EventTimer
 Attribute m_eventTimer.VB_VarHelpID = -1
@@ -72,6 +78,7 @@ Private Type this_
     MeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
     Measuring As Boolean
     MaximumChannelNumber As Integer
+    DesignMode As Boolean
 
     ' Winsock properties
     Host As String
@@ -300,6 +307,12 @@ err_Handler:
     GoTo exit_Handler
 
 End Sub
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' User interface settings
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -550,10 +563,12 @@ Public Sub OpenConnectionPowerOnResetCommand()
     
     Dim p_delay As Double: p_delay = 3
     Dim p_details As String: p_details = VBA.vbNullString
-    If Not Me.TryOpenConnectionPowerOnReset(p_details, p_delay) Then _
-            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.SocketConnectionError, _
-                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-                " Failed opening the connection; " & p_details
+    Dim p_success As Boolean
+    p_success = Me.TryOpenConnectionPowerOnReset(p_details, p_delay)
+    If Not p_success Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.SocketConnectionError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " Failed opening the connection; " & p_details
     
     Me.ReadStopper
 
@@ -2609,6 +2624,21 @@ Public Property Let Measuring(ByVal a_value As Boolean)
     End If
 End Property
 
+''' <summary>   Gets the design mode for unit testing and restoration of state. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get DesignMode() As Boolean
+    DesignMode = This.DesignMode
+End Property
+
+''' <summary>   Sets the design mode for unit testing and restoration of state. </summary>
+''' <param name="a_value">   [Boolean] true if in design mode. </param>
+Public Property Let DesignMode(ByVal a_value As Boolean)
+    If This.DesignMode <> a_value Then
+        This.DesignMode = a_value
+        Me.OnPropertyChanged "DesignMode"
+    End If
+End Property
+
 ''' <summary>   Gets the measurement mode. </summary>
 ''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
 Public Property Get MeasurementMode() As cc_isr_Tcp_Scpi.MeasurementModeOption
@@ -3300,6 +3330,9 @@ Friend Function TryConfigureIntitialTriggerMode(ByRef a_details As String) As Bo
     Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
     Dim p_details As String: p_details = VBA.vbNullString
     
+    ' notify of the changing measurement state
+    Me.OnMeasurementStateChanging
+    
     ' reset and clear the instrument
     p_success = This.K2700.Device.TryResetClear(p_details)
     
@@ -3394,19 +3427,50 @@ Friend Function TryConfigureContinuousMode(ByRef a_details As String) As Boolean
     Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
     Dim p_details As String: p_details = VBA.vbNullString
 
-    ' return failure if the initial state was not restored before this method.
-    p_success = Not Me.ShouldRestoreInitialState(p_details)
-    
-    If Not p_success Then _
-        p_details = "Restoring initial state failed; " & p_details
+    ' notify of the changing measurement state
+    Me.OnMeasurementStateChanging
 
     If p_success Then
     
-        ' reset and clear the instrument
-        p_success = This.K2700.Device.TryResetClear(p_details)
+        ' reset if changing modes.
+        If cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous <> This.MeasurementMode Then
+            
+            p_success = This.K2700.Device.TryResetClear(p_details)
         
-        If Not p_success Then _
-            p_details = "Failed resetting and clearing the IEEE488 device; " & p_details
+            If Not p_success Then _
+                p_details = "Failed resetting and clearing the IEEE488 device state; " & p_details
+        
+        Else
+        
+            ' clear execution state
+            p_success = This.K2700.Device.TryClearExecutionState(p_details)
+        
+            If Not p_success Then _
+                p_details = "Failed clearing the IEEE488 device execution state; " & p_details
+        
+        End If
+    
+    End If
+    
+    If Not p_success Then
+    
+        ' if instrument failed to reset, attempt to restore its initial state
+        
+        p_success = Me.TryRestoreInitialState(p_details)
+        
+        If p_success Then
+        
+            ' return failure if the initial state failed to restore
+            p_success = Not Me.ShouldRestoreInitialState(p_details)
+            
+            If Not p_success Then _
+                p_details = "Restoring initial state failed; " & p_details
+    
+        Else
+        
+            p_details = "Failed restoring initial state; " & p_details
+        
+        End If
     
     End If
     
@@ -3457,17 +3521,6 @@ Public Function ConfigureContinuousModeCommand(ByVal a_details As String) As Boo
     Dim p_success As Boolean: p_success = False
     Dim p_details As String: p_details = VBA.vbNullString
     
-    ' restore the instrument state if it had a power toggle.
-    
-    p_success = Me.TryRestoreInitialState(p_details)
-    
-    If Not p_success Then
-        a_details = "Failed restoring initial state; " & p_details
-        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " " & a_details
-    End If
-
     ' configure for continuous trigger
 
     p_success = Me.TryConfigureContinuousMode(p_details)
@@ -3526,16 +3579,13 @@ Friend Function TryConfigureExternalTriggerReading(ByRef a_details As String) As
     Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
     Dim p_details As String: p_details = VBA.vbNullString
 
-    ' return failure if the initial state was not restored before this method.
-    p_success = Not Me.ShouldRestoreInitialState(p_details)
-    
-    If Not p_success Then _
-        p_details = "Restoring initial state failed; " & p_details
+    ' notify of the changing measurement state
+    Me.OnMeasurementStateChanging
 
     If p_success Then
     
         ' reset if changing modes.
-        If cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous <> This.MeasurementMode Then
+        If cc_isr_Tcp_Scpi.MeasurementModeOption.External <> This.MeasurementMode Then
             
             p_success = This.K2700.Device.TryResetClear(p_details)
         
@@ -3551,6 +3601,42 @@ Friend Function TryConfigureExternalTriggerReading(ByRef a_details As String) As
         
         End If
     
+    End If
+
+    If Not p_success Then
+    
+        ' if instrument failed to reset, attempt to restore its initial state
+        
+        p_success = Me.TryRestoreInitialState(p_details)
+        
+        If p_success Then
+        
+            ' return failure if the initial state failed to restore
+            p_success = Not Me.ShouldRestoreInitialState(p_details)
+            
+            If Not p_success Then _
+                p_details = "Restoring initial state failed; " & p_details
+    
+        Else
+        
+            p_details = "Failed restoring initial state; " & p_details
+        
+        End If
+    
+    End If
+    
+    If p_success Then
+    
+        ' this validation worked when called from the ...Command method.
+        ' it used to fail if set after configuring external trigger measurements.
+        If cc_isr_Tcp_Scpi.MeasurementModeOption.External <> This.MeasurementMode Then
+            
+            ' validate only if we have a change in measurment mode.
+            p_success = Me.ValidateInputs(p_details)
+        
+            Me.LastMessage = p_details
+        End If
+        
     End If
     
     If p_success Then
@@ -3623,48 +3709,13 @@ Public Function ConfigureExternalTriggerReadingCommand(ByRef a_details As String
     Dim p_success As Boolean: p_success = False
     Dim p_details As String: p_details = VBA.vbNullString
     
-    ' restore the instrument state if it had a power toggle.
+    ' configure for external trigger readings
+    p_success = Me.TryConfigureExternalTriggerReading(p_details)
     
-    p_success = Me.TryRestoreInitialState(p_details)
-    
-    If Not p_success Then
-        a_details = "Failed restoring initial state; " & p_details
-        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " " & a_details
-    End If
-    
-    ' exit if inputs are not in the correct settings
-
-    If p_success Then
-    
-        ' this validation does not cause issues with incorrect results.
-        
-        p_success = Me.ValidateInputs(p_details)
-        
-        If p_success Then
-    
-            ' configure for external trigger readings
-            p_success = Me.TryConfigureExternalTriggerReading(p_details)
-            
-            If Not p_success Then
-            
-                a_details = "Failed configuring external trigger reading mode; " & p_details
-                cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-                    ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-                    " " & a_details
-            End If
-            
-        Else
-        
-            Me.LastMessage = p_details
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                " failed restoring initial state; " & p_details
-        
-        End If
-    
-    End If
-
+    If Not p_success Then _
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            " failed configuring external trigger reading measurement state; " & p_details
+   
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
@@ -3699,7 +3750,7 @@ End Function
 
 ''' <summary>   Tries to configure the immediate trigger reading mode. </summary>
 ''' <remarks>   This method requires that instrument be connected as per
-''' <see cref=TryRestoreInitialState"/> and inputs are set as required.
+''' <see cref="TryRestoreInitialState"/> and inputs are set as required.
 ''' This method enables the immediate reading executable (Measure) and
 ''' disables trigger monitoring executable. </remarks>
 ''' <param name="a_details">   [Out, String] Details why the method failed. </param>
@@ -3711,11 +3762,8 @@ Public Function TryConfigureImmediateTriggerReadings(ByRef a_details As String) 
     Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
     Dim p_details As String: p_details = VBA.vbNullString
 
-    ' return failure if the initial state was not restored before this method.
-    p_success = Not Me.ShouldRestoreInitialState(p_details)
-    
-    If Not p_success Then _
-        p_details = "Restoring initial state failed; " & p_details
+    ' notify of the changing measurement state
+    Me.OnMeasurementStateChanging
 
     If p_success Then
     
@@ -3737,6 +3785,43 @@ Public Function TryConfigureImmediateTriggerReadings(ByRef a_details As String) 
         
         End If
     
+    End If
+    
+    If Not p_success Then
+    
+        ' if instrument failed to reset, attempt to restore its initial state
+        
+        p_success = Me.TryRestoreInitialState(p_details)
+        
+        If p_success Then
+        
+            ' return failure if the initial state failed to restore
+            p_success = Not Me.ShouldRestoreInitialState(p_details)
+            
+            If Not p_success Then _
+                p_details = "Restoring initial state failed; " & p_details
+    
+        Else
+        
+            p_details = "Failed restoring initial state; " & p_details
+        
+        End If
+    
+    End If
+    
+    If p_success Then
+    
+        ' this validation worked when called from the ...Command method.
+        ' it used to fail if set after configuring immediate measurements.
+        If cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate <> This.MeasurementMode Then
+            
+            ' validate only if we have a change in measurment mode.
+            p_success = Me.ValidateInputs(p_details)
+        
+            Me.LastMessage = p_details
+            
+        End If
+        
     End If
     
     If p_success Then
@@ -3787,43 +3872,12 @@ Public Function ConfigureImmediateTriggerReadingsCommand(ByRef a_details As Stri
     Dim p_success As Boolean: p_success = False
     Dim p_details As String: p_details = VBA.vbNullString
     
-    ' restore the instrument state if it had a power toggle.
+    ' configure for immediate trigger readings
+    p_success = Me.TryConfigureImmediateTriggerReadings(p_details)
     
-    p_success = Me.TryRestoreInitialState(p_details)
-    
-    If Not p_success Then
-        a_details = "Failed restoring initial state; " & p_details
-        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " " & a_details
-    End If
-        
-    ' exit if inputs are not in the correct settings
-
-    If p_success Then
-    
-        ' this validation does not cause issues with validation results.
-        
-        p_success = Me.ValidateInputs(Me.LastMessage)
-        
-        If p_success Then
-    
-            ' configure for immediate trigger readings
-            p_success = Me.TryConfigureImmediateTriggerReadings(p_details)
-            If Not p_success Then
-                a_details = "Failed configuring immediate trigger reading mode; " & p_details
-                cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-                    ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-                    " " & a_details
-            End If
-        Else
-        
-            a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                " failed restoring initial state; " & Me.LastMessage
-        
-        End If
-    
-    End If
+    If Not p_success Then _
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            " failed configuring immediate trigger readings measurement state; " & Me.LastMessage
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -4426,8 +4480,8 @@ Friend Sub StopMonitoringExternalTriggers()
 exit_Handler:
 
     ' if necessary turn off measuring state
-    If cc_isr_Tcp_Scpi.MeasurementModeOption.none <> This.MeasurementMode Then _
-        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.none, "Trigger monitoring done", False
+    If cc_isr_Tcp_Scpi.MeasurementModeOption.None <> This.MeasurementMode Then _
+        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.None, "Trigger monitoring done", False
 
     On Error GoTo 0
     Exit Sub
@@ -4681,6 +4735,17 @@ Public Sub OnPropertyChanged(ByVal a_propertyName As String)
 
 End Sub
 
+''' <summary>   Notifies of a pending change in measurement state by
+''' raising the <see cref="MeasurementStateChanging"/> event. </summary>
+Public Sub OnMeasurementStateChanging()
+    
+    RaiseEvent MeasurementStateChanging(cc_isr_Core.Factory.NewEventArgs.Initialize())
+    ' allow the event to take place.
+    DoEvents
+    
+End Sub
+
+
 ''' <summary>   Handles the change of measurement mode and measuring state and
 ''' Raises the <see cref="MeasurementStateChanged"/> event. </summary>
 ''' <param name="a_mode">        [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>] the
@@ -4799,7 +4864,7 @@ exit_Handler:
         
         ' if not using the timer, go to none mode.
         If Not This.TimerControlled Then _
-            Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.none, "Trigger monitoring done", False
+            Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.None, "Trigger monitoring done", False
         
 #If False Then
         
@@ -4908,7 +4973,7 @@ Private Sub m_eventTimer_Tick()
     If This.PauseRequested Then
         This.TimerStarted = False
         If Not m_eventTimer Is Nothing Then m_eventTimer.PauseTimer
-        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.none, "Trigger monitoring done", False
+        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.None, "Trigger monitoring done", False
     Else
         Me.HandleTimerEvent
     End If

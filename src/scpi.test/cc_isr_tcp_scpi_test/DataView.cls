@@ -63,6 +63,7 @@ Private Type this_
     ClearReadingExecutable As Boolean
     ToggleConnectionValue As Boolean
     ToggleConnectionExecutable As Boolean
+    DesignMode As Boolean
     
 End Type
 
@@ -168,6 +169,34 @@ End Function
 ''' <value>   [Boolean] True if initialized. </value>
 Public Property Get Initialized() As Boolean
     Initialized = Not This.ViewModel Is Nothing
+End Property
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' User interface control
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Gets the design mode for unit testing and restoration of state. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get DesignMode() As Boolean
+    
+    If This.DataAcquisitionSheet Is Nothing Then
+        DesignMode = This.DesignMode
+    Else
+        DesignMode = This.DataAcquisitionSheet.DesignMode
+    End If
+
+End Property
+
+''' <summary>   Sets the design mode for unit testing and restoration of state. </summary>
+''' <param name="a_value">   [Boolean] true if in design mode. </param>
+Public Property Let DesignMode(ByVal a_value As Boolean)
+    If Me.DesignMode <> a_value Then
+        If Not This.DataAcquisitionSheet Is Nothing Then _
+            This.DataAcquisitionSheet.DesignMode = a_value
+        This.DesignMode = a_value
+    End If
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -704,6 +733,8 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.ToggleConnectionExecutable = This.ViewModel.ToggleConnectionExecutable
         Case "Connected"
             Me.ToggleConnectionValue = This.ViewModel.Connected
+        Case "DesignMode"
+            Me.DesignMode = This.ViewModel.DesignMode
 
     End Select
     
@@ -840,4 +871,5 @@ err_Handler:
     GoTo exit_Handler
     
 End Sub
+
 

@@ -118,7 +118,7 @@ Public Function ToSenseFunction(ByVal a_value As String) As cc_isr_Tcp_Scpi.Sens
         Case "CONT"
             ToSenseFunction = SenseFunctionOption.Continuity
         Case Else
-            ToSenseFunction = SenseFunctionOption.none
+            ToSenseFunction = SenseFunctionOption.None
     End Select
     
 End Function

@@ -121,12 +121,13 @@ Private Sub ClearReadingsButton_Click()
     DataView.OnClearReadings
 End Sub
 
-''' <summary>   Gets the design mode for unit testing. </summary>
+''' <summary>   Gets the design mode for unit testing and restoration of state. </summary>
 ''' <value>   [Boolean]. </value>
 Public Property Get DesignMode() As Boolean
     DesignMode = Me.DesignMode
 End Property
 
+''' <summary>   Sets the design mode for unit testing and restoration of state. </summary>
 ''' <summary>   Sets the design mode for unit testing. </summary>
 ''' <param name="a_value">   [Boolean] true if in design mode. </param>
 Public Property Let DesignMode(ByVal a_value As Boolean)

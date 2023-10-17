@@ -5,10 +5,12 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
-Scpi:
-Add state changed event arguments.
-View Model: Add MeasurementStateChanged event.
-User View: Use the measurement state changed event to update the user interface.
+Core: add naked event arguments class.
+
+Add measurement state changing event to disable controls while the mode is changing.
+Disable control value changes while not enabled.
+Try restore state only if reset clear fails during measurement configuration.
+Add design mode property to the view model.
 
 
 

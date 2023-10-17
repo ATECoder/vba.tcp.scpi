@@ -37,26 +37,27 @@ Private This As this_
 ''' <summary>   Initializes and returns an instance of this object. </summary>
 Public Function Initialize() As UserSheet
     
-    Me.AutoScanToggleButton.Enabled = False
-    Me.AutoScanToggleButton.Value = False
-    Me.AutoSingleToggleButton.Enabled = False
-    Me.AutoSingleToggleButton.Value = False
-    Me.ManualScanToggleButton.Enabled = False
-    Me.ManualScanToggleButton.Value = False
-    Me.ManualSingleToggleButton.Enabled = False
-    Me.ManualSingleToggleButton.Value = False
+    Me.AutoScanToggleExecutable = False
+    Me.AutoScanToggleValue = False
+    Me.AutoSingleToggleExecutable = False
+    Me.AutoSingleToggleValue = False
+    Me.ManualScanToggleExecutable = False
+    Me.ManualScanToggleValue = False
+    Me.ManualSingleToggleExecutable = False
+    Me.ManualSingleToggleValue = False
     
     ' initialize the state of the command buttons
     Set Initialize = Me
 
 End Function
 
-''' <summary>   Gets the design mode for unit testing. </summary>
+''' <summary>   Gets the design mode for unit testing and restoration of state. </summary>
 ''' <value>   [Boolean]. </value>
 Public Property Get DesignMode() As Boolean
     DesignMode = Me.DesignMode
 End Property
 
+''' <summary>   Sets the design mode for unit testing and restoration of state. </summary>
 ''' <summary>   Sets the design mode for unit testing. </summary>
 ''' <param name="a_value">   [Boolean] true if in design mode. </param>
 Public Property Let DesignMode(ByVal a_value As Boolean)

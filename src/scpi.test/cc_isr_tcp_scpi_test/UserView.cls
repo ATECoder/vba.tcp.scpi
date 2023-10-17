@@ -20,6 +20,7 @@ Private Type this_
 
     ViewModel As K2700ViewModel
     UserSampleSheet As UserSheet
+    DesignMode As Boolean
     
     Connected As Boolean
     
@@ -172,6 +173,33 @@ Public Property Let Connected(ByVal a_value As Boolean)
     End If
 End Property
 
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+'
+' User interface control
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Gets the design mode for unit testing and restoration of state. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get DesignMode() As Boolean
+    
+    If This.UserSampleSheet Is Nothing Then
+        DesignMode = This.DesignMode
+    Else
+        DesignMode = This.UserSampleSheet.DesignMode
+    End If
+
+End Property
+
+''' <summary>   Sets the design mode for unit testing and restoration of state. </summary>
+''' <param name="a_value">   [Boolean] true if in design mode. </param>
+Public Property Let DesignMode(ByVal a_value As Boolean)
+    If Me.DesignMode <> a_value Then
+        If Not This.UserSampleSheet Is Nothing Then _
+            This.UserSampleSheet.DesignMode = a_value
+        This.DesignMode = a_value
+    End If
+End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
@@ -196,9 +224,6 @@ Public Sub OnAutoScanToggleButtonChange()
     If This.ViewModel Is Nothing Then Exit Sub
 
     If Me.AutoScanToggleValue Then
-    
-        ' turn on the measuring state
-        This.ViewModel.Measuring = True
     
         This.UserSampleSheet.DisplayStartDateTime
         Me.AutoIncrementChannelNoEnabled = True
@@ -236,9 +261,6 @@ Public Sub OnAutoScanToggleButtonChange()
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
-    ' turn off the measuring state
-    This.ViewModel.Measuring = False
-    
     On Error GoTo 0
     Exit Sub
 
@@ -298,12 +320,18 @@ End Property
 ''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let AutoScanToggleValue(ByVal a_value As Boolean)
     
-    If Me.AutoScanToggleValue <> a_value Then
+    ' allow value changes only if the control is enabled.
+    ' this prevent value changes while the measurement mode is changing.
+    If Me.AutoScanToggleExecutable Then
     
-        If Not This.UserSampleSheet Is Nothing Then _
-            This.UserSampleSheet.AutoScanToggleValue = a_value
-
-        This.AutoScanToggleValue = a_value
+        If Me.AutoScanToggleValue <> a_value Then
+        
+            If Not This.UserSampleSheet Is Nothing Then _
+                This.UserSampleSheet.AutoScanToggleValue = a_value
+    
+            This.AutoScanToggleValue = a_value
+        End If
+    
     End If
 
 End Property
@@ -325,9 +353,6 @@ Public Sub OnAutoSingleToggleButtonChange()
     If This.ViewModel Is Nothing Then Exit Sub
 
     If Me.AutoSingleToggleValue Then
-    
-        ' turn on the measuring state
-        This.ViewModel.Measuring = True
     
         Me.SelectedChannelNumber = This.UserSampleSheet.SelectedChannelNumber
         This.UserSampleSheet.DisplayStartDateTime
@@ -367,9 +392,6 @@ Public Sub OnAutoSingleToggleButtonChange()
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
-    ' turn off the measuring state
-    This.ViewModel.Measuring = False
-    
     On Error GoTo 0
     Exit Sub
 
@@ -431,14 +453,20 @@ End Property
 ''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let AutoSingleToggleValue(ByVal a_value As Boolean)
     
-    If Me.AutoSingleToggleValue <> a_value Then
-        
-        If Not This.UserSampleSheet Is Nothing Then _
-            This.UserSampleSheet.AutoSingleToggleValue = a_value
-
-        This.AutoSingleToggleValue = a_value
+    ' allow value changes only if the control is enabled.
+    ' this prevent value changes while the measurement mode is changing.
+    If Me.AutoSingleToggleExecutable Then
+    
+        If Me.AutoSingleToggleValue <> a_value Then
+            
+            If Not This.UserSampleSheet Is Nothing Then _
+                This.UserSampleSheet.AutoSingleToggleValue = a_value
+    
+            This.AutoSingleToggleValue = a_value
+        End If
+    
     End If
-
+    
 End Property
 
 ''' <summary>   Handles the Manual Scan toggle button. </summary>
@@ -456,9 +484,6 @@ Public Sub OnManualScanToggleButtonChange()
     On Error GoTo err_Handler
 
     If This.ViewModel Is Nothing Then Exit Sub
-
-    ' toggle the measuring state
-    This.ViewModel.Measuring = Me.ManualScanToggleValue
 
     If Me.ManualScanToggleValue Then
     
@@ -576,14 +601,20 @@ End Property
 ''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let ManualScanToggleValue(ByVal a_value As Boolean)
     
-    If Me.ManualScanToggleValue <> a_value Then
-        
-        If Not This.UserSampleSheet Is Nothing Then _
-            This.UserSampleSheet.ManualScanToggleValue = a_value
-
-        This.ManualScanToggleValue = a_value
+    ' allow value changes only if the control is enabled.
+    ' this prevent value changes while the measurement mode is changing.
+    If Me.ManualScanToggleExecutable Then
+    
+        If Me.ManualScanToggleValue <> a_value Then
+            
+            If Not This.UserSampleSheet Is Nothing Then _
+                This.UserSampleSheet.ManualScanToggleValue = a_value
+    
+            This.ManualScanToggleValue = a_value
+        End If
+    
     End If
-
+    
 End Property
 
 ''' <summary>   Handles the Manual Single toggle button. </summary>
@@ -601,9 +632,6 @@ Public Sub OnManualSingleToggleButtonChange()
     On Error GoTo err_Handler
 
     If This.ViewModel Is Nothing Then Exit Sub
-
-    ' toggle the measuring state
-    This.ViewModel.Measuring = Me.ManualSingleToggleValue
 
     If Me.ManualSingleToggleValue Then
     
@@ -722,14 +750,20 @@ End Property
 ''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let ManualSingleToggleValue(ByVal a_value As Boolean)
     
-    If Me.ManualSingleToggleValue <> a_value Then
+    ' allow value changes only if the control is enabled.
+    ' this prevent value changes while the measurement mode is changing.
+    If Me.ManualSingleToggleExecutable Then
     
-        If Not This.UserSampleSheet Is Nothing Then _
-            This.UserSampleSheet.ManualSingleToggleValue = a_value
-
-        This.ManualSingleToggleValue = a_value
+        If Me.ManualSingleToggleValue <> a_value Then
+        
+            If Not This.UserSampleSheet Is Nothing Then _
+                This.UserSampleSheet.ManualSingleToggleValue = a_value
+    
+            This.ManualSingleToggleValue = a_value
+        End If
+    
     End If
-
+    
 End Property
 
 ''' <summary>   Gets the Auto Increment Channel Number Enabled. </summary>
@@ -941,12 +975,12 @@ Public Property Let MeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.Measurement
     End If
 End Property
 
-''' <summary>   Handles the change of measurment mode or single read enabled. </summary>
+''' <summary>   Handles the change of measurment state. </summary>
 ''' <remarks>   This enableds or disables the buttons and toggles the buttons
 ''' state if not toggled. </remarks>
-Friend Sub OnMeasurementModeChanged()
+Friend Sub OnMeasurementStateChanged()
 
-    If cc_isr_Tcp_Scpi.MeasurementModeOption.none = This.MeasurementMode Or _
+    If cc_isr_Tcp_Scpi.MeasurementModeOption.None = This.MeasurementMode Or _
         cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous = This.MeasurementMode Then
         Me.AutoScanToggleExecutable = This.Connected
         Me.AutoSingleToggleExecutable = This.Connected
@@ -1039,6 +1073,8 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.ReadingOffset = This.ViewModel.ReadingOffset
         Case "Connected"
             Me.Connected = This.ViewModel.Connected
+        Case "DesignMode"
+            Me.DesignMode = This.ViewModel.DesignMode
     End Select
     
 End Sub
@@ -1066,7 +1102,7 @@ Friend Sub Synchronize()
     Me.Connected = This.ViewModel.Connected
     
     ' ensure that the measurement status is set.
-    Me.OnMeasurementModeChanged
+    Me.OnMeasurementStateChanged
     
 End Sub
 
@@ -1113,6 +1149,49 @@ err_Handler:
 End Sub
 
 ''' <summary>   Handles the measurement state change event of the view model. </summary>
+''' <remarks>   Disables the user interface controls during measurement state transitions. </remarks>
+''' <param name="a_eventArgs">   [<see cref="cc_isr_Core.EventArgs"/>] event arguments. </param>
+Friend Sub m_viewModel_MeasurementStateChanging(ByVal a_eventArgs As cc_isr_Core.EventArgs)
+
+    Const p_procedureName = "m_viewModel_MeasurementStateChanging"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    If Not a_eventArgs Is Nothing Then
+    
+        ' disable controls.
+        Me.AutoScanToggleExecutable = False
+        Me.AutoSingleToggleExecutable = False
+        Me.ManualScanToggleExecutable = False
+        Me.ManualSingleToggleExecutable = False
+        
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' display the error message
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+    
+End Sub
+
+
+''' <summary>   Handles the measurement state change event of the view model. </summary>
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Tcp_Scpi.StateChangedEventArgs"/>] event arguments. </param>
 Friend Sub m_viewModel_MeasurementStateChanged(ByVal a_eventArgs As cc_isr_Tcp_Scpi.StateChangedEventArgs)
 
@@ -1123,7 +1202,7 @@ Friend Sub m_viewModel_MeasurementStateChanged(ByVal a_eventArgs As cc_isr_Tcp_S
     
     If Not a_eventArgs Is Nothing Then
     
-        Me.OnMeasurementModeChanged
+        Me.OnMeasurementStateChanged
         
     End If
     
