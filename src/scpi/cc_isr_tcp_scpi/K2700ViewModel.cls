@@ -16,7 +16,7 @@ Option Explicit
 ''' <summary>   Values that represent mesaurement mode options. </summary>
 Public Enum MeasurementModeOption
     ''' <summary>   An enum constant representing the none option. </summary>
-    None = 0
+    none = 0
     ''' <summary>   An enum constant representing the continuous trigger option. </summary>
     Continuous = 1
     ''' <summary>   An enum constant representing the immediate trigger option. </summary>
@@ -32,11 +32,18 @@ End Enum
 Implements cc_isr_Core.INotifyPropertyChanged
 
 ''' <summary>   Notifies all registered handlers of a property value change. </summary>
+''' <param name="a_eventArgs">   An <see cref="cc_isr_Core.PropertyChangedEventArgs"/> event args. </param>
 Public Event PropertyChanged(ByVal a_eventArgs As cc_isr_Core.PropertyChangedEventArgs)
 
 ''' <summary>   The event that is raised upon completion of a channel measurement. </summary>
-''' <param name="a_eventArgs">   An <see cref="ChannelReadingEventArgs"/> event args. </param>
-Public Event ChannelMeasured(ByVal a_eventArgs As ChannelReadingEventArgs)
+''' <param name="a_eventArgs">   An <see cref="cc_isr_Tcp_Scpi.ChannelReadingEventArgs"/> event args. </param>
+Public Event ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.ChannelReadingEventArgs)
+
+''' <summary>   Notifies all registered handlers of a measurement state change. </summary>
+''' <remarks>   The measurment state change is notified once all elements, such as measuring, measurement mode,
+''' and single reading are set and the measurement process is effectively on or off. </remarks>
+''' <param name="a_eventArgs">   An <see cref="cc_isr_Tcp_Scpi.StateChangedEventArgs"/> event args. </param>
+Public Event MeasurementStateChanged(ByVal a_eventArgs As cc_isr_Tcp_Scpi.StateChangedEventArgs)
 
 ' defines the standard event timer.
 Private WithEvents m_eventTimer As cc_isr_Core.EventTimer
@@ -1951,7 +1958,7 @@ Public Function TryReadStatusByte(ByRef a_details As String, Optional ByVal a_ca
 End Function
 
 ''' <summary>   Internal. Serial polls the instrument. </summary>
-''' <remarks>   Uses serial poll if available; otherwise <c>*STB?</></remakrs>
+''' <remarks>   Uses serial poll if available; otherwise <c>*STB?</></remarks>
 ''' <param name="canQuery">   [Optional, Boolean, False] True if the <c>*STB?</c>
 '''                           can be used to query the status byte in case
 '''                           <see cref="TcpSession.GpibLanControllerAttached"/> is false. </param>
@@ -2578,7 +2585,16 @@ Public Property Let BottomCardFunctionScanList(ByVal a_value As String)
     End If
 End Property
 
-''' <summary>   Gets the measuring state. True when measurements are collected. </summary>
+''' <summary>   Gets the measurement mode measuring state. </summary>
+''' <remarks>   The condition is true when a measurement mode is configured and active.
+''' In continuous and none measurement mode, measuring is false.
+''' In immediate mode, measureing is true after the mode is configured and data is collected
+''' and false after data collection is completed.
+''' In External Mode (before monitoring states), measuring is true after the external trigger
+''' is configured.
+''' In monitoring mode, measuring is true while monitoring is active and false once monitoring
+''' is ended.
+''' </remarks>
 ''' <value>   [Boolean]. </value>
 Public Property Get Measuring() As Boolean
     Measuring = This.Measuring
@@ -3315,7 +3331,7 @@ Friend Function TryConfigureIntitialTriggerMode(ByRef a_details As String) As Bo
  
     ' enable the mode executables and conditions.
     If p_success Then _
-        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous, "continuous"
+        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous, "continuous", False
 
     If Not p_success Then _
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
@@ -3418,7 +3434,7 @@ Friend Function TryConfigureContinuousMode(ByRef a_details As String) As Boolean
     
     ' enable the mode executables and conditions.
     If p_success Then _
-        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous, "continuous"
+        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous, "continuous", False
     
     If Not p_success Then _
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
@@ -3583,7 +3599,7 @@ Friend Function TryConfigureExternalTriggerReading(ByRef a_details As String) As
 
     ' enable the mode executables and conditions.
     If p_success Then _
-        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.External, "external trigger mode"
+        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.External, "external trigger mode", True
     
     If Not p_success Then _
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
@@ -3747,7 +3763,7 @@ Public Function TryConfigureImmediateTriggerReadings(ByRef a_details As String) 
     
     ' enable the mode executables and conditions.
     If p_success Then _
-        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate, "immediate mode"
+        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate, "immediate mode", True
     
     If Not p_success Then _
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
@@ -3973,9 +3989,6 @@ Public Function MeasureImmediatelyCommand(ByRef a_details As String) As Boolean
     
     If p_success Then
     
-        ' turn on the measuring state
-        Me.Measuring = True
-    
         ' disable the relevant commands.
         Me.MeasureExecutable = False
         Me.ImmediateTriggerOptionExecutable = False
@@ -4003,7 +4016,7 @@ Public Function MeasureImmediatelyCommand(ByRef a_details As String) As Boolean
 exit_Handler:
 
     ' turn off the measuring state
-    Me.Measuring = True
+    Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate, "Done", False
 
     MeasureImmediatelyCommand = p_success
     
@@ -4259,9 +4272,6 @@ Public Sub StartMonitoringExternalTriggers(Optional ByVal a_timerControlled As B
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    ' turn on measuring state
-    Me.Measuring = True
-
     If Me.AutoIncrementChannelNoEnabled Then
     
         ' Clear all readings
@@ -4301,7 +4311,7 @@ Public Sub StartMonitoringExternalTriggers(Optional ByVal a_timerControlled As B
     Else
         
         ' if not using timer, go to monitoring mode
-        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring, "Trigger monitoring commenced"
+        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring, "Trigger monitoring commenced", True
         
     End If
  
@@ -4415,8 +4425,9 @@ Friend Sub StopMonitoringExternalTriggers()
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
-    ' turn off measuring state
-    Me.Measuring = False
+    ' if necessary turn off measuring state
+    If cc_isr_Tcp_Scpi.MeasurementModeOption.none <> This.MeasurementMode Then _
+        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.none, "Trigger monitoring done", False
 
     On Error GoTo 0
     Exit Sub
@@ -4607,51 +4618,6 @@ Public Property Let MaximumChannelNumber(ByVal a_value As Integer)
     End If
 End Property
 
-
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
-' View Model Executables
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
-''' <summary>   Handles the change of measurement mode. </summary>
-''' <param name="a_infoMessage">   [Option, String] info about the monitoring state. </param>
-Friend Sub OnMeasurementModeChanged(ByVal a_mode As cc_isr_Tcp_Scpi.MeasurementModeOption, _
-    ByVal a_infoMessage As String)
-    
-    ' turn off the flag handling a timer event.
-    This.HandlingTimerEvent = False
-    
-    ' set the measurement mode.
-    Me.MeasurementMode = a_mode
-
-    ' update the monitoring state
-    Me.MonitoringState = a_infoMessage
-
-    ' turn on the stop requested in case the timer is still active except for monitoring mode.
-    Me.StopRequested = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring <> a_mode
-
-    ' turn off the pause requested when monitoring started
-    Me.PauseRequested = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring <> a_mode
-
-    ' disable the stop monitoring action
-    Me.StopMonitoringExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring = a_mode
-    
-    ' enable the start monitoring action in external mode
-    Me.StartMonitoringExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.External = a_mode
-    
-    ' enable immediate readings in immediate mode
-    Me.MeasureExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate = a_mode
-    
-    ' enable toggling the configurations
-    Me.ImmediateTriggerOptionExecutable = a_mode <> cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
-    Me.ExternalTriggerOptionExecutable = a_mode <> cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
-    
-    ' finally, indicates that external trigger monitoring is enabled thus updating the related commands.
-    Me.ExternalTrigMonitoringEnabled = a_mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
-    
-End Sub
-
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' View Model Commands
@@ -4710,6 +4676,56 @@ Public Sub OnPropertyChanged(ByVal a_propertyName As String)
 
     RaiseEvent PropertyChanged( _
             cc_isr_Core.Factory.CreatePropertyChangedEventArgs(a_propertyName))
+    ' allow the event to take place.
+    DoEvents
+
+End Sub
+
+''' <summary>   Handles the change of measurement mode and measuring state and
+''' Raises the <see cref="MeasurementStateChanged"/> event. </summary>
+''' <param name="a_mode">        [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>] the
+'''                              measurement mode option. </param>
+''' <param name="a_info">        [String] info about the measurement state. </param>
+''' <param name="a_measuring">   [Boolean] <see cref="Measuring"/>. </param>
+Public Sub OnMeasurementStateChanged(ByVal a_mode As cc_isr_Tcp_Scpi.MeasurementModeOption, _
+    ByVal a_info As String, ByVal a_measuring As Boolean)
+    
+    ' turn off the flag handling a timer event.
+    This.HandlingTimerEvent = False
+    
+    ' set the measuring state:
+    Me.Measuring = a_measuring
+    
+    ' set the measurement mode.
+    Me.MeasurementMode = a_mode
+
+    ' update the monitoring state
+    Me.MonitoringState = a_info
+
+    ' turn on the stop requested in case the timer is still active except for monitoring mode.
+    Me.StopRequested = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring <> a_mode
+
+    ' turn off the pause requested when monitoring started
+    Me.PauseRequested = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring <> a_mode
+
+    ' disable the stop monitoring action
+    Me.StopMonitoringExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring = a_mode
+    
+    ' enable the start monitoring action in external mode
+    Me.StartMonitoringExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.External = a_mode
+    
+    ' enable immediate readings in immediate mode
+    Me.MeasureExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate = a_mode
+    
+    ' enable toggling the configurations
+    Me.ImmediateTriggerOptionExecutable = a_mode <> cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
+    Me.ExternalTriggerOptionExecutable = a_mode <> cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
+    
+    ' finally, indicates that external trigger monitoring is enabled thus updating the related commands.
+    Me.ExternalTrigMonitoringEnabled = a_mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
+    
+    RaiseEvent MeasurementStateChanged( _
+            cc_isr_Tcp_Scpi.Factory.NewStateChangedEventArgs.Initialize())
     ' allow the event to take place.
     DoEvents
 
@@ -4783,7 +4799,7 @@ exit_Handler:
         
         ' if not using the timer, go to none mode.
         If Not This.TimerControlled Then _
-            Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.None, "Trigger monitoring done"
+            Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.none, "Trigger monitoring done", False
         
 #If False Then
         
@@ -4857,7 +4873,7 @@ Public Sub StartTimer(Optional ByVal a_interval As Long = 500)
     This.HandlingTimerEvent = False
     This.PauseRequested = False
     This.TimerStarted = True
-    Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring, "Trigger monitoring commenced"
+    Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring, "Trigger monitoring commenced", True
     If m_eventTimer Is Nothing Then
         Set m_eventTimer = cc_isr_Core.Factory.NewEventTimer.Initialize(a_interval)
         m_eventTimer.StartTimer
@@ -4892,7 +4908,7 @@ Private Sub m_eventTimer_Tick()
     If This.PauseRequested Then
         This.TimerStarted = False
         If Not m_eventTimer Is Nothing Then m_eventTimer.PauseTimer
-        Me.OnMeasurementModeChanged cc_isr_Tcp_Scpi.MeasurementModeOption.None, "Trigger monitoring done"
+        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.none, "Trigger monitoring done", False
     Else
         Me.HandleTimerEvent
     End If
@@ -5297,6 +5313,8 @@ Private Sub m_socket_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Conne
     
     ' notify of connection state.
     Me.ConnectionExecutableSetter
+    
+    Me.OnMeasurementStateChanged Me.MeasurementMode, "connection changed", Me.Measuring
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:

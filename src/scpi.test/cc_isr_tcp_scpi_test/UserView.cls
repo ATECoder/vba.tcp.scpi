@@ -169,10 +169,6 @@ Public Property Let Connected(ByVal a_value As Boolean)
     
     If Me.Connected <> a_value Then
         This.Connected = a_value
-    
-        ' ensure that the measurement status is set.
-        Me.OnMeasurementModeChanged
-    
     End If
 End Property
 
@@ -912,7 +908,6 @@ Public Property Let SingleReadEnabled(ByVal a_value As Boolean)
         This.SingleReadEnabled = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.SingleReadEnabled = a_value
-        Me.OnMeasurementModeChanged
     End If
 End Property
 
@@ -927,7 +922,6 @@ End Property
 Public Property Let Measuring(ByVal a_value As Boolean)
     If This.Measuring <> a_value Then
         This.Measuring = a_value
-        Me.OnMeasurementModeChanged
     End If
 End Property
 
@@ -944,7 +938,6 @@ End Property
 Public Property Let MeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementModeOption)
     If This.MeasurementMode <> a_value Then
         This.MeasurementMode = a_value
-        Me.OnMeasurementModeChanged
     End If
 End Property
 
@@ -953,7 +946,7 @@ End Property
 ''' state if not toggled. </remarks>
 Friend Sub OnMeasurementModeChanged()
 
-    If cc_isr_Tcp_Scpi.MeasurementModeOption.None = This.MeasurementMode Or _
+    If cc_isr_Tcp_Scpi.MeasurementModeOption.none = This.MeasurementMode Or _
         cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous = This.MeasurementMode Then
         Me.AutoScanToggleExecutable = This.Connected
         Me.AutoSingleToggleExecutable = This.Connected
@@ -1020,7 +1013,7 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Handles the property change event of the viwe model. </summary>
+''' <summary>   Handles the property change event of the view model. </summary>
 ''' <param name="a_propertyName">   [String] the property name. </param>
 Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
 
@@ -1077,11 +1070,11 @@ Friend Sub Synchronize()
     
 End Sub
 
-''' <summary>   Handles the property change event of the viwe model. </summary>
+''' <summary>   Handles the property change event of the view model. </summary>
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Core.PropertyChangedEventArgs"/>] event arguments. </param>
 Friend Sub m_viewModel_PropertyChanged(ByVal a_eventArgs As cc_isr_Core.PropertyChangedEventArgs)
 
-    Const p_procedureName = "m_K2700ViewModel_PropertyChanged"
+    Const p_procedureName = "m_viewModel_PropertyChanged"
     
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -1118,4 +1111,43 @@ err_Handler:
     GoTo exit_Handler
     
 End Sub
+
+''' <summary>   Handles the measurement state change event of the view model. </summary>
+''' <param name="a_eventArgs">   [<see cref="cc_isr_Tcp_Scpi.StateChangedEventArgs"/>] event arguments. </param>
+Friend Sub m_viewModel_MeasurementStateChanged(ByVal a_eventArgs As cc_isr_Tcp_Scpi.StateChangedEventArgs)
+
+    Const p_procedureName = "m_viewModel_MeasurementStateChanged"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    If Not a_eventArgs Is Nothing Then
+    
+        Me.OnMeasurementModeChanged
+        
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' display the error message
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+    
+End Sub
+
+
 

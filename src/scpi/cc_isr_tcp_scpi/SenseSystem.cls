@@ -26,7 +26,7 @@ Private This As this_
 ''' <summary>   Values that represent sense function options. </summary>
 Public Enum SenseFunctionOption
     ''' <summary>   An enum constant representing the none option. </summary>
-    None = 0
+    none = 0
     ''' <summary>   An enum constant representing the DC Voltage sense function. </summary>
     DcVoltage = 1
     AcVoltage = 2

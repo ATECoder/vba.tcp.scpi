@@ -5,9 +5,11 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
-Sheets and views: Initialize user interface state.
-View Model: Add property change on connection and can connect.
-Tests: Validate user interface state on initialize.
+Scpi:
+Add state changed event arguments.
+View Model: Add MeasurementStateChanged event.
+User View: Use the measurement state changed event to update the user interface.
+
 
 
 ## TODO
@@ -15,11 +17,10 @@ Run all unit tests.
 Test running from the User Sheet.
 Use open with reset to open the connection.
 
- 1 : 100.096039
-Test 13 TestUserViewShouldMeasureImmediately passed. Elapsed time: 6218.8 ms.
-Test 14 TestUserViewMonitoringShouldStartStop failed. User View Manual Scan toggle button should be depressed (Value = True). Elapsed time: 22132.9 ms.
+Test 01 TestShouldInitialize failed. 
+User view Auto Single Toggle should not be executable where Measurement Mode is Immediate, Multi-Read, and not Measuring. Elapsed time: 35164.1 ms.
 
-
+User view Auto Single Toggle should not be executable where Measurement Mode is Immediate, Multi-Read, and not Measuring. Elapsed time: 21209.1 ms.
 
 
 Move to flying.

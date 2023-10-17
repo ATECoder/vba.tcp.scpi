@@ -99,7 +99,7 @@ End Function
 Public Sub RunOneTest()
     BeforeAll
     RunTest 1
-    ' RunTest 14
+    'RunTest 14
     AfterAll
 End Sub
 
@@ -107,7 +107,7 @@ End Sub
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' Test 01 TestShouldInitialize passed. Elapsed time: 11.1 ms.
+''' Test 01 TestShouldInitialize passed. Elapsed time: 553.5 ms.
 ''' Test 02 TestShouldBeConnected passed. Elapsed time: 44.8 ms.
 '''     Serial Poll is 81 in 17.3 ms.
 ''' Test 03 TestShouldReadCards passed. Elapsed time: 12.5 ms.
@@ -1744,7 +1744,7 @@ Public Function AssertMonitoringModeShouldStop(ByVal a_assert As cc_isr_Test_Fx.
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(cc_isr_Tcp_Scpi.MeasurementModeOption.None, This.ViewModel.MeasurementMode, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(cc_isr_Tcp_Scpi.MeasurementModeOption.none, This.ViewModel.MeasurementMode, _
             "Measurement mode should be as expected after monitoring stopped.")
     End If
     
@@ -1766,7 +1766,7 @@ Public Function AssertMonitoringModeStopShouldValidate(ByVal a_assert As cc_isr_
     If p_outcome.AssertSuccessful Then
         
         Dim p_expectedMeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
-        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.None
+        p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.none
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
             "Measurement mode should be as expected after monitoring stopped.")
     End If
@@ -2168,17 +2168,24 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.UserView.MeasurementMode, _
             "User View and View Model Measurement Modes should equal.")
-            
+    
+    Dim p_measurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
+    Dim p_info As String
+    Dim p_measuring As Boolean
     Dim i As Integer, j As Integer, k As Integer
     For i = 1 To 4
         If i = 1 Then
-            This.ViewModel.MeasurementModeUnitTestSetter cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous
+            p_measurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous
+            p_info = "continuous"
         ElseIf i = 2 Then
-            This.ViewModel.MeasurementModeUnitTestSetter cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
+            p_measurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
+            p_info = "immediate"
         ElseIf i = 3 Then
-            This.ViewModel.MeasurementModeUnitTestSetter cc_isr_Tcp_Scpi.MeasurementModeOption.External
+            p_measurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
+            p_info = "external"
         ElseIf i = 4 Then
-            This.ViewModel.MeasurementModeUnitTestSetter cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
+            p_measurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
+            p_info = "monitoring"
         End If
         
         For j = 1 To 2
@@ -2188,25 +2195,46 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
                 This.ViewModel.SingleReadEnabled = True
             End If
             
-            For k = 1 To 2
-                If k = 1 Then
-                    This.ViewModel.Measuring = False
-                Else
-                    This.ViewModel.Measuring = True
-                End If
+            If p_measurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous Or _
+                p_measurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.none Then
+                p_measuring = False
+            
+                This.ViewModel.OnMeasurementStateChanged p_measurementMode, p_info, p_measuring
                 
                 If p_outcome.AssertSuccessful Then _
                    Set p_outcome = AssertUserInterfaceState(p_outcome)
                    
-            Next
+            Else
+            
+                For k = 1 To 2
+                    If k = 1 Then
+                       p_measuring = False
+                       p_info = p_info & " done"
+                    Else
+                       p_measuring = True
+                       p_info = p_info & " started"
+                    End If
+                    
+                    This.ViewModel.OnMeasurementStateChanged p_measurementMode, p_info, p_measuring
+                    
+                    If p_outcome.AssertSuccessful Then _
+                       Set p_outcome = AssertUserInterfaceState(p_outcome)
+                       
+                Next
+            
+            End If
         
         Next
         
     Next
     
     ' make sure to restore the none measurement mode.
-    This.ViewModel.MeasurementModeUnitTestSetter cc_isr_Tcp_Scpi.MeasurementModeOption.None
-    This.ViewModel.Measuring = False
+    p_measuring = False
+    p_info = "none"
+    p_measurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.none
+    This.ViewModel.OnMeasurementStateChanged p_measurementMode, p_info, p_measuring
+    If p_outcome.AssertSuccessful Then _
+       Set p_outcome = AssertUserInterfaceState(p_outcome)
     
     'On Error Resume Next
     ' exit design mode
@@ -2318,7 +2346,7 @@ Public Function AssertUserInterfaceState(ByVal a_outcome As cc_isr_Test_Fx.Asser
                 "User view Manual Single Toggle should not be executable when connected.")
     
     ElseIf cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous = This.ViewModel.MeasurementMode Or _
-           cc_isr_Tcp_Scpi.MeasurementModeOption.None = This.ViewModel.MeasurementMode Then
+           cc_isr_Tcp_Scpi.MeasurementModeOption.none = This.ViewModel.MeasurementMode Then
 
         If p_outcome.AssertSuccessful Then _
             Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.AutoScanToggleExecutable, _
@@ -4448,7 +4476,7 @@ Public Function AssetUserViewShouldMonitor(ByVal a_assert As cc_isr_Test_Fx.Asse
             "View Model Timer Started should be False after stopping external trigger monitoring.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(cc_isr_Tcp_Scpi.MeasurementModeOption.None, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(cc_isr_Tcp_Scpi.MeasurementModeOption.none, _
             This.ViewModel.MeasurementMode, _
             "View Model Measurement mode should be at 'None' after stopping external trigger monitoring.")
     

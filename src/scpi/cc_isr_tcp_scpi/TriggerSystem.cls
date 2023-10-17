@@ -26,7 +26,7 @@ Private This As this_
 ''' <summary>   Values that represent trigger source options. </summary>
 Public Enum TriggerSourceOption
     ''' <summary>   An enum constant representing the none trigger source. </summary>
-    None = 0
+    none = 0
     ''' <summary>   An enum constant representing the immediate trigger source. </summary>
     Immediate = 1
     ''' <summary>   An enum constant representing the external trigger source. </summary>
@@ -158,7 +158,7 @@ Public Function SourceGetter() As cc_isr_Tcp_Scpi.TriggerSourceOption
         Case "EXT"
             This.Source = TriggerSourceOption.External
         Case Else
-            This.Source = TriggerSourceOption.None
+            This.Source = TriggerSourceOption.none
     End Select
     SourceGetter = This.Source
     
