@@ -573,6 +573,7 @@ Public Sub StartManualScan()
 
     This.UserSampleSheet.DisplayStartDateTime
 
+    This.ViewModel.TargetChannelNumber = 1
     Me.AutoIncrementChannelNoEnabled = True
     Me.FrontInputsRequired = True
     Me.SingleReadEnabled = False

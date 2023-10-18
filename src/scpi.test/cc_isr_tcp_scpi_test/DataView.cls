@@ -218,11 +218,13 @@ Public Sub OnToggleConnectionButtonChange()
     ' exit if already connected or disconnected
     If Me.ToggleConnectionValue = This.ViewModel.Connected Then Exit Sub
     
-    If Me.ToggleConnectionValue Then
+    If Me.ToggleConnectionValue And This.ViewModel.OpenConnectionExecutable Then
     
+        ' we must initialize here without toggling the connection button state.
+        
         This.ViewModel.OpenConnectionPowerOnResetCommand
         
-    Else
+    ElseIf Not Me.ToggleConnectionValue And This.ViewModel.CloseConnectionExecutable Then
     
         This.ViewModel.CloseConnectionCommand
         
@@ -288,8 +290,12 @@ End Property
 Public Property Let ToggleConnectionValue(ByVal a_value As Boolean)
     If Me.ToggleConnectionValue <> a_value Then
         
-        If Not This.DataAcquisitionSheet Is Nothing Then _
-            This.DataAcquisitionSheet.ToggleConnectionValue = a_value
+        ' For simoplicity, the connection toggle is not toggled from the view model.
+        ' becuase on initiation, the connected state is false.
+        ' we could initialize the view model before getting into the connection issue, though.
+        ' also, this could wreck havoc when restoring state.
+        ' If Not This.DataAcquisitionSheet Is Nothing Then _
+        '    This.DataAcquisitionSheet.ToggleConnectionValue = a_value
         
         This.ToggleConnectionValue = a_value
     End If

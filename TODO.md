@@ -6,16 +6,6 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 ## GIT:
 
 ## TODO
-Run all unit tests.
-Test running from the User Sheet.
-Use open with reset to open the connection.
-
-Test 01 TestShouldInitialize failed. 
-User view Auto Single Toggle should not be executable where Measurement Mode is Immediate, Multi-Read, and not Measuring. Elapsed time: 35164.1 ms.
-
-User view Auto Single Toggle should not be executable where Measurement Mode is Immediate, Multi-Read, and not Measuring. Elapsed time: 21209.1 ms.
-
-
 Move to flying.
 
 

@@ -155,7 +155,7 @@ End Property
 ''' <summary>   Sets the action state of the Toggle Connection command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let ToggleConnectionValue(ByVal a_value As Boolean)
-    Me.ToggleConnectionButton.Value = a_value
+    ' Me.ToggleConnectionButton.Value = a_value
 End Property
 
 ''' <summary>   Handles the Got Focus event of the Toggle Connectionbutton.  </summary>
@@ -183,16 +183,14 @@ Private Sub ToggleConnectionButton_Change()
     ' when this data sheet is initialized.
     If This.DesignMode Or Not Me.ToggleConnectionButton.Enabled Then Exit Sub
     
+    Me.ToggleConnectionButton.Enabled = False
+    
     If This.FocusedControlName = Me.ToggleConnectionButton.Name Then
-
-        On Error GoTo 0
 
         ' Commands for click
         Me.OnConnectionChange
         
     Else
-
-        On Error GoTo 0
 
         ' Commands for change from within the sheet
         Me.OnConnectionChange
@@ -201,6 +199,8 @@ Private Sub ToggleConnectionButton_Change()
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
+
+    Me.ToggleConnectionButton.Enabled = True
 
     On Error GoTo 0
     Exit Sub
@@ -212,6 +212,8 @@ err_Handler:
     
     ' Commands for change from outside the sheet
     Me.OnConnectionChange
+    
+    GoTo exit_Handler:
     
 End Sub
 
@@ -233,8 +235,12 @@ Friend Sub OnConnectionChange()
     
     Me.ToggleConnectionButton.Caption = IIf(Me.ToggleConnectionButton.Value, "Tap to Disconnect", "Tap to Connect")
 
+    UserView.AutoSampleFrontInputs = Me.FrontAutoScanCheckBox.Value
     DataView.ToggleConnectionValue = Me.ToggleConnectionButton.Value
     
+    Me.LastMessage = IIf(Me.ToggleConnectionButton.Value, "Connecting; please wait...", _
+        "Disconnecting; please wait...")
+        
     ' Commands for change from outside the sheet
     DataView.OnToggleConnectionButtonChange
 

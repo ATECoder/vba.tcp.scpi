@@ -101,6 +101,12 @@ Public Sub RunOneTest()
     RunTest 1
     RunTest 2
     RunTest 3
+    RunTest 4
+    RunTest 5
+    RunTest 6
+    RunTest 7
+    RunTest 8
+    RunTest 9
     AfterAll
 End Sub
 
