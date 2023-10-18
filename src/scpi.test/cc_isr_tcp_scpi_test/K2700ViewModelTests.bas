@@ -98,8 +98,9 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 16
-    'RunTest 15
+    RunTest 1
+    RunTest 2
+    RunTest 3
     AfterAll
 End Sub
 
@@ -107,51 +108,77 @@ End Sub
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' Test 01 TestShouldInitialize passed. Elapsed time: 553.5 ms.
-''' Test 02 TestShouldBeConnected passed. Elapsed time: 44.8 ms.
-'''     Serial Poll is 81 in 17.3 ms.
-''' Test 03 TestShouldReadCards passed. Elapsed time: 12.5 ms.
-''' Test 04 TestInitialStateShouldRestore passed. Elapsed time: 12237.6 ms.
-''' Test 05 TestSyntaxErrorShouldRecover passed. Elapsed time: 157.3 ms.
-'''     Serial Poll is 68 in 3.9 ms.
-''' Test 06 TestClosedConnectionShouldRestore passed. Elapsed time: 5732.9 ms.
-''' Test 07 TestImmediateModeShouldConfigure passed. Elapsed time: 5639.4 ms.
-''' Test 08 TestExternalModeShouldConfigure passed. Elapsed time: 5513.5 ms.
-''' Test 09 TestTriggerPollingShouldStartStop passed. Elapsed time: 6813.1 ms.
-'''  1 : 100.115234
-'''  2 : 100.114975
-'''  3 : 100.116783
-'''  4 : 100.117149
-'''  5 : 100.115334
-'''  6 : 100.115814
-'''  7 : 100.116417
-''' Test 10 TestTriggerPollingShouldRead passed. Elapsed time: 11113.5 ms.
-''' Test 11 TestTriggerMonitoringShouldStartStop passed. Elapsed time: 7679.0 ms.
+''' Test 01 TestShouldInitialize passed. Elapsed time: 4609.5 ms.
+''' Test 02 TestShouldBeConnected passed. Elapsed time: 34.2 ms.
+'''     Serial Poll is 16 in 8.6 ms.
+''' Test 03 TestShouldReadCards passed. Elapsed time: 10.8 ms.
+''' Test 04 TestInitialStateShouldRestore passed. Elapsed time: 13155.9 ms.
+''' Test 05 TestSyntaxErrorShouldRecover passed. Elapsed time: 166.4 ms.
+'''     Serial Poll is 4 in 4.9 ms.
+''' Test 06 TestClosedConnectionShouldRestore passed. Elapsed time: 7647.8 ms.
+''' Test 07 TestImmediateModeShouldConfigure passed. Elapsed time: 2396.0 ms.
+''' Test 08 TestExternalModeShouldConfigure passed. Elapsed time: 2474.9 ms.
+''' Test 09 TestTriggerPollingShouldStartStop passed. Elapsed time: 2155.3 ms.
+''' Awaiting triggers...
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00136353E+02'.
+'''  1 : 100.136353
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00134216E+02'.
+'''  2 : 100.134216
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00134689E+02'.
+'''  3 : 100.134689
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00135223E+02'.
+'''  4 : 100.135223
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00134422E+02'.
+'''  5 : 100.134422
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00135017E+02'.
+'''  6 : 100.135017
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00135025E+02'.
+'''  7 : 100.135025
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00133934E+02'.
+'''  8 : 100.133934
+''' Test 10 TestTriggerPollingShouldRead passed. Elapsed time: 9017.2 ms.
+''' Test 11 TestTriggerMonitoringShouldStartStop passed. Elapsed time: 6234.8 ms.
 ''' Waiting for trigger....
-'''  1 : 100.118195
-'''  2 : 100.117058
-'''  3 : 100.117325
-''' Test 12 TestTriggerMonitoringShouldRead passed. Elapsed time: 12980.6 ms.
-'''  1 : 100.15197
-''' Test 13 TestUserViewShouldMeasureImmediately passed. Elapsed time: 5598.4 ms.
-'''  1 : 100.135483
-''' Test 13 TestUserViewShouldMeasureImmediately passed. Elapsed time: 5616.6 ms.
-''' Test 14 TestUserViewMonitoringShouldStartStop passed. Elapsed time: 7602.9 ms.
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00134773E+02'.
+'''  1 : 100.134773
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00135361E+02'.
+'''  2 : 100.135361
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00135979E+02'.
+'''  3 : 100.135979
+''' Test 12 TestTriggerMonitoringShouldRead passed. Elapsed time: 11310.5 ms.
+'''  1 : 100.146591
+''' Test 13 TestUserViewShouldMeasureImmediately passed. Elapsed time: 2460.0 ms.
+''' Test 14 TestUserViewMonitoringShouldStartStop passed. Elapsed time: 5591.8 ms.
 ''' Waiting for trigger....
-'''  1 : 100.125839
-'''  2 : 100.125107
-'''  3 : 100.125
-'''  4 : 100.124367
-''' Test 15 TestUserViewMonitoringShouldRead passed. Elapsed time: 12905.7 ms.
-''' Test 14 TestUserViewMonitoringShouldStartStop passed. Elapsed time: 7964.9 ms.
-''' Waiting for trigger....
-'''  1 : 100.122002
-'''  2 : 100.122925
-'''  3 : 100.122353
-'''  4 : 100.123596
-''' Test 15 TestUserViewMonitoringShouldRead passed. Elapsed time: 12975.6 ms.
-''' Ran 10 out of 10 tests.
-''' Passed: 10; Failed: 0; Inconclusive: 0.
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00135345E+02'.
+'''  1 : 100.135345
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00135422E+02'.
+'''  2 : 100.135422
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00135277E+02'.
+'''  3 : 100.135277
+''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
+''' Reading: '+1.00135765E+02'.
+'''  4 : 100.135765
+''' Test 15 TestUserViewMonitoringShouldRead passed. Elapsed time: 11354.8 ms.
+''' 19:08:24 Power on reset starting. This could take 3 seconds. Please wait...
+''' 19:08:31 done power on reset.
+''' Test 16 TestOpenConnectionWithPowerOnResetShouldConnect passed. Elapsed time: 7321.8 ms.
+''' Ran 16 out of 16 tests.
+''' Passed: 16; Failed: 0; Inconclusive: 0.
 ''' </code>
 ''' </remarks>
 Public Sub RunAllTests()
@@ -2269,6 +2296,15 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
 
     If p_outcome.AssertSuccessful Then _
        Set p_outcome = AssertUserInterfaceState(p_outcome)
+
+    If p_outcome.AssertSuccessful Then
+    
+        This.ViewModel.OpenConnectionCommand
+    
+        If Not This.ViewModel.Connected Then _
+            Set p_outcome = cc_isr_Test_Fx.Assert.Fail("Failed reconnecting after initialize.")
+
+    End If
 
     ' Finally, verify that no error message was recorded.
     If p_outcome.AssertSuccessful Then _
