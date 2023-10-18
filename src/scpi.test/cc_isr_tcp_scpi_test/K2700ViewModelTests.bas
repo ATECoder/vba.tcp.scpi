@@ -98,8 +98,8 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 13
-    'RunTest 14
+    RunTest 16
+    'RunTest 15
     AfterAll
 End Sub
 
@@ -1047,9 +1047,11 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_assert As cc_isr_Test_
         
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualScanToggleExecutable, _
             "User View manual scan button should be disabled in immediate mode.")
+    
     End If
     
     If p_outcome.AssertSuccessful Then
+        
         
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualSingleToggleExecutable, _
             "User View manual single button should be disabled in immediate mode.")
@@ -3873,7 +3875,7 @@ Public Function TestTriggerPollingShouldRead() As cc_isr_Test_Fx.Assert
     End If
     
     Dim p_enabled As Boolean: p_enabled = True
-    Dim p_duration As Double: p_duration = 10  ' in seconds
+    Dim p_duration As Double: p_duration = 5  ' in seconds
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = AssetTriggersShouldPoll(p_outcome, p_enabled, p_duration)

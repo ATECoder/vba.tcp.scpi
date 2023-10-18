@@ -2019,6 +2019,37 @@ Friend Sub Synchronize()
     Me.TopCard = This.ViewModel.TopCard
     Me.TopCardFunctionScanList = This.ViewModel.TopCardFunctionScanList
     
+    This.OpenConnectionExecutable = This.ViewModel.OpenConnectionExecutable
+    This.CloseConnectionExecutable = This.ViewModel.CloseConnectionExecutable
+    This.ResetKnownStateExecutable = This.ViewModel.ResetKnownStateExecutable
+    This.ClearExecutionStateExecutable = This.ViewModel.ClearExecutionStateExecutable
+    This.QueryExecutable = This.ViewModel.QueryExecutable
+    This.ReadExecutable = This.ViewModel.ReadExecutable
+    This.QueryStatusByteExecutable = This.ViewModel.QueryStatusByteExecutable
+    This.ReadStandardEventStatusExecutable = This.ViewModel.ReadStandardEventStatusExecutable
+    This.ReadStatusAfterWriteExecutable = This.ViewModel.ReadStatusAfterWriteExecutable
+    This.WriteExecutable = This.ViewModel.WriteExecutable
+    This.QueryInputsExecutable = This.ViewModel.QueryInputsExecutable
+    This.ClearReadingsExecutable = This.ViewModel.ClearReadingsExecutable
+    This.MeasureExecutable = This.ViewModel.MeasureExecutable
+    This.StartMonitoringExecutable = This.ViewModel.StartMonitoringExecutable
+    This.StopMonitoringExecutable = This.ViewModel.StopMonitoringExecutable
+    This.ImmediateTriggerOptionExecutable = This.ViewModel.ImmediateTriggerOptionExecutable
+    This.ExternalTriggerOptionExecutable = This.ViewModel.ExternalTriggerOptionExecutable
+    This.SelectiveDeviceClearExecutable = This.ViewModel.SelectiveDeviceClearExecutable
+    This.GoToLocalExecutable = This.ViewModel.GoToLocalExecutable
+    This.LocalLockoutExecutable = This.ViewModel.LocalLockoutExecutable
+    This.AutoAssertTalkSetExecutable = This.ViewModel.AutoAssertTalkSetExecutable
+    This.AutoAssertTalkGetExecutable = This.ViewModel.AutoAssertTalkGetExecutable
+    This.ReadStatusByteExecutable = This.ViewModel.ReadStatusByteExecutable
+    This.ServiceRequestedExecutable = This.ViewModel.ServiceRequestedExecutable
+    This.GpibAddressGetExecutable = This.ViewModel.GpibAddressGetExecutable
+    This.GpibAddressSetExecutable = This.ViewModel.GpibAddressSetExecutable
+    This.GpibLanReadTimeoutGetExecutable = This.ViewModel.GpibLanReadTimeoutGetExecutable
+    This.GpibLanReadTimeoutSetExecutable = This.ViewModel.GpibLanReadTimeoutSetExecutable
+    This.MessageToSendExecutable = This.ViewModel.MessageToSendExecutable
+    This.FunctionNameExecutable = This.ViewModel.FunctionNameExecutable
+    
 End Sub
 
 ''' <summary>   Handles the property change event of the viwe model. </summary>

@@ -220,7 +220,7 @@ Public Sub OnToggleConnectionButtonChange()
     
     If Me.ToggleConnectionValue Then
     
-        This.ViewModel.OpenConnectionCommand
+        This.ViewModel.OpenConnectionPowerOnResetCommand
         
     Else
     

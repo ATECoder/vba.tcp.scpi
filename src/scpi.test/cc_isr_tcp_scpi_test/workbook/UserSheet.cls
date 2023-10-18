@@ -54,7 +54,7 @@ End Function
 ''' <summary>   Gets the design mode for unit testing and restoration of state. </summary>
 ''' <value>   [Boolean]. </value>
 Public Property Get DesignMode() As Boolean
-    DesignMode = Me.DesignMode
+    DesignMode = This.DesignMode
 End Property
 
 ''' <summary>   Sets the design mode for unit testing and restoration of state. </summary>

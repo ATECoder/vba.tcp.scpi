@@ -1314,7 +1314,7 @@ Public Sub WriteCommand()
 
     Me.SentMessage = This.MessageToSend
 
-    If Me.ReadStatusAfterWriteEnabled Then
+    If This.ReadStatusAfterWriteEnabled Then
 
         Dim p_canQuery As Boolean
         p_canQuery = Not cc_isr_Ieee488.Scpi.IsQuery(This.MessageToSend)
@@ -2159,7 +2159,7 @@ Public Sub WriteSocketCommand()
     
         Me.SentMessage = This.MessageToSend
     
-        If Me.ReadStatusAfterWriteEnabled Then
+        If This.ReadStatusAfterWriteEnabled Then
     
             Dim p_canQuery As Boolean
             p_canQuery = Not cc_isr_Ieee488.Scpi.IsQuery(This.MessageToSend)
@@ -3584,6 +3584,20 @@ Friend Function TryConfigureExternalTriggerReading(ByRef a_details As String) As
 
     If p_success Then
     
+        ' unfortunately, reading the inputs after the reset belore returns an incorrect value
+        ' so this was moved as a workaround
+        If cc_isr_Tcp_Scpi.MeasurementModeOption.External <> This.MeasurementMode Then
+            
+            ' validate only if we have a change in measurment mode.
+            p_success = Me.ValidateInputs(p_details)
+        
+            Me.LastMessage = p_details
+        End If
+        
+    End If
+
+    If p_success Then
+    
         ' reset if changing modes.
         If cc_isr_Tcp_Scpi.MeasurementModeOption.External <> This.MeasurementMode Then
             
@@ -3623,20 +3637,6 @@ Friend Function TryConfigureExternalTriggerReading(ByRef a_details As String) As
         
         End If
     
-    End If
-    
-    If p_success Then
-    
-        ' this validation worked when called from the ...Command method.
-        ' it used to fail if set after configuring external trigger measurements.
-        If cc_isr_Tcp_Scpi.MeasurementModeOption.External <> This.MeasurementMode Then
-            
-            ' validate only if we have a change in measurment mode.
-            p_success = Me.ValidateInputs(p_details)
-        
-            Me.LastMessage = p_details
-        End If
-        
     End If
     
     If p_success Then
@@ -3767,6 +3767,21 @@ Public Function TryConfigureImmediateTriggerReadings(ByRef a_details As String) 
 
     If p_success Then
     
+        ' unfortunately, reading the inputs after the reset belore returns an incorrect value
+        ' so this was moved as a workaround
+        If cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate <> This.MeasurementMode Then
+            
+            ' validate only if we have a change in measurment mode.
+            p_success = Me.ValidateInputs(p_details)
+        
+            Me.LastMessage = p_details
+            
+        End If
+        
+    End If
+
+    If p_success Then
+    
         ' reset if changing modes.
         If cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate <> This.MeasurementMode Then
             
@@ -3807,21 +3822,6 @@ Public Function TryConfigureImmediateTriggerReadings(ByRef a_details As String) 
         
         End If
     
-    End If
-    
-    If p_success Then
-    
-        ' this validation worked when called from the ...Command method.
-        ' it used to fail if set after configuring immediate measurements.
-        If cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate <> This.MeasurementMode Then
-            
-            ' validate only if we have a change in measurment mode.
-            p_success = Me.ValidateInputs(p_details)
-        
-            Me.LastMessage = p_details
-            
-        End If
-        
     End If
     
     If p_success Then
@@ -3963,7 +3963,7 @@ Public Function TryMeasureImmediately(ByRef a_details As String) As Boolean
     Dim p_reading As String
     Dim p_channelNumber As Integer
 
-    If Me.AutoIncrementChannelNoEnabled Then
+    If This.AutoIncrementChannelNoEnabled Then
     
         ' Clear all cells
         Me.ClearReadings
@@ -3978,7 +3978,7 @@ Public Function TryMeasureImmediately(ByRef a_details As String) As Boolean
             Me.TargetChannelNumber = p_channelNumber
         
             Me.RestartStopper
-            If Me.FrontInputsValue Then
+            If This.FrontInputsValue Then
                 p_success = This.K2700.TryTakeFrontReading(p_reading, p_details, p_channelNumber)
                 If Not p_success Then _
                     p_details = "Failed taking a front reading; " & p_details
@@ -3999,7 +3999,7 @@ Public Function TryMeasureImmediately(ByRef a_details As String) As Boolean
     
         Me.RestartStopper
         
-        If Me.FrontInputsValue Then
+        If This.FrontInputsValue Then
             p_success = This.K2700.TryTakeFrontReading(p_reading, p_details, p_channelNumber)
             If Not p_success Then _
                 p_details = "Failed taking a front reading; " & p_details
@@ -4326,7 +4326,7 @@ Public Sub StartMonitoringExternalTriggers(Optional ByVal a_timerControlled As B
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    If Me.AutoIncrementChannelNoEnabled Then
+    If This.AutoIncrementChannelNoEnabled Then
     
         ' Clear all readings
         Me.ClearReadings
@@ -4335,7 +4335,7 @@ Public Sub StartMonitoringExternalTriggers(Optional ByVal a_timerControlled As B
 
     Me.MonitoringState = "External Trigger On"
 
-    If Me.AutoIncrementChannelNoEnabled Then
+    If This.AutoIncrementChannelNoEnabled Then
     
         ' set the first channel number for manual scan
         This.TargetChannelNumber = 1
@@ -4824,7 +4824,7 @@ Public Sub HandleTimerEvent()
     Dim p_channelNumber As Integer
 
     ' check if scan or single
-    If Me.AutoIncrementChannelNoEnabled Then
+    If This.AutoIncrementChannelNoEnabled Then
   
         ' in auto increment mode, use the Target Channel Number
         p_channelNumber = This.TargetChannelNumber
@@ -5454,7 +5454,7 @@ Private Sub m_k2700_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Channel
     On Error GoTo err_Handler
     
     ' issue a beep if reading beep is enabled
-    If Me.ReadingBeepEnabled Then VBA.Beep
+    If This.ReadingBeepEnabled Then VBA.Beep
 
     ' notify the observer of a channel measurements
     If VBA.vbNullString = a_eventArgs.Reading Then
@@ -5463,7 +5463,7 @@ Private Sub m_k2700_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Channel
         OnChannelMeasured a_eventArgs.ChannelNumber, CDbl(a_eventArgs.Reading)
     End If
 
-    If Me.AutoIncrementChannelNoEnabled Then
+    If This.AutoIncrementChannelNoEnabled Then
 
         ' increment the resistance for the next reading
         

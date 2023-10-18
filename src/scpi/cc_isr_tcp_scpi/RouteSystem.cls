@@ -129,7 +129,7 @@ End Function
 ''' <returns>   [String]. </returns>
 Public Function CardName(ByVal a_slotNumber As Integer) As String
     
-    If Me.InstalledCards.Count >= a_slotNumber Then
+    If This.InstalledCards.Count >= a_slotNumber Then
         CardName = Me.InstalledCard(a_slotNumber).Name
     Else
         CardName = VBA.vbNullString
@@ -141,7 +141,7 @@ End Function
 ''' <returns>   [String]. </returns>
 Public Function FunctionScanList(ByVal a_slotNumber As Integer) As String
         
-    If Me.InstalledCards.Count >= a_slotNumber Then
+    If This.InstalledCards.Count >= a_slotNumber Then
         FunctionScanList = Me.InstalledCard(a_slotNumber).FunctionScanList
     Else
         FunctionScanList = VBA.vbNullString

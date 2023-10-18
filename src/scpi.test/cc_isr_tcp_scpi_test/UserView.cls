@@ -207,6 +207,74 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
+''' <summary>   Starts an immediate triggering and take multiple readings. </summary>
+''' <remarks>   In auto scan we have the following settings:
+''' Auto Increment channel number: True;
+''' Front Inputs Required: False;
+''' Single Readings: False;
+''' Triggering Mode: Immediate.
+''' </remarks>
+Public Sub StartAutoScan()
+
+    Const p_procedureName As String = "StartAutoScan"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    This.UserSampleSheet.DisplayStartDateTime
+    Me.AutoIncrementChannelNoEnabled = True
+    Me.FrontInputsRequired = This.AutoSampleFrontInputs
+    Me.SingleReadEnabled = False
+    This.ViewModel.ReadingBeepEnabled = False
+    
+    ' next set immediate triggering mode.
+    
+    If This.ViewModel.ImmediateTriggerOptionExecutable Then
+        Me.LastCommandOutcome = This.ViewModel.ConfigureImmediateTriggerReadingsCommand(Me.LastCommandDetails)
+    Else
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " Immediate trigger command not enabled."
+    End If
+    
+    If Me.LastCommandOutcome Then
+    
+        ' next takes the measurements
+    
+        If This.ViewModel.MeasureExecutable Then
+            ' make an immediate measure of one or all channels.
+            Me.LastCommandOutcome = This.ViewModel.MeasureImmediatelyCommand(Me.LastCommandDetails)
+        Else
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " Measure command not enabled."
+        End If
+    
+    End If
+        
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' report the last error.
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+
 ''' <summary>   Handles the Auto Scan toggle button. </summary>
 ''' <remarks>   In auto scan we have the following settings:
 ''' Auto Increment channel number: True;
@@ -223,39 +291,11 @@ Public Sub OnAutoScanToggleButtonChange()
 
     If This.ViewModel Is Nothing Then Exit Sub
 
-    If Me.AutoScanToggleValue Then
+    If Me.AutoScanToggleValue And This.ViewModel.ImmediateTriggerOptionExecutable And _
+        Not This.Measuring Then
+        
+        Me.StartAutoScan
     
-        This.UserSampleSheet.DisplayStartDateTime
-        Me.AutoIncrementChannelNoEnabled = True
-        Me.FrontInputsRequired = This.AutoSampleFrontInputs
-        Me.SingleReadEnabled = False
-        This.ViewModel.ReadingBeepEnabled = False
-        
-        ' next set immediate triggering mode.
-        
-        If This.ViewModel.ImmediateTriggerOptionExecutable Then
-            Me.LastCommandOutcome = This.ViewModel.ConfigureImmediateTriggerReadingsCommand(Me.LastCommandDetails)
-        Else
-            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-                " Immediate trigger command not enabled."
-        End If
-        
-        If Me.LastCommandOutcome Then
-        
-            ' next takes the measurements
-        
-            If This.ViewModel.MeasureExecutable Then
-                ' make an immediate measure of one or all channels.
-                Me.LastCommandOutcome = This.ViewModel.MeasureImmediatelyCommand(Me.LastCommandDetails)
-            Else
-                cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-                    ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-                    " Measure command not enabled."
-            End If
-        
-        End If
-        
     End If
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -336,6 +376,75 @@ Public Property Let AutoScanToggleValue(ByVal a_value As Boolean)
 
 End Property
 
+''' <summary>   Starts immediate triggering and take a single reading. </summary>
+''' <remarks>   In auto single we have the following settings:
+''' Auto Increment channel number: False;
+''' Front Inputs Required: False;
+''' Single Readings: True;
+''' Triggering Mode: Immediate.
+''' </remarks>
+Public Sub StartAutoSingle()
+
+    Const p_procedureName As String = "StartAutoSingle"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Me.SelectedChannelNumber = This.UserSampleSheet.SelectedChannelNumber
+    This.UserSampleSheet.DisplayStartDateTime
+
+    Me.AutoIncrementChannelNoEnabled = False
+    Me.FrontInputsRequired = This.AutoSampleFrontInputs
+    Me.SingleReadEnabled = True
+    This.ViewModel.ReadingBeepEnabled = False
+    
+    ' next set immediate triggering mode.
+    
+    If This.ViewModel.ImmediateTriggerOptionExecutable Then
+        Me.LastCommandOutcome = This.ViewModel.ConfigureImmediateTriggerReadingsCommand(Me.LastCommandDetails)
+    Else
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " Immediate trigger command not enabled."
+    End If
+    
+    If Me.LastCommandOutcome Then
+    
+        ' next takes the measurements
+    
+        If This.ViewModel.MeasureExecutable Then
+            ' make an immediate measure of one or all channels.
+            Me.LastCommandOutcome = This.ViewModel.MeasureImmediatelyCommand(Me.LastCommandDetails)
+        Else
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " Measure command not enabled."
+        End If
+    
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' report the last error.
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
 ''' <summary>   Handles the Auto Single toggle button. </summary>
 ''' <remarks>   In auto single we have the following settings:
 ''' Auto Increment channel number: False;
@@ -352,41 +461,18 @@ Public Sub OnAutoSingleToggleButtonChange()
     
     If This.ViewModel Is Nothing Then Exit Sub
 
-    If Me.AutoSingleToggleValue Then
-    
-        Me.SelectedChannelNumber = This.UserSampleSheet.SelectedChannelNumber
-        This.UserSampleSheet.DisplayStartDateTime
-    
-        Me.AutoIncrementChannelNoEnabled = False
-        Me.FrontInputsRequired = This.AutoSampleFrontInputs
-        Me.SingleReadEnabled = True
-        This.ViewModel.ReadingBeepEnabled = False
-        
-        ' next set immediate triggering mode.
-        
-        If This.ViewModel.ImmediateTriggerOptionExecutable Then
-            Me.LastCommandOutcome = This.ViewModel.ConfigureImmediateTriggerReadingsCommand(Me.LastCommandDetails)
-        Else
-            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-                " Immediate trigger command not enabled."
-        End If
-        
-        If Me.LastCommandOutcome Then
-        
-            ' next takes the measurements
-        
-            If This.ViewModel.MeasureExecutable Then
-                ' make an immediate measure of one or all channels.
-                Me.LastCommandOutcome = This.ViewModel.MeasureImmediatelyCommand(Me.LastCommandDetails)
-            Else
-                cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-                    ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-                    " Measure command not enabled."
-            End If
-        
-        End If
+    ' exit if the view model is already in auto single mode and the button state is
+    ' already the same as the measuring state
+    If This.MeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate And _
+        This.SingleReadEnabled And Me.AutoSingleToggleValue = Me.Measuring Then
+        Exit Sub
+    End If
 
+    If Me.AutoSingleToggleValue And This.ViewModel.ImmediateTriggerOptionExecutable And _
+        Not Me.Measuring Then
+    
+        Me.StartAutoSingle
+        
     End If
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -469,6 +555,129 @@ Public Property Let AutoSingleToggleValue(ByVal a_value As Boolean)
     
 End Property
 
+''' <summary>   Starts external trigger monitoring in multiple readings mode. </summary>
+''' <remarks>   In manual scan we have the following settings:
+''' Auto Increment channel number: True;
+''' Front Inputs Required: True;
+''' Single Readings: False;
+''' Triggering Mode: External.
+''' </remarks>
+Public Sub StartManualScan()
+
+    Const p_procedureName As String = "StartManualScan"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    If This.ViewModel Is Nothing Then Exit Sub
+
+    This.UserSampleSheet.DisplayStartDateTime
+
+    Me.AutoIncrementChannelNoEnabled = True
+    Me.FrontInputsRequired = True
+    Me.SingleReadEnabled = False
+    This.ViewModel.ReadingBeepEnabled = DataView.BeepAllowed
+    
+    ' next set external triggering triggering mode.
+    
+    If This.ViewModel.ExternalTriggerOptionExecutable Then
+        Me.LastCommandOutcome = This.ViewModel.ConfigureExternalTriggerReadingCommand(Me.LastCommandDetails)
+    Else
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " External trigger enable command not enabled."
+    End If
+    
+    If Me.LastCommandOutcome Then
+    
+        ' next start external trigger monitoring
+        ' this should wait for monitoring to commence or raise an error.
+        If This.ViewModel.StartMonitoringExecutable Then
+            This.ViewModel.StartMonitoringExternalTriggersCommand
+        Else
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " Start monitoring command not enabled."
+        End If
+    
+    End If
+           
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' report the last error.
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' on error, stop monitoring
+    On Error Resume Next
+    
+    ' stop external trigger monitoring
+    ' this should wait for monitoring to stop
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.StopMonitoringExternalTriggersCommand
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Stops external triggering monitoring. </summary>
+Public Sub StopManualTriggering()
+
+    Const p_procedureName As String = "StopManualTriggering"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    If This.ViewModel Is Nothing Then Exit Sub
+
+    ' stop external trigger monitoring
+    
+    ' this should waits for monitoring to stop
+    This.ViewModel.StopMonitoringExternalTriggersCommand
+   
+           
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' report the last error.
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' on error, stop monitoring
+    On Error Resume Next
+    
+    ' stop external trigger monitoring
+    ' this should wait for monitoring to stop
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.StopMonitoringExternalTriggersCommand
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
 ''' <summary>   Handles the Manual Scan toggle button. </summary>
 ''' <remarks>   In manual scan we have the following settings:
 ''' Auto Increment channel number: True;
@@ -485,52 +694,16 @@ Public Sub OnManualScanToggleButtonChange()
 
     If This.ViewModel Is Nothing Then Exit Sub
 
-    If Me.ManualScanToggleValue Then
+    If Me.ManualScanToggleValue And This.ViewModel.ExternalTriggerOptionExecutable And _
+        Not This.Measuring Then
     
-        This.UserSampleSheet.DisplayStartDateTime
+        Me.StartManualScan
+        
+    ElseIf Not Me.ManualScanToggleValue And This.ViewModel.StopMonitoringExecutable And _
+        This.Measuring Then
     
-        Me.AutoIncrementChannelNoEnabled = True
-        Me.FrontInputsRequired = True
-        Me.SingleReadEnabled = False
-        This.ViewModel.ReadingBeepEnabled = DataView.BeepAllowed
+        Me.StopManualTriggering
         
-        ' next set external triggering triggering mode.
-        
-        If This.ViewModel.ExternalTriggerOptionExecutable Then
-            Me.LastCommandOutcome = This.ViewModel.ConfigureExternalTriggerReadingCommand(Me.LastCommandDetails)
-        Else
-            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-                " External trigger enable command not enabled."
-        End If
-        
-        If Me.LastCommandOutcome Then
-        
-            ' next start external trigger monitoring
-            ' this should wait for monitoring to commence or raise an error.
-            If This.ViewModel.StartMonitoringExecutable Then
-                This.ViewModel.StartMonitoringExternalTriggersCommand
-            Else
-                cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-                    ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-                    " Start monitoring command not enabled."
-            End If
-        
-        End If
-        
-    Else
-    
-        ' stop external trigger monitoring
-        ' this should wait for monitoring to stop
-        
-        If This.ViewModel.StopMonitoringExecutable Then
-            This.ViewModel.StopMonitoringExternalTriggersCommand
-        Else
-            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-                " Stop monitoring command not enabled."
-        End If
-            
     End If
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -617,6 +790,84 @@ Public Property Let ManualScanToggleValue(ByVal a_value As Boolean)
     
 End Property
 
+''' <summary>   Start the Manual Single monitoring. </summary>
+''' <remarks>   In manual Single we have the following settings:
+''' Auto Increment channel number: False;
+''' Front Inputs Required = True;
+''' Single Readings: True;
+''' Triggering Mode: External.
+''' </remarks>
+Public Sub StartManualSingle()
+
+    Const p_procedureName As String = "StartManualSingle"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    If This.ViewModel Is Nothing Then Exit Sub
+
+    Me.SelectedChannelNumber = This.UserSampleSheet.SelectedChannelNumber
+    This.UserSampleSheet.DisplayStartDateTime
+    
+    Me.AutoIncrementChannelNoEnabled = False
+    Me.FrontInputsRequired = True
+    Me.SingleReadEnabled = True
+    This.ViewModel.ReadingBeepEnabled = DataView.BeepAllowed
+    
+    ' next set external triggering triggering mode.
+    
+    If This.ViewModel.ExternalTriggerOptionExecutable Then
+        Me.LastCommandOutcome = This.ViewModel.ConfigureExternalTriggerReadingCommand(Me.LastCommandDetails)
+    Else
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " External trigger enable command not enabled."
+    End If
+    
+    If Me.LastCommandOutcome Then
+    
+        ' next start external trigger monitoring
+        ' this should wait for monitoring to commence or raise an error.
+        If This.ViewModel.StartMonitoringExecutable Then
+            This.ViewModel.StartMonitoringExternalTriggersCommand
+        Else
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " Start monitoring command not enabled."
+        End If
+    
+    End If
+        
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' report the last error.
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' on error, stop monitoring
+    On Error Resume Next
+    
+    ' stop external trigger monitoring
+    ' this should wait for monitoring to stop
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.StopMonitoringExternalTriggersCommand
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
 ''' <summary>   Handles the Manual Single toggle button. </summary>
 ''' <remarks>   In manual Single we have the following settings:
 ''' Auto Increment channel number: False;
@@ -633,52 +884,15 @@ Public Sub OnManualSingleToggleButtonChange()
 
     If This.ViewModel Is Nothing Then Exit Sub
 
-    If Me.ManualSingleToggleValue Then
+    If Me.ManualSingleToggleValue And This.ViewModel.ExternalTriggerOptionExecutable And _
+        Not This.Measuring Then
     
-        Me.SelectedChannelNumber = This.UserSampleSheet.SelectedChannelNumber
-        This.UserSampleSheet.DisplayStartDateTime
+        Me.StartManualSingle
         
-        Me.AutoIncrementChannelNoEnabled = False
-        Me.FrontInputsRequired = True
-        Me.SingleReadEnabled = True
-        This.ViewModel.ReadingBeepEnabled = DataView.BeepAllowed
-        
-        ' next set external triggering triggering mode.
-        
-        If This.ViewModel.ExternalTriggerOptionExecutable Then
-            Me.LastCommandOutcome = This.ViewModel.ConfigureExternalTriggerReadingCommand(Me.LastCommandDetails)
-        Else
-            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-                " External trigger enable command not enabled."
-        End If
-        
-        If Me.LastCommandOutcome Then
-        
-            ' next start external trigger monitoring
-            ' this should wait for monitoring to commence or raise an error.
-            If This.ViewModel.StartMonitoringExecutable Then
-                This.ViewModel.StartMonitoringExternalTriggersCommand
-            Else
-                cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-                    ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-                    " Start monitoring command not enabled."
-            End If
-        
-        End If
-        
-    Else
+    ElseIf Not Me.ManualSingleToggleValue And This.ViewModel.StopMonitoringExecutable And _
+        This.Measuring Then
     
-        ' stop external trigger monitoring
-        ' this should wait for monitoring to stop
-        
-        If This.ViewModel.StopMonitoringExecutable Then
-            This.ViewModel.StopMonitoringExternalTriggersCommand
-        Else
-            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-                " Stop monitoring command not enabled."
-        End If
+        Me.StopManualTriggering
             
     End If
     
@@ -711,6 +925,7 @@ err_Handler:
     GoTo exit_Handler
 
 End Sub
+
 
 ''' <summary>   Gets the execution (Can Execute) status of the Manual Single Toggle command. </summary>
 ''' <value>   [Boolean] true if the command is executable. </value>

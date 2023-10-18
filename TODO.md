@@ -5,15 +5,6 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
-Core: add naked event arguments class.
-
-Add measurement state changing event to disable controls while the mode is changing.
-Disable control value changes while not enabled.
-Try restore state only if reset clear fails during measurement configuration.
-Add design mode property to the view model.
-
-
-
 ## TODO
 Run all unit tests.
 Test running from the User Sheet.
