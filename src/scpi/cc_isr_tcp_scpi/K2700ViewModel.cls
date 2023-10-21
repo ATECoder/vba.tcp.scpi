@@ -805,13 +805,6 @@ Public Sub CloseConnection()
     
     End If
 
-    ' turn of instrument event handling
-    Set m_k2700 = Nothing
-
-    ' turn of socket event handling.
-    Set m_socket = Nothing
-
-
     Dim p_details As String
     If Me.Connected Then
         
@@ -825,6 +818,12 @@ Public Sub CloseConnection()
                 " Failed closing the connection; " & p_details
         End If
     End If
+        
+    ' turn of instrument event handling
+    Set m_k2700 = Nothing
+
+    ' turn of socket event handling.
+    Set m_socket = Nothing
         
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:

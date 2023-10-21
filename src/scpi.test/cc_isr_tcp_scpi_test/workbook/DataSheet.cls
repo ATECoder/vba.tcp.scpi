@@ -160,6 +160,8 @@ End Property
 ''' <param name="a_value">   [Boolean] true if the command is executable. </param>
 Public Property Let OpenConnectionExecutable(ByVal a_value As Boolean)
     Me.OpenConnectionButton.Enabled = a_value
+    ' allow power on reset only if not connected.
+    Me.PowerOnResetButton.Enabled = a_value
 End Property
 
 ''' <summary>   Handles the open Connection command event. </summary>
@@ -186,7 +188,6 @@ End Property
 ''' <param name="a_value">   [Boolean] true if the command is executable. </param>
 Public Property Let CloseConnectionExecutable(ByVal a_value As Boolean)
     Me.CloseConnectionButton.Enabled = a_value
-    Me.PowerOnResetButton.Enabled = a_value
 End Property
 
 ''' <summary>   Handles the open Connection command event. </summary>
