@@ -61,8 +61,8 @@ Private Type this_
     MeasuredValue As Double
     
     ClearReadingExecutable As Boolean
-    ToggleConnectionValue As Boolean
-    ToggleConnectionExecutable As Boolean
+    CloseConnectionExecutable As Boolean
+    OpenConnectionExecutable As Boolean
     DesignMode As Boolean
     
 End Type
@@ -205,30 +205,18 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Handles the Toggle Connection button change event. </summary>
-Public Sub OnToggleConnectionButtonChange()
+''' <summary>   Handles the power on reset button click event. </summary>
+Public Sub OnPowerOneResetButtonClick()
 
-    Const p_procedureName As String = "OnToggleConnectionButtonChange"
+    Const p_procedureName As String = "OnPowerOneResetButtonClick"
     
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
     If This.ViewModel Is Nothing Then Exit Sub
 
-    ' exit if already connected or disconnected
-    If Me.ToggleConnectionValue = This.ViewModel.Connected Then Exit Sub
-    
-    If Me.ToggleConnectionValue And This.ViewModel.OpenConnectionExecutable Then
-    
-        ' we must initialize here without toggling the connection button state.
-        
-        This.ViewModel.OpenConnectionPowerOnResetCommand
-        
-    ElseIf Not Me.ToggleConnectionValue And This.ViewModel.CloseConnectionExecutable Then
-    
-        This.ViewModel.CloseConnectionCommand
-        
-    End If
+    ' issue a power on reset.
+    This.ViewModel.PowerOnResetCommand
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -252,52 +240,124 @@ err_Handler:
 
 End Sub
 
-''' <summary>   Gets the execution (Can Execute) status of the Toggle Connection command. </summary>
+''' <summary>   Handles the Open Connection button Click event. </summary>
+Public Sub OnOpenConnectionButtonClick()
+
+    Const p_procedureName As String = "OnOpenConnectionButtonClick"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    If This.ViewModel Is Nothing Then Exit Sub
+
+    ' exit if already connected
+    If This.ViewModel.Connected Then Exit Sub
+        
+    This.ViewModel.OpenConnectionCommand
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' report the last error.
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Gets the execution (Can Execute) status of the Open Connection command. </summary>
 ''' <value>   [Boolean] true if the command is executable. </value>
-Public Property Get ToggleConnectionExecutable() As Boolean
+Public Property Get OpenConnectionExecutable() As Boolean
     If This.DataAcquisitionSheet Is Nothing Then
-        ToggleConnectionExecutable = This.ToggleConnectionExecutable
+        OpenConnectionExecutable = This.OpenConnectionExecutable
     Else
-        ToggleConnectionExecutable = This.DataAcquisitionSheet.ToggleConnectionExecutable
+        OpenConnectionExecutable = This.DataAcquisitionSheet.OpenConnectionExecutable
     End If
 End Property
 
-''' <summary>   Sets the execution (Can Execute) status of the Toggle Connection command. </summary>
+''' <summary>   Sets the execution (Can Execute) status of the Open Connection command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is executable. </param>
-Public Property Let ToggleConnectionExecutable(ByVal a_value As Boolean)
-    If Me.ToggleConnectionExecutable <> a_value Then
+Public Property Let OpenConnectionExecutable(ByVal a_value As Boolean)
+    If Me.OpenConnectionExecutable <> a_value Then
         
         If Not This.DataAcquisitionSheet Is Nothing Then _
-            This.DataAcquisitionSheet.ToggleConnectionExecutable = a_value
+            This.DataAcquisitionSheet.OpenConnectionExecutable = a_value
         
-        This.ToggleConnectionExecutable = a_value
+        This.OpenConnectionExecutable = a_value
     
     End If
 End Property
 
-''' <summary>   Gets the action state of the Toggle Connection command. </summary>
-''' <value>   [Boolean] true if the command is active. </value>
-Public Property Get ToggleConnectionValue() As Boolean
+''' <summary>   Handles the Close Connection button Click event. </summary>
+Public Sub OnCloseConnectionButtonClick()
+
+    Const p_procedureName As String = "OnCloseConnectionButtonClick"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    If This.ViewModel Is Nothing Then Exit Sub
+
+    ' exit if already disconnected
+    If Not This.ViewModel.Connected Then Exit Sub
+        
+    This.ViewModel.CloseConnectionCommand
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' report the last error.
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+
+''' <summary>   Gets the execution (Can Execute) status of the Close Connection command. </summary>
+''' <value>   [Boolean] true if the command is executable. </value>
+Public Property Get CloseConnectionExecutable() As Boolean
     If This.DataAcquisitionSheet Is Nothing Then
-        ToggleConnectionValue = This.ToggleConnectionValue
+        CloseConnectionExecutable = This.CloseConnectionExecutable
     Else
-        ToggleConnectionValue = This.DataAcquisitionSheet.ToggleConnectionValue
+        CloseConnectionExecutable = This.DataAcquisitionSheet.CloseConnectionExecutable
     End If
 End Property
 
-''' <summary>   Sets the action state of the Toggle Connection command. </summary>
-''' <param name="a_value">   [Boolean] true if the command is active. </param>
-Public Property Let ToggleConnectionValue(ByVal a_value As Boolean)
-    If Me.ToggleConnectionValue <> a_value Then
+''' <summary>   Sets the execution (Can Execute) status of the Close Connection command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is executable. </param>
+Public Property Let CloseConnectionExecutable(ByVal a_value As Boolean)
+    If Me.CloseConnectionExecutable <> a_value Then
         
-        ' For simoplicity, the connection toggle is not toggled from the view model.
-        ' becuase on initiation, the connected state is false.
-        ' we could initialize the view model before getting into the connection issue, though.
-        ' also, this could wreck havoc when restoring state.
-        ' If Not This.DataAcquisitionSheet Is Nothing Then _
-        '    This.DataAcquisitionSheet.ToggleConnectionValue = a_value
+        If Not This.DataAcquisitionSheet Is Nothing Then _
+            This.DataAcquisitionSheet.CloseConnectionExecutable = a_value
         
-        This.ToggleConnectionValue = a_value
+        This.CloseConnectionExecutable = a_value
+    
     End If
 End Property
 
@@ -735,10 +795,10 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
         
         Case "ClearReadingsExecutable"
             Me.ClearReadingsExecutable = This.ViewModel.ClearReadingsExecutable
-        Case "ToggleConnectionExecutable"
-            Me.ToggleConnectionExecutable = This.ViewModel.ToggleConnectionExecutable
-        Case "Connected"
-            Me.ToggleConnectionValue = This.ViewModel.Connected
+        Case "CloseConnectionExecutable"
+            Me.CloseConnectionExecutable = This.ViewModel.CloseConnectionExecutable
+        Case "OpenConnectionExecutable"
+            Me.OpenConnectionExecutable = This.ViewModel.OpenConnectionExecutable
         Case "DesignMode"
             Me.DesignMode = This.ViewModel.DesignMode
 
@@ -781,8 +841,8 @@ Friend Sub Synchronize()
     Me.ReadingOffset = This.ViewModel.ReadingOffset
     
     Me.ClearReadingsExecutable = This.ViewModel.ClearReadingsExecutable
-    Me.ToggleConnectionExecutable = This.ViewModel.ToggleConnectionExecutable
-    Me.ToggleConnectionValue = This.ViewModel.Connected
+    Me.OpenConnectionExecutable = This.ViewModel.OpenConnectionExecutable
+    Me.CloseConnectionExecutable = This.ViewModel.CloseConnectionExecutable
     
 End Sub
 

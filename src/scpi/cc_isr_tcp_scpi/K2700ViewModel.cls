@@ -475,6 +475,33 @@ End Property
 ''' <param name="a_details">   [String] Details why the method failed. </param>
 ''' <param name="a_delay">     [Double] the post seset delay. </param>
 ''' <returns>   [Boolean]. </returns>
+Public Function TryPing(ByRef a_details As String, ByVal a_delay As Double) As Boolean
+
+    Const p_procedureName = "TryPowerOnReset"
+
+    Dim p_details As String
+    Dim p_success As Boolean
+    p_success = cc_isr_Ieee488.GpibLanController.TryPing(This.SocketAddress, This.SessionTimeout, p_details)
+    
+    If p_success Then
+        p_success = 0 = cc_isr_Core_IO.UserDefinedErrors.QueuedErrorCount
+        If Not p_success Then
+            p_details = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        End If
+    End If
+    
+    If Not p_success Then _
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                "; " & p_details
+
+    TryPing = p_success
+    
+End Function
+
+''' <summary>   Tries to issue power on reset. </summary>
+''' <param name="a_details">   [String] Details why the method failed. </param>
+''' <param name="a_delay">     [Double] the post seset delay. </param>
+''' <returns>   [Boolean]. </returns>
 Public Function TryPowerOnReset(ByRef a_details As String, ByVal a_delay As Double) As Boolean
 
     Const p_procedureName = "TryPowerOnReset"
@@ -485,15 +512,68 @@ Public Function TryPowerOnReset(ByRef a_details As String, ByVal a_delay As Doub
     
     If p_success Then
         p_success = 0 = cc_isr_Core_IO.UserDefinedErrors.QueuedErrorCount
+        If Not p_success Then
+            p_details = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        End If
     End If
     
     If Not p_success Then _
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                " " & p_details
+                "; " & p_details
 
     TryPowerOnReset = p_success
     
 End Function
+
+''' <summary>   Handles the power on reset command event. </summary>
+Public Sub PowerOnResetCommand()
+
+    Const p_procedureName = "PowerOnResetCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Me.RestartStopper
+    
+    Me.LastMessage = "Resetting the controller to its power on state; please wait..."
+    
+    Dim p_delay As Double: p_delay = 3
+    Dim p_details As String: p_details = VBA.vbNullString
+    Dim p_success As Boolean
+    p_success = Me.TryPowerOnReset(p_details, p_delay)
+    If Not p_success Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.SocketConnectionError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " Failed power on reset; " & p_details
+    
+    If p_success Then _
+        Me.LastMessage = "The controller was reset to its power on state."
+    
+    Me.ReadStopper
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
 
 ''' <summary>   Opens the connection and power on reset the GPIB Lan Controller. </summary>
 ''' <param name="a_delay">     [Double] the post seset delay. </param>
@@ -526,7 +606,7 @@ exit_Handler:
 
     If Not p_success Then _
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-                " " & p_details
+                "; " & p_details
     
     TryOpenConnectionPowerOnReset = p_success
     
@@ -549,7 +629,6 @@ err_Handler:
     GoTo exit_Handler
 
 End Function
-
 
 ''' <summary>   Handles the open connection power on reset command event. </summary>
 Public Sub OpenConnectionPowerOnResetCommand()
@@ -612,12 +691,27 @@ Public Sub OpenConnection()
     Me.OpenConnectionExecutable = False
     Me.CloseConnectionExecutable = False
     
-    Dim p_details As String
-    If Not Me.Connectable.TryOpenConnection(This.SocketAddress, This.SessionTimeout, p_details) Then _
-            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.SocketConnectionError, _
-                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-                " Failed opening the connection; " & p_details
+    Me.LastMessage = "Pinging controller and device at " & This.SocketAddress & "; please wait..."
+    
+    Dim p_details As String: p_details = VBA.vbNullString
+    Dim p_success As Boolean: p_success = True
+    p_success = cc_isr_Ieee488.GpibLanController.TryPing(This.SocketAddress, This.SessionTimeout, p_details)
+    If Not p_success Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.SocketConnectionError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " Failed pinging the instrument; " & p_details
+    
+    Me.LastMessage = "Opening connection to " & This.SocketAddress & "; please wait..."
+    
+    p_success = Me.Connectable.TryOpenConnection(This.SocketAddress, This.SessionTimeout, p_details)
+    If Not p_success Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.SocketConnectionError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " Failed opening the connection; " & p_details
 
+    If p_success Then _
+        Me.LastMessage = This.SocketAddress & " is open."
+    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
@@ -717,9 +811,14 @@ Public Sub CloseConnection()
     ' turn of socket event handling.
     Set m_socket = Nothing
 
+
     Dim p_details As String
     If Me.Connected Then
+        
+        Me.LastMessage = "Closing " & This.SocketAddress & "; please wait..."
+        
         If Me.Connectable.TryCloseConnection(p_details) Then
+            Me.LastMessage = "Done Closing " & This.SocketAddress & "."
         Else
             cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.SocketConnectionError, _
                 ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
@@ -1263,7 +1362,7 @@ Public Function ClearExecutionStateCommand(ByVal a_details As String) As Boolean
     
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " " & p_details
+            "; " & p_details
     End If
 
     Me.ReadStopper
@@ -1516,7 +1615,7 @@ Public Function ResetKnownStateCommand(ByVal a_details As String) As Boolean
     
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " " & p_details
+            "; " & p_details
     End If
 
     Me.ReadStopper
@@ -1593,7 +1692,7 @@ Public Sub QueryStatusByteCommand()
     If Not Me.TryQueryStatusByte(p_details) Then _
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " " & p_details
+            "; " & p_details
 
     Me.ReadStopper
 
@@ -1917,7 +2016,7 @@ Public Sub SelectiveDeviceClearCommand()
     If Not This.Session.TrySelectiveDeviceClear(p_details, True) Then _
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " " & p_details
+            "; " & p_details
 
     Me.ReadStopper
 
@@ -1990,7 +2089,7 @@ Friend Sub ReadStatusByte(Optional ByVal a_canQuery As Boolean = False)
     If Not Me.TryReadStatusByte(p_details, a_canQuery) Then _
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " " & p_details
+            "; " & p_details
     
     Me.ReadStopper
 
@@ -4015,7 +4114,7 @@ Public Function TryMeasureImmediately(ByRef a_details As String) As Boolean
     
     If Not p_success Then
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-            " " & p_details
+            "; " & p_details
     End If
 
     TryMeasureImmediately = p_success

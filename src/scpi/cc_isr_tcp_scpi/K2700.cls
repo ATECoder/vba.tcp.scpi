@@ -388,7 +388,7 @@ Public Function TryTakeRearReading(ByVal a_channelNumber As Integer, _
 
     If Not p_success Then _
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-            " " & p_details
+            "; " & p_details
 
     TryTakeRearReading = p_success
 
@@ -805,7 +805,7 @@ Public Function TryMonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVa
     
     If Not p_success Then _
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-            " " & p_details
+            "; " & p_details
     
 
     TryMonitorExternalTrigger = p_success

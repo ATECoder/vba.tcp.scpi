@@ -2008,18 +2008,22 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
             "View Model Connected state should be true.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, _
-            This.DataView.ToggleConnectionValue, _
-            "Data View toggle connection value and View Model connection state should equal when connected.")
-            
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.OpenConnectionExecutable, _
+            "View Model Open Connection Executable should be False.")
+    
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.ToggleConnectionExecutable, _
-            "View Model Toggle Connection Executable should be true.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.CloseConnectionExecutable, _
+            "View Model Close Connection Executable should be True.")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.ToggleConnectionExecutable, _
-            This.DataView.ToggleConnectionExecutable, _
-            "Data View and View Model Toggle Connection Executables should equal.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.OpenConnectionExecutable, _
+            This.DataView.OpenConnectionExecutable, _
+            "Data View and View Model Open Connection Executables should equal.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.CloseConnectionExecutable, _
+            This.DataView.CloseConnectionExecutable, _
+            "Data View and View Model Close Connection Executables should equal.")
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SocketAddress, This.DataView.SocketAddress, _
@@ -2289,12 +2293,14 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     End If
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.ToggleConnectionExecutable, This.DataView.ToggleConnectionExecutable, _
-            "Data View and View Model Toggle Connection Executables should equal after disconnection.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.OpenConnectionExecutable, _
+            This.DataView.OpenConnectionExecutable, _
+            "Data View and View Model Open Connection Executables should equal after disconnection.")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, This.DataView.ToggleConnectionValue, _
-            "Data View toggle connection value and View Model Connected states should equal after disconnection.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.CloseConnectionExecutable, _
+            This.DataView.CloseConnectionExecutable, _
+            "Data View and View Model Close Connection Executables should equal after disconnection.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, This.UserView.Connected, _

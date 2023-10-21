@@ -5,7 +5,21 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
 
+Scpi:
+Data View: Split connect toggle to connect and disconnect buttons.
+Add power on reset button.
+Add ping to the connection command method.
+All tests passed.
+
+
 ## TODO
+
+Scpi:
+Test Data sheet commands.
+
+
+
+
 Move to flying.
 
 

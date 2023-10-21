@@ -119,8 +119,8 @@ End Property
 ''' <summary>   Sets the selected channel number. </summary>
 ''' <param name="a_value">   [Integer] the selected channel number. </param>
 Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
-    
-    If Not Me.ProtectContents Then
+
+    If (0 <> a_value) And Not Me.ProtectContents Then
         If ThisWorkbook.ActiveSheet.Name <> UserSheet.Name Then
             UserSheet.Activate
             VBA.DoEvents

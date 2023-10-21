@@ -32,12 +32,29 @@ Private This As this_
 ''' <summary>   Initializes and returns an instance of this object. </summary>
 Public Function Initialize() As DataSheet
     
-    ' initialize the state of user interface.
-    Me.ToggleConnectionButton.Value = False
-    
     Set Initialize = Me
 
 End Function
+
+''' <summary>   Initializes the views. </summary>
+Private Sub InitializeViews()
+
+    If Not DataView.Initialized Then
+    
+        Dim p_viewModel As cc_isr_Tcp_Scpi.K2700ViewModel
+        
+        Set p_viewModel = cc_isr_Tcp_Scpi.Factory.NewK2700ViewModel
+        
+        ' initialize the views before initializing the view model
+        ' the view model gets initialized upon connecting.
+        DataView.Initialize p_viewModel
+        UserView.Initialize p_viewModel
+    
+    End If
+    
+    UserView.AutoSampleFrontInputs = Me.FrontAutoScanCheckBox.Value
+
+End Sub
 
 ''' <summary>   Gets the socket address. </summary>
 ''' <value>   [String]. </value
@@ -53,7 +70,7 @@ End Property
 
 ''' <summary> Get the timer interval. </summary>
 ''' <value>   [Integer]. </value>
-Friend Property Get TimerInterval() As Integer
+Public Property Get TimerInterval() As Integer
     TimerInterval = VBA.CInt(Range(m_timerIntervalCell).Value)
 End Property
 
@@ -83,28 +100,27 @@ End Property
 
 ''' <summary>   Gets the Last Error Message. </summary>
 ''' <value>   [String]. </value>
-Friend Property Get LastErrorMessage() As String
+Public Property Get LastErrorMessage() As String
     LastErrorMessage = Range(m_lastErrorMessageCell).Value
 End Property
 
 ''' <summary>   Sets the Last Error Message. </summary>
 ''' <param name="a_value">   [String] the message. </value>
-Friend Property Let LastErrorMessage(ByVal a_value As String)
+Public Property Let LastErrorMessage(ByVal a_value As String)
     Range(m_lastErrorMessageCell).Value = a_value
 End Property
 
 ''' <summary>   Gets the Last Message. </summary>
 ''' <value>   [String]. </value>
-Friend Property Get LastMessage() As String
+Public Property Get LastMessage() As String
     LastMessage = Range(m_lastMessageCell).Value
 End Property
 
 ''' <summary>   Sets the Last Message. </summary>
 ''' <param name="a_value">   [String] the message. </value>
-Friend Property Let LastMessage(ByVal a_value As String)
+Public Property Let LastMessage(ByVal a_value As String)
     Range(m_lastMessageCell).Value = a_value
 End Property
-
 
 ''' <summary>   Handles the change event of the Beep Allowed check box. </summary>
 Private Sub BeepAllowedCheckBox_Change()
@@ -134,118 +150,74 @@ Public Property Let DesignMode(ByVal a_value As Boolean)
     This.DesignMode = a_value
 End Property
 
-''' <summary>   Gets the execution Can Execute) status of the Toggle Connection command. </summary>
+''' <summary>   Gets the execution Can Execute) status of the Open Connection command. </summary>
 ''' <value>   [Boolean]. </value>
-Public Property Get ToggleConnectionExecutable() As Boolean
-    ToggleConnectionExecutable = Me.ToggleConnectionButton.Enabled
+Public Property Get OpenConnectionExecutable() As Boolean
+    OpenConnectionExecutable = Me.OpenConnectionButton.Enabled
 End Property
 
-''' <summary>   Sets the execution Can Execute) status of the Toggle Connection command. </summary>
+''' <summary>   Sets the execution Can Execute) status of the Open Connection command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is executable. </param>
-Public Property Let ToggleConnectionExecutable(ByVal a_value As Boolean)
-    Me.ToggleConnectionButton.Enabled = a_value
+Public Property Let OpenConnectionExecutable(ByVal a_value As Boolean)
+    Me.OpenConnectionButton.Enabled = a_value
 End Property
 
-''' <summary>   Gets the action state of the Toggle Connection command. </summary>
-''' <value>   [Boolean] true if the command is active. </value>
-Public Property Get ToggleConnectionValue() As Boolean
-    ToggleConnectionValue = Me.ToggleConnectionButton.Value
+''' <summary>   Handles the open Connection command event. </summary>
+Private Sub OnOpenConnection()
+
+    ' initialize the views if necessary
+    InitializeViews
+    
+    DataView.OnOpenConnectionButtonClick
+
+End Sub
+
+Private Sub OpenConnectionButton_Click()
+    OnOpenConnection
+End Sub
+
+''' <summary>   Gets the execution Can Execute) status of the Close Connection command. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get CloseConnectionExecutable() As Boolean
+    CloseConnectionExecutable = Me.CloseConnectionButton.Enabled
 End Property
 
-''' <summary>   Sets the action state of the Toggle Connection command. </summary>
-''' <param name="a_value">   [Boolean] true if the command is active. </param>
-Public Property Let ToggleConnectionValue(ByVal a_value As Boolean)
-    ' Me.ToggleConnectionButton.Value = a_value
+''' <summary>   Sets the execution Can Execute) status of the Close Connection command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is executable. </param>
+Public Property Let CloseConnectionExecutable(ByVal a_value As Boolean)
+    Me.CloseConnectionButton.Enabled = a_value
+    Me.PowerOnResetButton.Enabled = a_value
 End Property
 
-''' <summary>   Handles the Got Focus event of the Toggle Connectionbutton.  </summary>
-''' <remarks>   Identifies the active toggle button by saving the button name. </remarks>
-Private Sub ToggleConnectionButton_GotFocus()
-    This.FocusedControlName = Me.ToggleConnectionButton.Name
-    VBA.DoEvents
-End Sub
+''' <summary>   Handles the open Connection command event. </summary>
+Private Sub OnCloseConnection()
 
-''' <summary>   Handles the Lost Focus event of the Toggle Connectionbutton.  </summary>
-Private Sub ToggleConnectionButton_LostFocus()
-    This.FocusedControlName = VBA.vbNullString
-    VBA.DoEvents
-End Sub
-
-''' <summary>   Handles the Toggle Connection button change event. </summary>
-''' <remarks>   The button change event also causes a click event.
-''' This method issues the click event on actual click.
-''' Note: Make sure to not implement the click event,
-Private Sub ToggleConnectionButton_Change()
-
-    On Error GoTo err_Handler:
+    If DataView.Initialized Then
     
-    ' prevent execution so that the state of this can be toggled
-    ' when this data sheet is initialized.
-    If This.DesignMode Or Not Me.ToggleConnectionButton.Enabled Then Exit Sub
-    
-    Me.ToggleConnectionButton.Enabled = False
-    
-    If This.FocusedControlName = Me.ToggleConnectionButton.Name Then
-
-        ' Commands for click
-        Me.OnConnectionChange
-        
-    Else
-
-        ' Commands for change from within the sheet
-        Me.OnConnectionChange
-
-    End If
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    Me.ToggleConnectionButton.Enabled = True
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    On Error GoTo 0
-    
-    ' Commands for change from outside the sheet
-    Me.OnConnectionChange
-    
-    GoTo exit_Handler:
-    
-End Sub
-
-''' <summary>   Handles the Toggle Connection command event. </summary>
-Friend Sub OnConnectionChange()
-
-    If Me.ToggleConnectionButton.Value And Not DataView.Initialized Then
-    
-        Dim p_viewModel As cc_isr_Tcp_Scpi.K2700ViewModel
-        
-        Set p_viewModel = cc_isr_Tcp_Scpi.Factory.NewK2700ViewModel
-        
-        ' initialize the views before initializing the view model
-        ' the view model gets initialized upon connecting.
-        DataView.Initialize p_viewModel
-        UserView.Initialize p_viewModel
+        DataView.OnCloseConnectionButtonClick
     
     End If
-    
-    Me.ToggleConnectionButton.Caption = IIf(Me.ToggleConnectionButton.Value, "Tap to Disconnect", "Tap to Connect")
-
-    UserView.AutoSampleFrontInputs = Me.FrontAutoScanCheckBox.Value
-    DataView.ToggleConnectionValue = Me.ToggleConnectionButton.Value
-    
-    Me.LastMessage = IIf(Me.ToggleConnectionButton.Value, "Connecting; please wait...", _
-        "Disconnecting; please wait...")
-        
-    ' Commands for change from outside the sheet
-    DataView.OnToggleConnectionButtonChange
 
 End Sub
 
+Private Sub CloseConnectionButton_Click()
+    OnCloseConnection
+End Sub
+
+''' <summary>   Handles the click event of the power on reset.  </summary>
+Private Sub PowerOnResetButton_Click()
+    OnPowerOnReset
+End Sub
+
+''' <summary>   Handles the power on reset command event. </summary>
+Private Sub OnPowerOnReset()
+
+    ' initialize the views if necessary
+    InitializeViews
+    
+    DataView.OnPowerOneResetButtonClick
+
+End Sub
 
 ''' <summary>   Handles the change event of the spreadsheet. </summary>
 ''' <remarks>   Updates the relevant values of the <see cref="DataView"/> </remarks>
