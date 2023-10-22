@@ -6,11 +6,13 @@ https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## TODO
 
-Fix demo projects. 
+* Update Sheets and Views based on Flying.
+* move back to VXI-11.
+* merge all projects into main.
+* remove unused objects.
+* delete old branches.
 
-2700 Demo
-* Use the observer to update the demo
-* test using the view model.
+* Fix demo projects. 
 
 ## Beta 202308
 
