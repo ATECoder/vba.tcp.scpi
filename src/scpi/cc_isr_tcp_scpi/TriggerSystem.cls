@@ -89,9 +89,9 @@ End Function
 
 ''' <summary>   Sets the continuous enabled. </summary>
 ''' <param name="a_value">   [Boolean] The continuous enabled to set. </param >
-Public Sub ContinuousEnabledSetter(ByVal a_value As Boolean)
-    This.Session.WriteLine "CONT " & IIf(a_value, "ON", "OFF")
-    This.ContinuousEnabled = a_value
+Public Sub ContinuousEnabledSetter(ByVal a_Value As Boolean)
+    This.Session.WriteLine "CONT " & IIf(a_Value, "ON", "OFF")
+    This.ContinuousEnabled = a_Value
 End Sub
 
 ''' <summary>   Gets the last set or get sample count. </summary>
@@ -118,9 +118,9 @@ End Function
 
 ''' <summary>   Sets the sample count. </summary>
 ''' <param name="a_value">   [Long] The sample count to set. </param >
-Public Sub SampleCountSetter(ByVal a_value As Long)
-    This.Session.WriteLine "SAMP:COUN " & VBA.CStr(a_value)
-    This.SampleCount = a_value
+Public Sub SampleCountSetter(ByVal a_Value As Long)
+    This.Session.WriteLine "SAMP:COUN " & VBA.CStr(a_Value)
+    This.SampleCount = a_Value
 End Sub
 
 
@@ -132,17 +132,17 @@ End Property
 
 ''' <summary>   Sets the <see cref="TriggerSourceOption"/>. </summary>
 ''' <param name="a_value">   [<see cref="TriggerSourceOption"/>] the trigger source. </param>
-Public Sub SourceSetter(ByVal a_value As cc_isr_Tcp_Scpi.TriggerSourceOption)
+Public Sub SourceSetter(ByVal a_Value As cc_isr_Tcp_Scpi.TriggerSourceOption)
 
-    If cc_isr_Tcp_Scpi.TriggerSourceOption.Immediate = a_value Then
+    If cc_isr_Tcp_Scpi.TriggerSourceOption.Immediate = a_Value Then
         This.Session.WriteLine ":TRIG:SOUR IMM"
-    ElseIf cc_isr_Tcp_Scpi.TriggerSourceOption.External = a_value Then
+    ElseIf cc_isr_Tcp_Scpi.TriggerSourceOption.External = a_Value Then
         ' for some reason the old application had the trigger source toggled
         ' if requesting an external trigger source
         ' This.Session.WriteLine ":TRIG:SOUR IMM"
         This.Session.WriteLine ":TRIG:SOUR EXT"
     End If
-    This.Source = a_value
+    This.Source = a_Value
     
 End Sub
 
@@ -191,9 +191,9 @@ End Function
 
 ''' <summary>   Sets the Trigger count. </summary>
 ''' <param name="a_value">   [Long] The Trigger count to set. </param >
-Public Sub TriggerCountSetter(ByVal a_value As Long)
-    This.Session.WriteLine "TRIG:COUN " & VBA.CStr(a_value)
-    This.TriggerCount = a_value
+Public Sub TriggerCountSetter(ByVal a_Value As Long)
+    This.Session.WriteLine "TRIG:COUN " & VBA.CStr(a_Value)
+    This.TriggerCount = a_Value
 End Sub
 
 

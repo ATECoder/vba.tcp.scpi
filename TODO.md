@@ -1,13 +1,8 @@
 # TODO
-=IF(LEN(C4)>0,"ERR                               ","Module")
 
 https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
 
 ## GIT:
-
-Scpi:
-Fix handling for the close connection.
-Test Data sheet commands.
 
 ## TODO
 

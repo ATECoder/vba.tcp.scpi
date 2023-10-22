@@ -63,9 +63,9 @@ End Function
 
 ''' <summary>   Sets the Beeper enabled. </summary>
 ''' <param name="a_value">   [Boolean] The Beeper enabled to set. </param >
-Public Sub BeeperEnabledSetter(ByVal a_value As Boolean)
-    This.Session.WriteLine ":SYST:BEEP:STAT " & IIf(a_value, "ON", "OFF")
-    This.BeeperEnabled = a_value
+Public Sub BeeperEnabledSetter(ByVal a_Value As Boolean)
+    This.Session.WriteLine ":SYST:BEEP:STAT " & IIf(a_Value, "ON", "OFF")
+    This.BeeperEnabled = a_Value
 End Sub
 
 ''' <summary>   Query INPUTS switch (0=rear, 1=front). </summary>

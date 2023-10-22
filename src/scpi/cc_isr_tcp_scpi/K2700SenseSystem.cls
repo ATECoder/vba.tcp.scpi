@@ -35,11 +35,11 @@ End Property
 
 ''' <summary>   Sets the <see cref="SenseFunctionOption"/>. </summary>
 ''' <param name="a_value">   [<see cref="SenseFunctionOption"/>] the sense function option. </param>
-Public Sub SenseFunctionSetter(ByVal a_value As cc_isr_Tcp_Scpi.SenseFunctionOption)
+Public Sub SenseFunctionSetter(ByVal a_Value As cc_isr_Tcp_Scpi.SenseFunctionOption)
 
-    Dim p_senseFunctionName As String: p_senseFunctionName = Me.FromSenseFunction(a_value)
+    Dim p_senseFunctionName As String: p_senseFunctionName = Me.FromSenseFunction(a_Value)
     This.SenseSystem.SenseFunctionSetter p_senseFunctionName, "'"
-    This.SenseSystem.SenseFunction = a_value
+    This.SenseSystem.SenseFunction = a_Value
 
 End Sub
 
@@ -57,9 +57,9 @@ End Function
 ''' to a sense function name. </summary>
 ''' <param name="a_value">   [<see cref="SenseFunctionOption"/>] the sense function. </param>
 ''' <returns>   [String]. </returns>
-Public Function FromSenseFunction(ByVal a_value As cc_isr_Tcp_Scpi.SenseFunctionOption) As String
+Public Function FromSenseFunction(ByVal a_Value As cc_isr_Tcp_Scpi.SenseFunctionOption) As String
 
-    Select Case a_value
+    Select Case a_Value
         Case SenseFunctionOption.DcVoltage
             FromSenseFunction = "VOLT:DC"
         Case SenseFunctionOption.AcVoltage
@@ -90,9 +90,9 @@ End Function
 ''' sense function. </summary>
 ''' <param name="a_value">   [String] the sense function name. </param>
 ''' <returns>   [<see cref="cc_isr_Tcp_Scpi.SenseFunctionOption"/>]. </returns>
-Public Function ToSenseFunction(ByVal a_value As String) As cc_isr_Tcp_Scpi.SenseFunctionOption
+Public Function ToSenseFunction(ByVal a_Value As String) As cc_isr_Tcp_Scpi.SenseFunctionOption
 
-    Select Case a_value
+    Select Case a_Value
         Case "VOLT"
             ToSenseFunction = SenseFunctionOption.DcVoltage
         Case "VOLT:DC"
