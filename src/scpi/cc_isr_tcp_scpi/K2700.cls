@@ -110,8 +110,8 @@ End Property
 
 ''' <summary>   Sets the port number of the GPIB Lan controller. </summary>
 ''' <param name="a_value">   [Long] the GPIB Lan controller port. </param>
-Public Property Let GpibLanControllerPort(ByVal a_Value As Long)
-    This.GpibLanControllerPort = a_Value
+Public Property Let GpibLanControllerPort(ByVal a_value As Long)
+    This.GpibLanControllerPort = a_value
 End Property
 
 ''' <summary>   Gets the Read After Write Delay in milliseconds. </summary>
@@ -122,8 +122,8 @@ End Property
 
 ''' <summary>   Sets the Read After Write Delay Delay in milliseconds. </summary>
 ''' <param name="a_value">   [Integer] the Read After Write Delay Delay in milliseconds. </param>
-Public Property Let ReadAfterWriteDelay(ByVal a_Value As Integer)
-    This.ReadAfterWriteDelay = a_Value
+Public Property Let ReadAfterWriteDelay(ByVal a_value As Integer)
+    This.ReadAfterWriteDelay = a_value
 End Property
 
 ''' <summary>   Gets the termination to append to output messages. </summary>
@@ -134,8 +134,8 @@ End Property
 
 ''' <summary>   Sets the termination to append to output messages. </summary>
 ''' <param name="a_value">   [String] the termination. </param>
-Public Property Let Termination(ByVal a_Value As String)
-    This.Termination = a_Value
+Public Property Let Termination(ByVal a_value As String)
+    This.Termination = a_value
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +

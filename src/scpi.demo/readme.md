@@ -23,11 +23,6 @@ Presently supported is the Keithley 2700 instrument either as an LXI instrument 
 * Identity -- To query the instrument identity using the *IDN? command.
 * K2700    -- To command and query the Keithley 2700 scanning multimeter.
 
-## Scripts
-
-* [deploy]: copy the workbook and its dependencies to the deployment `..\..\bin` folder.
-* [localize]: sets workbook references to the local deployment `..\..\bin` folder.
-
 ## Integration Testing
 
 ### Identity Worksheet Testing
@@ -174,10 +169,6 @@ Bug reports and contributions are welcome at the [cc.isr.tcp.scpi] repository.
 [cc.isr.Core]: https://github.com/ATECoder/vba.core
 [cc.isr.core.io]: https://github.com/ATECoder/vba.core/src/io
 [cc.isr.test.fx]: https://github.com/ATECoder/vba.core/src/testfx
-
-[unit test]: ./unit.test.lnk
-[deploy]: ./deploy.ps1
-[localize]: ./localize.ps1
 
 [ISR]: https://www.integratedscientificresources.com
 

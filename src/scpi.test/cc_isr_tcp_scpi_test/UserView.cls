@@ -65,6 +65,7 @@ Private This As this_
 Private Sub Class_Initialize()
     This.ChannelNumberCaptionPrefix = "R"
     This.ChannelNumberTitle = "resistance number"
+    This.AutoSampleFrontInputs = False
 End Sub
 
 ''' <summary>   Handles the Class Terminal event. </summary>

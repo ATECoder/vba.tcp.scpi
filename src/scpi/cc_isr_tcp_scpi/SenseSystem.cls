@@ -77,9 +77,9 @@ End Function
 
 ''' <summary>   Sets the Auto Range enabled. </summary>
 ''' <param name="a_value">   [Boolean] The AutoRange enabled to set. </param >
-Public Sub AutoRangeEnabledSetter(ByVal a_Value As Boolean)
-    This.Session.WriteLine ":" & This.SenseFunctionName & ":RANG:AUTO " & IIf(a_Value, "1", "0")
-    This.AutoRangeEnabled = a_Value
+Public Sub AutoRangeEnabledSetter(ByVal a_value As Boolean)
+    This.Session.WriteLine ":" & This.SenseFunctionName & ":RANG:AUTO " & IIf(a_value, "1", "0")
+    This.AutoRangeEnabled = a_value
 End Sub
 
 ''' <summary>   Gets the last set or get Power Line Cycles. </summary>
@@ -109,9 +109,9 @@ End Function
 
 ''' <summary>   Sets the integration rate in Power Line Cycles. </summary>
 ''' <param name="a_value">   [Double] The integration rate in Power Line Cyclest. </param >
-Public Sub PowerLineCyclesSetter(ByVal a_Value As Double)
-    This.Session.WriteLine ":" & This.SenseFunctionName & ":NPLC " & VBA.CStr(a_Value)
-    This.PowerLineCycles = a_Value
+Public Sub PowerLineCyclesSetter(ByVal a_value As Double)
+    This.Session.WriteLine ":" & This.SenseFunctionName & ":NPLC " & VBA.CStr(a_value)
+    This.PowerLineCycles = a_value
 End Sub
 
 ''' <summary>   Gets the [<see cref="cc_isr_Tcp_Scpi.SenseFunctionOption"/>]. </summary>
@@ -122,8 +122,8 @@ End Property
 
 ''' <summary>   Sets the [<see cref="cc_isr_Tcp_Scpi.SenseFunctionOption"/>]. </summary>
 ''' <param name="a_value">    [<see cref="cc_isr_Tcp_Scpi.SenseFunctionOption"/>] the sense function. </param>
-Friend Property Let SenseFunction(ByVal a_Value As cc_isr_Tcp_Scpi.SenseFunctionOption)
-    This.SenseFunction = a_Value
+Friend Property Let SenseFunction(ByVal a_value As cc_isr_Tcp_Scpi.SenseFunctionOption)
+    This.SenseFunction = a_value
 End Property
 
 ''' <summary>   Sets the Sense Function name. </summary>
@@ -134,8 +134,8 @@ End Property
 
 ''' <summary>   Sets the Sense Function name. </summary>
 ''' <param name="a_value">    [String] the sense function name. </param>
-Friend Property Let SenseFunctionName(ByVal a_Value As String)
-    This.SenseFunctionName = a_Value
+Friend Property Let SenseFunctionName(ByVal a_value As String)
+    This.SenseFunctionName = a_value
 End Property
 
 ''' <summary>   Gets the sense function. </summary>
@@ -152,10 +152,10 @@ End Function
 ''' <summary>   Sets the sense function. </summary>
 ''' <param name="a_value">       [String] the sense function. </param>
 ''' <param name="a_decorator">   [String] the decorator to append before and after the function name. </param>
-Public Sub SenseFunctionSetter(ByVal a_Value As String, _
+Public Sub SenseFunctionSetter(ByVal a_value As String, _
         Optional ByVal a_decorator As String = "'")
 
-    This.SenseFunctionName = a_Value
+    This.SenseFunctionName = a_value
     This.Session.WriteLine ":SENS:FUNC " & a_decorator & This.SenseFunctionName & a_decorator
 
 End Sub

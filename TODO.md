@@ -1,22 +1,8 @@
 # TODO
 
-https://groups.io/g/HP-Agilent-Keysight-equipment/topic/86224398
-
 ## GIT:
 
 ## TODO
-
-* Update Sheets and Views based on Flying.
-* move back to VXI-11.
-* merge all projects into main.
-* remove unused objects.
-* delete old branches.
-
-* Fix demo projects. 
-
-## Beta 202308
-
-https://stackoverflow.com/questions/18124853/excel-vba-checkbox-click-and-change-events-the-same
 
 ## Tests
 

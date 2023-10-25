@@ -36,18 +36,21 @@ Private Sub ReadIdentityButton_Click()
     Dim p_repeatCount As Integer: p_repeatCount = Range(m_repeatCountCell).Value
     Dim p_timeout As Integer: p_timeout = Range(m_receiveTimeoutCell).Value
     
-    ReadIdentity p_host, p_port, p_repeatCount
+    ReadIdentity p_host, p_port, p_timeout, p_repeatCount
    
 End Sub
 
 
 ''' <summary>   Uses the 2700 Virtual instrument to send the identity query and reads back the identity
 ''' from the instrument. </summary>
-''' <param name="a_host">   The host IPv4 dotted address. </param>
-''' <param name="a_port">   the host port number. </param>
+''' <param name="a_host">          The host IPv4 dotted address. </param>
+''' <param name="a_port">          the host port number. </param>
+''' <param name="a_timeout">       session timeout. </param>
 ''' <param name="a_repeatCount">   The number of time to repeat the query. </param>
-Private Sub ReadIdentity(ByVal a_host As String, ByVal a_port As Long, ByVal a_repeatCount As Integer)
+Private Sub ReadIdentity(ByVal a_host As String, ByVal a_port As Long, _
+    ByVal a_timeout As Long, ByVal a_repeatCount As Integer)
 
+    Const p_procedureName As String = "ReadIdentity"
     On Error GoTo Finally
     
     Range(m_socketAddressCell) = vbNullString
@@ -63,16 +66,16 @@ Private Sub ReadIdentity(ByVal a_host As String, ByVal a_port As Long, ByVal a_r
     Dim p_totalMilliseconds As Double
     
     Dim p_device As K2700
-    Set p_device = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize(New ErrTracer)
+    Set p_device = cc_isr_Tcp_Scpi.Factory.NewK2700.Initialize()
     
-    p_device.OpenConnection a_host, a_port
+    p_device.Connectable.OpenConnection a_host & ":" & VBA.CStr(a_port), a_timeout
     
     ' report the socket number
-    Range(m_connectedSocketIdCell).Value = p_device.ViSession.SocketId
+    Range(m_connectedSocketIdCell).Value = p_device.Session.Socket.SocketId
    
     ' report the connection state
     Range(m_connectedCell).Value = p_device.Connected
-    Range(m_socketAddressCell).Value = p_device.ViSession.SocketAddress
+    Range(m_socketAddressCell).Value = p_device.Session.SocketAddress
     
     If a_repeatCount > 0 And p_device.Connected Then
     
@@ -120,7 +123,7 @@ Finally:
     On Error Resume Next
     If Not p_device Is Nothing Then
         If p_device.Connected Then
-            p_device.CloseConnection
+            p_device.Connectable.CloseConnection
         End If
     End If
     
@@ -144,23 +147,8 @@ End Property
 ''' <see cref="cc_isr_Core_IO.UserDefinedErrors.ErrorsQueue">errors queue</see>. </summary>
 Public Sub TraceErrorQueue()
     
-    If cc_isr_Core_IO.UserDefinedErrors.ErrorsQueue.Count > 0 Then _
+    If cc_isr_Core_IO.UserDefinedErrors.QueuedErrorCount > 0 Then _
         Me.LastError = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage(VBA.vbCrLf)
 
 End Sub
-
-' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-' Worksheet events
-' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-''' <summary>   Initialize this worksheet if not initialized. </summary>
-Private Sub Worksheet_Activate()
-    If Not This.Initialized Then
-        Range(m_socketAddressCell) = vbNullString
-        Range(m_connectedSocketIdCell).Value = vbNullString
-        Range(m_connectedCell).Value = vbNullString
-    End If
-    This.Initialized = True
-End Sub
-
 

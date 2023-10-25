@@ -26,8 +26,6 @@ Presently supported is the Keithley 2700 instrument either as an LXI instrument 
 ## Scripts
 
 * [unit test]: shortcut to run unit tests.
-* [deploy]: copy the workbook and its dependencies to the deployment `..\..\bin` folder.
-* [localize]: sets workbook references to the local deployment `..\..\bin` folder.
 
 ## Unit Testing
 
@@ -50,9 +48,7 @@ Bug reports and contributions are welcome at the [cc.isr.tcp.scpi] repository.
 [cc.isr.core.io]: https://github.com/ATECoder/vba.core/src/io
 [cc.isr.test.fx]: https://github.com/ATECoder/vba.core/src/testfx
 
-[unit test]: ./unit.test.lnk
-[deploy]: ./deploy.ps1
-[localize]: ./localize.ps1
+[unit test]: ./cc.isr.tcp.scpi.test.unit.test.lnk
 
 [ISR]: https://www.integratedscientificresources.com
 
