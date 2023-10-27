@@ -10,14 +10,15 @@ Attribute VB_Exposed = True
 Option Explicit
 
 Private Const m_sessionTimeoutCell As String = "B1"
-Private Const m_inputHostCell As String = "B2"
-Private Const m_inputPortCell As String = "B3"
+Private Const m_socketHostCell As String = "B2"
+Private Const m_socketPortCell As String = "B3"
 Private Const m_socketAddressCell As String = "C2"
 Private Const m_socketIdCell As String = "D2"
 Private Const m_connectedCell As String = "E2"
 Private Const m_sentMessageCell As String = "F2"
 Private Const m_receivedMessageLengthCell As String = "J2"
 Private Const m_receivedMessageCell As String = "K2"
+
 Private Const m_elapsedTimeCell As String = "L2"
 Private Const m_elapsedTimeFormatCell As String = "L3"
 Private Const m_elapsedTimeFormat As String = "0.0"
@@ -45,12 +46,20 @@ Private Const m_functionNameCell As String = "B29"
 Private Const m_functionValueCell As String = "C29"
 Private Const m_functionUnitCell As String = "D29"
 Private Const m_channelCountCell As String = "C30"
-Private Const m_externalTriggerStatusCell As String = "C31"
+Private Const m_monitoringStateCell As String = "C31"
+Private Const m_measuredChannelNumberCell As String = "D28"
 
 Private Const m_readingOffsetCell As String = "L4"
-Private Const m_measurementTopRow As Integer = 2
-Private Const m_measurementNoCol As String = "M"
-Private Const m_measurementValueCol As String = "N"
+Private Const m_measurementRow As Integer = 2
+Private Const m_measurementCol As Integer = 14 ' 2
+Private Const m_channelRow As Integer = 2 ' 7
+Private Const m_channelCol As Integer = 13 ' 1
+Private Const m_byRow As Boolean = True ' False
+Private Const m_displayIncrement As Integer = 1 '  2
+
+Private Const m_maximumChannelNumber As Integer = 48
+
+Private Const m_gpibLanControllerPort As Long = 1234
 
 Private WithEvents m_viewModel As K2700ViewModel
 Attribute m_viewModel.VB_VarHelpID = -1
@@ -60,6 +69,8 @@ Private Type this_
     ViewModel As cc_isr_Tcp_Scpi.K2700ViewModel
     FocusedControlName As String
     DesignMode As Boolean
+    MeasuredValue As Double
+    Connected As Boolean
 End Type
 
 Private This As this_
@@ -80,19 +91,17 @@ Private Sub InitializeViews()
 
     If Not K2700Observer.Initialized Then
     
-        Dim p_viewModel As cc_isr_Tcp_Scpi.K2700ViewModel
-        
-        Set p_viewModel = cc_isr_Tcp_Scpi.Factory.NewK2700ViewModel
+        Set m_viewModel = cc_isr_Tcp_Scpi.Factory.NewK2700ViewModel
         
         ' initialize the views before initializing the view model
         ' the view model gets initialized upon connecting.
-        DataView.Initialize p_viewModel
-        UserView.Initialize p_viewModel
-    
+        K2700Observer.Initialize m_viewModel
+
+        Me.Synchronize
+        
+
     End If
     
-    UserView.AutoSampleFrontInputs = Me.FrontAutoScanCheckBox.Value
-
 End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -102,80 +111,107 @@ End Sub
 ''' <summary>   Gets or sets the socket address. </summary>
 ''' <value>   [String]. </value
 Public Property Get SocketAddress() As String
-    SocketAddress = VBA.CStr(Range(m_socketAddressCell).Value)
+    SocketAddress = VBA.CStr(K2700Sheet.Range(m_socketAddressCell).Value)
 End Property
 
 Public Property Let SocketAddress(ByVal a_value As String)
-    Range(m_socketAddressCell).Value = a_value
+    K2700Sheet.Range(m_socketAddressCell).Value = a_value
 End Property
 
 ''' <summary>   Gets or sets the session timeout. </summary>
 ''' <value>   [Long]. </value>
 Public Property Get SessionTimeout() As Long
-    SessionTimeout = VBA.CLng(Range(m_sessionTimeoutCell).Value)
+    SessionTimeout = VBA.CLng(K2700Sheet.Range(m_sessionTimeoutCell).Value)
 End Property
 
 Public Property Let SessionTimeout(ByVal a_value As Long)
-    Range(m_sessionTimeoutCell).Value = a_value
+    K2700Sheet.Range(m_sessionTimeoutCell).Value = a_value
+End Property
+
+''' <summary>   Gets or sets the connected state. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get Connected() As Boolean
+    Connected = This.Connected
+End Property
+
+Public Property Let Connected(ByVal a_value As Boolean)
+    If This.Connected <> a_value Then
+        This.Connected = a_value
+        K2700Sheet.Range(m_connectedCell).Value = a_value
+    End If
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 ' Winsock Control
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Handles the Toggle connection button click event. </summary>
-Friend Sub ConnectToggleButton_Click()
+''' <summary>   Gets the execution (Can Execute) status of the Open Connection command. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get OpenConnectionExecutable() As Boolean
+    OpenConnectionExecutable = Me.OpenConnectionButton.Enabled
+End Property
 
-    If This.ViewModel Is Nothing Then
+''' <summary>   Sets the execution (Can Execute) status of the Open Connection command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is executable. </param>
+Public Property Let OpenConnectionExecutable(ByVal a_value As Boolean)
+    Me.OpenConnectionButton.Enabled = a_value
+    ' allow power on reset only if not connected.
+    Me.PowerOnResetButton.Enabled = a_value
+End Property
+
+''' <summary>   Handles the open Connection command event. </summary>
+Private Sub OnOpenConnection()
+
+    ' initialize the views if necessary
+    InitializeViews
     
-        Set This.ViewModel = cc_isr_Tcp_Scpi.Factory.NewK2700ViewModel
-        
-        ' initialize the observer before initializing the view mode
-        ' but after the observer setting are set. The observer initial
-        ' settings are then applied to the view model.
-        Set This.Observer = K2700Observer.Initialize(This.ViewModel)
-        
+    K2700Observer.OnOpenConnectionButtonClick
+
+End Sub
+
+''' <summary>   Handles open connection button click event. </summary>
+Private Sub OpenConnectionButton_Click()
+    OnOpenConnection
+End Sub
+
+''' <summary>   Gets the execution (Can Execute) status of the Close Connection command. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get CloseConnectionExecutable() As Boolean
+    CloseConnectionExecutable = Me.CloseConnectionButton.Enabled
+End Property
+
+''' <summary>   Sets the execution (Can Execute) status of the Close Connection command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is executable. </param>
+Public Property Let CloseConnectionExecutable(ByVal a_value As Boolean)
+    Me.CloseConnectionButton.Enabled = a_value
+End Property
+
+''' <summary>   Handles the open Connection command event. </summary>
+Private Sub OnCloseConnection()
+
+    If K2700Observer.Initialized Then
+    
+        K2700Observer.OnCloseConnectionButtonClick
+    
     End If
-    
-    ' issue the open connection command. This initializes the view model.
-    This.ViewModel.OpenConnectionCommand
 
-
-    If ConnectToggleButton.Value And This.ViewModel.CanConnect Then
-    
-        ' the view mode is initialized when connected.
-        This.ViewModel.OpenConnectionCommand
-    
-    ElseIf Not ConnectToggleButton.Value Then
-    
-        If Not This.ViewModel Is Nothing Then
-            If This.ViewModel.Connected Then _
-                This.ViewModel.CloseConnectionCommand
-            This.ViewModel.Dispose
-        End If
-    
-    End If
-    
 End Sub
 
-Private Sub ConnectToggleButton_GotFocus()
-    This.FocusedControlName = Me.ConnectToggleButton.Name
+''' <summary>   Handles close connection button click event. </summary>
+Private Sub CloseConnectionButton_Click()
+    OnCloseConnection
 End Sub
 
-Private Sub ConnectToggleButton_LostFocus()
-    This.FocusedControlName = VBA.vbNullString
-End Sub
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' IEEE488 Settings
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 ' IEEE488 Control
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 Private Sub CLSButton_Click()
-    
-    Dim p_details As String
-    This.ViewModel.ClearExecutionStateCommand p_details
-    Range(m_lastErrorMessageCell).Value = p_details
-    
+    K2700Observer.OnClearExecutionState
 End Sub
 
 Private Sub CommandsComboBox_GotFocus()
@@ -197,14 +233,14 @@ Private Sub CommandsComboBox_Change()
         On Error GoTo 0
 
         ' Commands for click
-        This.ViewModel.MessageToSend = Me.CommandsComboBox.Text
+        K2700Observer.MessageToSend = Me.CommandsComboBox.Text
         
     Else
 
         On Error GoTo 0
 
         ' Commands for change from within the sheet
-        This.ViewModel.MessageToSend = Me.CommandsComboBox.Text
+        K2700Observer.MessageToSend = Me.CommandsComboBox.Text
 
     End If
     
@@ -220,7 +256,7 @@ err_Handler:
     On Error GoTo 0
     
     ' Commands for change from outside the sheet
-    This.ViewModel.MessageToSend = Me.CommandsComboBox.Text
+    K2700Observer.MessageToSend = Me.CommandsComboBox.Text
 
 End Sub
 
@@ -235,7 +271,7 @@ Public Sub PopulateCommandsComboBox()
     Me.CommandsComboBox.Clear
     Dim p_item As Variant
     Dim p_scpiCommand As String
-    For Each p_item In This.ViewModel.ScpiCommands
+    For Each p_item In K2700Observer.ScpiCommands
         p_scpiCommand = VBA.CStr(p_item)
         Me.CommandsComboBox.AddItem p_scpiCommand
     Next
@@ -265,16 +301,13 @@ End Sub
 
 ''' <summary>   Handles the Query button click event. </summary>
 Private Sub QueryButton_Click()
-    
     This.ViewModel.QueryCommand
 
 End Sub
 
 ''' <summary>   Handles the Read button click event. </summary>
 Private Sub ReadButton_Click()
-
     This.ViewModel.ReadCommand
-    
 End Sub
 
 Private Sub ReadStatusAfterWriteCheckBox_GotFocus()
@@ -297,14 +330,14 @@ Private Sub ReadStatusAfterWriteCheckBox_Change()
         On Error GoTo 0
 
         ' Commands for click
-        This.ViewModel.ReadStatusAfterWriteEnabled = Me.ReadStatusAfterWriteCheckBox.Value
+        K2700Observer.ReadStatusAfterWriteEnabled = Me.ReadStatusAfterWriteCheckBox.Value
         
     Else
 
         On Error GoTo 0
 
         ' Commands for change from within the sheet
-        This.ViewModel.ReadStatusAfterWriteEnabled = Me.ReadStatusAfterWriteCheckBox.Value
+        K2700Observer.ReadStatusAfterWriteEnabled = Me.ReadStatusAfterWriteCheckBox.Value
 
     End If
     
@@ -320,39 +353,28 @@ err_Handler:
     On Error GoTo 0
     
     ' Commands for change from outside the sheet
-    This.ViewModel.ReadStatusAfterWriteEnabled = Me.ReadStatusAfterWriteCheckBox.Value
+    K2700Observer.ReadStatusAfterWriteEnabled = Me.ReadStatusAfterWriteCheckBox.Value
     
 End Sub
 
 ''' <summary>   Handles the Read Status Byte button click event. </summary>
 Public Sub ReadStatusByteButton_Click()
-    
-    This.ViewModel.QueryStatusByteCommand
-    
+    K2700Observer.OnQueryStatusByte
 End Sub
-
 
 ''' <summary>   Handles the Read Standard Event Status Byte button click event. </summary>
 Private Sub ReadStandardEventStatusButton_Click()
-
-    This.ViewModel.ReadStandardEventStatusCommand
-    
+    K2700Observer.OnReadStandardEventStatus
 End Sub
 
 ''' <summary>   Handles the Reset Known State button click event. </summary>
 Private Sub RSTButton_Click()
-
-    Dim p_details As String
-    This.ViewModel.ResetKnownStateCommand p_details
-    Range(m_lastErrorMessageCell).Value = p_details
-    
+    K2700Observer.OnResetKnownState
 End Sub
 
 ''' <summary>   Handles the Write button click event. </summary>
 Private Sub WriteButton_Click()
-
     This.ViewModel.WriteCommand
-    
 End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -362,11 +384,17 @@ End Sub
 ''' <summary>   Gets or sets the primary Gpib Address. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get PrimaryGpibAddress() As Integer
-    TimerInterval = VBA.CInt(Range(m_gpibAddressCell).Value)
+    TimerInterval = VBA.CInt(K2700Sheet.Range(m_gpibAddressCell).Value)
 End Property
 
 Public Property Let PrimaryGpibAddress(ByVal a_value As Integer)
-    Range(m_gpibAddressCell).Value = a_value
+    K2700Sheet.Range(m_gpibAddressCell).Value = a_value
+End Property
+
+''' <summary>   Gets the Gpib Lan Controller Port number. </summary>
+''' <value>   [Long]. </value>
+Public Property Get GpibLanControllerPort() As Long
+    GpibLanControllerPort = m_gpibLanControllerPort
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -375,98 +403,172 @@ End Property
 
 ''' <summary>   Handles the Go To Local button click event. </summary>
 Private Sub GoToLocalButton_Click()
-
-    This.ViewModel.GoToLocalCommand
-    
+    K2700Observer.OnGoToLocal
 End Sub
 
 ''' <summary>   Handles the GPIB Address Get button click event. </summary>
 Private Sub GpibAddressGetButton_Click()
-
-    This.ViewModel.GpibAddressGetCommand
-
+    K2700Observer.OnGpibAddressGet
 End Sub
 
 ''' <summary>   Handles the GPIB Address set button click event. </summary>
 Private Sub GpibAddressSetButton_Click()
-
-    This.ViewModel.GpibAddressSetCommand
-
+    K2700Observer.OnGpibAddressSet
 End Sub
 
 ''' <summary>   Handles the local lockout button click event. </summary>
 Private Sub LocalLockoutButton_Click()
+    K2700Observer.OnLocalLockout
+End Sub
 
-    This.ViewModel.LocalLockoutCommand
+''' <summary>   Handles the click event of the power on reset.  </summary>
+Private Sub PowerOnResetButton_Click()
+    OnPowerOnReset
+End Sub
+
+''' <summary>   Handles the power on reset command event. </summary>
+Private Sub OnPowerOnReset()
+
+    ' initialize the views if necessary
+    InitializeViews
+    
+    K2700Observer.OnPowerOneResetButtonClick
 
 End Sub
 
 ''' <summary>   Handles the read after write set button click event. </summary>
 Private Sub ReadAfterWriteSetButton_Click()
-
-    This.ViewModel.AutoAssertTalkSetCommand
-
+    K2700Observer.OnAutoAssertTalkSet
 End Sub
 
 ''' <summary>   Handles the read after write get button click event. </summary>
 Private Sub ReadAfterWriteGetButton_Click()
-
-    This.ViewModel.AutoAssertTalkGetCommand
-
+    K2700Observer.OnAutoAssertTalkGet
 End Sub
 
 ''' <summary>   Handles the Read Timeout get button click event. </summary>
 Private Sub ReadTimeoutGetButton_Click()
-
-    This.ViewModel.GpibLanReadTimeoutGetCommand
-
+    K2700Observer.OnReadTimeoutGet
 End Sub
 
 ''' <summary>   Handles the Read Timeout set button click event. </summary>
 Private Sub ReadTimeoutSetButton_Click()
-
-    This.ViewModel.GpibLanReadTimeoutSetCommand
-
+    K2700Observer.OnReadTimeoutSet
 End Sub
 
 ''' <summary>   Handles the Selective device clear button click event. </summary>
 Private Sub SDCButton_Click()
-    
-    This.ViewModel.SelectiveDeviceClearCommand
-    
+    K2700Observer.OnSDC
 End Sub
 
 ''' <summary>   Handles the serial poll button click event. </summary>
 Private Sub SerialPollButton_Click()
-
-    This.ViewModel.SerialPollCommand
-
+    K2700Observer.OnReadStatusByte
 End Sub
 
 ''' <summary>   Handles the SRQ button click event. </summary>
 Private Sub SRQButton_Click()
-
-    This.ViewModel.ServiceRequestedQueryCommand
-
+    K2700Observer.OnSRQ
 End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 ' K2700 Settings
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
+''' <summary>   Gets the maxmum channge count. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get MaximumChannelNumber() As Integer
+    MaximumChannelNumber = m_maximumChannelNumber
+End Property
+
 ''' <summary> Get or sets the timer interval. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get TimerInterval() As Integer
-    TimerInterval = VBA.CInt(Range(m_timerIntervalCell).Value)
+    TimerInterval = VBA.CInt(K2700Sheet.Range(m_timerIntervalCell).Value)
 End Property
 
 Public Property Let TimerInterval(ByVal a_value As Integer)
-    Range(m_timerIntervalCell).Value = a_value
+    K2700Sheet.Range(m_timerIntervalCell).Value = a_value
+End Property
+
+''' <summary>   Gets the selected channel number from the active cell value. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get SelectedChannelNumber() As Integer
+    SelectedChannelNumber = VBA.CInt(K2700Sheet.Range(m_channelNumberCell).Value)
+End Property
+
+''' <summary>   Sets the selected channel number. </summary>
+''' <param name="a_value">   [Integer] the selected channel number. </param>
+Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
+    K2700Sheet.Range(m_channelNumberCell).Value = a_value
+End Property
+
+''' <summary>   Gets the Measured channel number from the active cell value. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get MeasuredChannelNumber() As Integer
+    MeasuredChannelNumber = VBA.CInt(K2700Sheet.Range(m_measuredChannelNumberCell).Value)
+End Property
+
+''' <summary>   Sets the Measured channel number. </summary>
+''' <param name="a_value">   [Integer] the Measured channel number. </param>
+Public Property Let MeasuredChannelNumber(ByVal a_value As Integer)
+    K2700Sheet.Range(m_measuredChannelNumberCell).Value = a_value
+End Property
+
+''' <summary>   Gets the Measured reading. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get MeasuredReading() As String
+    MeasuredReading = K2700Sheet.Range(m_functionValueCell).Value
+End Property
+
+''' <summary>   Sets the Measured reading. </summary>
+''' <param name="a_value">   [String] the Measured reading. </param>
+Public Property Let MeasuredReading(ByVal a_value As String)
+    K2700Sheet.Range(m_functionValueCell).Value = a_value
+End Property
+
+''' <summary>   Gets the reading offset. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get ReadingOffset() As Double
+    ReadingOffset = K2700Sheet.Range(m_readingOffsetCell).Value
+End Property
+
+''' <summary>   Sets the reading offset. </summary>
+''' <param name="a_value">   [Double] the reading offset. </param>
+Public Property Let ReadingOffset(ByVal a_value As Double)
+    K2700Sheet.Range(m_readingOffsetCell).Value = a_value
+End Property
+
+''' <summary>   Gets the Measured Value. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get MeasuredValue() As Double
+    MeasuredValue = This.MeasuredValue
+End Property
+
+''' <summary>   Sets the Measured Value. </summary>
+''' <param name="a_value">   [Double] the Measured Value. </param>
+Public Property Let MeasuredValue(ByVal a_value As Double)
+    This.MeasuredValue = a_value
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 ' K2700 Control
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Gets the Auto Increment Channel Number Enabled. </summary>
+''' <remarks>   Indicates that front inputs are Value for this mode. </remarks>
+''' <value>   [Boolean]. </value>
+Public Property Get AutoIncrementChannelNoEnabled() As Boolean
+    AutoIncrementChannelNoEnabled = Me.AutoIncrementCheckBox.Value
+End Property
+
+''' <summary>   Sets the Auto Increment Channel Number Enabled. </summary>
+''' <param name="a_value">   [Boolean] the Auto Increment Channel Number Enabled value. </value>
+Public Property Let AutoIncrementChannelNoEnabled(ByVal a_value As Boolean)
+    If Me.AutoIncrementCheckBox.Value <> a_value Then
+        Me.AutoIncrementCheckBox.Value = a_value
+    End If
+End Property
 
 Private Sub AutoIncrementCheckBox_GotFocus()
     This.FocusedControlName = Me.AutoIncrementCheckBox.Name
@@ -488,14 +590,14 @@ Private Sub AutoIncrementCheckBox_Change()
         On Error GoTo 0
 
         ' Commands for click
-        This.ViewModel.AutoIncrementChannelNoEnabled = Me.AutoIncrementCheckBox.Value
+        K2700Observer.AutoIncrementChannelNoEnabled = Me.AutoIncrementCheckBox.Value
         
     Else
 
         On Error GoTo 0
 
         ' Commands for change from within the sheet
-        This.ViewModel.AutoIncrementChannelNoEnabled = Me.AutoIncrementCheckBox.Value
+        K2700Observer.AutoIncrementChannelNoEnabled = Me.AutoIncrementCheckBox.Value
 
     End If
     
@@ -511,13 +613,43 @@ err_Handler:
     On Error GoTo 0
     
     ' Commands for change from outside the sheet
-    This.ViewModel.AutoIncrementChannelNoEnabled = Me.AutoIncrementCheckBox.Value
+    K2700Observer.AutoIncrementChannelNoEnabled = Me.AutoIncrementCheckBox.Value
     
 End Sub
 
+''' <summary>   Gets the execution (Can Execute) status of the Clear Reading command. </summary>
+''' <value>   [Boolean] True if the Clear Readings command can be executed. </value>
+Public Property Get ClearReadingsExecutable() As Boolean
+    ClearReadingsExecutable = Me.ClearReadingsButton.Enabled
+End Property
+
+''' <summary>   Sets the execution (Can Execute) status of the Clear Reading command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is executable. </param>
+Public Property Let ClearReadingsExecutable(ByVal a_value As Boolean)
+    Me.ClearReadingsButton.Enabled = a_value
+End Property
+
+''' <summary>   Handles the click event of the Clear Radings button. </summary>
 Private Sub ClearReadingsButton_Click()
-    This.ViewModel.ClearReadingsCommand
+    K2700Observer.OnClearReadings
 End Sub
+
+''' <summary>   Gets the External Trig Monitoring Enabled condition. </summary>
+''' <remarks>   When true, a Stop request is sent to the timer so that the timer
+'''             event is not handled and the timer is Stopd on the next event. </remarks>
+''' <value>   [Boolean]. </value>
+Public Property Get ExternalTrigMonitoringEnabled() As Boolean
+    ExternalTrigMonitoringEnabled = Me.ExternalTriggerOptionButton.Value
+End Property
+
+''' <summary>   Sets the External Trig Monitoring Enabled condition. </summary>
+''' <param name="a_value">   [Boolean] the External Trig Monitoring Enabled value. </value>
+Public Property Let ExternalTrigMonitoringEnabled(ByVal a_value As Boolean)
+    If Me.ExternalTriggerOptionButton.Value <> a_value Then
+        Me.ExternalTriggerOptionButton.Value = a_value
+    End If
+End Property
+
 
 Private Sub ExternalTriggerOptionButton_GotFocus()
     This.FocusedControlName = Me.ExternalTriggerOptionButton.Name
@@ -540,10 +672,10 @@ Private Sub ExternalTriggerOptionButton_Change()
         On Error GoTo 0
 
         ' Commands for click
-        If Me.ExternalTriggerOptionButton.Value Then _
-            This.ViewModel.ConfigureExternalTriggerReadingCommand p_details
-        
-        Range(m_lastErrorMessageCell).Value = p_details
+        If Me.ExternalTriggerOptionButton.Value Then
+            K2700Observer.ExternalSenseFunctionName = Me.FunctionComboBox.Text
+            K2700Observer.OnExternalTriggerOption
+        End If
         
     Else
 
@@ -566,54 +698,6 @@ err_Handler:
     
     ' Commands for change from outside the sheet
     
-End Sub
-
-Private Sub FunctionComboBox_GotFocus()
-    This.FocusedControlName = Me.FunctionComboBox.Name
-    DoEvents
-End Sub
-
-Private Sub FunctionComboBox_LostFocus()
-    This.FocusedControlName = VBA.vbNullString
-    DoEvents
-End Sub
-
-''' <summary>   Selects the measurement function. </summary>
-Private Sub FunctionComboBox_Change()
-    
-    On Error GoTo err_Handler:
-
-    If This.FocusedControlName = Me.FunctionComboBox.Name Then
-
-        On Error GoTo 0
-
-        ' Commands for click
-        This.ViewModel.SenseFunctionName = Me.FunctionComboBox.Text
-        
-    Else
-
-        On Error GoTo 0
-
-        ' Commands for change from within the sheet
-        This.ViewModel.SenseFunctionName = Me.FunctionComboBox.Text
-
-    End If
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    On Error GoTo 0
-    
-    ' Commands for change from outside the sheet
-    This.ViewModel.SenseFunctionName = Me.FunctionComboBox.Text
-    
-
 End Sub
 
 Private Sub ImmediateTriggerOptionButton_GotFocus()
@@ -641,10 +725,10 @@ Private Sub ImmediateTriggerOptionButton_Change()
         On Error GoTo 0
 
         ' Commands for click
-        If ImmediateTriggerOptionButton.Value Then _
-            This.ViewModel.ConfigureImmediateTriggerReadingsCommand p_details
-    
-        Range(m_lastErrorMessageCell).Value = p_details
+        If ImmediateTriggerOptionButton.Value Then
+            K2700Observer.ImmediateSenseFunctionName = Me.FunctionComboBox.Text
+            K2700Observer.OnImmediateTriggerOption
+        End If
     
     Else
 
@@ -690,14 +774,14 @@ Private Sub InputsCheckBox_Change()
         On Error GoTo 0
 
         ' Commands for click
-        This.ViewModel.FrontInputsRequired = Me.InputsCheckBox.Value
+        K2700Observer.FrontInputsRequired = Me.InputsCheckBox.Value
         
     Else
 
         On Error GoTo 0
 
         ' Commands for change from within the sheet
-        This.ViewModel.FrontInputsRequired = Me.InputsCheckBox.Value
+        K2700Observer.FrontInputsRequired = Me.InputsCheckBox.Value
 
     End If
     
@@ -713,9 +797,25 @@ err_Handler:
     On Error GoTo 0
     
     ' Commands for change from outside the sheet
-    This.ViewModel.FrontInputsRequired = Me.InputsCheckBox.Value
+    K2700Observer.FrontInputsRequired = Me.InputsCheckBox.Value
     
 End Sub
+
+''' <summary>   Gets the Front Inputs Required. </summary>
+''' <remarks>   True if front inputs are Required; otherwise, Rear inputs. </remarks>
+''' <value>   [Boolean]. </value>
+Public Property Get FrontInputsRequired() As Boolean
+    FrontInputsRequired = Me.InputsCheckBox.Value
+End Property
+
+''' <summary>   Sets the Front Inputs Required. </summary>
+''' <param name="a_value">   [Boolean] true if Front Inputs are Required. </value>
+Public Property Let FrontInputsRequired(ByVal a_value As Boolean)
+    If Me.InputsCheckBox.Value <> a_value Then
+        Me.InputsCheckBox.Value = a_value
+        K2700Observer.FrontInputsRequired = a_value
+    End If
+End Property
 
 ''' <summary>   Handles the measure button click event. Takes a single or multiple
 '''             readings from the front or rear panel. </summary>
@@ -726,68 +826,19 @@ Private Sub MeasureButton_Click()
     ' make an immediate measure of one or all channels.
     This.ViewModel.MeasureImmediatelyCommand p_details
     
-    Range(m_lastErrorMessageCell).Value = p_details
+    K2700Sheet.Range(m_lastErrorMessageCell).Value = p_details
     
   
 End Sub
 
-Private Sub MonitorExtTrigToggleButton_GotFocus()
-    This.FocusedControlName = Me.MonitorExtTrigToggleButton.Name
-    DoEvents
+''' <summary>   Handles the start monitoring button click event. </summary>
+Private Sub StartMonitoringButton_Click()
+    K2700Observer.OnStartMonitorExtTrigButtonClick
 End Sub
 
-Private Sub MonitorExtTrigToggleButton_LostFocus()
-    This.FocusedControlName = VBA.vbNullString
-    DoEvents
-End Sub
-
-''' <summary>   Handles the external trigger toggle button. </summary>
-Private Sub MonitorExtTrigToggleButton_Change()
-
-    On Error GoTo err_Handler:
-
-    If This.FocusedControlName = Me.MonitorExtTrigToggleButton.Name Then
-
-        On Error GoTo 0
-
-        If MonitorExtTrigToggleButton.Value Then
-            This.ViewModel.StartMonitoringExternalTriggersCommand
-        Else
-            This.ViewModel.StopMonitoringExternalTriggersCommand
-        End If
-
-
-    Else
-
-        On Error GoTo 0
-
-        ' Commands for change from within the sheet
-        If MonitorExtTrigToggleButton.Value Then
-            This.ViewModel.StartMonitoringExternalTriggersCommand
-        Else
-            This.ViewModel.StopMonitoringExternalTriggersCommand
-        End If
-
-    End If
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    On Error GoTo 0
-    
-    ' Commands for change from outside the sheet
-    If MonitorExtTrigToggleButton.Value Then
-        This.ViewModel.StartMonitoringExternalTriggersCommand
-    Else
-        This.ViewModel.StopMonitoringExternalTriggersCommand
-    End If
-    
+''' <summary>   Handles the stop monitoring button click event. </summary>
+Private Sub StopMonitoringButton_Click()
+    K2700Observer.OnStopMonitorExtTrigButtonClick
 End Sub
 
 ''' <summary> Queries the Inputs status. </summary>
@@ -796,6 +847,21 @@ Private Sub QueryInputsButton_Click()
     This.ViewModel.QueryInputsCommand
 
 End Sub
+
+''' <summary>   Gets the Single Read Enabled. </summary>
+''' <remarks>   Indicates that front inputs are Value for this mode. </remarks>
+''' <value>   [Boolean]. </value>
+Public Property Get SingleReadEnabled() As Boolean
+    SingleReadEnabled = Me.SingleMultipleCheckBox.Value
+End Property
+
+''' <summary>   Sets the Single Read Enabled. </summary>
+''' <param name="a_value">   [Boolean] the Single Read Enabled value. </value>
+Public Property Let SingleReadEnabled(ByVal a_value As Boolean)
+    If Me.SingleMultipleCheckBox.Value <> a_value Then
+        Me.SingleMultipleCheckBox.Value = a_value
+    End If
+End Property
 
 Private Sub SingleMultipleCheckBox_GotFocus()
     This.FocusedControlName = Me.SingleMultipleCheckBox.Name
@@ -816,14 +882,14 @@ Private Sub SingleMultipleCheckBox_Change()
         On Error GoTo 0
 
         ' Commands for click
-        This.ViewModel.SingleReadEnabled = Me.SingleMultipleCheckBox.Value
+        K2700Observer.SingleReadEnabled = Me.SingleMultipleCheckBox.Value
         
     Else
 
         On Error GoTo 0
 
         ' Commands for change from within the sheet
-        This.ViewModel.SingleReadEnabled = Me.SingleMultipleCheckBox.Value
+        K2700Observer.SingleReadEnabled = Me.SingleMultipleCheckBox.Value
 
     End If
     
@@ -839,7 +905,7 @@ err_Handler:
     On Error GoTo 0
     
     ' Commands for change from outside the sheet
-    This.ViewModel.SingleReadEnabled = Me.SingleMultipleCheckBox.Value
+    K2700Observer.SingleReadEnabled = Me.SingleMultipleCheckBox.Value
     
 End Sub
 
@@ -855,7 +921,7 @@ Public Sub PopulateFunctionComboBox()
     Me.FunctionComboBox.Clear
     Dim p_item As Variant
     Dim p_senseFunction As String
-    For Each p_item In This.ViewModel.SenseFunctions
+    For Each p_item In K2700Observer.SenseFunctions
         p_senseFunction = VBA.CStr(p_item)
         Me.FunctionComboBox.AddItem p_senseFunction
         If "FRES" = p_senseFunction Then
@@ -887,9 +953,71 @@ err_Handler:
 End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
+' View Model Settings
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Gets the design mode for unit testing and restoration of state. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get DesignMode() As Boolean
+    DesignMode = This.DesignMode
+End Property
+
+''' <summary>   Sets the design mode for unit testing and restoration of state. </summary>
+''' <summary>   Sets the design mode for unit testing. </summary>
+''' <param name="a_value">   [Boolean] true if in design mode. </param>
+Public Property Let DesignMode(ByVal a_value As Boolean)
+    This.DesignMode = a_value
+End Property
+
+''' <summary>   Gets the Last Error Message. </summary>
+''' <value>   [String]. </value>
+Public Property Get LastErrorMessage() As String
+    LastErrorMessage = K2700Sheet.Range(m_lastErrorMessageCell).Value
+End Property
+
+''' <summary>   Sets the Last Error Message. </summary>
+''' <param name="a_value">   [String] the message. </value>
+Public Property Let LastErrorMessage(ByVal a_value As String)
+    K2700Sheet.Range(m_lastErrorMessageCell).Value = a_value
+End Property
+
+''' <summary>   Gets the Last Message. </summary>
+''' <value>   [String]. </value>
+Public Property Get LastMessage() As String
+    LastMessage = K2700Sheet.Range(m_lastMessageCell).Value
+End Property
+
+''' <summary>   Sets the Last Message. </summary>
+''' <param name="a_value">   [String] the message. </value>
+Public Property Let LastMessage(ByVal a_value As String)
+    K2700Sheet.Range(m_lastMessageCell).Value = a_value
+End Property
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' Measurments View
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+Public Property Get MeasurementRow() As Integer
+    MeasurementRow = m_measurementRow
+End Property
+Public Property Get MeasurementCol() As Integer
+    MeasurementCol = m_measurementCol
+End Property
+Public Property Get ChannelRow() As Integer
+    ChannelRow = m_channelRow
+End Property
+Public Property Get ChannelCol() As Integer
+    ChannelCol = m_channelCol
+End Property
+Public Property Get ByRow() As Boolean
+    ByRow = m_byRow
+End Property
+Public Property Get DisplayIncrement() As Integer
+    DisplayIncrement = m_displayIncrement
+End Property
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 ' View Model Events
-'
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Sets the measurement display. </summary>
@@ -897,14 +1025,14 @@ End Sub
 ''' <param name="a_value">       [double] the value. </param>
 Private Sub SetReading(ByVal a_channelNo As Integer, ByVal a_value As Double)
 
-    Dim p_rowNo As String: p_rowNo = VBA.CStr(m_measurementTopRow + a_channelNo - 1)
+    Dim p_rowNo As String: p_rowNo = VBA.CStr(Me.MeasurementRow + a_channelNo - 1)
     Dim p_cell As String
     
-    p_cell = m_measurementNoCol & p_rowNo
-    Range(p_cell).Value = VBA.CStr(a_channelNo)
+    p_cell = Me.ChannelCol & p_rowNo
+    K2700Sheet.Range(p_cell).Value = VBA.CStr(a_channelNo)
     
-    p_cell = m_measurementValueCol & p_rowNo
-    Range(p_cell).Value = Format(a_value, This.ViewModel.MeasuredValueFormat)
+    p_cell = Me.MeasurementCol & p_rowNo
+    K2700Sheet.Range(p_cell).Value = Format(a_value, This.ViewModel.MeasuredValueFormat)
     
 End Sub
 
@@ -918,9 +1046,11 @@ Private Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Cha
     On Error GoTo err_Handler
     
     If VBA.vbNullString = a_eventArgs.Reading Then
-        SetReading a_eventArgs.ChannelNumber, -1#
+        ' let the observer make these updates.
+        ' SetReading a_eventArgs.ChannelNumber, -1#
     Else
-        SetReading a_eventArgs.ChannelNumber, CDbl(a_eventArgs.Reading)
+        ' let the observer make these updates.
+        ' SetReading a_eventArgs.ChannelNumber, CDbl(a_eventArgs.Reading)
     End If
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -944,105 +1074,129 @@ err_Handler:
     
 End Sub
 
+Public Sub Synchronize()
+
+    This.Connected = This.ViewModel.Connected
+    This.DesignMode = This.ViewModel.DesignMode
+    
+    Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
+    Me.ReadingOffset = This.ViewModel.ReadingOffset
+    Me.ClearReadingsExecutable = This.ViewModel.ClearExecutionStateExecutable
+    
+    Me.CloseConnectionExecutable = This.ViewModel.CloseConnectionExecutable
+    Me.OpenConnectionExecutable = This.ViewModel.OpenConnectionExecutable
+    
+    Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
+    Me.MeasuredReading = This.ViewModel.MeasuredReading
+    Me.MeasuredValue = This.ViewModel.MeasuredValue
+    Me.LastErrorMessage = This.ViewModel.LastErrorMessage
+    Me.LastMessage = This.ViewModel.LastMessage
+    Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
+        
+    Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
+    Me.SingleReadEnabled = This.ViewModel.SingleReadEnabled
+    Me.ExternalTrigMonitoringEnabled = This.ViewModel.ExternalTrigMonitoringEnabled
+        
+End Sub
+
 ''' <summary>   Handles the property change event of the viwe model. </summary>
 ''' <param name="a_propertyName">   [String] the property name. </param>
 Private Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
 
-    Const p_procedureName = "m_K2700ViewModel_PropertyChanged"
+    Const p_procedureName = "HandleViewModelPropertyChanged"
 
     Select Case a_propertyName
 
         Case "Host"
-            Range(m_inputHostCell).Value = This.ViewModel.Host
+            K2700Sheet.Range(m_socketHostCell).Value = This.ViewModel.Host
         Case "Port"
-            Range(m_inputPortCell).Value = This.ViewModel.Port
+            K2700Sheet.Range(m_socketPortCell).Value = This.ViewModel.Port
         Case "SocketAddress"
-            Range(m_socketAddressCell).Value = This.ViewModel.SocketAddress
+            K2700Sheet.Range(m_socketAddressCell).Value = This.ViewModel.SocketAddress
         Case "SocketId"
-            Range(m_socketIdCell).Value = This.ViewModel.SocketId
+            K2700Sheet.Range(m_socketIdCell).Value = This.ViewModel.SocketId
         Case "SessionTimeout"
-            Range(m_sessionTimeoutCell).Value = This.ViewModel.SessionTimeout
+            K2700Sheet.Range(m_sessionTimeoutCell).Value = This.ViewModel.SessionTimeout
         Case "PauseRequested"
         Case "TimerInterval"
-            Range(m_timerIntervalCell).Value = This.ViewModel.TimerInterval
+            K2700Sheet.Range(m_timerIntervalCell).Value = This.ViewModel.TimerInterval
         Case "Connected"
-            Range(m_connectedCell).Value = This.ViewModel.Connected
-    
+            Me.Connected = This.ViewModel.Connected
         Case "ElapsedTime"
-            ' Range(m_elapsedTimeCell).Value = This.ViewModel.ElapsedTime
+            ' K2700Sheet.Range(m_elapsedTimeCell).Value = This.ViewModel.ElapsedTime
         Case "ElapsedTimeFormat"
-            Range(m_elapsedTimeFormatCell).Value = This.ViewModel.ElapsedTimeFormat
+            K2700Sheet.Range(m_elapsedTimeFormatCell).Value = This.ViewModel.ElapsedTimeFormat
         Case "ElapsedTimeCaption"
-            Range(m_elapsedTimeCell).Value = This.ViewModel.ElapsedTimeCaption
+            K2700Sheet.Range(m_elapsedTimeCell).Value = This.ViewModel.ElapsedTimeCaption
         
         Case "MessageToSend"
         Case "SentMessage"
-            Range(m_sentMessageCell).Value = This.ViewModel.SentMessage
+            K2700Sheet.Range(m_sentMessageCell).Value = This.ViewModel.SentMessage
         Case "ReceivedMessage"
-            Range(m_receivedMessageCell).Value = This.ViewModel.ReceivedMessage
+            K2700Sheet.Range(m_receivedMessageCell).Value = This.ViewModel.ReceivedMessage
         Case "ReceivedMessageLength"
-            Range(m_receivedMessageLengthCell).Value = This.ViewModel.ReceivedMessageLength
+            K2700Sheet.Range(m_receivedMessageLengthCell).Value = This.ViewModel.ReceivedMessageLength
         Case "ReadStatusAfterWriteEnabled"
             Me.ReadStatusAfterWriteCheckBox.Value = This.ViewModel.ReadStatusAfterWriteEnabled
         Case "LastErrorMessage"
-            Range(m_lastErrorMessageCell).Value = This.ViewModel.LastErrorMessage
+            K2700Sheet.Range(m_lastErrorMessageCell).Value = This.ViewModel.LastErrorMessage
         Case "LastMessage"
-            Range(m_lastMessageCell).Value = This.ViewModel.LastMessage
+            K2700Sheet.Range(m_lastMessageCell).Value = This.ViewModel.LastMessage
         Case "SerialPollByte"
-            Range(m_serialPollCell).Value = This.ViewModel.SerialPollByte
+            K2700Sheet.Range(m_serialPollCell).Value = This.ViewModel.SerialPollByte
         Case "StatusByte"
-            Range(m_statusByteCell).Value = This.ViewModel.StatusByte
+            K2700Sheet.Range(m_statusByteCell).Value = This.ViewModel.StatusByte
         Case "StandardByte"
-            Range(m_standardByteCell).Value = This.ViewModel.StandardByte
+            K2700Sheet.Range(m_standardByteCell).Value = This.ViewModel.StandardByte
         Case "ServiceRequested"
-            Range(m_srqCell).Value = This.ViewModel.ServiceRequested
+            K2700Sheet.Range(m_srqCell).Value = This.ViewModel.ServiceRequested
         Case "GpibAddress"
-            Range(m_gpibAddressCell).Value = This.ViewModel.GpibAddress
+            K2700Sheet.Range(m_gpibAddressCell).Value = This.ViewModel.GpibAddress
         Case "AutoAssertTalk"
-            Range(m_autoAssertTalkCell).Value = This.ViewModel.AutoAssertTalk
+            K2700Sheet.Range(m_autoAssertTalkCell).Value = This.ViewModel.AutoAssertTalk
         Case "GpibLanReadTimeout"
-            Range(m_autoAssertTalkCell).Value = This.ViewModel.GpibLanReadTimeout
+            K2700Sheet.Range(m_autoAssertTalkCell).Value = This.ViewModel.GpibLanReadTimeout
             
         Case "TopCard"
-            Range(m_card1Cell).Value = This.ViewModel.TopCard
+            K2700Sheet.Range(m_card1Cell).Value = This.ViewModel.TopCard
         Case "BottomCard"
-            Range(m_card2Cell).Value = This.ViewModel.BottomCard
+            K2700Sheet.Range(m_card2Cell).Value = This.ViewModel.BottomCard
         Case "TopCardFunctionScanList"
-            Range(m_card1ScanListCell).Value = This.ViewModel.TopCardFunctionScanList
+            K2700Sheet.Range(m_card1ScanListCell).Value = This.ViewModel.TopCardFunctionScanList
         Case "BottomCardFunctionScanList"
-            Range(m_card2ScanListCell).Value = This.ViewModel.BottomCardFunctionScanList
+            K2700Sheet.Range(m_card2ScanListCell).Value = This.ViewModel.BottomCardFunctionScanList
         Case "FrontInputsRequired"
-            Me.InputsCheckBox.Value = This.ViewModel.FrontInputsRequired
+            Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
         Case "FrontInputsValue"
         Case "FrontInputsCaption"
-            Range(m_inputsCell).Value = This.ViewModel.FrontInputsCaption
+            K2700Sheet.Range(m_inputsCell).Value = This.ViewModel.FrontInputsCaption
         Case "SelectedChannelNumber"
-            Range(m_channelNumberCell).Value = This.ViewModel.SelectedChannelNumber
+            K2700Sheet.Range(m_channelNumberCell).Value = This.ViewModel.SelectedChannelNumber
         Case "ChannelCount"
-            Range(m_channelCountCell).Value = This.ViewModel.ChannelCount
+            K2700Sheet.Range(m_channelCountCell).Value = This.ViewModel.ChannelCount
         Case "CurrentChannelNumber"
         Case "MeasuredChannelNumber"
+            Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
         Case "SenseFunctionName"
         Case "SenseFunctionCaption"
-            Range(m_functionNameCell).Value = This.ViewModel.SenseFunctionCaption
+            K2700Sheet.Range(m_functionNameCell).Value = This.ViewModel.SenseFunctionCaption
         Case "SenseFunctionUnit"
-            Range(m_functionUnitCell).Value = This.ViewModel.SenseFunctionUnit
+            K2700Sheet.Range(m_functionUnitCell).Value = This.ViewModel.SenseFunctionUnit
         Case "MeasuredReading"
-            Range(m_functionValueCell).Value = This.ViewModel.MeasuredReading
+            K2700Sheet.Range(m_functionValueCell).Value = This.ViewModel.MeasuredReading
         Case "MeasuredValueFormat"
-            Range(m_readingFormatCell).Value = This.ViewModel.MeasuredValueFormat
+            K2700Sheet.Range(m_readingFormatCell).Value = This.ViewModel.MeasuredValueFormat
         
         Case "MeasuredValue"
+            Me.MeasuredValue = This.ViewModel.MeasuredValue
         Case "ExternalTrigMonitoringEnabled"
-            Me.MonitorExtTrigToggleButton.Value = This.ViewModel.ExternalTrigMonitoringEnabled
-        Case "MonitoringState"
-            ' Range(m_readingFormatCell).Value = This.ViewModel.MonitoringState
+            Me.ExternalTrigMonitoringEnabled = This.ViewModel.ExternalTrigMonitoringEnabled
         Case "MeasuredValueFormat"
-            Range(m_readingFormatCell).Value = This.ViewModel.MeasuredValueFormat
+            K2700Sheet.Range(m_readingFormatCell).Value = This.ViewModel.MeasuredValueFormat
         Case "AutoIncrementChannelNoEnabled"
-            Me.AutoIncrementCheckBox.Value = This.ViewModel.AutoIncrementChannelNoEnabled
+            Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
         Case "SingleReadEnabled"
-            Me.SingleMultipleCheckBox.Value = This.ViewModel.SingleReadEnabled
+            Me.SingleReadEnabled = This.ViewModel.SingleReadEnabled
         Case "SenseFunctions"
             Me.PopulateFunctionComboBox
         Case "ScpiCommands"
@@ -1055,42 +1209,42 @@ Private Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
         Case "ExternalTriggerOptionSelected"
             ' Me.ExternalTriggerOptionButton.Value = This.ViewModel.ExternalTriggerOptionSelected
         Case "ReadingOffset"
-            Range(m_readingOffsetCell).Value = This.ViewModel.ReadingOffset
+            Me.ReadingOffset = This.ViewModel.ReadingOffset
         Case "MonitoringState"
-            Range(m_externalTriggerStatusCell).Value = This.ViewModel.MonitoringState
+            K2700Sheet.Range(m_monitoringStateCell).Value = This.ViewModel.MonitoringState
         
         Case "OpenConnectionExecutable"
+            Me.OpenConnectionButton.Enabled = This.ViewModel.OpenConnectionExecutable
         Case "CloseConnectionExecutable"
+            Me.CloseConnectionButton.Enabled = This.ViewModel.CloseConnectionExecutable
         Case "ToggleConnectionExecutable"
-            ConnectToggleButton.Enabled = This.ViewModel.ToggleConnectionExecutable
+            ' ConnectToggleButton.Enabled = This.ViewModel.ToggleConnectionExecutable
         Case "ResetKnownStateExecutable"
-            RSTButton.Enabled = This.ViewModel.ResetKnownStateExecutable
+            Me.RSTButton.Enabled = This.ViewModel.ResetKnownStateExecutable
         Case "ClearExecutionStateExecutable"
-            CLSButton.Enabled = This.ViewModel.ClearExecutionStateExecutable
+            Me.CLSButton.Enabled = This.ViewModel.ClearExecutionStateExecutable
         Case "QueryExecutable"
-            QueryButton.Enabled = This.ViewModel.QueryExecutable
+            Me.QueryButton.Enabled = This.ViewModel.QueryExecutable
         Case "ReadExecutable"
-            ReadButton.Enabled = This.ViewModel.ReadExecutable
+            Me.ReadButton.Enabled = This.ViewModel.ReadExecutable
         Case "ReadStatusByteExecutable"
-            ReadStatusByteButton.Enabled = This.ViewModel.ReadStatusByteExecutable
+            Me.ReadStatusByteButton.Enabled = This.ViewModel.ReadStatusByteExecutable
         Case "ReadStandardEventStatusExecutable"
-            ReadStandardEventStatusButton.Enabled = This.ViewModel.ReadStandardEventStatusExecutable
+            Me.ReadStandardEventStatusButton.Enabled = This.ViewModel.ReadStandardEventStatusExecutable
         Case "ReadStatusAfterWriteExecutable"
-            ReadStatusAfterWriteCheckBox.Enabled = This.ViewModel.ReadStandardEventStatusExecutable
+            Me.ReadStatusAfterWriteCheckBox.Enabled = This.ViewModel.ReadStandardEventStatusExecutable
         Case "WriteExecutable"
-            WriteButton.Enabled = This.ViewModel.WriteExecutable
+            Me.WriteButton.Enabled = This.ViewModel.WriteExecutable
         Case "QueryInputsExecutable"
-            QueryInputsButton.Enabled = This.ViewModel.QueryInputsExecutable
+            Me.QueryInputsButton.Enabled = This.ViewModel.QueryInputsExecutable
         Case "ClearReadingsExecutable"
             ClearReadingsButton.Enabled = This.ViewModel.ClearReadingsExecutable
         Case "MeasureExecutable"
             MeasureButton.Enabled = This.ViewModel.MeasureExecutable
         Case "StopMonitoringExecutable"
-            MonitorExtTrigToggleButton.Enabled = This.ViewModel.StopMonitoringExecutable Or _
-                This.ViewModel.StartMonitoringExecutable
+            StopMonitoringButton.Enabled = This.ViewModel.StopMonitoringExecutable
         Case "StartMonitoringExecutable"
-            MonitorExtTrigToggleButton.Enabled = This.ViewModel.StopMonitoringExecutable Or _
-                This.ViewModel.StartMonitoringExecutable
+            StartMonitoringButton.Enabled = This.ViewModel.StartMonitoringExecutable
         Case "ImmediateTriggerOptionExecutable"
             ImmediateTriggerOptionButton.Enabled = This.ViewModel.ImmediateTriggerOptionExecutable
         Case "ExternalTriggerOptionExecutable"
@@ -1210,89 +1364,87 @@ End Sub
 ''' <remarks> The check box change event also causes a click event.
 '''           This method issues the click event on actual click.
 '''              Note: Make sure to not implement the click event,
-Private Sub OnWorksheetChange(ByVal a_range As Range)
+Private Sub OnWorksheetChange(ByVal a_range As Excel.Range)
 
-    ' If Not Intersect(a_range, Me.Range("H5")) Is Nothing Then
+    ' If Not Intersect(a_range, Me.K2700Sheet.Range("H5")) Is Nothing Then
     ' this uses fewer resources than Intersect,
     ' which will be helpful if your worksheet changes a lot.
     Select Case a_range.Address
         
-        Case m_sessionTimeoutCell
-            This.ViewModel.SessionTimeout = Range(m_sessionTimeoutCell).Value
-        Case m_inputHostCell
-            This.ViewModel.SocketAddress = Range(m_inputHostCell).Value & ":" & _
-                Range(m_inputPortCell).Value
-        Case m_inputPortCell
-            This.ViewModel.SocketAddress = Range(m_inputHostCell).Value & ":" & _
-                Range(m_inputPortCell).Value
+        Case m_socketHostCell
+            This.ViewModel.SocketAddress = K2700Sheet.Range(m_socketHostCell).Value & ":" & _
+                K2700Sheet.Range(m_socketPortCell).Value
+        Case m_socketPortCell
+            This.ViewModel.SocketAddress = K2700Sheet.Range(m_socketHostCell).Value & ":" & _
+                K2700Sheet.Range(m_socketPortCell).Value
         Case m_socketAddressCell
-            This.ViewModel.SocketAddress = Range(m_socketAddressCell).Value
+            K2700Observer.SocketAddress = Me.SocketAddress
         Case m_socketIdCell
-            ' This.ViewModel.SocketId = Range(m_socketIdCell).Value
+            K2700Observer.SocketId = K2700Sheet.Range(m_socketIdCell).Value
         Case m_sessionTimeoutCell
-            This.ViewModel.SessionTimeout = Range(m_sessionTimeoutCell).Value
+            K2700Observer.SessionTimeout = Me.SessionTimeout
             
         Case m_connectedCell
             ' connected is read only
-            ' This.ViewModel.Connected = Range(m_connectedCell).Value
+            ' This.ViewModel.Connected = K2700Sheet.Range(m_connectedCell).Value
         Case m_sentMessageCell
-            This.ViewModel.SentMessage = Range(m_sentMessageCell).Value
+            This.ViewModel.SentMessage = K2700Sheet.Range(m_sentMessageCell).Value
         Case m_receivedMessageLengthCell
-            This.ViewModel.ReceivedMessageLength = Range(m_receivedMessageLengthCell).Value
+            This.ViewModel.ReceivedMessageLength = K2700Sheet.Range(m_receivedMessageLengthCell).Value
         Case m_receivedMessageCell
-            This.ViewModel.ReceivedMessage = Range(m_receivedMessageCell).Value
+            This.ViewModel.ReceivedMessage = K2700Sheet.Range(m_receivedMessageCell).Value
         Case m_elapsedTimeCell
-            This.ViewModel.ElapsedTimeCaption = Range(m_elapsedTimeCell).Value
+            This.ViewModel.ElapsedTimeCaption = K2700Sheet.Range(m_elapsedTimeCell).Value
         Case m_elapsedTimeFormatCell
-            This.ViewModel.ElapsedTimeFormat = Range(m_elapsedTimeFormatCell).Value
+            This.ViewModel.ElapsedTimeFormat = K2700Sheet.Range(m_elapsedTimeFormatCell).Value
         Case m_lastMessageCell
-            This.ViewModel.LastMessage = Range(m_lastMessageCell).Value
+            This.ViewModel.LastMessage = K2700Sheet.Range(m_lastMessageCell).Value
         Case m_lastErrorMessageCell
-            This.ViewModel.LastErrorMessage = Range(m_lastErrorMessageCell).Value
+            This.ViewModel.LastErrorMessage = K2700Sheet.Range(m_lastErrorMessageCell).Value
         Case m_serialPollCell
-            This.ViewModel.SerialPollByte = Range(m_serialPollCell).Value
+            This.ViewModel.SerialPollByte = K2700Sheet.Range(m_serialPollCell).Value
         Case m_statusByteCell
-            This.ViewModel.StatusByte = Range(m_statusByteCell).Value
+            This.ViewModel.StatusByte = K2700Sheet.Range(m_statusByteCell).Value
         Case m_standardByteCell
-            This.ViewModel.StandardByte = Range(m_standardByteCell).Value
+            This.ViewModel.StandardByte = K2700Sheet.Range(m_standardByteCell).Value
 
         Case m_srqCell
-            This.ViewModel.ServiceRequested = Range(m_srqCell).Value
+            This.ViewModel.ServiceRequested = K2700Sheet.Range(m_srqCell).Value
         Case m_gpibAddressCell
-            This.ViewModel.GpibAddress = Range(m_gpibAddressCell).Value
+            This.ViewModel.GpibAddress = K2700Sheet.Range(m_gpibAddressCell).Value
         Case m_readTimeoutCell
-            This.ViewModel.GpibLanReadTimeout = Range(m_readTimeoutCell).Value
+            This.ViewModel.GpibLanReadTimeout = K2700Sheet.Range(m_readTimeoutCell).Value
         Case m_autoAssertTalkCell
-            This.ViewModel.AutoAssertTalk = VBA.CBool(Range(m_autoAssertTalkCell).Value)
+            This.ViewModel.AutoAssertTalk = VBA.CBool(K2700Sheet.Range(m_autoAssertTalkCell).Value)
         Case m_timerIntervalCell
-            This.ViewModel.TimerInterval = Range(m_timerIntervalCell).Value
+            This.ViewModel.TimerInterval = K2700Sheet.Range(m_timerIntervalCell).Value
 
         Case m_readingFormatCell
-            This.ViewModel.MeasuredValueFormat = Range(m_readingFormatCell).Value
+            This.ViewModel.MeasuredValueFormat = K2700Sheet.Range(m_readingFormatCell).Value
         Case m_card1Cell
-            This.ViewModel.TopCard = Range(m_card1Cell).Value
+            This.ViewModel.TopCard = K2700Sheet.Range(m_card1Cell).Value
         Case m_card2Cell
-            This.ViewModel.TopCard = Range(m_card2Cell).Value
+            This.ViewModel.TopCard = K2700Sheet.Range(m_card2Cell).Value
         Case m_card1ScanListCell
-            This.ViewModel.TopCardFunctionScanList = Range(m_card1ScanListCell).Value
+            This.ViewModel.TopCardFunctionScanList = K2700Sheet.Range(m_card1ScanListCell).Value
         Case m_card2ScanListCell
-            This.ViewModel.BottomCardFunctionScanList = Range(m_card2ScanListCell).Value
+            This.ViewModel.BottomCardFunctionScanList = K2700Sheet.Range(m_card2ScanListCell).Value
         Case m_inputsCell
-            This.ViewModel.FrontInputsCaption = Range(m_inputsCell).Value
+            This.ViewModel.FrontInputsCaption = K2700Sheet.Range(m_inputsCell).Value
         Case m_channelNumberCell
-            This.ViewModel.SelectedChannelNumber = Range(m_channelNumberCell).Value
+            This.ViewModel.SelectedChannelNumber = K2700Sheet.Range(m_channelNumberCell).Value
         Case m_channelCountCell
-            This.ViewModel.ChannelCount = Range(m_channelCountCell).Value
+            This.ViewModel.ChannelCount = K2700Sheet.Range(m_channelCountCell).Value
         Case m_functionNameCell
-            This.ViewModel.SenseFunctionCaption = Range(m_functionNameCell).Value
+            This.ViewModel.SenseFunctionCaption = K2700Sheet.Range(m_functionNameCell).Value
         Case m_functionValueCell
-            This.ViewModel.MeasuredReading = Range(m_functionValueCell).Value
+            This.ViewModel.MeasuredReading = MeasuredReading
         Case m_functionUnitCell
-            This.ViewModel.SenseFunctionUnit = Range(m_functionUnitCell).Value
-        Case m_externalTriggerStatusCell
-            This.ViewModel.MonitoringState = Range(m_externalTriggerStatusCell).Value
+            This.ViewModel.SenseFunctionUnit = K2700Sheet.Range(m_functionUnitCell).Value
+        Case m_monitoringStateCell
+            This.ViewModel.MonitoringState = K2700Sheet.Range(m_monitoringStateCell).Value
         Case m_readingOffsetCell
-            This.ViewModel.ReadingOffset = Range(m_readingOffsetCell).Value
+            This.ViewModel.ReadingOffset = K2700Sheet.Range(m_readingOffsetCell).Value
 
     End Select
 
@@ -1303,7 +1455,7 @@ End Sub
 ''' <remarks> The check box change event also causes a click event.
 '''           This method issues the click event on actual click.
 '''              Note: Make sure to not implement the click event,
-Private Sub Worksheet_Change(ByVal a_range As Range)
+Private Sub Worksheet_Change(ByVal a_range As Excel.Range)
 
     OnWorksheetChange a_range
 

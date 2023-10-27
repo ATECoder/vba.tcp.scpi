@@ -20,6 +20,7 @@ Private Type this_
 
     ' Observer properties
     K2700Sheet As K2700Sheet
+    DesignMode As Boolean
         
     ' Initial User inputs
     SocketAddress As String
@@ -36,7 +37,6 @@ Private Type this_
     MeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
     Measuring As Boolean
     MaximumChannelNumber As Integer
-    
 
     ' Winsock properties
     Host As String
@@ -85,6 +85,14 @@ Private Type this_
     MeasuredValueFormat As String
     MeasuredValue As Double
     SenseFunctions As Collection
+    
+    MeasurementRow As Integer
+    MeasurementColumn As Integer
+    ChannelRow As Integer
+    ChannelColumn As Integer
+    ChannelCellValue As String
+    MeasurementCellValue As String
+    ChannelNumberCaptionPrefix As String
     
     ' service request monitoring timer control
     ExternalTrigMonitoringEnabled As Boolean
@@ -157,6 +165,7 @@ Private This As this_
 ''' <summary>   Handles the Class Initialize event. </summary>
 Private Sub Class_Initialize()
     This.TopCard = VBA.vbNullString
+    This.ChannelNumberCaptionPrefix = "R"
 End Sub
 
 ''' <summary>   Handles the Class Terminate event. </summary>
@@ -180,7 +189,7 @@ Friend Function Initialize(ByVal a_viewModel As K2700ViewModel) As K2700Observer
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Set This.K2700Sheet = DataSheet.Initialize()
+    Set This.K2700Sheet = K2700Sheet.Initialize()
     
     Set This.ViewModel = a_viewModel
     
@@ -282,6 +291,7 @@ End Property
 
 ''' <summary>   Handles the Toggle connection button click event. </summary>
 Public Sub OnConnect()
+
     If This.ToggleConnectionExecutable Then
         If This.OpenConnectionExecutable Then
             This.ViewModel.OpenConnectionCommand
@@ -340,10 +350,10 @@ End Sub
 ''' <summary>   Gets the execution (Can Execute) status of the Open Connection command. </summary>
 ''' <value>   [Boolean] true if the command is executable. </value>
 Public Property Get OpenConnectionExecutable() As Boolean
-    If This.DataAcquisitionSheet Is Nothing Then
+    If This.K2700Sheet Is Nothing Then
         OpenConnectionExecutable = This.OpenConnectionExecutable
     Else
-        OpenConnectionExecutable = This.DataAcquisitionSheet.OpenConnectionExecutable
+        OpenConnectionExecutable = This.K2700Sheet.OpenConnectionExecutable
     End If
 End Property
 
@@ -360,8 +370,8 @@ End Property
 Public Property Let OpenConnectionExecutable(ByVal a_value As Boolean)
     If Me.OpenConnectionExecutable <> a_value Then
         
-        If Not This.DataAcquisitionSheet Is Nothing Then _
-            This.DataAcquisitionSheet.OpenConnectionExecutable = a_value
+        If Not This.K2700Sheet Is Nothing Then _
+            This.K2700Sheet.OpenConnectionExecutable = a_value
         
         This.OpenConnectionExecutable = a_value
     
@@ -409,10 +419,10 @@ End Sub
 ''' <summary>   Gets the execution (Can Execute) status of the Close Connection command. </summary>
 ''' <value>   [Boolean] true if the command is executable. </value>
 Public Property Get CloseConnectionExecutable() As Boolean
-    If This.DataAcquisitionSheet Is Nothing Then
+    If This.K2700Sheet Is Nothing Then
         CloseConnectionExecutable = This.CloseConnectionExecutable
     Else
-        CloseConnectionExecutable = This.DataAcquisitionSheet.CloseConnectionExecutable
+        CloseConnectionExecutable = This.K2700Sheet.CloseConnectionExecutable
     End If
 End Property
 
@@ -421,8 +431,8 @@ End Property
 Public Property Let CloseConnectionExecutable(ByVal a_value As Boolean)
     If Me.CloseConnectionExecutable <> a_value Then
         
-        If Not This.DataAcquisitionSheet Is Nothing Then _
-            This.DataAcquisitionSheet.CloseConnectionExecutable = a_value
+        If Not This.K2700Sheet Is Nothing Then _
+            This.K2700Sheet.CloseConnectionExecutable = a_value
         
         This.CloseConnectionExecutable = a_value
     
@@ -430,9 +440,7 @@ Public Property Let CloseConnectionExecutable(ByVal a_value As Boolean)
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
 ' IEEE488 Control
-'
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 Public Sub OnClearExecutionState()
@@ -521,9 +529,7 @@ Public Sub OnWrite()
 End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
 ' GPIB-Lan Control
-'
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Handles the Go To Local button click event. </summary>
@@ -692,9 +698,7 @@ err_Handler:
 End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
-' Data Acquisitoon View
-'
+' Measurments View
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 Public Sub OnClearReadings()
@@ -707,17 +711,153 @@ Public Sub OnClearReadings()
     End If
 End Sub
 
+''' <summary>   Handles the Clear Messages Button Click Event. </summary>
+Public Sub OnClearMessages()
+    If Not This.ViewModel Is Nothing Then
+        This.ViewModel.LastErrorMessage = VBA.vbNullString
+        This.ViewModel.LastMessage = VBA.vbNullString
+    End If
+End Sub
+
+''' <summary>   Gets the Measurement Row. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get MeasurementRow() As Integer
+    MeasurementRow = This.MeasurementRow
+End Property
+
+''' <summary>   Sets the Measurement Row. </summary>
+''' <param name="a_value">   [Integer] the Measurement Row. </value>
+Public Property Let MeasurementRow(ByVal a_value As Integer)
+    If This.MeasurementRow <> a_value Then
+        This.MeasurementRow = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Measurement Column. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get MeasurementColumn() As Integer
+    MeasurementColumn = This.MeasurementColumn
+End Property
+
+''' <summary>   Sets the Measurement Column. </summary>
+''' <param name="a_value">   [Integer] the Measurement Column. </value>
+Public Property Let MeasurementColumn(ByVal a_value As Integer)
+    If This.MeasurementColumn <> a_value Then
+        This.MeasurementColumn = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Channel Row. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get ChannelRow() As Integer
+    ChannelRow = This.ChannelRow
+End Property
+
+''' <summary>   Sets the Channel Row. </summary>
+''' <param name="a_value">   [Integer] the Channel Row. </value>
+Public Property Let ChannelRow(ByVal a_value As Integer)
+    If This.ChannelRow <> a_value Then
+        This.ChannelRow = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Channel Column. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get ChannelColumn() As Integer
+    ChannelColumn = This.ChannelColumn
+End Property
+
+''' <summary>   Sets the Channel Column. </summary>
+''' <param name="a_value">   [Integer] the Channel Column. </value>
+Public Property Let ChannelColumn(ByVal a_value As Integer)
+    If This.ChannelColumn <> a_value Then
+        This.ChannelColumn = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Measurement Cell Value. </summary>
+''' <value>   [String]. </value>
+Public Property Get MeasurementCellValue() As String
+    If This.K2700Sheet Is Nothing Then
+        MeasurementCellValue = This.MeasurementCellValue
+    Else
+        MeasurementCellValue = This.K2700Sheet.Cells(Me.MeasurementRow, Me.MeasurementColumn).Value
+    End If
+End Property
+
+''' <summary>   Sets the Measurement Cell Value. </summary>
+''' <param name="a_value">   [String] the Measurement Cell Value. </value>
+Public Property Let MeasurementCellValue(ByVal a_value As String)
+    If Me.MeasurementCellValue <> a_value Then
+        This.MeasurementCellValue = a_value
+        
+        If Not This.K2700Sheet Is Nothing Then _
+            This.K2700Sheet.Cells(Me.MeasurementRow, Me.MeasurementColumn).Value = a_value
+    End If
+End Property
+        
+''' <summary>   Gets the channel cell Value. </summary>
+''' <value>   [String]. </value>
+Public Property Get ChannelCellValue() As String
+    If This.K2700Sheet Is Nothing Then
+        ChannelCellValue = This.ChannelCellValue
+    Else
+        ChannelCellValue = This.K2700Sheet.Cells(Me.ChannelRow, Me.ChannelColumn).Value
+    End If
+End Property
+
+''' <summary>   Sets the channel cell value. </summary>
+''' <param name="a_value">   [String] the channel cell value. </value>
+Public Property Let ChannelCellValue(ByVal a_value As String)
+    If Me.ChannelCellValue <> a_value Then
+        
+        This.ChannelCellValue = a_value
+        
+        If Not This.K2700Sheet Is Nothing Then _
+            This.K2700Sheet.Cells(Me.ChannelRow, Me.ChannelColumn).Value = a_value
+        
+    End If
+End Property
+
+''' <summary>   Sets the Channel display. </summary>
+''' <param name="a_channelNo">   [single] the channel number. </param>
+''' <param name="a_value">       [double] the value. </param>
+Public Sub SetReading(ByVal a_channelNo As Integer, ByVal a_value As Double)
+    If Not This.K2700Sheet Is Nothing Then _
+        SetReading_ a_channelNo, a_value, This.K2700Sheet.ByRow, This.K2700Sheet.DisplayIncrement
+End Sub
+
+''' <summary>   Sets the Channel display. </summary>
+''' <param name="a_channelNo">   [single] the channel number. </param>
+''' <param name="a_value">       [double] the value. </param>
+''' <param name="a_byRow">       [Boolean] true if the next reading goes to the next row. </param>
+''' <param name="a_increment">   [Integer] the row or column increment. </param>
+Private Sub SetReading_(ByVal a_channelNo As Integer, ByVal a_value As Double, _
+    ByVal a_byRow As Boolean, ByVal a_increment As Integer)
+
+    Me.MeasurementRow = IIf(a_byRow, This.K2700Sheet.MeasurementRow + a_increment * (a_channelNo - 1), _
+        This.K2700Sheet.MeasurementRow)
+    Me.MeasurementColumn = IIf(a_byRow, This.K2700Sheet.MeasurementCol, _
+        This.K2700Sheet.MeasurementCol + a_increment * (a_channelNo - 1))
+   
+    Me.ChannelRow = IIf(a_byRow, This.K2700Sheet.ChannelRow + a_increment * (a_channelNo - 1), _
+        This.K2700Sheet.ChannelRow)
+    Me.ChannelColumn = IIf(a_byRow, This.K2700Sheet.ChannelCol, _
+        This.K2700Sheet.ChannelCol + a_increment * (a_channelNo - 1))
+   
+    Me.ChannelCellValue = This.ChannelNumberCaptionPrefix & VBA.CStr(a_channelNo)
+    Me.MeasurementCellValue = VBA.CStr(a_value)
+    
+End Sub
+
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
 ' K2700 Control
-'
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Handles the external trigger option button change and click events. </summary>
-Public Sub OnExternalTriggerOptionChange(ByVal a_value As Boolean)
+''' <summary>   Handles the external trigger option click events. </summary>
+Public Sub OnExternalTriggerOption()
     If This.ExternalTriggerOptionExecutable Then
-        If a_value Then _
-            Me.LastCommandOutcome = This.ViewModel.ConfigureExternalTriggerReadingCommand(Me.LastCommandDetails)
+        Me.LastCommandOutcome = This.ViewModel.ConfigureExternalTriggerReadingCommand(Me.LastCommandDetails)
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".OnExternalTriggerOptionChange", _
@@ -726,14 +866,10 @@ Public Sub OnExternalTriggerOptionChange(ByVal a_value As Boolean)
 End Sub
 
 ''' <summary>   Configure immediate trigger mode and enables the read button. </summary>
-''' <remarks>   The check box change event also causes a click event.
-'''             This method issues the click event on actual click.
-'''             Note: Make sure to not implement the click event,
-Public Sub OnImmediateTriggerOptionChange(ByVal a_value As Boolean)
+Public Sub OnImmediateTriggerOption()
 
     If This.ImmediateTriggerOptionExecutable Then
-        If a_value Then _
-            Me.LastCommandOutcome = This.ViewModel.ConfigureImmediateTriggerReadingsCommand(Me.LastCommandDetails)
+        Me.LastCommandOutcome = This.ViewModel.ConfigureImmediateTriggerReadingsCommand(Me.LastCommandDetails)
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnImmediateTriggerOptionChange", _
@@ -752,6 +888,16 @@ Public Sub OnMeasure()
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnMeasure", _
             " Command not enabled."
     End If
+End Sub
+
+''' <summary>   Handles the start monitoring external trigger button click. </summary>
+Public Sub OnStartMonitorExtTrigButtonClick()
+    This.ViewModel.StartMonitoringExternalTriggersCommand
+End Sub
+
+''' <summary>   Handles the stop monitoring external trigger button click. </summary>
+Public Sub OnStopMonitorExtTrigButtonClick()
+    This.ViewModel.StopMonitoringExternalTriggersCommand
 End Sub
 
 ''' <summary>   Handles the external trigger toggle button. </summary>
@@ -1111,9 +1257,7 @@ Public Property Let GpibLanReadTimeout(ByVal a_value As Integer)
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
 ' K2700 properties
-'
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Gets the Top Card name. </summary>
@@ -1181,9 +1325,7 @@ Public Property Let BottomCardFunctionScanList(ByVal a_value As String)
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
 ' Data Acquisition properties
-'
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Gets the maximum Channel Number. </summary>
@@ -1716,9 +1858,15 @@ End Property
 ''' <param name="a_value">   [String] the last error message value. </value>
 Public Property Let LastErrorMessage(ByVal a_value As String)
     If This.LastErrorMessage <> a_value Then
+        
         This.LastErrorMessage = a_value
+        
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.LastErrorMessage = a_value
+            
+        If Not This.K2700Sheet Is Nothing Then _
+            This.K2700Sheet.LastErrorMessage = a_value
+            
     End If
 End Property
 
@@ -1733,8 +1881,13 @@ End Property
 Public Property Let LastMessage(ByVal a_value As String)
     If This.LastMessage <> a_value Then
         This.LastMessage = a_value
+        
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.LastMessage = a_value
+    
+        If Not This.K2700Sheet Is Nothing Then _
+            This.K2700Sheet.LastMessage = a_value
+            
     End If
 End Property
 
@@ -1836,9 +1989,7 @@ Public Property Get MessageToSendExecutable() As Boolean
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
 ' GPIB-Lan Executables
-'
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Gets the condition indicating that the Selective Device Clear command
@@ -1920,16 +2071,26 @@ Public Property Get GpibLanReadTimeoutSetExecutable() As Boolean
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
 ' K2700 Executables
-'
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Gets the condition indicating that the Clear Readings command
-'''              can be executed. </summary>
+''' <summary>   Gets the execution (Can Execute) status of the Clear Reading command. </summary>
 ''' <value>   [Boolean] True if the Clear Readings command can be executed. </value>
 Public Property Get ClearReadingsExecutable() As Boolean
-    ClearReadingsExecutable = This.ClearReadingsExecutable
+    If This.K2700Sheet.ClearReadingsButton Is Nothing Then
+        ClearReadingsExecutable = This.ClearReadingsExecutable
+    Else
+        ClearReadingsExecutable = This.K2700Sheet.ClearReadingsButton.Enabled
+    End If
+End Property
+
+''' <summary>   Sets the execution (Can Execute) status of the Clear Reading command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is executable. </param>
+Public Property Let ClearReadingsExecutable(ByVal a_value As Boolean)
+    If Not This.K2700Sheet.ClearReadingsButton Is Nothing Then
+        This.K2700Sheet.ClearReadingsButton.Enabled = a_value
+    End If
+    This.ClearReadingsExecutable = a_value
 End Property
 
 ''' <summary>   Gets the condition indicating that the Query Inputs command
@@ -2011,6 +2172,8 @@ Friend Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Chan
         End If
     End If
     Me.MeasuredValue = p_value
+    
+    Me.SetReading This.MeasuredChannelNumber, This.MeasuredValue
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -2149,6 +2312,8 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.ReadingOffset = This.ViewModel.ReadingOffset
         Case "MonitoringState"
             Me.MonitoringState = This.ViewModel.MonitoringState
+        Case "DesignMode"
+            Me.DesignMode = This.ViewModel.DesignMode
         
         Case "OpenConnectionExecutable"
             This.OpenConnectionExecutable = This.ViewModel.OpenConnectionExecutable
@@ -2225,9 +2390,17 @@ Friend Sub Synchronize()
 
     Const p_procedureName = "Synchronize"
 
-    ' set the view model settings that come from the Observer user interface
+    ' set the view model settings that come from the ViewModel user interface
+    
+    ' set user interface settings
+    Me.GpibLanControllerPort = This.K2700Sheet.GpibLanControllerPort
+    Me.GpibAddress = This.K2700Sheet.PrimaryGpibAddress
+    Me.MaximumChannelNumber = This.K2700Sheet.MaximumChannelNumber
+    Me.SocketAddress = This.K2700Sheet.SocketAddress
+    Me.SessionTimeout = This.K2700Sheet.SessionTimeout
+    Me.TimerInterval = This.K2700Sheet.TimerInterval
+    
     This.ViewModel.SocketAddress = This.SocketAddress
-    This.ViewModel.ReadingOffset = This.ReadingOffset
     This.ViewModel.GpibLanControllerPort = This.GpibLanControllerPort
     This.ViewModel.SessionTimeout = Me.SessionTimeout
     This.ViewModel.TimerInterval = Me.TimerInterval
@@ -2318,7 +2491,7 @@ End Sub
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Core.PropertyChangedEventArgs"/>] event arguments. </param>
 Friend Sub m_viewModel_PropertyChanged(ByVal a_eventArgs As cc_isr_Core.PropertyChangedEventArgs)
 
-    Const p_procedureName = "m_K2700ViewModel_PropertyChanged"
+    Const p_procedureName = "m_viewModel_PropertyChanged"
     
     ' Trap errors to the error handler
     On Error GoTo err_Handler
