@@ -19,8 +19,7 @@ Attribute m_viewModel.VB_VarHelpID = -1
 Private Type this_
 
     ' Observer properties
-    Initialized As Boolean
-    FocusedControlName As String
+    K2700Sheet As K2700Sheet
         
     ' Initial User inputs
     SocketAddress As String
@@ -150,11 +149,136 @@ End Type
 
 Private This As this_
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
+
+' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+' Construction and cleanup
+' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+''' <summary>   Handles the Class Initialize event. </summary>
+Private Sub Class_Initialize()
+    This.TopCard = VBA.vbNullString
+End Sub
+
+''' <summary>   Handles the Class Terminate event. </summary>
+Private Sub Class_Terminate()
+    Me.Dispose
+End Sub
+
+''' <summary>    Gets the Initialization condition of this object. </summary>
+''' <value>   [Boolean] True if initialized. </value>
+Public Property Get Initialized() As Boolean
+    Initialized = Not This.ViewModel Is Nothing
+End Property
+
+''' <summary>   Initialize this worksheet if not initialized. </summary>
+Friend Function Initialize(ByVal a_viewModel As K2700ViewModel) As K2700Observer
+
+    Const p_procedureName = "Initialize"
+
+    ' Error are trapped to prevent crashes because this method gets started when
+    ' the main workbook is activated.
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Set This.K2700Sheet = DataSheet.Initialize()
+    
+    Set This.ViewModel = a_viewModel
+    
+    Me.Synchronize
+    
+    ' set reference to the view model event handler.
+    
+    Set m_viewModel = a_viewModel
+    
+    Set Initialize = Me
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' display the error message
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Function
+
+''' <summary>   Dispose of the worksheet objects. </summary>
+Public Sub Dispose()
+
+    Const p_procedureName As String = "Dispose"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Set This.K2700Sheet = Nothing
+    
+    Set m_viewModel = Nothing
+    
+    Set This.ViewModel = Nothing
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' display the error message
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+    
+End Sub
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' User interface control
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Gets the design mode for unit testing and restoration of state. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get DesignMode() As Boolean
+    
+    If This.K2700Sheet Is Nothing Then
+        DesignMode = This.DesignMode
+    Else
+        DesignMode = This.K2700Sheet.DesignMode
+    End If
+
+End Property
+
+''' <summary>   Sets the design mode for unit testing and restoration of state. </summary>
+''' <param name="a_value">   [Boolean] true if in design mode. </param>
+Public Property Let DesignMode(ByVal a_value As Boolean)
+    If Me.DesignMode <> a_value Then
+        If Not This.K2700Sheet Is Nothing Then _
+            This.K2700Sheet.DesignMode = a_value
+        This.DesignMode = a_value
+    End If
+End Property
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 ' Winsock Control
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Handles the Toggle connection button click event. </summary>
 Public Sub OnConnect()
@@ -176,11 +300,140 @@ Public Sub OnConnect()
 
 End Sub
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+''' <summary>   Handles the Open Connection button Click event. </summary>
+Public Sub OnOpenConnectionButtonClick()
+
+    Const p_procedureName As String = "OnOpenConnectionButtonClick"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    If This.ViewModel Is Nothing Then Exit Sub
+
+    ' exit if already connected
+    If This.ViewModel.Connected Then Exit Sub
+        
+    This.ViewModel.OpenConnectionCommand
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' report the last error.
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+''' <summary>   Gets the execution (Can Execute) status of the Open Connection command. </summary>
+''' <value>   [Boolean] true if the command is executable. </value>
+Public Property Get OpenConnectionExecutable() As Boolean
+    If This.DataAcquisitionSheet Is Nothing Then
+        OpenConnectionExecutable = This.OpenConnectionExecutable
+    Else
+        OpenConnectionExecutable = This.DataAcquisitionSheet.OpenConnectionExecutable
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the toggle Connection command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Toggle Connection command can be executed. </value>
+Public Property Get ToggleConnectionExecutable() As Boolean
+    ToggleConnectionExecutable = This.OpenConnectionExecutable Or This.CloseConnectionExecutable
+End Property
+
+
+''' <summary>   Sets the execution (Can Execute) status of the Open Connection command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is executable. </param>
+Public Property Let OpenConnectionExecutable(ByVal a_value As Boolean)
+    If Me.OpenConnectionExecutable <> a_value Then
+        
+        If Not This.DataAcquisitionSheet Is Nothing Then _
+            This.DataAcquisitionSheet.OpenConnectionExecutable = a_value
+        
+        This.OpenConnectionExecutable = a_value
+    
+    End If
+End Property
+
+''' <summary>   Handles the Close Connection button Click event. </summary>
+Public Sub OnCloseConnectionButtonClick()
+
+    Const p_procedureName As String = "OnCloseConnectionButtonClick"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    If This.ViewModel Is Nothing Then Exit Sub
+
+    ' exit if already disconnected
+    If Not This.ViewModel.Connected Then Exit Sub
+        
+    This.ViewModel.CloseConnectionCommand
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' report the last error.
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+
+''' <summary>   Gets the execution (Can Execute) status of the Close Connection command. </summary>
+''' <value>   [Boolean] true if the command is executable. </value>
+Public Property Get CloseConnectionExecutable() As Boolean
+    If This.DataAcquisitionSheet Is Nothing Then
+        CloseConnectionExecutable = This.CloseConnectionExecutable
+    Else
+        CloseConnectionExecutable = This.DataAcquisitionSheet.CloseConnectionExecutable
+    End If
+End Property
+
+''' <summary>   Sets the execution (Can Execute) status of the Close Connection command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is executable. </param>
+Public Property Let CloseConnectionExecutable(ByVal a_value As Boolean)
+    If Me.CloseConnectionExecutable <> a_value Then
+        
+        If Not This.DataAcquisitionSheet Is Nothing Then _
+            This.DataAcquisitionSheet.CloseConnectionExecutable = a_value
+        
+        This.CloseConnectionExecutable = a_value
+    
+    End If
+End Property
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' IEEE488 Control
 '
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 Public Sub OnClearExecutionState()
     If This.ClearExecutionStateExecutable Then
@@ -267,11 +520,11 @@ Public Sub OnWrite()
     
 End Sub
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' GPIB-Lan Control
 '
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Handles the Go To Local button click event. </summary>
 Public Sub OnGoToLocal()
@@ -403,11 +656,46 @@ Public Sub OnSRQ()
 
 End Sub
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+''' <summary>   Handles the power on reset button click event. </summary>
+Public Sub OnPowerOneResetButtonClick()
+
+    Const p_procedureName As String = "OnPowerOneResetButtonClick"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    If This.ViewModel Is Nothing Then Exit Sub
+
+    ' issue a power on reset.
+    This.ViewModel.PowerOnResetCommand
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' report the last error.
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Sub
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
-' Data Acquisition View
+' Data Acquisitoon View
 '
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 Public Sub OnClearReadings()
     If This.ClearReadingsExecutable Then
@@ -419,11 +707,11 @@ Public Sub OnClearReadings()
     End If
 End Sub
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' K2700 Control
 '
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Handles the external trigger option button change and click events. </summary>
 Public Sub OnExternalTriggerOptionChange(ByVal a_value As Boolean)
@@ -490,11 +778,11 @@ Public Sub OnQueryInputs()
     End If
 End Sub
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' Winsock properties
 '
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Gets the INET Address dotted IP Address. </summary>
 ''' <value>   [String]. </value>
@@ -584,11 +872,11 @@ Public Property Let SessionTimeout(ByVal a_value As Integer)
     End If
 End Property
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' IEEE 488 properties
 '
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Gets the Message to Sent. </summary>
 ''' <value>   [String]. </value>
@@ -718,11 +1006,11 @@ Public Property Let ScpiCommands(ByVal a_value As Collection)
     End If
 End Property
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' GPIB-Lan properties
 '
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Gets the Serial Poll Byte. </summary>
 ''' <value>   [Integer]. </value>
@@ -822,11 +1110,11 @@ Public Property Let GpibLanReadTimeout(ByVal a_value As Integer)
     End If
 End Property
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' K2700 properties
 '
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Gets the Top Card name. </summary>
 ''' <value>   [String]. </value>
@@ -892,11 +1180,11 @@ Public Property Let BottomCardFunctionScanList(ByVal a_value As String)
     End If
 End Property
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' Data Acquisition properties
 '
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Gets the maximum Channel Number. </summary>
 ''' <value>   [Integer]. </value>
@@ -1266,7 +1554,7 @@ End Property
 
 ''' <summary>   Gets the External Trig Monitoring Enabled condition. </summary>
 ''' <remarks>   When true, a Stop request is sent to the timer so that the timer
-'''             event is not handled and the timer is Stopped on the next event. </remarks>
+'''             event is not handled and the timer is Stopd on the next event. </remarks>
 ''' <value>   [Boolean]. </value>
 Public Property Get ExternalTrigMonitoringEnabled() As Boolean
     ExternalTrigMonitoringEnabled = This.ExternalTrigMonitoringEnabled
@@ -1316,11 +1604,11 @@ Public Property Let SingleReadEnabled(ByVal a_value As Boolean)
     End If
 End Property
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' View Model Settings
 '
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Gets the Pause Requested condition. </summary>
 ''' <remarks>   When true, a pause request is sent to the timer so that the timer
@@ -1340,7 +1628,7 @@ End Property
 
 ''' <summary>   Gets the Stop Requested condition. </summary>
 ''' <remarks>   When true, a Stop request is sent to the timer so that the timer
-'''             event is not handled and the timer is Stopped on the next event. </remarks>
+'''             event is not handled and the timer is Stopd on the next event. </remarks>
 ''' <value>   [Boolean]. </value>
 Public Property Get StopRequested() As Boolean
     StopRequested = This.StopRequested
@@ -1478,38 +1766,11 @@ Public Property Let LastCommandOutcome(ByVal a_value As Boolean)
     End If
 End Property
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
-' View Model Observable executables
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
-''' <summary>   Gets the condition indicating that the Open Connection command
-'''             can be executed. </summary>
-''' <value>   [Boolean] True if the Open Connection command can be executed. </value>
-Public Property Get OpenConnectionExecutable() As Boolean
-    OpenConnectionExecutable = This.OpenConnectionExecutable
-End Property
-
-''' <summary>   Gets the condition indicating that the Close Connection command
-'''             can be executed. </summary>
-''' <value>   [Boolean] True if the Close Connection command can be executed. </value>
-Public Property Get CloseConnectionExecutable() As Boolean
-    CloseConnectionExecutable = This.CloseConnectionExecutable
-End Property
-
-''' <summary>   Gets the condition indicating that the toggle Connection command
-'''             can be executed. </summary>
-''' <value>   [Boolean] True if the Toggle Connection command can be executed. </value>
-Public Property Get ToggleConnectionExecutable() As Boolean
-    ToggleConnectionExecutable = This.OpenConnectionExecutable Or This.CloseConnectionExecutable
-End Property
-
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' IEEE488 Executables
 '
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Gets the condition indicating that the Reset Known State command
 '''             can be executed. </summary>
@@ -1574,11 +1835,11 @@ Public Property Get MessageToSendExecutable() As Boolean
     MessageToSendExecutable = This.MessageToSendExecutable
 End Property
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' GPIB-Lan Executables
 '
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Gets the condition indicating that the Selective Device Clear command
 '''             can be executed. </summary>
@@ -1609,9 +1870,9 @@ Public Property Get AutoAssertTalkGetExecutable() As Boolean
     AutoAssertTalkGetExecutable = This.AutoAssertTalkGetExecutable
 End Property
 
-''' <summary>   Gets the condition indicating that the Auto Asset TALK Set Command
+''' <summary>   Gets the condition indicating that the Auto Asset TALK Setcommand
 '''             can be executed. </summary>
-''' <value>   [Boolean] True if the Auto Asset TALK Set Command can be executed. </value>
+''' <value>   [Boolean] True if the Auto Asset TALK Setcommand can be executed. </value>
 Public Property Get AutoAssertTalkSetExecutable() As Boolean
     AutoAssertTalkSetExecutable = This.AutoAssertTalkSetExecutable
 End Property
@@ -1658,11 +1919,11 @@ Public Property Get GpibLanReadTimeoutSetExecutable() As Boolean
     GpibLanReadTimeoutSetExecutable = This.GpibLanReadTimeoutSetExecutable
 End Property
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' K2700 Executables
 '
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Gets the condition indicating that the Clear Readings command
 '''              can be executed. </summary>
@@ -1764,7 +2025,8 @@ err_Handler:
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
     
     ' display the error message
-    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1772,7 +2034,7 @@ err_Handler:
     
 End Sub
 
-''' <summary>   Handles the property change event of the view model. </summary>
+''' <summary>   Handles the property change event of the viwe model. </summary>
 ''' <param name="a_propertyName">   [String] the property name. </param>
 Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
 
@@ -1954,10 +2216,10 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
     
 End Sub
 
-''' <summary>   Synchronizes the view model with the Observer. </summary>
-''' <remarks>   This is required because the view (observer) that is planned for this
+''' <summary>   Synchronizes the view mode with the Observer. </summary>
+''' <remarks>   This is required becuase the view (observer) that is planned for this
 ''' view model is a Sheet, which is a singleton class whereas the view model is a
-''' non-singleton class. As a result, the observer retains values from previous
+''' non-singleton class. As a resule, the observer retains values from previous
 ''' instances of the View Model. </remarks>
 Friend Sub Synchronize()
 
@@ -2052,7 +2314,7 @@ Friend Sub Synchronize()
     
 End Sub
 
-''' <summary>   Handles the property change event of the view model. </summary>
+''' <summary>   Handles the property change event of the viwe model. </summary>
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Core.PropertyChangedEventArgs"/>] event arguments. </param>
 Friend Sub m_viewModel_PropertyChanged(ByVal a_eventArgs As cc_isr_Core.PropertyChangedEventArgs)
 
@@ -2086,7 +2348,8 @@ err_Handler:
     Err.Description = Err.Description & ". Property name: '" & p_propertyName & "'."
     
     ' display the error message
-    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -2094,90 +2357,3 @@ err_Handler:
     
 End Sub
 
-' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-' Construction and cleanup
-' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-''' <summary>   Handles the Class Initialize event. </summary>
-Private Sub Class_Initialize()
-    This.TopCard = VBA.vbNullString
-End Sub
-
-''' <summary>   Initialize this worksheet if not initialized. </summary>
-Friend Function Initialize(ByVal a_viewModel As K2700ViewModel) As K2700Observer
-
-    Const p_procedureName = "Initialize"
-
-    ' Error are trapped to prevent crashes because this method gets started when
-    ' the main workbook is activated.
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Set This.ViewModel = a_viewModel
-    
-    Me.Synchronize
-    
-    ' set reference to the view model event handler.
-    
-    Set m_viewModel = a_viewModel
-    
-    If Not This.Initialized Then
-    End If
-    
-    This.Initialized = True
-        
-    Set Initialize = Me
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Function
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-    
-    ' display the error message
-    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Function
-
-''' <summary>   Dispose of the worksheet objects. </summary>
-Public Sub Dispose()
-
-    Const p_procedureName As String = "Dispose"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Set m_viewModel = Nothing
-    
-    Set This.ViewModel = Nothing
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-    
-    ' display the error message
-    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-    
-End Sub

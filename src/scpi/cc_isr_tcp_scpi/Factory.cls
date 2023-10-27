@@ -27,6 +27,13 @@ Public Property Get NewChannelReadingEventArgs() As ChannelReadingEventArgs
     Set NewChannelReadingEventArgs = New ChannelReadingEventArgs
 End Property
 
+''' <summary>   Instantiates the <see cref="K2700ViewModel"/> object. </summary>
+''' <returns>   [<see cref="K2700ViewModel"/>]. </returns>
+Public Function NewK2700ViewModel() As K2700ViewModel
+    Set NewK2700ViewModel = New K2700ViewModel
+End Function
+
+
 ''' <summary>   Instantiates the <see cref="ScpiSystem"/> object. </summary>
 ''' <returns>   [<see cref="ScpiSystem"/>]. </returns>
 Public Function NewScpiSystem() As ScpiSystem
@@ -37,12 +44,6 @@ End Function
 ''' <returns>   [<see cref="RouteSystem"/>]. </returns>
 Public Function NewRouteSystem() As RouteSystem
     Set NewRouteSystem = New RouteSystem
-End Function
-
-''' <summary>   Instantiates the <see cref="K2700ViewModel"/> object. </summary>
-''' <returns>   [<see cref="K2700ViewModel"/>]. </returns>
-Public Function NewK2700ViewModel() As K2700ViewModel
-    Set NewK2700ViewModel = New K2700ViewModel
 End Function
 
 ''' <summary>   Instantiates a new <see cref="StateChangedEventArgs"/> object. </summary>

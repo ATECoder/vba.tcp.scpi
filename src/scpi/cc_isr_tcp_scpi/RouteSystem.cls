@@ -18,6 +18,7 @@ Private Type this_
     InstrumentFamilyCards As Collection
     InstalledCards As Collection
     ChannelCount As Integer
+    ScanListsFunction As String
 End Type
 
 Private This As this_
@@ -167,16 +168,28 @@ Public Function Read7700Cards(ByVal a_deviceOptions As String) As Integer
     
 End Function
 
+''' <summary>   Gets the scan list function as defined in <see cref="DefineFunctionScanLists"/>. </summary>
+''' <value>   [String]. </value>
+Public Property Get ScanListFunction() As String
+    ScanListFunction = This.ScanListsFunction
+End Property
+
 ''' <summary>   Sets the complete scan lists for measurements on all cards. </summary>
 ''' <param name="a_function">    The measurement function. </param>
 Public Sub DefineFunctionScanLists(ByVal a_function As String)
 
-    Me.BuildFunctionScanLists a_function
+    If VBA.Len(a_function) > 0 And a_function <> This.ScanListsFunction Then
     
-    Dim p_multiplexerCard As MultiplexerCard
-    For Each p_multiplexerCard In Me.InstalledCards
-        This.Session.WriteLine p_multiplexerCard.FunctionScanList
-    Next
+        Me.BuildFunctionScanLists a_function
+        
+        Dim p_multiplexerCard As MultiplexerCard
+        For Each p_multiplexerCard In Me.InstalledCards
+            This.Session.WriteLine p_multiplexerCard.FunctionScanList
+        Next
+    
+        This.ScanListsFunction = a_function
+    
+    End If
 
 End Sub
 

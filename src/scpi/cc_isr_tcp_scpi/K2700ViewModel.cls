@@ -5,7 +5,7 @@ END
 Attribute VB_Name = "K2700ViewModel"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
-Attribute VB_PredeclaredId = True
+Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ''' <summary>   A public creatable singleton View Model for the
@@ -4018,8 +4018,17 @@ Public Function TryConfigureImmediateTriggerReadings(ByRef a_details As String) 
     
     If p_success Then
     
+        ' set the sense function for the immeidate trigger measurement mode.
         Me.SenseFunctionName = This.ImmediateSenseFunctionName
-        
+    
+        ' set the instrument function scan list; this updates only if the
+        ' function changed.
+        This.K2700.RouteSystem.DefineFunctionScanLists This.SenseFunctionName
+    
+        ' show the results.
+        Me.TopCardFunctionScanList = This.K2700.RouteSystem.FunctionScanList(1)
+        Me.BottomCardFunctionScanList = This.K2700.RouteSystem.FunctionScanList(2)
+    
         ' configure measuring a single value on each read.
         p_success = This.K2700.TryConfigureSingleFunctionReading(This.SenseFunctionName, p_details)
         

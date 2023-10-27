@@ -98,15 +98,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 1
     RunTest 2
-    RunTest 3
-    RunTest 4
-    RunTest 5
-    RunTest 6
-    RunTest 7
-    RunTest 8
-    RunTest 9
     AfterAll
 End Sub
 
@@ -666,7 +658,7 @@ Public Function AssertExternalTriggerModeShouldStart(ByVal a_assert As cc_isr_Te
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
             This.DataView.MeasurementMode, _
-            "Data acquisirtion view measurement mode should equal expected value for external trigger reading mode.")
+            "Data acquisition view measurement mode should equal expected value for external trigger reading mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -784,7 +776,7 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_assert As cc_isr
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.PauseRequested, _
-            "Pause requested should be on in external trigger reading mode before monitroing started.")
+            "Pause requested should be on in external trigger reading mode before monitoring started.")
     
     If p_outcome.AssertSuccessful Then
         
@@ -844,7 +836,7 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_assert As cc_isr
     If p_outcome.AssertSuccessful Then
         If This.UserView.SingleReadEnabled Then
             Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.ManualSingleToggleExecutable, _
-                "User View manual single button should be enabled in external trigger single-eading mode.")
+                "User View manual single button should be enabled in external trigger single-reading mode.")
         Else
             Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualSingleToggleExecutable, _
                 "User View manual single button should be disabled in external trigger multi-reading mode.")
@@ -1049,7 +1041,7 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_assert As cc_isr_Test_
     If p_outcome.AssertSuccessful Then
         
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.Observer.MeasureExecutable, _
-            "Observer Measure button should be ensabled in immediate mode.")
+            "Observer Measure button should be enabled in immediate mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1477,7 +1469,7 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test
     
     If p_outcome.AssertSuccessful And This.ViewModel.TimerControlled Then
     
-        ' the external trigger is initiated immediated when the timer is started in timer control
+        ' the external trigger is initiated immediate when the timer is started in timer control
         
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.K2700.ExtTrigInitiated, _
             "External trigger should get initiated after starting the monitoring timer.")
@@ -1598,7 +1590,7 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test
     
     If p_outcome.AssertSuccessful Then
     
-        ' testing trigger montoring uses auto increment to detect changes
+        ' testing trigger monitoring uses auto increment to detect changes
         ' in channel number as readings are triggered.
         
         Dim p_autoIncrementChannelNumber As Boolean: p_autoIncrementChannelNumber = True
@@ -1651,9 +1643,9 @@ Public Function AssertMeasurementsShouldGetTriggered(ByVal a_assert As cc_isr_Te
 
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
     
-    ' Auto increment (mupltiple readings) is used in triggered measurement tests in which
+    ' Auto increment (multiple readings) is used in triggered measurement tests in which
     ' case, the target channel number is measured. Following each reading, the target channel
-    ' number is incremented in a circular fasion.
+    ' number is incremented in a circular fashion.
     
     ' get the first channel number
     Dim p_channel As Integer
@@ -1742,7 +1734,7 @@ Public Function AssertMonitoringModeShouldStop(ByVal a_assert As cc_isr_Test_Fx.
     
     If p_outcome.AssertSuccessful Then
     
-        ' monitoring might have been stopped alsready.
+        ' monitoring might have been stopped already.
         
         If This.ViewModel.MeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring Then
         
@@ -1995,7 +1987,7 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(UserSheet.InitialResistance, This.ViewModel.ReadingOffset, _
-            "View Model 'Readin gOffset' setting should equal user sheet value.")
+            "View Model 'Reading Offset' setting should equal user sheet value.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(DataSheet.GpibLanControllerPort, This.ViewModel.GpibLanControllerPort, _
@@ -2188,12 +2180,12 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(UserView.ReadingOffset, This.ViewModel.ReadingOffset, _
             "View Model and User View 'Reading Offset' should equal.")
 
-    ' check how measurment mode changes the values
+    ' check how measurement mode changes the values
     
     If p_outcome.AssertSuccessful Then
         'On Error Resume Next
         ' get into design mode.
-        ' these cause error 91 althow these work form the
+        ' these cause error 91 although these work from the
         ' immediate window.
         ' CommandBars("Exit Design Mode").Controls(1).Execute
         'If CommandBars.GetEnabledMso("DesignMode") Then _
@@ -2565,7 +2557,7 @@ Public Function AssertUserInterfaceState(ByVal a_outcome As cc_isr_Test_Fx.Asser
                 
                     If p_outcome.AssertSuccessful Then _
                         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.UserView.ManualScanToggleValue, _
-                            "User view Manual Scan Toggle should be released (falsoe) where " & _
+                            "User view Manual Scan Toggle should be released (false) where " & _
                             "Measurement Mode is Immediate, Multi-Read, and Measuring.")
                 
                     If p_outcome.AssertSuccessful Then _
@@ -2878,7 +2870,7 @@ Public Function TestShouldBeConnected() As cc_isr_Test_Fx.Assert
         
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.StopMonitoringExecutable, _
-            "Stop monitoning command should be disabled upon connection.")
+            "Stop monitoring command should be disabled upon connection.")
         
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.AutoScanToggleExecutable, _
@@ -3111,7 +3103,7 @@ Public Function TestInitialStateShouldRestore() As cc_isr_Test_Fx.Assert
     ' check if we need to restore the GPIB-Lan initial state.
     If p_outcome.AssertSuccessful Then
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.ShouldRestoreInitialState(p_details), _
-            "The View Model should not require restoration to inital state after connecting; " & p_details)
+            "The View Model should not require restoration to initial state after connecting; " & p_details)
     End If
 
     Dim p_expectedSenseFunctionName As String: p_expectedSenseFunctionName = "VOLT:DC"
@@ -3136,7 +3128,7 @@ Public Function TestInitialStateShouldRestore() As cc_isr_Test_Fx.Assert
             
     End If
     
-    ' now that the function was changed, a resore should be required
+    ' now that the function was changed, a restore should be required
     If p_outcome.AssertSuccessful Then
     
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.ShouldRestoreSenseFunction(p_actualSenseFunctionName, _
@@ -3878,7 +3870,7 @@ err_Handler:
 End Function
 
 
-''' <summary>   Unit test. Asserts that view model should polltriggering. </summary>
+''' <summary>   Unit test. Asserts that view model should poll triggering. </summary>
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
@@ -4204,7 +4196,7 @@ Public Function TestUserViewShouldMeasureImmediately() As cc_isr_Test_Fx.Assert
     
     If p_outcome.AssertSuccessful Then
         
-        ' clear the Data View measured channel number so that we can detected a measurment.
+        ' clear the Data View measured channel number so that we can detected a measurement.
         This.DataView.MeasuredChannelNumber = -1
         
         ' depress the User View, this should start the
@@ -4382,7 +4374,7 @@ Public Function AssetUserViewShouldMonitor(ByVal a_assert As cc_isr_Test_Fx.Asse
     
     If p_outcome.AssertSuccessful Then
         
-        ' clear the Data View measured channel number so that we can detected a measurment.
+        ' clear the Data View measured channel number so that we can detected a measurement.
         This.DataView.MeasuredChannelNumber = -1
     
         ' depress the manual scan toggle; this will also configure the external triggering

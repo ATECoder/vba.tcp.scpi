@@ -9,7 +9,7 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
 Option Explicit
 
-Private Const m_sessionReadTimeoutCell As String = "B1"
+Private Const m_sessionTimeoutCell As String = "B1"
 Private Const m_inputHostCell As String = "B2"
 Private Const m_inputPortCell As String = "B3"
 Private Const m_socketAddressCell As String = "C2"
@@ -23,7 +23,6 @@ Private Const m_elapsedTimeFormatCell As String = "L3"
 Private Const m_elapsedTimeFormat As String = "0.0"
 Private Const m_lastMessageCell As String = "B4"
 Private Const m_lastErrorMessageCell As String = "B33"
-Private Const m_socketReceiveTimeoutCell As String = "A14"
 
 Private Const m_serialPollCell As String = "E11"
 Private Const m_statusByteCell As String = "F11"
@@ -32,7 +31,7 @@ Private Const m_standardByteCell As String = "H11"
 Private Const m_srqCell As String = "C10"
 Private Const m_gpibAddressCell As String = "C12"
 Private Const m_readTimeoutCell As String = "C15"
-Private Const m_readAfterWriteEnabledCell As String = "C18"
+Private Const m_autoAssertTalkCell As String = "C18"
 
 Private Const m_readingFormatCell As String = "C21"
 Private Const m_timerIntervalCell As String = "C22"
@@ -60,39 +59,102 @@ Private Type this_
     Initialized As Boolean
     ViewModel As cc_isr_Tcp_Scpi.K2700ViewModel
     FocusedControlName As String
+    DesignMode As Boolean
 End Type
 
 Private This As this_
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' Construction and cleanup
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Initializes and returns an instance of this object. </summary>
+Public Function Initialize() As K2700Sheet
+    
+    Set Initialize = Me
+
+End Function
+
+''' <summary>   Initializes the views. </summary>
+Private Sub InitializeViews()
+
+    If Not K2700Observer.Initialized Then
+    
+        Dim p_viewModel As cc_isr_Tcp_Scpi.K2700ViewModel
+        
+        Set p_viewModel = cc_isr_Tcp_Scpi.Factory.NewK2700ViewModel
+        
+        ' initialize the views before initializing the view model
+        ' the view model gets initialized upon connecting.
+        DataView.Initialize p_viewModel
+        UserView.Initialize p_viewModel
+    
+    End If
+    
+    UserView.AutoSampleFrontInputs = Me.FrontAutoScanCheckBox.Value
+
+End Sub
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' Winsock Settings
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Gets or sets the socket address. </summary>
+''' <value>   [String]. </value
+Public Property Get SocketAddress() As String
+    SocketAddress = VBA.CStr(Range(m_socketAddressCell).Value)
+End Property
+
+Public Property Let SocketAddress(ByVal a_value As String)
+    Range(m_socketAddressCell).Value = a_value
+End Property
+
+''' <summary>   Gets or sets the session timeout. </summary>
+''' <value>   [Long]. </value>
+Public Property Get SessionTimeout() As Long
+    SessionTimeout = VBA.CLng(Range(m_sessionTimeoutCell).Value)
+End Property
+
+Public Property Let SessionTimeout(ByVal a_value As Long)
+    Range(m_sessionTimeoutCell).Value = a_value
+End Property
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 ' Winsock Control
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Handles the Toggle connection button click event. </summary>
 Friend Sub ConnectToggleButton_Click()
 
     If This.ViewModel Is Nothing Then
     
-        ' assign the view model.
-        Set This.ViewModel = cc_isr_Tcp_Scpi.K2700ViewModel.Initialize()
+        Set This.ViewModel = cc_isr_Tcp_Scpi.Factory.NewK2700ViewModel
         
-        ' set focus to the last message cell to clear all focus info
-        Range(m_lastMessageCell).Select
-    
+        ' initialize the observer before initializing the view mode
+        ' but after the observer setting are set. The observer initial
+        ' settings are then applied to the view model.
+        Set This.Observer = K2700Observer.Initialize(This.ViewModel)
+        
     End If
     
+    ' issue the open connection command. This initializes the view model.
+    This.ViewModel.OpenConnectionCommand
+
+
     If ConnectToggleButton.Value And This.ViewModel.CanConnect Then
     
+        ' the view mode is initialized when connected.
         This.ViewModel.OpenConnectionCommand
     
-    ElseIf Not ConnectToggleButton.Value And This.ViewModel.Connected Then
+    ElseIf Not ConnectToggleButton.Value Then
     
-        This.ViewModel.CloseConnectionCommand
+        If Not This.ViewModel Is Nothing Then
+            If This.ViewModel.Connected Then _
+                This.ViewModel.CloseConnectionCommand
+            This.ViewModel.Dispose
+        End If
     
     End If
-    
     
 End Sub
 
@@ -104,12 +166,9 @@ Private Sub ConnectToggleButton_LostFocus()
     This.FocusedControlName = VBA.vbNullString
 End Sub
 
-
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 ' IEEE488 Control
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 Private Sub CLSButton_Click()
     
@@ -296,11 +355,23 @@ Private Sub WriteButton_Click()
     
 End Sub
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' GPIB-Lan Settings
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Gets or sets the primary Gpib Address. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get PrimaryGpibAddress() As Integer
+    TimerInterval = VBA.CInt(Range(m_gpibAddressCell).Value)
+End Property
+
+Public Property Let PrimaryGpibAddress(ByVal a_value As Integer)
+    Range(m_gpibAddressCell).Value = a_value
+End Property
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 ' GPIB-Lan Control
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Handles the Go To Local button click event. </summary>
 Private Sub GoToLocalButton_Click()
@@ -379,11 +450,23 @@ Private Sub SRQButton_Click()
 
 End Sub
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' K2700 Settings
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary> Get or sets the timer interval. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get TimerInterval() As Integer
+    TimerInterval = VBA.CInt(Range(m_timerIntervalCell).Value)
+End Property
+
+Public Property Let TimerInterval(ByVal a_value As Integer)
+    Range(m_timerIntervalCell).Value = a_value
+End Property
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 ' K2700 Control
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 Private Sub AutoIncrementCheckBox_GotFocus()
     This.FocusedControlName = Me.AutoIncrementCheckBox.Name
@@ -803,11 +886,11 @@ err_Handler:
     
 End Sub
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' View Model Events
 '
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Sets the measurement display. </summary>
 ''' <param name="a_channelNo">   [single] the channel number. </param>
@@ -861,16 +944,6 @@ err_Handler:
     
 End Sub
 
-''' <summary>   Handles the <see cref="cc_isr_Tcp_Scpi.Demo.K2700ViewModel.ConnectionChanged"/> event. </summary>
-''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/>] event arguments. </param>
-Private Sub m_viewModel_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
-End Sub
-
-''' <summary>   Handles the <see cref="cc_isr_Tcp_Scpi.Demo.K2700ViewModel.ConnectionChanging"/> event. </summary>
-''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangingEventArgs"/>] event arguments. </param>
-Private Sub m_ViewModel_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
-End Sub
-
 ''' <summary>   Handles the property change event of the viwe model. </summary>
 ''' <param name="a_propertyName">   [String] the property name. </param>
 Private Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
@@ -888,9 +961,7 @@ Private Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
         Case "SocketId"
             Range(m_socketIdCell).Value = This.ViewModel.SocketId
         Case "SessionTimeout"
-            Range(m_socketReceiveTimeoutCell).Value = This.ViewModel.SessionTimeout
-        Case "SessionReadTimeout"
-            Range(m_sessionReadTimeoutCell).Value = This.ViewModel.SessionTimeout
+            Range(m_sessionTimeoutCell).Value = This.ViewModel.SessionTimeout
         Case "PauseRequested"
         Case "TimerInterval"
             Range(m_timerIntervalCell).Value = This.ViewModel.TimerInterval
@@ -928,9 +999,9 @@ Private Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
         Case "GpibAddress"
             Range(m_gpibAddressCell).Value = This.ViewModel.GpibAddress
         Case "AutoAssertTalk"
-            Range(m_readAfterWriteEnabledCell).Value = This.ViewModel.AutoAssertTalk
+            Range(m_autoAssertTalkCell).Value = This.ViewModel.AutoAssertTalk
         Case "GpibLanReadTimeout"
-            Range(m_readAfterWriteEnabledCell).Value = This.ViewModel.GpibLanReadTimeout
+            Range(m_autoAssertTalkCell).Value = This.ViewModel.GpibLanReadTimeout
             
         Case "TopCard"
             Range(m_card1Cell).Value = This.ViewModel.TopCard
@@ -1146,8 +1217,8 @@ Private Sub OnWorksheetChange(ByVal a_range As Range)
     ' which will be helpful if your worksheet changes a lot.
     Select Case a_range.Address
         
-        Case m_sessionReadTimeoutCell
-            This.ViewModel.SessionTimeout = Range(m_sessionReadTimeoutCell).Value
+        Case m_sessionTimeoutCell
+            This.ViewModel.SessionTimeout = Range(m_sessionTimeoutCell).Value
         Case m_inputHostCell
             This.ViewModel.SocketAddress = Range(m_inputHostCell).Value & ":" & _
                 Range(m_inputPortCell).Value
@@ -1158,8 +1229,8 @@ Private Sub OnWorksheetChange(ByVal a_range As Range)
             This.ViewModel.SocketAddress = Range(m_socketAddressCell).Value
         Case m_socketIdCell
             ' This.ViewModel.SocketId = Range(m_socketIdCell).Value
-        Case m_socketReceiveTimeoutCell
-            This.ViewModel.SessionTimeout = Range(m_socketReceiveTimeoutCell).Value
+        Case m_sessionTimeoutCell
+            This.ViewModel.SessionTimeout = Range(m_sessionTimeoutCell).Value
             
         Case m_connectedCell
             ' connected is read only
@@ -1191,9 +1262,8 @@ Private Sub OnWorksheetChange(ByVal a_range As Range)
             This.ViewModel.GpibAddress = Range(m_gpibAddressCell).Value
         Case m_readTimeoutCell
             This.ViewModel.GpibLanReadTimeout = Range(m_readTimeoutCell).Value
-        Case m_readAfterWriteEnabledCell
-            This.ViewModel.ReadAfterWriteEnabled = Range(m_readAfterWriteEnabledCell).Value
-
+        Case m_autoAssertTalkCell
+            This.ViewModel.AutoAssertTalk = VBA.CBool(Range(m_autoAssertTalkCell).Value)
         Case m_timerIntervalCell
             This.ViewModel.TimerInterval = Range(m_timerIntervalCell).Value
 

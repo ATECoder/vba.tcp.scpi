@@ -761,7 +761,7 @@ End Sub
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Handles the property change event of the viwe model. </summary>
+''' <summary>   Handles the property change event of the view model. </summary>
 ''' <param name="a_propertyName">   [String] the property name. </param>
 Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
 
@@ -806,10 +806,10 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
     
 End Sub
 
-''' <summary>   Synchronizes the view mode with the View. </summary>
-''' <remarks>   This is required becuase the view (ViewModel) that is planned for this
+''' <summary>   Synchronizes the view model with the View. </summary>
+''' <remarks>   This is required because the view (ViewModel) that is planned for this
 ''' view model is a Sheet, which is a singleton class whereas the view model is a
-''' non-singleton class. As a resule, the ViewModel retains values from previous
+''' non-singleton class. As a result, the ViewModel retains values from previous
 ''' instances of the View Model. </remarks>
 Friend Sub Synchronize()
 
@@ -846,11 +846,11 @@ Friend Sub Synchronize()
     
 End Sub
 
-''' <summary>   Handles the property change event of the viwe model. </summary>
+''' <summary>   Handles the property change event of the view model. </summary>
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Core.PropertyChangedEventArgs"/>] event arguments. </param>
 Friend Sub m_viewModel_PropertyChanged(ByVal a_eventArgs As cc_isr_Core.PropertyChangedEventArgs)
 
-    Const p_procedureName = "m_K2700ViewModel_PropertyChanged"
+    Const p_procedureName = "m_viewModel_PropertyChanged"
     
     ' Trap errors to the error handler
     On Error GoTo err_Handler

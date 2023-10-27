@@ -760,7 +760,7 @@ Public Property Let ManualScanToggleExecutable(ByVal a_value As Boolean)
     End If
 End Property
 
-''' <summary>   Gets the action state of the Manuam Scan Toggle command. </summary>
+''' <summary>   Gets the action state of the Manual Scan Toggle command. </summary>
 ''' <value>   [Boolean] true if the command is active. </value>
 Public Property Get ManualScanToggleValue() As Boolean
     
@@ -772,7 +772,7 @@ Public Property Get ManualScanToggleValue() As Boolean
 
 End Property
 
-''' <summary>   Sets the action state of the Manuam Scan Toggle command. </summary>
+''' <summary>   Sets the action state of the Manual Scan Toggle command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let ManualScanToggleValue(ByVal a_value As Boolean)
     
@@ -951,7 +951,7 @@ Public Property Let ManualSingleToggleExecutable(ByVal a_value As Boolean)
     End If
 End Property
 
-''' <summary>   Gets the action state of the Manuam Single Toggle command. </summary>
+''' <summary>   Gets the action state of the Manual Single Toggle command. </summary>
 ''' <value>   [Boolean] true if the command is active. </value>
 Public Property Get ManualSingleToggleValue() As Boolean
     
@@ -963,7 +963,7 @@ Public Property Get ManualSingleToggleValue() As Boolean
 
 End Property
 
-''' <summary>   Sets the action state of the Manuam Single Toggle command. </summary>
+''' <summary>   Sets the action state of the Manual Single Toggle command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let ManualSingleToggleValue(ByVal a_value As Boolean)
     
@@ -1016,14 +1016,14 @@ Public Property Let ReadingOffset(ByVal a_value As Double)
     End If
 End Property
 
-''' <summary>   Gets the condition for using front inputs for auto sampe. </summary>
+''' <summary>   Gets the condition for using front inputs for auto sample. </summary>
 ''' <remarks>   True if front inputs are Required; otherwise, Rear inputs. </remarks>
 ''' <value>   [Boolean]. </value>
 Public Property Get AutoSampleFrontInputs() As Boolean
     AutoSampleFrontInputs = This.AutoSampleFrontInputs
 End Property
 
-''' <summary>   Sets the condition for using front inputs for auto sampe. </summary>
+''' <summary>   Sets the condition for using front inputs for auto sample. </summary>
 ''' <param name="a_value">   [Boolean] true if Front Inputs are used for auto sampling. </value>
 Public Property Let AutoSampleFrontInputs(ByVal a_value As Boolean)
     If This.AutoSampleFrontInputs <> a_value Then
@@ -1192,8 +1192,8 @@ Public Property Let MeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.Measurement
     End If
 End Property
 
-''' <summary>   Handles the change of measurment state. </summary>
-''' <remarks>   This enableds or disables the buttons and toggles the buttons
+''' <summary>   Handles the change of measurement state. </summary>
+''' <remarks>   This enables or disables the buttons and toggles the buttons
 ''' state if not toggled. </remarks>
 Friend Sub OnMeasurementStateChanged()
 
@@ -1296,10 +1296,10 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
     
 End Sub
 
-''' <summary>   Synchronizes the view mode with the ViewModel. </summary>
-''' <remarks>   This is required becuase the view (ViewModel) that is planned for this
+''' <summary>   Synchronizes the view model with the ViewModel. </summary>
+''' <remarks>   This is required because the view (ViewModel) that is planned for this
 ''' view model is a Sheet, which is a singleton class whereas the view model is a
-''' non-singleton class. As a resule, the ViewModel retains values from previous
+''' non-singleton class. As a result, the ViewModel retains values from previous
 ''' instances of the View Model. </remarks>
 Friend Sub Synchronize()
 

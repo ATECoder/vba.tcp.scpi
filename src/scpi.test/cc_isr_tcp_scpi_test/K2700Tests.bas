@@ -707,7 +707,7 @@ Public Function TestSelectiveDeviceShouldClear() As cc_isr_Test_Fx.Assert
         p_success = This.K2700.Session.TrySelectiveDeviceClear(p_details, True, _
                 This.SelectiveDeviceClearDelay)
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(p_success, _
-            "K2700 Selective device should clear and synchropnize with a delay of " & _
+            "K2700 Selective device should clear and synchronize with a delay of " & _
                 VBA.CStr(This.SelectiveDeviceClearDelay) & " ms; " & p_details)
     End If
     

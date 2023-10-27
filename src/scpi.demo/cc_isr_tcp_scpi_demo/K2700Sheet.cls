@@ -9,7 +9,7 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
 Option Explicit
 
-Private Const m_sessionReadTimeoutCell As String = "B1"
+Private Const m_sessionTimeoutCell As String = "B1"
 Private Const m_inputHostCell As String = "B2"
 Private Const m_inputPortCell As String = "B3"
 Private Const m_socketAddressCell As String = "C2"
@@ -19,6 +19,7 @@ Private Const m_sentMessageCell As String = "F2"
 Private Const m_receivedMessageLengthCell As String = "J2"
 Private Const m_receivedMessageCell As String = "K2"
 Private Const m_elapsedTimeCell As String = "L2"
+Private Const m_elapsedTimeFormatCell As String = "L3"
 Private Const m_elapsedTimeFormat As String = "0.0"
 Private Const m_lastMessageCell As String = "B4"
 Private Const m_lastErrorMessageCell As String = "B33"
@@ -30,7 +31,7 @@ Private Const m_standardByteCell As String = "H11"
 Private Const m_srqCell As String = "C10"
 Private Const m_gpibAddressCell As String = "C12"
 Private Const m_readTimeoutCell As String = "C15"
-Private Const m_readAfterWriteEnabledCell As String = "C18"
+Private Const m_autoAssertTalkCell As String = "C18"
 
 Private Const m_readingFormatCell As String = "C21"
 Private Const m_timerIntervalCell As String = "C22"
@@ -46,6 +47,7 @@ Private Const m_functionUnitCell As String = "D29"
 Private Const m_channelCountCell As String = "C30"
 Private Const m_externalTriggerStatusCell As String = "C31"
 
+Private Const m_readingOffsetCell As String = "L4"
 Private Const m_measurementTopRow As Integer = 2
 Private Const m_measurementNoCol As String = "M"
 Private Const m_measurementValueCol As String = "N"
@@ -55,22 +57,80 @@ Attribute m_viewModel.VB_VarHelpID = -1
 
 Private Type this_
     Initialized As Boolean
-    ViewModel As K2700ViewModel
+    ViewModel As cc_isr_Tcp_Scpi.K2700ViewModel
     FocusedControlName As String
+    DesignMode As Boolean
 End Type
 
 Private This As this_
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-'
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' Construction and cleanup
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Initializes and returns an instance of this object. </summary>
+Public Function Initialize() As DataSheet
+    
+    Set Initialize = Me
+
+End Function
+
+''' <summary>   Initializes the views. </summary>
+Private Sub InitializeViews()
+
+    If Not K2700Observer.Initialized Then
+    
+        Dim p_viewModel As cc_isr_Tcp_Scpi.K2700ViewModel
+        
+        Set p_viewModel = cc_isr_Tcp_Scpi.Factory.NewK2700ViewModel
+        
+        ' initialize the views before initializing the view model
+        ' the view model gets initialized upon connecting.
+        DataView.Initialize p_viewModel
+        UserView.Initialize p_viewModel
+    
+    End If
+    
+    UserView.AutoSampleFrontInputs = Me.FrontAutoScanCheckBox.Value
+
+End Sub
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 ' Winsock Control
-'
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Handles the Toggle connection button click event. </summary>
 Friend Sub ConnectToggleButton_Click()
 
-    This.ViewModel.ToggleConnectionCommand ConnectToggleButton.Value
+    If This.ViewModel Is Nothing Then
+    
+        Set This.ViewModel = cc_isr_Tcp_Scpi.Factory.NewK2700ViewModel
+        
+        ' initialize the observer before initializing the view mode
+        ' but after the observer setting are set. The observer initial
+        ' settings are then applied to the view model.
+        Set This.Observer = K2700Observer.Initialize(This.ViewModel)
+        
+    End If
+    
+    ' issue the open connection command. This initializes the view model.
+    This.ViewModel.OpenConnectionCommand
+
+
+    If ConnectToggleButton.Value And This.ViewModel.CanConnect Then
+    
+        ' the view mode is initialized when connected.
+        This.ViewModel.OpenConnectionCommand
+    
+    ElseIf Not ConnectToggleButton.Value Then
+    
+        If Not This.ViewModel Is Nothing Then
+            If This.ViewModel.Connected Then _
+                This.ViewModel.CloseConnectionCommand
+            This.ViewModel.Dispose
+        End If
+    
+    End If
     
 End Sub
 
@@ -83,15 +143,17 @@ Private Sub ConnectToggleButton_LostFocus()
 End Sub
 
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' IEEE488 Control
 '
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 Private Sub CLSButton_Click()
     
-    This.ViewModel.ClearExecutionStateCommand
+    Dim p_details As String
+    This.ViewModel.ClearExecutionStateCommand p_details
+    Range(m_lastErrorMessageCell).Value = p_details
     
 End Sub
 
@@ -259,7 +321,9 @@ End Sub
 ''' <summary>   Handles the Reset Known State button click event. </summary>
 Private Sub RSTButton_Click()
 
-    This.ViewModel.ResetKnownStateCommand
+    Dim p_details As String
+    This.ViewModel.ResetKnownStateCommand p_details
+    Range(m_lastErrorMessageCell).Value = p_details
     
 End Sub
 
@@ -270,11 +334,11 @@ Private Sub WriteButton_Click()
     
 End Sub
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' GPIB-Lan Control
 '
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Handles the Go To Local button click event. </summary>
 Private Sub GoToLocalButton_Click()
@@ -307,28 +371,28 @@ End Sub
 ''' <summary>   Handles the read after write set button click event. </summary>
 Private Sub ReadAfterWriteSetButton_Click()
 
-    This.ViewModel.ReadAfterWriteSetCommand
+    This.ViewModel.AutoAssertTalkSetCommand
 
 End Sub
 
 ''' <summary>   Handles the read after write get button click event. </summary>
 Private Sub ReadAfterWriteGetButton_Click()
 
-    This.ViewModel.ReadAfterWriteGetCommand
+    This.ViewModel.AutoAssertTalkGetCommand
 
 End Sub
 
 ''' <summary>   Handles the Read Timeout get button click event. </summary>
 Private Sub ReadTimeoutGetButton_Click()
 
-    This.ViewModel.ReadTimeoutGetCommand
+    This.ViewModel.GpibLanReadTimeoutGetCommand
 
 End Sub
 
 ''' <summary>   Handles the Read Timeout set button click event. </summary>
 Private Sub ReadTimeoutSetButton_Click()
 
-    This.ViewModel.ReadTimeoutSetCommand
+    This.ViewModel.GpibLanReadTimeoutSetCommand
 
 End Sub
 
@@ -353,11 +417,11 @@ Private Sub SRQButton_Click()
 
 End Sub
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' K2700 Control
 '
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 Private Sub AutoIncrementCheckBox_GotFocus()
     This.FocusedControlName = Me.AutoIncrementCheckBox.Name
@@ -424,6 +488,7 @@ End Sub
 Private Sub ExternalTriggerOptionButton_Change()
 
     On Error GoTo err_Handler:
+    Dim p_details As String
 
     If This.FocusedControlName = Me.ExternalTriggerOptionButton.Name Then
 
@@ -431,7 +496,9 @@ Private Sub ExternalTriggerOptionButton_Change()
 
         ' Commands for click
         If Me.ExternalTriggerOptionButton.Value Then _
-            This.ViewModel.ConfigureExternalTriggerReadingCommand
+            This.ViewModel.ConfigureExternalTriggerReadingCommand p_details
+        
+        Range(m_lastErrorMessageCell).Value = p_details
         
     Else
 
@@ -521,15 +588,19 @@ End Sub
 Private Sub ImmediateTriggerOptionButton_Change()
 
     On Error GoTo err_Handler:
+    
+    Dim p_details As String
 
     If This.FocusedControlName = Me.ImmediateTriggerOptionButton.Name Then
 
         On Error GoTo 0
 
         ' Commands for click
-        If ImmediateTriggerOptionButton.Value Then
-            This.ViewModel.ConfigureImmediateTriggerReadingsCommand
-        End If
+        If ImmediateTriggerOptionButton.Value Then _
+            This.ViewModel.ConfigureImmediateTriggerReadingsCommand p_details
+    
+        Range(m_lastErrorMessageCell).Value = p_details
+    
     Else
 
         On Error GoTo 0
@@ -605,8 +676,13 @@ End Sub
 '''             readings from the front or rear panel. </summary>
 Private Sub MeasureButton_Click()
 
+    Dim p_details As String
+    
     ' make an immediate measure of one or all channels.
-    This.ViewModel.MeasureImmediatelyCommand
+    This.ViewModel.MeasureImmediatelyCommand p_details
+    
+    Range(m_lastErrorMessageCell).Value = p_details
+    
   
 End Sub
 
@@ -629,15 +705,23 @@ Private Sub MonitorExtTrigToggleButton_Change()
 
         On Error GoTo 0
 
-        ' Commands for click
-        This.ViewModel.MonitorExtTrigToggleCommand MonitorExtTrigToggleButton.Value
-        
+        If MonitorExtTrigToggleButton.Value Then
+            This.ViewModel.StartMonitoringExternalTriggersCommand
+        Else
+            This.ViewModel.StopMonitoringExternalTriggersCommand
+        End If
+
+
     Else
 
         On Error GoTo 0
 
         ' Commands for change from within the sheet
-        This.ViewModel.MonitorExtTrigToggleCommand MonitorExtTrigToggleButton.Value
+        If MonitorExtTrigToggleButton.Value Then
+            This.ViewModel.StartMonitoringExternalTriggersCommand
+        Else
+            This.ViewModel.StopMonitoringExternalTriggersCommand
+        End If
 
     End If
     
@@ -653,7 +737,11 @@ err_Handler:
     On Error GoTo 0
     
     ' Commands for change from outside the sheet
-    This.ViewModel.MonitorExtTrigToggleCommand MonitorExtTrigToggleButton.Value
+    If MonitorExtTrigToggleButton.Value Then
+        This.ViewModel.StartMonitoringExternalTriggersCommand
+    Else
+        This.ViewModel.StopMonitoringExternalTriggersCommand
+    End If
     
 End Sub
 
@@ -753,11 +841,11 @@ err_Handler:
     
 End Sub
 
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
 ' View Model Events
 '
-' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Sets the measurement display. </summary>
 ''' <param name="a_channelNo">   [single] the channel number. </param>
@@ -811,16 +899,6 @@ err_Handler:
     
 End Sub
 
-''' <summary>   Handles the <see cref="cc_isr_Tcp_Scpi.Demo.K2700ViewModel.ConnectionChanged"/> event. </summary>
-''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangedEventArgs"/>] event arguments. </param>
-Private Sub m_viewModel_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangedEventArgs)
-End Sub
-
-''' <summary>   Handles the <see cref="cc_isr_Tcp_Scpi.Demo.K2700ViewModel.ConnectionChanging"/> event. </summary>
-''' <param name="a_eventArgs">   [<see cref="cc_isr_Winsock.ConnectionChangingEventArgs"/>] event arguments. </param>
-Private Sub m_ViewModel_ConnectionChanging(ByVal a_eventArgs As cc_isr_Winsock.ConnectionChangingEventArgs)
-End Sub
-
 ''' <summary>   Handles the property change event of the viwe model. </summary>
 ''' <param name="a_propertyName">   [String] the property name. </param>
 Private Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
@@ -837,19 +915,21 @@ Private Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Range(m_socketAddressCell).Value = This.ViewModel.SocketAddress
         Case "SocketId"
             Range(m_socketIdCell).Value = This.ViewModel.SocketId
-        Case "ReceiveTimeout"
-            Range(m_socketReceiveTimeoutCell).Value = This.ViewModel.SocketReceiveTimeout
-        
-        Case "SessionReadTimeout"
-            Range(m_sessionReadTimeoutCell).Value = This.ViewModel.SessionReadTimeout
-
+        Case "SessionTimeout"
+            Range(m_sessionTimeoutCell).Value = This.ViewModel.SessionTimeout
         Case "PauseRequested"
         Case "TimerInterval"
             Range(m_timerIntervalCell).Value = This.ViewModel.TimerInterval
-       
         Case "Connected"
             Range(m_connectedCell).Value = This.ViewModel.Connected
     
+        Case "ElapsedTime"
+            ' Range(m_elapsedTimeCell).Value = This.ViewModel.ElapsedTime
+        Case "ElapsedTimeFormat"
+            Range(m_elapsedTimeFormatCell).Value = This.ViewModel.ElapsedTimeFormat
+        Case "ElapsedTimeCaption"
+            Range(m_elapsedTimeCell).Value = This.ViewModel.ElapsedTimeCaption
+        
         Case "MessageToSend"
         Case "SentMessage"
             Range(m_sentMessageCell).Value = This.ViewModel.SentMessage
@@ -857,12 +937,8 @@ Private Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Range(m_receivedMessageCell).Value = This.ViewModel.ReceivedMessage
         Case "ReceivedMessageLength"
             Range(m_receivedMessageLengthCell).Value = This.ViewModel.ReceivedMessageLength
-        Case "ElapsedTime"
-            ' Range(m_elapsedTimeCell).Value = This.ViewModel.ElapsedTime
-        Case "ElapsedTimeFormat"
-            Range(m_elapsedTimeFormatCell).Value = This.ViewModel.ElapsedTimeFormat
-        Case "ElapsedTimeCaption"
-            Range(m_elapsedTimeCell).Value = This.ViewModel.ElapsedTimeCaption
+        Case "ReadStatusAfterWriteEnabled"
+            Me.ReadStatusAfterWriteCheckBox.Value = This.ViewModel.ReadStatusAfterWriteEnabled
         Case "LastErrorMessage"
             Range(m_lastErrorMessageCell).Value = This.ViewModel.LastErrorMessage
         Case "LastMessage"
@@ -877,10 +953,10 @@ Private Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Range(m_srqCell).Value = This.ViewModel.ServiceRequested
         Case "GpibAddress"
             Range(m_gpibAddressCell).Value = This.ViewModel.GpibAddress
-        Case "ReadAfterWriteEnabled"
-            Range(m_readAfterWriteEnabledCell).Value = This.ViewModel.ReadAfterWriteEnabled
+        Case "AutoAssertTalk"
+            Range(m_autoAssertTalkCell).Value = This.ViewModel.AutoAssertTalk
         Case "GpibLanReadTimeout"
-            Range(m_readAfterWriteEnabledCell).Value = This.ViewModel.ReadAfterWriteEnabled
+            Range(m_autoAssertTalkCell).Value = This.ViewModel.GpibLanReadTimeout
             
         Case "TopCard"
             Range(m_card1Cell).Value = This.ViewModel.TopCard
@@ -891,7 +967,7 @@ Private Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
         Case "BottomCardFunctionScanList"
             Range(m_card2ScanListCell).Value = This.ViewModel.BottomCardFunctionScanList
         Case "FrontInputsRequired"
-            Me.FrontBackCheckBox.Value = This.ViewModel.FrontInputsRequired
+            Me.InputsCheckBox.Value = This.ViewModel.FrontInputsRequired
         Case "FrontInputsValue"
         Case "FrontInputsCaption"
             Range(m_inputsCell).Value = This.ViewModel.FrontInputsCaption
@@ -914,26 +990,29 @@ Private Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
         Case "MeasuredValue"
         Case "ExternalTrigMonitoringEnabled"
             Me.MonitorExtTrigToggleButton.Value = This.ViewModel.ExternalTrigMonitoringEnabled
-        Case "m_externalTriggerStatusCell"
-            Range(m_readingFormatCell).Value = This.ViewModel.MonitoringState
+        Case "MonitoringState"
+            ' Range(m_readingFormatCell).Value = This.ViewModel.MonitoringState
+        Case "MeasuredValueFormat"
+            Range(m_readingFormatCell).Value = This.ViewModel.MeasuredValueFormat
         Case "AutoIncrementChannelNoEnabled"
-            Me.AutoManualCheckBox.Value = This.ViewModel.AutoIncrementChannelNoEnabled
+            Me.AutoIncrementCheckBox.Value = This.ViewModel.AutoIncrementChannelNoEnabled
         Case "SingleReadEnabled"
             Me.SingleMultipleCheckBox.Value = This.ViewModel.SingleReadEnabled
         Case "SenseFunctions"
             Me.PopulateFunctionComboBox
         Case "ScpiCommands"
             Me.PopulateCommandsComboBox
-        Case "ImmediateTriggerModeEnabled"
-            Me.ConfigureImmediateTriggerCheckBox.Value = This.ViewModel.ExternalTrigMonitoringEnabled
-        Case "ExternalTriggerModeEnabled"
-            Me.ConfigureImmediateTriggerCheckBox.Value = Not This.ViewModel.ExternalTrigMonitoringEnabled
-        Case "ReadStatusAfterWrite"
-            Me.ReadStatusAfterWriteCheckBox.Value = This.ViewModel.ReadStatusAfterWrite
+            
+        ' !@# do we need this?
+        Case "ImmediateTriggerOptionSelected"
+            ' Me.ImmediateTriggerOptionButton.Value = This.ViewModel.ImmediateTriggerOptionSelected
+        ' !@# do we need this?
+        Case "ExternalTriggerOptionSelected"
+            ' Me.ExternalTriggerOptionButton.Value = This.ViewModel.ExternalTriggerOptionSelected
         Case "ReadingOffset"
             Range(m_readingOffsetCell).Value = This.ViewModel.ReadingOffset
-        Case "MonitoringStatus"
-            Range(m_externalTriggerStatusCell).Value = This.ViewModel.MonitoringStatus
+        Case "MonitoringState"
+            Range(m_externalTriggerStatusCell).Value = This.ViewModel.MonitoringState
         
         Case "OpenConnectionExecutable"
         Case "CloseConnectionExecutable"
@@ -952,7 +1031,7 @@ Private Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
         Case "ReadStandardEventStatusExecutable"
             ReadStandardEventStatusButton.Enabled = This.ViewModel.ReadStandardEventStatusExecutable
         Case "ReadStatusAfterWriteExecutable"
-            ReadStatusAfterWriteCheckBox.Enabled = This.ViewModel.ReadStatusAfterWriteExecutable
+            ReadStatusAfterWriteCheckBox.Enabled = This.ViewModel.ReadStandardEventStatusExecutable
         Case "WriteExecutable"
             WriteButton.Enabled = This.ViewModel.WriteExecutable
         Case "QueryInputsExecutable"
@@ -961,8 +1040,12 @@ Private Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             ClearReadingsButton.Enabled = This.ViewModel.ClearReadingsExecutable
         Case "MeasureExecutable"
             MeasureButton.Enabled = This.ViewModel.MeasureExecutable
-        Case "MonitorExtTrigExecutable"
-            MonitorExtTrigButton.Enabled = This.ViewModel.MonitorExtTrigExecutable
+        Case "StopMonitoringExecutable"
+            MonitorExtTrigToggleButton.Enabled = This.ViewModel.StopMonitoringExecutable Or _
+                This.ViewModel.StartMonitoringExecutable
+        Case "StartMonitoringExecutable"
+            MonitorExtTrigToggleButton.Enabled = This.ViewModel.StopMonitoringExecutable Or _
+                This.ViewModel.StartMonitoringExecutable
         Case "ImmediateTriggerOptionExecutable"
             ImmediateTriggerOptionButton.Enabled = This.ViewModel.ImmediateTriggerOptionExecutable
         Case "ExternalTriggerOptionExecutable"
@@ -971,25 +1054,25 @@ Private Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
         Case "SelectiveDeviceClearExecutable"
             SDCButton.Enabled = This.ViewModel.SelectiveDeviceClearExecutable
         Case "GoToLocalExecutable"
-            Button.Enabled = This.ViewModel.GoToLocalExecutable
+            GoToLocalButton.Enabled = This.ViewModel.GoToLocalExecutable
         Case "LocalLockoutExecutable"
             LocalLockoutButton.Enabled = This.ViewModel.LocalLockoutExecutable
-        Case "ReadAfterWriteSetExecutable"
-            ReadAfterWriteSetButton.Enabled = This.ViewModel.ReadAfterWriteSetExecutable
-        Case "ReadAfterWriteGetExecutable"
-            ReadAfterWriteGetButton.Enabled = This.ViewModel.ReadAfterWriteGetExecutable
-        Case "SerialPollExecutable"
-            SerialPollButton.Enabled = This.ViewModel.SerialPollExecutable
+        Case "AutoAssertTalkSetExecutable"
+            ReadAfterWriteSetButton.Enabled = This.ViewModel.AutoAssertTalkSetExecutable
+        Case "AutoAssertTalkGetExecutable"
+            ReadAfterWriteGetButton.Enabled = This.ViewModel.AutoAssertTalkGetExecutable
+        Case "ReadStatusByteExecutable"
+            SerialPollButton.Enabled = This.ViewModel.ReadStatusByteExecutable
         Case "ServiceRequestedExecutable"
             SRQButton.Enabled = This.ViewModel.ServiceRequestedExecutable
         Case "GpibAddressGetExecutable"
             GpibAddressGetButton.Enabled = This.ViewModel.GpibAddressGetExecutable
         Case "GpibAddressSetExecutable"
             GpibAddressSetButton.Enabled = This.ViewModel.GpibAddressSetExecutable
-        Case "ReadTimeoutGetExecutable"
-            ReadTimeoutGetButton.Enabled = This.ViewModel.ReadTimeoutGetExecutable
-        Case "ReadTimeoutSetExecutable"
-            ReadTimeoutSetButton.Enabled = This.ViewModel.ReadTimeoutSetExecutable
+        Case "GpibLanReadTimeoutGetExecutable"
+            ReadTimeoutGetButton.Enabled = This.ViewModel.GpibLanReadTimeoutGetExecutable
+        Case "GpibLanReadTimeoutSetExecutable"
+            ReadTimeoutSetButton.Enabled = This.ViewModel.GpibLanReadTimeoutSetExecutable
         
         
         Case "MessageToSendExecutable"
@@ -1038,51 +1121,6 @@ End Sub
 ' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ' Worksheet events
 ' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-''' <summary>   Initialize this worksheet if not initialized. </summary>
-Private Sub Worksheet_Activate()
-
-    Const p_procedureName = "Initialize"
-
-    ' Error are trapped to prevent crashes because this method gets started when
-    ' the main workbook is activated.
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    If Not This.Initialized Then
-    
-        Set This.ViewModel = K2700ViewModel
-        
-        This.ViewModel.Initialize
-        
-        ' set focus to the last message cell to clear all focus info
-        Range(m_lastMessageCell).Select
-    
-    End If
-    
-    This.Initialized = True
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
-    
-    ' display the error message
-    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
 Private Sub Worksheet_Deactivate()
 
     Me.Dispose
@@ -1127,25 +1165,27 @@ End Sub
 ''' <remarks> The check box change event also causes a click event.
 '''           This method issues the click event on actual click.
 '''              Note: Make sure to not implement the click event,
-Private Sub OneWorksheetChange(ByVal a_range As Range)
+Private Sub OnWorksheetChange(ByVal a_range As Range)
 
     ' If Not Intersect(a_range, Me.Range("H5")) Is Nothing Then
     ' this uses fewer resources than Intersect,
     ' which will be helpful if your worksheet changes a lot.
     Select Case a_range.Address
-
-        Case m_sessionReadTimeoutCell
-            This.ViewModel.SessionReadTimeout = Range(m_sessionReadTimeoutCell).Value
+        
+        Case m_sessionTimeoutCell
+            This.ViewModel.SessionTimeout = Range(m_sessionTimeoutCell).Value
         Case m_inputHostCell
-            This.ViewModel.Host = Range(m_inputHostCell).Value
+            This.ViewModel.SocketAddress = Range(m_inputHostCell).Value & ":" & _
+                Range(m_inputPortCell).Value
         Case m_inputPortCell
-            This.ViewModel.Port = Range(m_inputPortCell).Value
+            This.ViewModel.SocketAddress = Range(m_inputHostCell).Value & ":" & _
+                Range(m_inputPortCell).Value
         Case m_socketAddressCell
             This.ViewModel.SocketAddress = Range(m_socketAddressCell).Value
         Case m_socketIdCell
-            This.ViewModel.SocketId = Range(m_socketIdCell).Value
-        Case m_socketReceiveTimeoutCell
-            This.ViewModel.SocketReceiveTimeout = Range(m_socketReceiveTimeoutCell).Value
+            ' This.ViewModel.SocketId = Range(m_socketIdCell).Value
+        Case m_sessionTimeoutCell
+            This.ViewModel.SessionTimeout = Range(m_sessionTimeoutCell).Value
             
         Case m_connectedCell
             ' connected is read only
@@ -1177,9 +1217,8 @@ Private Sub OneWorksheetChange(ByVal a_range As Range)
             This.ViewModel.GpibAddress = Range(m_gpibAddressCell).Value
         Case m_readTimeoutCell
             This.ViewModel.GpibLanReadTimeout = Range(m_readTimeoutCell).Value
-        Case m_readAfterWriteEnabledCell
-            This.ViewModel.ReadAfterWriteEnabled = Range(m_readAfterWriteEnabledCell).Value
-
+        Case m_autoAssertTalkCell
+            This.ViewModel.AutoAssertTalk = VBA.CBool(Range(m_autoAssertTalkCell).Value)
         Case m_timerIntervalCell
             This.ViewModel.TimerInterval = Range(m_timerIntervalCell).Value
 
@@ -1206,7 +1245,7 @@ Private Sub OneWorksheetChange(ByVal a_range As Range)
         Case m_functionUnitCell
             This.ViewModel.SenseFunctionUnit = Range(m_functionUnitCell).Value
         Case m_externalTriggerStatusCell
-            This.ViewModel.MonitoringStatus = Range(m_externalTriggerStatusCell).Value
+            This.ViewModel.MonitoringState = Range(m_externalTriggerStatusCell).Value
         Case m_readingOffsetCell
             This.ViewModel.ReadingOffset = Range(m_readingOffsetCell).Value
 
@@ -1225,3 +1264,4 @@ Private Sub Worksheet_Change(ByVal a_range As Range)
 
 End Sub
 
+ 

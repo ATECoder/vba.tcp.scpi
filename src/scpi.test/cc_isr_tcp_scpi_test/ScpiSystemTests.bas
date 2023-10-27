@@ -479,16 +479,16 @@ Public Function TestFrontInputStateShouldRead() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then
         p_success = This.K2700.Device.TryQueryOperationCompleted(p_reply, p_details)
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(p_success, _
-            "Device should query operaiton completion; " & p_details)
+            "Device should query operation completion; " & p_details)
     End If
         
-    ' validate inputs was returning false values until this cludge was added.
+    ' validate inputs was returning false values until this kludge was added.
     ' cc_isr_Core_IO.Factory.NewStopwatch.Wait 50 ' 10 this was not enough
     
     If p_outcome.AssertSuccessful Then
         p_actualFrontInputs = This.K2700.ScpiSystem.QueryFrontSwitch()
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedFrontInputs, p_actualFrontInputs, _
-            "#2. Scpi System should query and report the previous state of the front switch ofter *OPC?.")
+            "#2. Scpi System should query and report the previous state of the front switch after *OPC?.")
     End If
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:

@@ -379,7 +379,7 @@ Public Function Test7700CardsShouldBePopulated() As cc_isr_Test_Fx.Assert
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsNotNothing(p_routeSystem.InstrumentFamilyCards, "Instrument family cardcollection should be instantiated.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsNotNothing(p_routeSystem.InstrumentFamilyCards, "Instrument family card collection should be instantiated.")
     End If
     
     Dim p_expectedCount As Integer

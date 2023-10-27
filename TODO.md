@@ -1,6 +1,6 @@
 # TODO
 
-## GIT:
+## GIT
 
 ## TODO
 
