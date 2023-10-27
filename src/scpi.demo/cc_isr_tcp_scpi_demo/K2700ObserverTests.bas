@@ -620,7 +620,7 @@ Public Function AssertExternalTriggerModeShouldStart(ByVal a_assert As cc_isr_Te
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, _
             This.K2700Sheet.FrontInputsRequired, _
-            "User View Front inputs state should equal view model inputs state for external trigger reading mode.")
+            "K2700 Sheet Front inputs state should equal view model inputs state for external trigger reading mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -852,7 +852,7 @@ Public Function AssertImmediateModeShouldStart(ByVal a_assert As cc_isr_Test_Fx.
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, _
             This.K2700Sheet.FrontInputsRequired, _
-            "User View Front inputs state should equal view model inputs state for external trigger reading mode.")
+            "K2700 Sheet Front inputs state should equal view model inputs state for external trigger reading mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1050,7 +1050,7 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_assert As cc_isr_Test_
     
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
             This.K2700Sheet.SelectedChannelNumber, _
-            "The User View selected channel number should be set to the View Model selected channel number.")
+            "The K2700 Sheet selected channel number should be set to the View Model selected channel number.")
     
     End If
     
@@ -1128,7 +1128,7 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
     If p_outcome.AssertSuccessful Then
     
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.K2700Sheet.SelectedChannelNumber, _
+            This.Observer.SelectedChannelNumber, _
             "The User View selected channel number should be set to the View Model selected channel number.")
     
     End If
@@ -1136,8 +1136,8 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
     If p_outcome.AssertSuccessful Then
     
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.K2700Sheet.MeasuredChannelNumber, _
-            "The Data View measured channel number should be set to the View Model selected channel number.")
+            This.Observer.MeasuredChannelNumber, _
+            "The Observer measured channel number should be set to the View Model selected channel number.")
     
     End If
     
@@ -1160,7 +1160,7 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.K2700Sheet.MeasuredChannelNumber, _
             This.ViewModel.MeasuredChannelNumber, _
-            "View Model measured channel number should equal the Data View measured channel.")
+            "View Model measured channel number should equal the K2700 Sheet measured channel.")
             
     End If
     
@@ -1192,7 +1192,7 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
             This.K2700Sheet.SelectedChannelNumber, _
-            "The User View Selected Channel Number should equal the view model selected channel number.")
+            "The K2700 Sheet Selected Channel Number should equal the view model selected channel number.")
             
     End If
     
@@ -1505,7 +1505,7 @@ Public Function AssertMeasurementsShouldGetTriggered(ByVal a_assert As cc_isr_Te
                 
                 Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.K2700Sheet.MeasuredChannelNumber, _
                     This.ViewModel.MeasuredChannelNumber, _
-                    "View Model measured channel number should equal the Data View measured channel.")
+                    "View Model measured channel number should equal the K2700 Sheet measured channel.")
                     
             End If
             
@@ -1765,25 +1765,17 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SocketAddress, This.K2700Sheet.SocketAddress, _
-            "Data View 'Socket Address' setting should equal the view model initial setting.")
+            "K2700 Sheet 'Socket Address' setting should equal the view model initial setting.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SocketAddress, This.Observer.SocketAddress, _
-            "Observer and view model 'Socket Address' setting should equal.")
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SocketAddress, This.K2700Sheet.SocketAddress, _
-            "Data View and view model 'Socket Address' setting should equal.")
-
-    If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(K2700Sheet.ReadingOffset, This.ViewModel.ReadingOffset, _
-            "View Model 'Readin gOffset' setting should equal user sheet value.")
+            "View Model 'Readin gOffset' setting should equal K2700 Sheet value.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(K2700Sheet.GpibLanControllerPort, This.ViewModel.GpibLanControllerPort, _
-            "View Model 'GpibLanControllerPort' setting should equal data sheet value.")
+            "View Model 'GpibLanControllerPort' setting should equal K2700 Sheet value.")
             
-    ' check the Data View Status
+    ' check the Observer Status
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.Connected, _
@@ -1800,20 +1792,38 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.OpenConnectionExecutable, _
             This.K2700Sheet.OpenConnectionExecutable, _
-            "Data View and View Model Open Connection Executables should equal.")
+            "K2700 Sheet and View Model Open Connection Executables should equal.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.OpenConnectionExecutable, _
+            This.Observer.OpenConnectionExecutable, _
+            "Observer and View Model Open Connection Executables should equal.")
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.CloseConnectionExecutable, _
             This.K2700Sheet.CloseConnectionExecutable, _
-            "Data View and View Model Close Connection Executables should equal.")
+            "data sheet and View Model Close Connection Executables should equal.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.CloseConnectionExecutable, _
+            This.Observer.CloseConnectionExecutable, _
+            "Observer and View Model Close Connection Executables should equal.")
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SocketAddress, This.K2700Sheet.SocketAddress, _
-            "Data View and View Model Socket Addresses should equal.")
+            "K2700 sheet and View Model Socket Addresses should equal.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SocketAddress, This.Observer.SocketAddress, _
+            "Observer and View Model Socket Addresses should equal.")
    
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SessionTimeout, This.K2700Sheet.SessionTimeout, _
-            "Data View and View Model Session Timeouts should equal.")
+            "K2700 sheet and View Model Session Timeouts should equal.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SessionTimeout, This.Observer.SessionTimeout, _
+            "Observer and View Model Session Timeouts should equal.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
@@ -1821,14 +1831,24 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
 
     This.ViewModel.LastErrorMessage = "test: no error"
     If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.LastErrorMessage, This.Observer.LastErrorMessage, _
+            "Observer and View Model Last Error Messages should equal.")
+    
+    If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.LastErrorMessage, This.K2700Sheet.LastErrorMessage, _
-            "Data View and View Model Last Error Messages should equal.")
+            "K27000 sheet and View Model Last Error Messages should equal.")
+    
     This.ViewModel.LastErrorMessage = VBA.vbNullString
 
     This.ViewModel.LastMessage = "test message"
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.LastMessage, This.K2700Sheet.LastMessage, _
-            "Data View and View Model Last Messages should equal.")
+            "K2700 sheet and View Model Last Messages should equal.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.LastMessage, This.Observer.LastMessage, _
+            "Observer and View Model Last Messages should equal.")
+    
     This.ViewModel.LastMessage = VBA.vbNullString
 
     If p_outcome.AssertSuccessful Then _
@@ -1837,8 +1857,15 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     
     This.ViewModel.MeasuredChannelNumber = 1
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredChannelNumber, This.K2700Sheet.MeasuredChannelNumber, _
-            "Data View and View Model Measured Channel Numbers should equal.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredChannelNumber, _
+            This.K2700Sheet.MeasuredChannelNumber, _
+            "K2700 sheet and View Model Measured Channel Numbers should equal.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredChannelNumber, _
+            This.Observer.MeasuredChannelNumber, _
+            "Observer and View Model Measured Channel Numbers should equal.")
+    
     This.ViewModel.MeasuredChannelNumber = 0
 
     If p_outcome.AssertSuccessful Then _
@@ -1848,7 +1875,12 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     This.ViewModel.MeasuredReading = "0.0"
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredReading, This.K2700Sheet.MeasuredReading, _
-            "Data View and View Model Measured Readings should equal.")
+            "k2700 sheet and View Model Measured Readings should equal.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredReading, This.Observer.MeasuredReading, _
+            "Observer and View Model Measured Readings should equal.")
+    
     This.ViewModel.MeasuredReading = VBA.vbNullString
     
     If p_outcome.AssertSuccessful Then _
@@ -1858,7 +1890,12 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     This.ViewModel.MeasuredValue = 0.1
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredValue, This.K2700Sheet.MeasuredValue, _
-            "Data View and View Model Measured Values should equal.")
+            "K2700 sheet and View Model Measured Values should equal.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredValue, This.Observer.MeasuredValue, _
+            "Observer and View Model Measured Values should equal.")
+    
     This.ViewModel.MeasuredValue = 0#
 
     If p_outcome.AssertSuccessful Then _
@@ -1871,82 +1908,128 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
             "View Model Clear Reading executable should be true.")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.ClearReadingsExecutable, This.K2700Sheet.ClearReadingsExecutable, _
-            "Data View and View Model Clear Readings Executables should equal.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.ClearReadingsExecutable, _
+            This.K2700Sheet.ClearReadingsExecutable, _
+            "K2700 Sheet and View Model Clear Readings Executables should equal.")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MaximumChannelNumber, This.K2700Sheet.MaximumChannelNumber, _
-            "Data View and View Model Maximum Channel Numbers should equal.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.ClearReadingsExecutable, _
+            This.Observer.ClearReadingsExecutable, _
+            "Observer and View Model Clear Readings Executables should equal.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MaximumChannelNumber, _
+            This.K2700Sheet.MaximumChannelNumber, _
+            "K2700 Sheet and View Model Maximum Channel Numbers should equal.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MaximumChannelNumber, _
+            This.Observer.MaximumChannelNumber, _
+            "Observer and View Model Maximum Channel Numbers should equal.")
 
     ' check the User View Status
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, This.K2700Sheet.Connected, _
-            "Data View and View Model connection state should equal when connected.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, This.Observer.Connected, _
+            "Observer and View Model connection state should equal when connected.")
             
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, This.K2700Sheet.FrontInputsRequired, _
-            "Data View and View Model Front Inputs Required should equal.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, _
+            This.K2700Sheet.FrontInputsRequired, _
+            "K2700 sheet and View Model Front Inputs Required should equal.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, _
+            This.Observer.FrontInputsRequired, _
+            "Observer and View Model Front Inputs Required should equal.")
 
     This.ViewModel.FrontInputsRequired = Not This.ViewModel.FrontInputsRequired
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, This.K2700Sheet.FrontInputsRequired, _
-            "Data View and View Model Front Inputs Required should equal after toggling value.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, _
+            This.Observer.FrontInputsRequired, _
+            "Observer and View Model Front Inputs Required should equal after toggling value.")
     
     This.K2700Sheet.FrontInputsRequired = Not This.ViewModel.FrontInputsRequired
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, This.K2700Sheet.FrontInputsRequired, _
-            "Data View and View Model Front Inputs Required should equal after restoring the value.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, _
+            This.Observer.FrontInputsRequired, _
+            "Observer and View Model Front Inputs Required should equal after restoring the value.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, _
+            This.K2700Sheet.FrontInputsRequired, _
+            "K27000 sheet and View Model Front Inputs Required should equal after restoring the value.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(1, This.ViewModel.SelectedChannelNumber, _
             "View Model Selected Channel Numbers should equal 1.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, This.K2700Sheet.SelectedChannelNumber, _
-            "Data View and View Model Selected Channel Numbers should equal.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
+            This.K2700Sheet.SelectedChannelNumber, _
+            "K2700 sheet and View Model Selected Channel Numbers should equal.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
+            This.Observer.SelectedChannelNumber, _
+            "Observer and View Model Selected Channel Numbers should equal.")
 
     This.ViewModel.SelectedChannelNumber = 2
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, This.K2700Sheet.SelectedChannelNumber, _
-            "Data View and View Model Selected Channel Numbers should equal after change.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
+            This.Observer.SelectedChannelNumber, _
+            "Observer and View Model Selected Channel Numbers should equal after change.")
     
     This.K2700Sheet.SelectedChannelNumber = 1
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, This.K2700Sheet.SelectedChannelNumber, _
-            "Data View and View Model Selected Channel Numbers should equal after restoring the value.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
+            This.K2700Sheet.SelectedChannelNumber, _
+            "K2700 sheet and View Model Selected Channel Numbers should equal after restoring the value.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.AutoIncrementChannelNoEnabled, _
             This.K2700Sheet.AutoIncrementChannelNoEnabled, _
-            "K2700 Sheet and  View Model Auto Increment Channel No Enabled should equal.")
+            "Observer and  View Model Auto Increment Channel No Enabled should equal.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.AutoIncrementChannelNoEnabled, _
+            This.K2700Sheet.AutoIncrementChannelNoEnabled, _
+            "K2700 sheet and  View Model Auto Increment Channel No Enabled should equal.")
 
     This.K2700Sheet.AutoIncrementChannelNoEnabled = Not This.ViewModel.AutoIncrementChannelNoEnabled
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.AutoIncrementChannelNoEnabled, This.K2700Sheet.AutoIncrementChannelNoEnabled, _
-            "Data View and View Model Auto Increment Channel No Enabled should equal after restoring the value.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.AutoIncrementChannelNoEnabled, _
+            This.Observer.AutoIncrementChannelNoEnabled, _
+            "Observer and View Model Auto Increment Channel No Enabled should equal after restoring the value.")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SingleReadEnabled, This.K2700Sheet.SingleReadEnabled, _
-            "Data View and View Model Single Read Enabled should equal.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SingleReadEnabled, _
+            This.K2700Sheet.SingleReadEnabled, _
+            "K2700 sheet and View Model Single Read Enabled should equal.")
 
     This.ViewModel.SingleReadEnabled = Not This.ViewModel.SingleReadEnabled
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SingleReadEnabled, This.K2700Sheet.SingleReadEnabled, _
-            "Data View and View Model Single Read Enabled should equal after change.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SingleReadEnabled, _
+            This.Observer.SingleReadEnabled, _
+            "Observer and View Model Single Read Enabled should equal after change.")
 
     This.K2700Sheet.SingleReadEnabled = Not This.ViewModel.SingleReadEnabled
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SingleReadEnabled, This.K2700Sheet.SingleReadEnabled, _
-            "Data View and View Model Single Read Enabled should equal after restoring the value.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SingleReadEnabled, _
+            This.K2700Sheet.SingleReadEnabled, _
+            "K2700 sheet and View Model Single Read Enabled should equal after restoring the value.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.Measuring, _
             "Measuring state should be false.")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(K2700Sheet.ReadingOffset, This.ViewModel.ReadingOffset, _
-            "View Model and User View 'Reading Offset' should equal.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.K2700Sheet.ReadingOffset, This.ViewModel.ReadingOffset, _
+            "View Model and K2700 sheet 'Reading Offset' should equal.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.ReadingOffset, This.ViewModel.ReadingOffset, _
+            "View Model and observer 'Reading Offset' should equal.")
 
     If p_outcome.AssertSuccessful Then
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.Session.Socket.TryCloseConnection(p_details), _
@@ -1961,16 +2044,30 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.OpenConnectionExecutable, _
             This.K2700Sheet.OpenConnectionExecutable, _
-            "Data View and View Model Open Connection Executables should equal after disconnection.")
+            "K2700 sheet  and View Model Open Connection Executables should equal after disconnection.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.OpenConnectionExecutable, _
+            This.Observer.OpenConnectionExecutable, _
+            "Observer and View Model Open Connection Executables should equal after disconnection.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.CloseConnectionExecutable, _
             This.K2700Sheet.CloseConnectionExecutable, _
-            "Data View and View Model Close Connection Executables should equal after disconnection.")
+            "K2700 sheet and View Model Close Connection Executables should equal after disconnection.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.CloseConnectionExecutable, _
+            This.Observer.CloseConnectionExecutable, _
+            "Observer and View Model Close Connection Executables should equal after disconnection.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, This.K2700Sheet.Connected, _
-            "User View and View Model Connected states should equal after disconnection.")
+            "K2700 sheet and View Model Connected states should equal after disconnection.")
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, This.Observer.Connected, _
+            "Observer and View Model Connected states should equal after disconnection.")
 
     If p_outcome.AssertSuccessful Then _
        Set p_outcome = AssertUserInterfaceState(p_outcome)
@@ -2026,12 +2123,21 @@ Public Function AssertUserInterfaceState(ByVal a_outcome As cc_isr_Test_Fx.Asser
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, This.K2700Sheet.Connected, _
-            "User View and View Model Connected states should equal for testing user interface controls.")
+            "K2700 Sheet and View Model Connected states should equal for testing user interface controls.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, This.Observer.Connected, _
+            "Observer and View Model Connected states should equal for testing user interface controls.")
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SingleReadEnabled, _
             This.K2700Sheet.SingleReadEnabled, _
-            "User View and View Model single read enabled should equal for testing user interface controls.")
+            "K2700 sheet and View Model single read enabled should equal for testing user interface controls.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SingleReadEnabled, _
+            This.Observer.SingleReadEnabled, _
+            "Observer and View Model single read enabled should equal for testing user interface controls.")
     
     Set AssertUserInterfaceState = p_outcome
     
@@ -2069,8 +2175,12 @@ Public Function TestShouldBeConnected() As cc_isr_Test_Fx.Assert
             "View model should be connected.")
         
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(K2700Sheet.PrimaryGpibAddress, This.ViewModel.GpibAddress, _
-            "View model Gpib address should be set to the user view value.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.K2700Sheet.PrimaryGpibAddress, This.ViewModel.GpibAddress, _
+            "View model Gpib address should be set to the K2700 sheet value.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.GpibAddress, This.ViewModel.GpibAddress, _
+            "View model Gpib address should be set to the observer value.")
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.CloseConnectionExecutable, _
@@ -2154,7 +2264,12 @@ Public Function TestShouldBeConnected() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.LastErrorMessage, _
             This.K2700Sheet.LastErrorMessage, _
-            "Data View Last error message should be the same as the view model.")
+            "K2700 sheet Last error message should be the same as the view model.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.LastErrorMessage, _
+            This.Observer.LastErrorMessage, _
+            "Observer Last error message should be the same as the view model.")
     
     ' Finally, verify that no error message was recorded.
     If p_outcome.AssertSuccessful Then _
@@ -2938,7 +3053,7 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
                 
                 Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.K2700Sheet.MeasuredChannelNumber, _
                     This.ViewModel.MeasuredChannelNumber, _
-                    "View Model measured channel number should equal the Data View measured channel.")
+                    "View Model measured channel number should equal the K2700 Sheet measured channel.")
                     
             End If
             
@@ -3412,7 +3527,7 @@ Public Function TestK2700SheetShouldMeasureImmediately() As cc_isr_Test_Fx.Asser
     
     If p_outcome.AssertSuccessful Then
         
-        ' clear the Data View measured channel number so that we can detected a measurment.
+        ' clear the Observer measured channel number so that we can detected a measurment.
         This.K2700Sheet.MeasuredChannelNumber = -1
         
         ' depress the User View, this should start the
@@ -3455,7 +3570,7 @@ Public Function TestK2700SheetShouldMeasureImmediately() As cc_isr_Test_Fx.Asser
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.K2700Sheet.MeasuredChannelNumber, _
             This.ViewModel.MeasuredChannelNumber, _
-            "View Model measured channel number should equal the Data View measured channel.")
+            "View Model measured channel number should equal the Observer measured channel.")
             
     End If
     
@@ -3487,7 +3602,7 @@ Public Function TestK2700SheetShouldMeasureImmediately() As cc_isr_Test_Fx.Asser
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
             This.K2700Sheet.SelectedChannelNumber, _
-            "The User View Selected Channel Number should equal the view model selected channel number.")
+            "The K2700 Sheet Selected Channel Number should equal the view model selected channel number.")
             
     End If
     
@@ -3584,7 +3699,7 @@ Public Function AssetK2700SheetShouldMonitor(ByVal a_assert As cc_isr_Test_Fx.As
     
     If p_outcome.AssertSuccessful Then
         
-        ' clear the Data View measured channel number so that we can detected a measurment.
+        ' clear the Observer measured channel number so that we can detected a measurment.
         This.K2700Sheet.MeasuredChannelNumber = -1
     
         ' configure external trigger
