@@ -3,4 +3,4 @@ ffc39c063184711eaa00ec19ddb93c908a92ef28,core,lib\vba\core
 30f1e13eb7eb1a283e0329debbcf5e852d260f07,mvvm,lib\vba\core
 9e7317c58974f5507c1225b030d85e31856f92d0,winsock,lib\vba\iot
 fe5b7f36a34dcffdaf1a45cc5e45356be5adb7d7,tcp.ieee488,lib\vba\iot
-21737ccd27cd3f09902a16f1517ceea20cf30dcc,tcp.scpi,lib\vba\iot
+d5d73b825f503c13b1e10e72660e550d72a12f34,tcp.scpi,lib\vba\iot

@@ -170,7 +170,6 @@ Private Type this_
     QueryExecutable As Boolean
     ReadExecutable As Boolean
     QueryStatusByteExecutable As Boolean
-    ReadStatusByteExecutable As Boolean
     ReadStatusAfterWriteExecutable As Boolean
     ReadStandardEventStatusExecutable As Boolean
     ResetKnownStateExecutable As Boolean
@@ -195,7 +194,7 @@ Private Type this_
     LocalLockoutExecutable As Boolean
     AutoAssertTalkSetExecutable As Boolean
     AutoAssertTalkGetExecutable As Boolean
-    ReadStatisByteExecutable As Boolean
+    ReadStatusByteExecutable As Boolean
     GpibAddressGetExecutable As Boolean
     GpibAddressSetExecutable As Boolean
     GpibLanReadTimeoutGetExecutable As Boolean
@@ -1235,23 +1234,6 @@ Public Property Let QueryStatusByteExecutable(ByVal a_value As Boolean)
     End If
 End Property
 
-''' <summary>   Gets the condition indicating that the Read Status Byte command
-'''             can be executed. </summary>
-''' <value>   [Boolean] True if the Read Status Byte command can be executed. </value>
-Public Property Get ReadStatusByteExecutable() As Boolean
-    ReadStatusByteExecutable = This.ReadStatusByteExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Read Status Byte command
-'''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Read Status Byte command can be executed. </param>
-Public Property Let ReadStatusByteExecutable(ByVal a_value As Boolean)
-    If This.ReadStatusByteExecutable <> a_value Then
-        This.ReadStatusByteExecutable = a_value
-        Me.OnPropertyChanged "ReadStatusByteExecutable"
-    End If
-End Property
-
 ''' <summary>   Gets the condition indicating that the Read Status After Write command
 '''             can be executed. </summary>
 ''' <value>   [Boolean] True if the Read Status After Write command can be executed. </value>
@@ -1820,23 +1802,6 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Gets the condition indicating that the Selective Device Clear command
-'''             can be executed. </summary>
-''' <value>   [Boolean] True if the Selective Device Clear command can be executed. </value>
-Public Property Get SelectiveDeviceClearExecutable() As Boolean
-    SelectiveDeviceClearExecutable = This.SelectiveDeviceClearExecutable
-End Property
-
-''' <summary>   Sets the condition indicating that the Selective Device Clear command
-'''             can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Selective Device Clear command can be executed. </param>
-Public Property Let SelectiveDeviceClearExecutable(ByVal a_value As Boolean)
-    If This.SelectiveDeviceClearExecutable <> a_value Then
-        This.SelectiveDeviceClearExecutable = a_value
-        Me.OnPropertyChanged "SelectiveDeviceClearExecutable"
-    End If
-End Property
-
 ''' <summary>   Gets the condition indicating that the Go To Local command
 '''             can be executed. </summary>
 ''' <value>   [Boolean] True if the Go To Local command can be executed. </value>
@@ -1905,17 +1870,17 @@ Public Property Let AutoAssertTalkSetExecutable(ByVal a_value As Boolean)
     End If
 End Property
 
-''' <summary>   Gets the condition indicating that the Read Status Byte (Serial poll) command
-''' can be executed. </summary>
-''' <value>   [Boolean] True if the Serial Poll command can be executed. </value>
-Public Property Get ReadStatisByteExecutable() As Boolean
-    ReadStatisByteExecutable = This.ReadStatisByteExecutable
+''' <summary>   Gets the condition indicating that the Read Status Byte command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Read Status Byte command can be executed. </value>
+Public Property Get ReadStatusByteExecutable() As Boolean
+    ReadStatusByteExecutable = This.ReadStatusByteExecutable
 End Property
 
-''' <summary>   Sets the condition indicating that the read status byte (Serial Poll) command
-''' can be executed. </summary>
-''' <param name="a_value">   [Boolean] True if the Serial Poll command can be executed. </param>
-Public Property Let ReadStatisByteExecutable(ByVal a_value As Boolean)
+''' <summary>   Sets the condition indicating that the Read Status Byte command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Read Status Byte command can be executed. </param>
+Public Property Let ReadStatusByteExecutable(ByVal a_value As Boolean)
     If This.ReadStatusByteExecutable <> a_value Then
         This.ReadStatusByteExecutable = a_value
         Me.OnPropertyChanged "ReadStatusByteExecutable"
@@ -2002,6 +1967,23 @@ Public Property Let GpibLanReadTimeoutSetExecutable(ByVal a_value As Boolean)
     If This.GpibLanReadTimeoutSetExecutable <> a_value Then
         This.GpibLanReadTimeoutSetExecutable = a_value
         Me.OnPropertyChanged "GpibLanReadTimeoutSetExecutable"
+    End If
+End Property
+
+''' <summary>   Gets the condition indicating that the Selective Device Clear command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Selective Device Clear command can be executed. </value>
+Public Property Get SelectiveDeviceClearExecutable() As Boolean
+    SelectiveDeviceClearExecutable = This.SelectiveDeviceClearExecutable
+End Property
+
+''' <summary>   Sets the condition indicating that the Selective Device Clear command
+'''             can be executed. </summary>
+''' <param name="a_value">   [Boolean] True if the Selective Device Clear command can be executed. </param>
+Public Property Let SelectiveDeviceClearExecutable(ByVal a_value As Boolean)
+    If This.SelectiveDeviceClearExecutable <> a_value Then
+        This.SelectiveDeviceClearExecutable = a_value
+        Me.OnPropertyChanged "SelectiveDeviceClearExecutable"
     End If
 End Property
 

@@ -24,14 +24,12 @@ Private Type this_
     FailedCount As Integer
     InconclusiveCount As Integer
     
-    ' initial observer settings
-    Observer As K2700Observer
+    ' The k2700 view
     K2700Sheet As K2700Sheet
     
-    ' initial view model settings
+    ' the view model
     ViewModel As cc_isr_Tcp_Scpi.K2700ViewModel
     
-    ' initial observer settings
     ContinuousSenseFunctionName As String
     ImmediateSenseFunctionName As String
     ExternalSenseFunctionName As String
@@ -81,12 +79,6 @@ Public Function RunTest(ByVal a_testNumber As Integer) As cc_isr_Test_Fx.Assert
         Case 12
             Set p_outcome = TestTriggerMonitoringShouldRead
         Case 13
-            Set p_outcome = TestK2700SheetShouldMeasureImmediately
-        Case 14
-            Set p_outcome = TestK2700SheetMonitoringShouldStartStop
-        Case 15
-            Set p_outcome = TestK2700SheetMonitoringShouldRead
-        Case 16
             Set p_outcome = TestOpenConnectionWithPowerOnResetShouldConnect
         Case Else
     End Select
@@ -185,7 +177,7 @@ Public Sub RunAllTests()
     This.PassedCount = 0
     This.FailedCount = 0
     This.InconclusiveCount = 0
-    This.TestCount = 16
+    This.TestCount = 13
     Dim p_testNumber As Integer
     For p_testNumber = 1 To This.TestCount
         Set p_outcome = RunTest(p_testNumber)
@@ -257,10 +249,9 @@ Public Sub BeforeAll()
     
     Set This.ErrTracer = p_errTrace.Initialize(This.ViewModel.Device)
     
-    ' initialize the observer before initializing the view mode
-    ' but after the observer setting are set. The observer initial
+    ' initialize the view before initializing the view model
+    ' but after the view initial setting are set. The view initial
     ' settings are then applied to the view model.
-    Set This.Observer = K2700Observer.Initialize(This.ViewModel)
     Set This.K2700Sheet = K2700Sheet.Initialize(This.ViewModel)
     
     ' issue the open connection command. This initializes the view model.
@@ -612,15 +603,8 @@ Public Function AssertExternalTriggerModeShouldStart(ByVal a_assert As cc_isr_Te
     If p_outcome.AssertSuccessful Then
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, _
-            This.Observer.FrontInputsRequired, _
-            "Observer Front inputs state should equal view model inputs state for external trigger reading mode.")
-    End If
-    
-    If p_outcome.AssertSuccessful Then
-        
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, _
             This.K2700Sheet.FrontInputsRequired, _
-            "K2700 Sheet Front inputs state should equal view model inputs state for external trigger reading mode.")
+            "The K2700 Sheet Front inputs state should equal view model inputs state for external trigger reading mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -634,8 +618,8 @@ Public Function AssertExternalTriggerModeShouldStart(ByVal a_assert As cc_isr_Te
     If p_outcome.AssertSuccessful Then
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
-            This.Observer.MeasurementMode, _
-            "Observer measurement mode should equal expected value for external trigger reading mode.")
+            This.K2700Sheet.MeasurementMode, _
+            "The K2700 Sheet measurement mode should equal expected value for external trigger reading mode.")
     End If
     
     Set AssertExternalTriggerModeShouldStart = p_outcome
@@ -663,8 +647,9 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_assert As cc_isr
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.Observer.MeasurementMode, _
-            "Observer measurement mode should equal expected value for external trigger reading mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
+            This.K2700Sheet.MeasurementMode, _
+            "The K2700 Sheet measurement mode should equal expected value for external trigger reading mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -679,8 +664,9 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_assert As cc_isr
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, This.Observer.TargetChannelNumber, _
-            "Observer Target Channel Number should equal the view model channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, _
+            This.K2700Sheet.TargetChannelNumber, _
+            "The K2700 Sheet Target Channel Number should equal the view model channel number.")
     
     End If
     
@@ -749,8 +735,8 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_assert As cc_isr
     End If
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.Observer.MeasureExecutable, _
-            "Observer Measure button should be disabled in external trigger reading mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.K2700Sheet.MeasureExecutable, _
+            "The K2700 Sheet Measure button should be disabled in external trigger reading mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -761,8 +747,8 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_assert As cc_isr
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.Observer.StopMonitoringExecutable, _
-            "Observer stop monitoring button should be disabled in external trigger reading mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.K2700Sheet.StopMonitoringExecutable, _
+            "The K2700 Sheet stop monitoring button should be disabled in external trigger reading mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -773,8 +759,8 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_assert As cc_isr
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.Observer.StartMonitoringExecutable, _
-            "Observer start monitoring button should be enabled in external trigger reading mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700Sheet.StartMonitoringExecutable, _
+            "The K2700 Sheet start monitoring button should be enabled in external trigger reading mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -785,8 +771,8 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_assert As cc_isr
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.Observer.ImmediateTriggerOptionExecutable, _
-            "Observer immediate trigger option button should be enabled in external trigger reading mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700Sheet.ImmediateTriggerOptionExecutable, _
+            "The K2700 Sheet immediate trigger option button should be enabled in external trigger reading mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -797,8 +783,8 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_assert As cc_isr
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.Observer.ExternalTriggerOptionExecutable, _
-            "Observer external trigger option button should be enabled in external trigger reading mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700Sheet.ExternalTriggerOptionExecutable, _
+            "The K2700 Sheet external trigger option button should be enabled in external trigger reading mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -809,8 +795,8 @@ Public Function AssertExternalTriggerModeShouldValidate(ByVal a_assert As cc_isr
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.Observer.ExternalTrigMonitoringEnabled, _
-            "Observer external trigger monitoring state should be off in external trigger reading mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.K2700Sheet.ExternalTrigMonitoringEnabled, _
+            "The K2700 Sheet external trigger monitoring state should be off in external trigger reading mode.")
     End If
     
     Set AssertExternalTriggerModeShouldValidate = p_outcome
@@ -844,15 +830,8 @@ Public Function AssertImmediateModeShouldStart(ByVal a_assert As cc_isr_Test_Fx.
     If p_outcome.AssertSuccessful Then
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, _
-            This.Observer.FrontInputsRequired, _
-            "Observer Front inputs state should equal view model inputs state for external trigger reading mode.")
-    End If
-    
-    If p_outcome.AssertSuccessful Then
-        
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, _
             This.K2700Sheet.FrontInputsRequired, _
-            "K2700 Sheet Front inputs state should equal view model inputs state for external trigger reading mode.")
+            "The K2700 Sheet Front inputs state should equal view model inputs state for external trigger reading mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -865,8 +844,9 @@ Public Function AssertImmediateModeShouldStart(ByVal a_assert As cc_isr_Test_Fx.
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.Observer.MeasurementMode, _
-            "Observer measurement mode should equal expected value for immediate trigger reading mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
+            This.K2700Sheet.MeasurementMode, _
+            "The K2700 Sheet measurement mode should equal expected value for immediate trigger reading mode.")
     End If
     
     Set AssertImmediateModeShouldStart = p_outcome
@@ -895,8 +875,9 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_assert As cc_isr_Test_
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.Observer.MeasurementMode, _
-            "Observer measurement mode should equal expected value for immediate trigger reading mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
+            This.K2700Sheet.MeasurementMode, _
+            "The K2700 Sheet measurement mode should equal expected value for immediate trigger reading mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -944,8 +925,8 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_assert As cc_isr_Test_
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.Observer.MeasureExecutable, _
-            "Observer Measure button should be ensabled in immediate mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700Sheet.MeasureExecutable, _
+            "The K2700 Sheet Measure button should be ensabled in immediate mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -956,8 +937,8 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_assert As cc_isr_Test_
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.Observer.StopMonitoringExecutable, _
-            "Observer stop monitoring button should be disabled in immediate mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.K2700Sheet.StopMonitoringExecutable, _
+            "The K2700 Sheet stop monitoring button should be disabled in immediate mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -968,8 +949,8 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_assert As cc_isr_Test_
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.Observer.StartMonitoringExecutable, _
-            "Observer start monitoring button should be disabled in immediate mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.K2700Sheet.StartMonitoringExecutable, _
+            "The K2700 Sheet start monitoring button should be disabled in immediate mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -980,8 +961,8 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_assert As cc_isr_Test_
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.Observer.ImmediateTriggerOptionExecutable, _
-            "Observer immediate trigger option button should be enabled in immediate mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700Sheet.ImmediateTriggerOptionExecutable, _
+            "The K2700 Sheet immediate trigger option button should be enabled in immediate mode.")
     End If
     
     
@@ -993,8 +974,8 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_assert As cc_isr_Test_
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.Observer.ExternalTriggerOptionExecutable, _
-            "Observer external trigger option button should be enabled in immediate mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700Sheet.ExternalTriggerOptionExecutable, _
+            "The K2700 Sheet external trigger option button should be enabled in immediate mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1005,8 +986,8 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_assert As cc_isr_Test_
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.Observer.ExternalTrigMonitoringEnabled, _
-            "Observer external trigger monitoring state should be off in immediate mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.K2700Sheet.ExternalTrigMonitoringEnabled, _
+            "The K2700 Sheet external trigger monitoring state should be off in immediate mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1023,7 +1004,7 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_assert As cc_isr_Test_
     
         ' with immediate mode and single reading, the selected channel is used to set the
         ' measured channel after a reading is triggered and the measurement event is handled
-        ' by the observer.
+        ' by the K2700 Sheet.
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.SelectedChannelNumber > 0, _
             "The View Model selected channel number '" & VBA.CStr(This.ViewModel.SelectedChannelNumber) & _
             "' should be positive.")
@@ -1041,8 +1022,8 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_assert As cc_isr_Test_
     If p_outcome.AssertSuccessful Then
     
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.Observer.SelectedChannelNumber, _
-            "The Observer selected channel number should be set to the View Model selected channel number.")
+            This.K2700Sheet.SelectedChannelNumber, _
+            "The K2700 Sheet selected channel number should be set to the View Model selected channel number.")
     
     End If
     
@@ -1120,24 +1101,16 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
         cc_isr_Core_IO.Factory.NewStopwatch().Wait 10
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.Observer.MeasuredChannelNumber, _
-            "Observer measured channel number should equal the selected channel number.")
+            This.K2700Sheet.MeasuredChannelNumber, _
+            "The K2700 Sheet measured channel number should equal the selected channel number.")
             
     End If
     
     If p_outcome.AssertSuccessful Then
     
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.Observer.SelectedChannelNumber, _
+            This.K2700Sheet.SelectedChannelNumber, _
             "The User View selected channel number should be set to the View Model selected channel number.")
-    
-    End If
-    
-    If p_outcome.AssertSuccessful Then
-    
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.Observer.MeasuredChannelNumber, _
-            "The Observer measured channel number should be set to the View Model selected channel number.")
     
     End If
     
@@ -1147,7 +1120,7 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
     
     If p_outcome.AssertSuccessful Then
         
-        ' get the reading from the observer.
+        ' get the reading from the K2700 Sheet.
         p_reading = This.K2700Sheet.MeasuredReading
         
         p_channelNumber = This.K2700Sheet.MeasuredChannelNumber
@@ -1166,14 +1139,6 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.MeasuredChannelNumber, _
-            This.ViewModel.MeasuredChannelNumber, _
-            "View Model measured channel number should equal the Observer measured channel.")
-            
-    End If
-    
-    If p_outcome.AssertSuccessful Then
-        
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(ExpectedTargetChannelNumber(), _
             This.ViewModel.SelectedChannelNumber, _
             "The expected target channel number should equal the selected channel number.")
@@ -1183,8 +1148,8 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
     If p_outcome.AssertSuccessful Then
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.Observer.SelectedChannelNumber, _
-            "The observer Selected Channel Number should equal the view model selected channel number.")
+            This.K2700Sheet.SelectedChannelNumber, _
+            "The K2700 Sheet Selected Channel Number should equal the view model selected channel number.")
             
     End If
     
@@ -1265,8 +1230,9 @@ Public Function AssertMonitoringModeShouldStart(ByVal a_assert As cc_isr_Test_Fx
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.Observer.MeasurementMode, _
-            "Observer measurement mode should equal expected value for trigger monitoring mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
+            This.K2700Sheet.MeasurementMode, _
+            "The K2700 Sheet measurement mode should equal expected value for trigger monitoring mode.")
     End If
     
     Set AssertMonitoringModeShouldStart = p_outcome
@@ -1296,8 +1262,8 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test
     If p_outcome.AssertSuccessful Then
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
-            This.Observer.MeasurementMode, _
-            "Observer measurement mode should equal expected value for external trigger monitoring mode.")
+            This.K2700Sheet.MeasurementMode, _
+            "The K2700 Sheet measurement mode should equal expected value for external trigger monitoring mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1337,8 +1303,8 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.Observer.StopMonitoringExecutable, _
-            "Observer stop monitoring button should be enabled in trigger monitoring mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700Sheet.StopMonitoringExecutable, _
+            "The K2700 Sheet stop monitoring button should be enabled in trigger monitoring mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1349,8 +1315,8 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.Observer.MeasureExecutable, _
-            "Observer Measure button should be disabled in trigger monitoring mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.K2700Sheet.MeasureExecutable, _
+            "The K2700 Sheet Measure button should be disabled in trigger monitoring mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1361,8 +1327,8 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.Observer.StartMonitoringExecutable, _
-            "Observer start monitoring button should be disabled in trigger monitoring mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.K2700Sheet.StartMonitoringExecutable, _
+            "The K2700 Sheet start monitoring button should be disabled in trigger monitoring mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1373,8 +1339,8 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.Observer.ImmediateTriggerOptionExecutable, _
-            "Observer immediate trigger option button should be disabled in trigger monitoring mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.K2700Sheet.ImmediateTriggerOptionExecutable, _
+            "The K2700 Sheet immediate trigger option button should be disabled in trigger monitoring mode.")
     End If
     
     
@@ -1386,8 +1352,8 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.Observer.ExternalTriggerOptionExecutable, _
-            "Observer external trigger option button should be disabled in trigger monitoring mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.K2700Sheet.ExternalTriggerOptionExecutable, _
+            "The K2700 Sheet external trigger option button should be disabled in trigger monitoring mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1398,8 +1364,8 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.Observer.ExternalTrigMonitoringEnabled, _
-            "Observer external trigger monitoring state should be on in trigger monitoring mode.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700Sheet.ExternalTrigMonitoringEnabled, _
+            "The K2700 Sheet external trigger monitoring state should be on in trigger monitoring mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1418,7 +1384,7 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test
     
         ' with triggered mode and multiple reading, the Target Channel Number is used to set the
         ' measured channel after a reading is triggered and the measurement event is handled
-        ' by the observer. The target channel number must then be set to between 1 and the
+        ' by the K2700 Sheet. The target channel number must then be set to between 1 and the
         ' channel count (see below).
         
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.TargetChannelNumber > 0, _
@@ -1438,8 +1404,8 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_assert As cc_isr_Test
     If p_outcome.AssertSuccessful Then
     
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, _
-            This.Observer.TargetChannelNumber, _
-            "Observer Target Channel Number should be set to the selected channel number.")
+            This.K2700Sheet.TargetChannelNumber, _
+            "The K2700 Sheet Target Channel Number should be set to the selected channel number.")
     
     End If
    
@@ -1495,14 +1461,6 @@ Public Function AssertMeasurementsShouldGetTriggered(ByVal a_assert As cc_isr_Te
             
             If p_outcome.AssertSuccessful Then
                 
-                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.MeasuredChannelNumber, _
-                    This.ViewModel.MeasuredChannelNumber, _
-                    "View Model measured channel number should equal the Observer measured channel.")
-                    
-            End If
-            
-            If p_outcome.AssertSuccessful Then
-                
                 Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.K2700Sheet.MeasuredChannelNumber, _
                     This.ViewModel.MeasuredChannelNumber, _
                     "View Model measured channel number should equal the K2700 Sheet measured channel.")
@@ -1520,8 +1478,8 @@ Public Function AssertMeasurementsShouldGetTriggered(ByVal a_assert As cc_isr_Te
             If p_outcome.AssertSuccessful Then
                 
                 Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, _
-                    This.Observer.TargetChannelNumber, _
-                    "The observer Target Channel Number should equal the view model target channel number.")
+                    This.K2700Sheet.TargetChannelNumber, _
+                    "The K2700 Sheet Target Channel Number should equal the view model target channel number.")
                     
             End If
 
@@ -1642,8 +1600,8 @@ Public Function AssertMonitoringModeStopShouldValidate(ByVal a_assert As cc_isr_
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.Observer.StopMonitoringExecutable, _
-            "Observer stop monitoring button should be enabled after monitoring stopped.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.K2700Sheet.StopMonitoringExecutable, _
+            "The K2700 Sheet stop monitoring button should be enabled after monitoring stopped.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1654,8 +1612,8 @@ Public Function AssertMonitoringModeStopShouldValidate(ByVal a_assert As cc_isr_
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.Observer.MeasureExecutable, _
-            "Observer Measure button should be disabled after monitoring stopped.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.K2700Sheet.MeasureExecutable, _
+            "The K2700 Sheet Measure button should be disabled after monitoring stopped.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1666,8 +1624,8 @@ Public Function AssertMonitoringModeStopShouldValidate(ByVal a_assert As cc_isr_
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.Observer.StartMonitoringExecutable, _
-            "Observer start monitoring button should be disabled after monitoring stopped.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.K2700Sheet.StartMonitoringExecutable, _
+            "The K2700 Sheet start monitoring button should be disabled after monitoring stopped.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1678,8 +1636,8 @@ Public Function AssertMonitoringModeStopShouldValidate(ByVal a_assert As cc_isr_
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.Observer.ImmediateTriggerOptionExecutable, _
-            "Observer immediate trigger option button should be enabled after monitoring stopped.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700Sheet.ImmediateTriggerOptionExecutable, _
+            "The K2700 Sheet immediate trigger option button should be enabled after monitoring stopped.")
     End If
     
     
@@ -1691,8 +1649,8 @@ Public Function AssertMonitoringModeStopShouldValidate(ByVal a_assert As cc_isr_
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.Observer.ExternalTriggerOptionExecutable, _
-            "Observer external trigger option button should be enabled after monitoring stopped.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700Sheet.ExternalTriggerOptionExecutable, _
+            "The K2700 Sheet external trigger option button should be enabled after monitoring stopped.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -1703,14 +1661,15 @@ Public Function AssertMonitoringModeStopShouldValidate(ByVal a_assert As cc_isr_
     
     If p_outcome.AssertSuccessful Then
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.Observer.ExternalTrigMonitoringEnabled, _
-            "Observer external trigger monitoring state should be off after monitoring stopped.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.K2700Sheet.ExternalTrigMonitoringEnabled, _
+            "The K2700 Sheet external trigger monitoring state should be off after monitoring stopped.")
     End If
     
     If p_outcome.AssertSuccessful Then
     
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, This.Observer.TargetChannelNumber, _
-            "Observer Target Channel Number should be set to the selected channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, _
+            This.K2700Sheet.TargetChannelNumber, _
+            "The K2700 Sheet Target Channel Number should be set to the selected channel number.")
     
     End If
    
@@ -1752,20 +1711,16 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
             "Toggle connection should be executable after initializing the View Model.")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Host, This.Observer.Host, _
-            "Observer and view model 'Host' setting should equal.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Host, This.K2700Sheet.Host, _
+            "The K2700 Sheet and view model 'Host' setting should equal.")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Port, This.Observer.Port, _
-            "Observer and view model 'Port' setting should equal.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Port, This.K2700Sheet.Port, _
+            "The K2700 Sheet and view model 'Port' setting should equal.")
 
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SocketAddress, This.Observer.SocketAddress, _
-            "Observer 'Socket Address' setting should equal the view model value.")
-    
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SocketAddress, This.K2700Sheet.SocketAddress, _
-            "K2700 Sheet 'Socket Address' setting should equal the view model initial setting.")
+            "The K2700 Sheet 'Socket Address' setting should equal the view model initial setting.")
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(K2700Sheet.ReadingOffset, This.ViewModel.ReadingOffset, _
@@ -1775,7 +1730,7 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(K2700Sheet.GpibLanControllerPort, This.ViewModel.GpibLanControllerPort, _
             "View Model 'GpibLanControllerPort' setting should equal K2700 Sheet value.")
             
-    ' check the Observer Status
+    ' check the K2700 Sheet Status
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.Connected, _
@@ -1792,48 +1747,26 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.OpenConnectionExecutable, _
             This.K2700Sheet.OpenConnectionExecutable, _
-            "K2700 Sheet and View Model Open Connection Executables should equal.")
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.OpenConnectionExecutable, _
-            This.Observer.OpenConnectionExecutable, _
-            "Observer and View Model Open Connection Executables should equal.")
+            "The K2700 Sheet and View Model Open Connection Executables should equal.")
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.CloseConnectionExecutable, _
             This.K2700Sheet.CloseConnectionExecutable, _
-            "data sheet and View Model Close Connection Executables should equal.")
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.CloseConnectionExecutable, _
-            This.Observer.CloseConnectionExecutable, _
-            "Observer and View Model Close Connection Executables should equal.")
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SocketAddress, This.K2700Sheet.SocketAddress, _
-            "K2700 sheet and View Model Socket Addresses should equal.")
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SocketAddress, This.Observer.SocketAddress, _
-            "Observer and View Model Socket Addresses should equal.")
+            "The K2700 Sheet and View Model Close Connection Executables should equal.")
    
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SessionTimeout, This.K2700Sheet.SessionTimeout, _
-            "K2700 sheet and View Model Session Timeouts should equal.")
-
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SocketAddress, This.K2700Sheet.SocketAddress, _
+            "The K2700 Sheet and View Model Socket Addresses should equal.")
+    
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SessionTimeout, This.Observer.SessionTimeout, _
-            "Observer and View Model Session Timeouts should equal.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SessionTimeout, This.K2700Sheet.SessionTimeout, _
+            "The K2700 Sheet and View Model Session Timeouts should equal.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
             "Last error message should be empty.")
 
     This.ViewModel.LastErrorMessage = "test: no error"
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.LastErrorMessage, This.Observer.LastErrorMessage, _
-            "Observer and View Model Last Error Messages should equal.")
-    
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.LastErrorMessage, This.K2700Sheet.LastErrorMessage, _
             "K27000 sheet and View Model Last Error Messages should equal.")
@@ -1843,11 +1776,7 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     This.ViewModel.LastMessage = "test message"
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.LastMessage, This.K2700Sheet.LastMessage, _
-            "K2700 sheet and View Model Last Messages should equal.")
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.LastMessage, This.Observer.LastMessage, _
-            "Observer and View Model Last Messages should equal.")
+            "The K2700 Sheet and View Model Last Messages should equal.")
     
     This.ViewModel.LastMessage = VBA.vbNullString
 
@@ -1859,12 +1788,7 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredChannelNumber, _
             This.K2700Sheet.MeasuredChannelNumber, _
-            "K2700 sheet and View Model Measured Channel Numbers should equal.")
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredChannelNumber, _
-            This.Observer.MeasuredChannelNumber, _
-            "Observer and View Model Measured Channel Numbers should equal.")
+            "The K2700 Sheet and View Model Measured Channel Numbers should equal.")
     
     This.ViewModel.MeasuredChannelNumber = 0
 
@@ -1875,11 +1799,7 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     This.ViewModel.MeasuredReading = "0.0"
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredReading, This.K2700Sheet.MeasuredReading, _
-            "k2700 sheet and View Model Measured Readings should equal.")
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredReading, This.Observer.MeasuredReading, _
-            "Observer and View Model Measured Readings should equal.")
+            "The K2700 Sheet and View Model Measured Readings should equal.")
     
     This.ViewModel.MeasuredReading = VBA.vbNullString
     
@@ -1890,11 +1810,7 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     This.ViewModel.MeasuredValue = 0.1
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredValue, This.K2700Sheet.MeasuredValue, _
-            "K2700 sheet and View Model Measured Values should equal.")
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredValue, This.Observer.MeasuredValue, _
-            "Observer and View Model Measured Values should equal.")
+            "The K2700 Sheet and View Model Measured Values should equal.")
     
     This.ViewModel.MeasuredValue = 0#
 
@@ -1910,55 +1826,35 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.ClearReadingsExecutable, _
             This.K2700Sheet.ClearReadingsExecutable, _
-            "K2700 Sheet and View Model Clear Readings Executables should equal.")
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.ClearReadingsExecutable, _
-            This.Observer.ClearReadingsExecutable, _
-            "Observer and View Model Clear Readings Executables should equal.")
+            "The K2700 Sheet and View Model Clear Readings Executables should equal.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MaximumChannelNumber, _
             This.K2700Sheet.MaximumChannelNumber, _
-            "K2700 Sheet and View Model Maximum Channel Numbers should equal.")
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MaximumChannelNumber, _
-            This.Observer.MaximumChannelNumber, _
-            "Observer and View Model Maximum Channel Numbers should equal.")
+            "The K2700 Sheet and View Model Maximum Channel Numbers should equal.")
 
     ' check the User View Status
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, This.Observer.Connected, _
-            "Observer and View Model connection state should equal when connected.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, This.K2700Sheet.Connected, _
+            "The K2700 Sheet and View Model connection state should equal when connected.")
             
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, _
             This.K2700Sheet.FrontInputsRequired, _
-            "K2700 sheet and View Model Front Inputs Required should equal.")
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, _
-            This.Observer.FrontInputsRequired, _
-            "Observer and View Model Front Inputs Required should equal.")
+            "The K2700 Sheet and View Model Front Inputs Required should equal.")
 
     This.ViewModel.FrontInputsRequired = Not This.ViewModel.FrontInputsRequired
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, _
-            This.Observer.FrontInputsRequired, _
-            "Observer and View Model Front Inputs Required should equal after toggling value.")
+            This.K2700Sheet.FrontInputsRequired, _
+            "The K2700 Sheet and View Model Front Inputs Required should equal after toggling value.")
     
     This.K2700Sheet.FrontInputsRequired = Not This.ViewModel.FrontInputsRequired
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, _
-            This.Observer.FrontInputsRequired, _
-            "Observer and View Model Front Inputs Required should equal after restoring the value.")
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, _
             This.K2700Sheet.FrontInputsRequired, _
-            "K27000 sheet and View Model Front Inputs Required should equal after restoring the value.")
+            "The K2700 Sheet and View Model Front Inputs Required should equal after restoring the value.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(1, This.ViewModel.SelectedChannelNumber, _
@@ -1967,57 +1863,52 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
             This.K2700Sheet.SelectedChannelNumber, _
-            "K2700 sheet and View Model Selected Channel Numbers should equal.")
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.Observer.SelectedChannelNumber, _
-            "Observer and View Model Selected Channel Numbers should equal.")
+            "The K2700 Sheet and View Model Selected Channel Numbers should equal.")
 
     This.ViewModel.SelectedChannelNumber = 2
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.Observer.SelectedChannelNumber, _
-            "Observer and View Model Selected Channel Numbers should equal after change.")
+            This.K2700Sheet.SelectedChannelNumber, _
+            "The K2700 Sheet and View Model Selected Channel Numbers should equal after change.")
     
     This.K2700Sheet.SelectedChannelNumber = 1
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
             This.K2700Sheet.SelectedChannelNumber, _
-            "K2700 sheet and View Model Selected Channel Numbers should equal after restoring the value.")
+            "The K2700 Sheet and View Model Selected Channel Numbers should equal after restoring the value.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.AutoIncrementChannelNoEnabled, _
             This.K2700Sheet.AutoIncrementChannelNoEnabled, _
-            "Observer and  View Model Auto Increment Channel No Enabled should equal.")
+            "The K2700 Sheet and  View Model Auto Increment Channel No Enabled should equal.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.AutoIncrementChannelNoEnabled, _
             This.K2700Sheet.AutoIncrementChannelNoEnabled, _
-            "K2700 sheet and  View Model Auto Increment Channel No Enabled should equal.")
+            "The K2700 Sheet and  View Model Auto Increment Channel No Enabled should equal.")
 
     This.K2700Sheet.AutoIncrementChannelNoEnabled = Not This.ViewModel.AutoIncrementChannelNoEnabled
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.AutoIncrementChannelNoEnabled, _
-            This.Observer.AutoIncrementChannelNoEnabled, _
-            "Observer and View Model Auto Increment Channel No Enabled should equal after restoring the value.")
+            This.K2700Sheet.AutoIncrementChannelNoEnabled, _
+            "The K2700 Sheet and View Model Auto Increment Channel No Enabled should equal after restoring the value.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SingleReadEnabled, _
             This.K2700Sheet.SingleReadEnabled, _
-            "K2700 sheet and View Model Single Read Enabled should equal.")
+            "The K2700 Sheet and View Model Single Read Enabled should equal.")
 
     This.ViewModel.SingleReadEnabled = Not This.ViewModel.SingleReadEnabled
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SingleReadEnabled, _
-            This.Observer.SingleReadEnabled, _
-            "Observer and View Model Single Read Enabled should equal after change.")
+            This.K2700Sheet.SingleReadEnabled, _
+            "The K2700 Sheet and View Model Single Read Enabled should equal after change.")
 
     This.K2700Sheet.SingleReadEnabled = Not This.ViewModel.SingleReadEnabled
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SingleReadEnabled, _
             This.K2700Sheet.SingleReadEnabled, _
-            "K2700 sheet and View Model Single Read Enabled should equal after restoring the value.")
+            "The K2700 Sheet and View Model Single Read Enabled should equal after restoring the value.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.Measuring, _
@@ -2026,10 +1917,6 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.K2700Sheet.ReadingOffset, This.ViewModel.ReadingOffset, _
             "View Model and K2700 sheet 'Reading Offset' should equal.")
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.ReadingOffset, This.ViewModel.ReadingOffset, _
-            "View Model and observer 'Reading Offset' should equal.")
 
     If p_outcome.AssertSuccessful Then
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.Session.Socket.TryCloseConnection(p_details), _
@@ -2044,30 +1931,16 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.OpenConnectionExecutable, _
             This.K2700Sheet.OpenConnectionExecutable, _
-            "K2700 sheet  and View Model Open Connection Executables should equal after disconnection.")
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.OpenConnectionExecutable, _
-            This.Observer.OpenConnectionExecutable, _
-            "Observer and View Model Open Connection Executables should equal after disconnection.")
+            "The K2700 Sheet and View Model Open Connection Executables should equal after disconnection.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.CloseConnectionExecutable, _
             This.K2700Sheet.CloseConnectionExecutable, _
-            "K2700 sheet and View Model Close Connection Executables should equal after disconnection.")
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.CloseConnectionExecutable, _
-            This.Observer.CloseConnectionExecutable, _
-            "Observer and View Model Close Connection Executables should equal after disconnection.")
+            "The K2700 Sheet and View Model Close Connection Executables should equal after disconnection.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, This.K2700Sheet.Connected, _
-            "K2700 sheet and View Model Connected states should equal after disconnection.")
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, This.Observer.Connected, _
-            "Observer and View Model Connected states should equal after disconnection.")
+            "The K2700 Sheet and View Model Connected states should equal after disconnection.")
 
     If p_outcome.AssertSuccessful Then _
        Set p_outcome = AssertUserInterfaceState(p_outcome)
@@ -2123,21 +1996,12 @@ Public Function AssertUserInterfaceState(ByVal a_outcome As cc_isr_Test_Fx.Asser
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, This.K2700Sheet.Connected, _
-            "K2700 Sheet and View Model Connected states should equal for testing user interface controls.")
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, This.Observer.Connected, _
-            "Observer and View Model Connected states should equal for testing user interface controls.")
+            "The K2700 Sheet and View Model Connected states should equal for testing user interface controls.")
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SingleReadEnabled, _
             This.K2700Sheet.SingleReadEnabled, _
-            "K2700 sheet and View Model single read enabled should equal for testing user interface controls.")
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SingleReadEnabled, _
-            This.Observer.SingleReadEnabled, _
-            "Observer and View Model single read enabled should equal for testing user interface controls.")
+            "The K2700 Sheet and View Model single read enabled should equal for testing user interface controls.")
     
     Set AssertUserInterfaceState = p_outcome
     
@@ -2176,23 +2040,15 @@ Public Function TestShouldBeConnected() As cc_isr_Test_Fx.Assert
         
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.K2700Sheet.PrimaryGpibAddress, This.ViewModel.GpibAddress, _
-            "View model Gpib address should be set to the K2700 sheet value.")
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.GpibAddress, This.ViewModel.GpibAddress, _
-            "View model Gpib address should be set to the observer value.")
+            "View model Gpib address should be set to the K2700 Sheet value.")
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.CloseConnectionExecutable, _
             "View model close connection executable should be enabled upon connection.")
         
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.Observer.CloseConnectionExecutable, _
-            "View model Observer close connection executable should be enabled upon connection.")
-        
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.Observer.ToggleConnectionExecutable, _
-            "View model Observer toggle connection executable should be enabled upon connection.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700Sheet.CloseConnectionExecutable, _
+            "The K2700 Sheet close connection executable should be enabled upon connection.")
         
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.OpenConnectionExecutable, _
@@ -2207,8 +2063,8 @@ Public Function TestShouldBeConnected() As cc_isr_Test_Fx.Assert
             "External trigger option button should be enabled upon connection.")
         
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.Observer.ExternalTriggerOptionExecutable, _
-            "Observer External trigger option button should be enabled upon connection.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700Sheet.ExternalTriggerOptionExecutable, _
+            "The K2700 Sheet External trigger option button should be enabled upon connection.")
         
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.StartMonitoringExecutable, _
@@ -2251,25 +2107,20 @@ Public Function TestShouldBeConnected() As cc_isr_Test_Fx.Assert
         
         If p_outcome.AssertSuccessful Then _
             Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SerialPollByte, _
-                This.Observer.SerialPollByte, _
-                "Observer and view model serial poll bytes should be equal.")
+                This.K2700Sheet.SerialPollByte, _
+                "The K2700 Sheet and view model serial poll bytes should be equal.")
             
         If p_outcome.AssertSuccessful Then _
             Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.StatusByte, _
-                This.Observer.StatusByte, _
-                "Observer and view model status bytes should be equal.")
+                This.K2700Sheet.StatusByte, _
+                "The K2700 Sheet and view model status bytes should be equal.")
                 
     End If
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.LastErrorMessage, _
             This.K2700Sheet.LastErrorMessage, _
-            "K2700 sheet Last error message should be the same as the view model.")
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.LastErrorMessage, _
-            This.Observer.LastErrorMessage, _
-            "Observer Last error message should be the same as the view model.")
+            "The K2700 Sheet Last error message should be the same as the view model.")
     
     ' Finally, verify that no error message was recorded.
     If p_outcome.AssertSuccessful Then _
@@ -2629,15 +2480,15 @@ Public Function TestSyntaxErrorShouldRecover() As Assert
         
         If p_outcome.AssertSuccessful Then _
             Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SerialPollByte, _
-                This.Observer.SerialPollByte, _
-                "Observer and view model serial poll bytes should be equal.")
+                This.K2700Sheet.SerialPollByte, _
+                "The K2700 Sheet and view model serial poll bytes should be equal.")
             
         This.ViewModel.QueryStatusByteCommand
        
         If p_outcome.AssertSuccessful Then _
             Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.StatusByte, _
-                This.Observer.StatusByte, _
-                "Observer and view model status bytes should be equal.")
+                This.K2700Sheet.StatusByte, _
+                "The K2700 Sheet and view model status bytes should be equal.")
     
         ' clear the error state
         cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
@@ -2802,7 +2653,7 @@ Public Function TestImmediateModeShouldConfigure() As cc_isr_Test_Fx.Assert
     ' With single reading mode (auto increment is off),
     ' the selected channel number becomes the
     ' measured channel number after the immediate reading is
-    ' triggered and the observer event handler handles the
+    ' triggered and the K2700 Sheet event handler handles the
     ' measurement completion event. Thus, start with channel 1 and
     ' turn off auto increment in order to take single readings.
     
@@ -3043,14 +2894,6 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
             
             If p_outcome.AssertSuccessful Then
                 
-                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.MeasuredChannelNumber, _
-                    This.ViewModel.MeasuredChannelNumber, _
-                    "View Model measured channel number should equal the Observer measured channel.")
-                    
-            End If
-            
-            If p_outcome.AssertSuccessful Then
-                
                 Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.K2700Sheet.MeasuredChannelNumber, _
                     This.ViewModel.MeasuredChannelNumber, _
                     "View Model measured channel number should equal the K2700 Sheet measured channel.")
@@ -3068,8 +2911,8 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
             If p_outcome.AssertSuccessful Then
                 
                 Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, _
-                    This.Observer.TargetChannelNumber, _
-                    "The observer Target Channel Number should equal the view model target channel number.")
+                    This.K2700Sheet.TargetChannelNumber, _
+                    "The K2700 Sheet Target Channel Number should equal the view model target channel number.")
                     
             End If
 
@@ -3471,453 +3314,6 @@ err_Handler:
     GoTo exit_Handler
 
 End Function
-
-''' <summary>   Unit test. Asserts that User View should measure immediately. </summary>
-''' <remarks>
-''' <code>
-''' With 1ms read after write delay.
-'''  1 : 100.104454
-''' Test 13 TestK2700SheetShouldMeasureImmediately passed. Elapsed time: 14728.3 ms.
-'''  1 : 100.133842
-''' Test 13 TestK2700SheetShouldMeasureImmediately passed. Elapsed time: 6138.5 ms.
-''' </code>
-''' </remarks>
-''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
-''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestK2700SheetShouldMeasureImmediately() As cc_isr_Test_Fx.Assert
-
-    Const p_procedureName As String = "TestK2700SheetShouldMeasureImmediately"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
-    
-    If p_outcome.AssertSuccessful Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
-    End If
-    
-    ' setup conditions for immediate triggering
-    
-    ' Immediate trigger mode is tested in single readings
-    ' by turning auto increment off.
-    
-    ' With single reading mode (auto increment is off),
-    ' the selected channel number becomes the
-    ' measured channel number after the immediate reading is
-    ' triggered and the observer event handler handles the
-    ' measurement completion event. Thus, start with channel 1 and
-    ' turn off auto increment in order to take single readings.
-    
-    If This.K2700Sheet.MeasuredChannelNumber = 1 Then
-        This.ViewModel.SelectedChannelNumber = 2
-    Else
-        This.ViewModel.SelectedChannelNumber = 1
-    End If
-    
-    ' start the immediate trigger reading mode
-    
-    Dim p_reading As String: p_reading = This.K2700Sheet.MeasuredReading
-    Dim p_channelNumber As Integer: p_channelNumber = This.K2700Sheet.MeasuredChannelNumber
-    Dim p_readingValue As Double: p_readingValue = This.K2700Sheet.MeasuredValue
-    
-    ' this needs to be longer than 5 seconds due to the time it takes the instrument to reset
-    ' and set the immediate mode.
-    Dim p_duration As String: p_duration = 10
-    
-    If p_outcome.AssertSuccessful Then
-        
-        ' clear the Observer measured channel number so that we can detected a measurment.
-        This.K2700Sheet.MeasuredChannelNumber = -1
-        
-        ' depress the User View, this should start the
-        ' immediate trigger mode and take a reading
-        This.Observer.OnImmediateTriggerOption
-        This.Observer.OnMeasure
-        
-        ' start the immediate measurement mode, which should take a single measurement
-        ' this should get invoked by the button change event.
-        ' This.K2700Sheet.OnAutoSingleToggleButtonChange
-        
-    End If
-    
-    If p_outcome.AssertSuccessful Then
-        
-        ' wait for the measurement to come in
-        
-        Dim p_endTime As Double
-        p_endTime = cc_isr_Core_IO.CoreExtensions.DaysNow() + _
-            (p_duration / cc_isr_Core_IO.CoreExtensions.SecondsPerDay)
-        Do While p_endTime > cc_isr_Core_IO.CoreExtensions.DaysNow()
-            
-            VBA.DoEvents
-        
-            ' report reading if the selected channel number was measured
-            If This.ViewModel.SelectedChannelNumber = This.K2700Sheet.MeasuredChannelNumber Then
-            
-                VBA.DoEvents
-                Debug.Print This.K2700Sheet.MeasuredChannelNumber; ": "; This.K2700Sheet.MeasuredReading
-    
-                Exit Do
-                
-            End If
-        
-        Loop
-        
-    End If
-    
-    If p_outcome.AssertSuccessful Then
-        
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.K2700Sheet.MeasuredChannelNumber, _
-            This.ViewModel.MeasuredChannelNumber, _
-            "View Model measured channel number should equal the Observer measured channel.")
-            
-    End If
-    
-    If p_outcome.AssertSuccessful Then
-        
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.MeasuredChannelNumber, _
-            This.ViewModel.MeasuredChannelNumber, _
-            "View Model measured channel number should equal the Observer measured channel.")
-            
-    End If
-    
-    If p_outcome.AssertSuccessful Then
-        
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(ExpectedTargetChannelNumber(), _
-            This.ViewModel.SelectedChannelNumber, _
-            "The expected target channel number should equal the selected channel number.")
-            
-    End If
-    
-    If p_outcome.AssertSuccessful Then
-        
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.Observer.SelectedChannelNumber, _
-            "The observer Selected Channel Number should equal the view model selected channel number.")
-            
-    End If
-    
-    If p_outcome.AssertSuccessful Then
-        
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.K2700Sheet.SelectedChannelNumber, _
-            "The K2700 Sheet Selected Channel Number should equal the view model selected channel number.")
-            
-    End If
-    
-    If p_outcome.AssertSuccessful Then
-        
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(VBA.vbNullString = This.K2700Sheet.MeasuredReading, _
-            "Reading should not be empty.")
-            
-    End If
-    
-    If p_outcome.AssertSuccessful Then
-        
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700Sheet.MeasuredValue > 0, _
-            "Reading value '" & VBA.CStr(This.K2700Sheet.MeasuredReading) & "' should be positive.")
-            
-    End If
-    
-    Dim p_epsilon As Double: p_epsilon = 0.0000000001
-    
-    If p_outcome.AssertSuccessful Then
-        
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreCloseDouble(This.K2700Sheet.MeasuredValue, _
-            VBA.CDbl(This.K2700Sheet.MeasuredReading), p_epsilon, _
-            "Reading should equal the parsed value.")
-            
-    End If
-    
-    
-    ' Finally, verify that no error message was recorded.
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
-            "Last error message should be empty but found: '" & This.ViewModel.LastErrorMessage & "'.")
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
-    
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
-        " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
-    
-    Set TestK2700SheetShouldMeasureImmediately = p_outcome
-    
-    On Error GoTo 0
-    Exit Function
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
-    
-    ' enqueue the error or append its source to the last error.
-    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Function
-
-''' <summary>   Asserts that User View should monitor triggered readings. </summary>
-''' <param name="a_assert">     [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
-''' <param name="a_enabled">    [Optional, Boolean, True] True to enable reading triggered values. </param>
-''' <param name="a_duration">   [Optional, Double, 5] The time to wait for some triggered values. </param>
-''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
-''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function AssetK2700SheetShouldMonitor(ByVal a_assert As cc_isr_Test_Fx.Assert, _
-    Optional ByVal a_enabled As Boolean = True, _
-    Optional ByVal a_duration As Double = 5) As cc_isr_Test_Fx.Assert
-    
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
-    Dim p_details As String: p_details = VBA.vbNullString
-
-    ' setup conditions for monitoring
-    
-    ' Multiple readings (auto increment on) is used for testing
-    ' trigger monitoring. The test checks that channel numbers change
-    ' with each trigger.
-    
-    ' With multiple readings (auto increment is on),
-    ' channel numbers start with the Target Channel Number.
-    ' Start with channel 1 and
-    
-    This.ViewModel.TargetChannelNumber = 1
-    
-    ' this needs to be longer than 5 seconds due to the time it takes the instrument to reset
-    ' and set the immediate mode.
-    Dim p_duration As String: p_duration = 10
-    
-    ' start the manual scan operations: external trigger monitoring mode
-    
-    If p_outcome.AssertSuccessful Then
-        
-        ' clear the Observer measured channel number so that we can detected a measurment.
-        This.K2700Sheet.MeasuredChannelNumber = -1
-    
-        ' configure external trigger
-        ' and start monitoring, which takes a bit of time, ergo the wait for the timer to start.
-        This.Observer.OnExternalTriggerOption
-        
-        ' start tmonitoring
-        This.Observer.OnStartMonitorExtTrigButtonClick
-        
-        Dim p_endTime As Double
-        p_endTime = cc_isr_Core_IO.CoreExtensions.DaysNow() + _
-            (p_duration / cc_isr_Core_IO.CoreExtensions.SecondsPerDay)
-        Do Until This.ViewModel.TimerStarted Or (p_endTime < cc_isr_Core_IO.CoreExtensions.DaysNow())
-            VBA.DoEvents
-        Loop
-    
-    End If
-    
-    ' validate active monitoring settings
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.StopRequested, _
-            "View Model Stop Requested should be false during external trigger monitoring.")
-        
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.PauseRequested, _
-            "View Model Pause Requested should be false during external trigger monitoring.")
-        
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.TimerStarted, _
-            "View Model Timer Started should be true during external trigger monitoring.")
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring, _
-            This.ViewModel.MeasurementMode, _
-            "View Model Measurement mode should be at 'Monitoring' during external trigger monitoring.")
-    
-    ' get some data here.
-
-    If p_outcome.AssertSuccessful And a_enabled Then _
-        Set p_outcome = AssertMeasurementsShouldGetTriggered(p_outcome, a_duration)
-
-    ' stop external trigger monitoring.
-    
-    If p_outcome.AssertSuccessful Then
-    
-        ' stop monitoring
-        ' but we need to monitor the timer event to make sure.
-        This.Observer.OnStopMonitorExtTrigButtonClick
-        
-        ' monitor
-        ' the timer event for the stop before validating the state.
-        ' This.K2700Sheet.OnManualScanToggleButtonChange
-        p_endTime = cc_isr_Core_IO.CoreExtensions.DaysNow() + _
-            (p_duration / cc_isr_Core_IO.CoreExtensions.SecondsPerDay)
-        Do Until Not This.ViewModel.TimerStarted Or (p_endTime < cc_isr_Core_IO.CoreExtensions.DaysNow())
-            VBA.DoEvents
-        Loop
-    
-    End If
-        
-    ' validate active monitoring settings
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.StopRequested, _
-            "View Model Stop Requested should be true after stopping external trigger monitoring.")
-        
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.PauseRequested, _
-            "View Model Pause Requested should be true after stopping external trigger monitoring.")
-        
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.TimerStarted, _
-            "View Model Timer Started should be False after stopping external trigger monitoring.")
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(cc_isr_Tcp_Scpi.MeasurementModeOption.None, _
-            This.ViewModel.MeasurementMode, _
-            "View Model Measurement mode should be at 'None' after stopping external trigger monitoring.")
-    
-    ' Finally, verify that no error message was recorded.
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
-            "Last error message should be empty but found: '" & This.ViewModel.LastErrorMessage & "'.")
-
-    Set AssetK2700SheetShouldMonitor = p_outcome
-    
-End Function
-
-''' <summary>   Unit test. Asserts that User View should start and stop trigger monitoring. </summary>
-''' <remarks>
-''' <code>
-''' With 1ms read after write delay.
-''' Test 14 TestK2700SheetMonitoringShouldStartStop passed. Elapsed time: 8259.8 ms.
-''' </code>
-''' </remarks>
-''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
-''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestK2700SheetMonitoringShouldStartStop() As cc_isr_Test_Fx.Assert
-
-    Const p_procedureName As String = "TestK2700SheetMonitoringShouldStartStop"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Dim p_details As String: p_details = VBA.vbNullString
-    
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
-    
-    If p_outcome.AssertSuccessful Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
-    End If
-    
-    Dim p_enabled As Boolean: p_enabled = False
-    Dim p_duration As Double: p_duration = 5  ' in seconds
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = AssetK2700SheetShouldMonitor(p_outcome, p_enabled, p_duration)
-        
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
-    
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
-        " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
-    
-    Set TestK2700SheetMonitoringShouldStartStop = p_outcome
-    
-    On Error GoTo 0
-    Exit Function
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
-    
-    ' enqueue the error or append its source to the last error.
-    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Function
-
-''' <summary>   Unit test. Asserts that User View should monitor and read triggered values. </summary>
-''' <remarks>
-''' <code>
-''' With 1ms read after write delay.
-''' Waiting for trigger....
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00121651E+02'.
-'''  1 : 100.121651
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00121086E+02'.
-'''  2 : 100.121086
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00121704E+02'.
-'''  3 : 100.121704
-''' Test 15 TestK2700SheetMonitoringShouldRead passed. Elapsed time: 13514.2 ms.
-''' </code>
-''' </remarks>
-''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
-''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function TestK2700SheetMonitoringShouldRead() As cc_isr_Test_Fx.Assert
-
-    Const p_procedureName As String = "TestK2700SheetMonitoringShouldRead"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Dim p_details As String: p_details = VBA.vbNullString
-    
-    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
-    
-    If p_outcome.AssertSuccessful Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
-    End If
-    
-    Dim p_enabled As Boolean: p_enabled = True
-    Dim p_duration As Double: p_duration = 5  ' in seconds
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = AssetK2700SheetShouldMonitor(p_outcome, p_enabled, p_duration)
-        
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = This.ErrTracer.AssertLeftoverErrors
-    
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
-        " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
-    
-    Set TestK2700SheetMonitoringShouldRead = p_outcome
-    
-    On Error GoTo 0
-    Exit Function
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, This.Name, ThisWorkbook
-    
-    ' enqueue the error or append its source to the last error.
-    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Function
-
 
 ''' <summary>   Unit test. Asserts that view model should connect after power on reset. </summary>
 ''' <remarks>

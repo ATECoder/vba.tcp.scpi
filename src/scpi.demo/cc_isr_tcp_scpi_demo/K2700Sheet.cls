@@ -82,11 +82,14 @@ Private Type this_
     ' command info
     LastCommandOutcome As Boolean
     LastCommandDetails As String
+    ElapsedTime As Double
     
     ' data acquisition
     Measuring As Boolean
-    MeasurmentMode As cc_isr_Tcp_Scpi.MeasurementModeOption
+    MeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
     FrontInputsValue As Boolean
+    PauseRequested As Boolean
+    StopRequested As Boolean
     
     MeasurementRow As Integer
     MeasurementColumn As Integer
@@ -120,7 +123,7 @@ Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As K2700Sheet
     
     ' set the initial values that are provided by the user interface
     Me.GpibLanControllerPort = 1234
-    Me.ChannelNumberCaptionPrefix = "ch"
+    This.ChannelNumberCaptionPrefix = "ch"
     Me.MaximumChannelNumber = 48
     Me.FrontInputsRequired = True
     Me.SingleReadEnabled = True
@@ -357,7 +360,7 @@ End Property
 ''' <summary>   Sets the Message to Sent. </summary>
 ''' <param name="a_value">   [String] the Message to Sent. </value>
 Public Property Let MessageToSend(ByVal a_value As String)
-    If This.MessageToSend <> a_value Then
+    If Me.MessageToSend <> a_value Then
         Me.CommandsComboBox.Text = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.MessageToSend = a_value
@@ -491,7 +494,7 @@ End Property
 Public Property Let SenseFunctions(ByVal a_value As Collection)
     If Not cc_isr_Core.CollectionExtensions.AreEqual(This.SenseFunctions, a_value) Then
         Set This.SenseFunctions = a_value
-        Me.PopulateFunctionComboBox
+        Me.PopulateSenseFunctionComboBox
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.SenseFunctions = a_value
     End If
@@ -584,7 +587,8 @@ err_Handler:
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
-    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -670,6 +674,87 @@ End Sub
 Private Sub WriteButton_Click()
     This.ViewModel.WriteCommand
 End Sub
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' IEEE4888 Executables
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Gets or sets the condition indicating that the Reset Known State command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Reset Known State command can be executed. </value>
+Public Property Get ResetKnownStateExecutable() As Boolean
+    ResetKnownStateExecutable = Me.RSTButton.Enabled
+End Property
+
+Public Property Let ResetKnownStateExecutable(ByVal a_value As Boolean)
+    Me.RSTButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Clear Execution State Command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Clear Execution State Command can be executed. </value>
+Public Property Get ClearExecutionStateExecutable() As Boolean
+    ClearExecutionStateExecutable = Me.CLSButton.Enabled
+End Property
+
+Public Property Let ClearExecutionStateExecutable(ByVal a_value As Boolean)
+    Me.CLSButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Query command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Query command can be executed. </value>
+Public Property Get QueryExecutable() As Boolean
+    QueryExecutable = Me.QueryButton.Enabled
+End Property
+
+Public Property Let QueryExecutable(ByVal a_value As Boolean)
+    Me.QueryButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Read command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Read command can be executed. </value>
+Public Property Get ReadExecutable() As Boolean
+    ReadExecutable = Me.ReadButton.Enabled
+End Property
+
+Public Property Let ReadExecutable(ByVal a_value As Boolean)
+    Me.ReadButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Write command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Write command can be executed. </value>
+Public Property Get WriteExecutable() As Boolean
+    WriteExecutable = Me.WriteButton.Enabled
+End Property
+
+Public Property Let WriteExecutable(ByVal a_value As Boolean)
+    Me.WriteButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Query Status Byte command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Read Status Byte command can be executed. </value>
+Public Property Get QueryStatusByteExecutable() As Boolean
+    QueryStatusByteExecutable = Me.ReadStatusByteButton.Enabled
+End Property
+
+Public Property Let QueryStatusByteExecutable(ByVal a_value As Boolean)
+    Me.ReadStatusByteButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Read Standard Byte command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Read Standard Byte command can be executed. </value>
+Public Property Get ReadStandardByteExecutable() As Boolean
+    ReadStandardByteExecutable = Me.ReadStandardEventStatusButton.Enabled
+End Property
+
+Public Property Let ReadStandardByteExecutable(ByVal a_value As Boolean)
+    Me.ReadStandardEventStatusButton.Enabled = a_value
+End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 ' GPIB-Lan Settings
@@ -762,14 +847,15 @@ End Property
 ''' <summary>   Gets the Service Requested. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get ServiceRequested() As Integer
-    ServiceRequested = This.ServiceRequested
+    If 0 = Len(Me.Range(m_srqCell).Value) Then Me.Range(m_srqCell).Value = 0
+    ServiceRequested = VBA.CInt(Me.Range(m_srqCell).Value)
 End Property
 
 ''' <summary>   Sets the Service Requested. </summary>
 ''' <param name="a_value">   [Integer] the Service Requested value. </value>
 Public Property Let ServiceRequested(ByVal a_value As Integer)
-    If This.ServiceRequested <> a_value Then
-        This.ServiceRequested = a_value
+    If Me.ServiceRequested <> a_value Then
+        Me.Range(m_srqCell).Value = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.ServiceRequested = a_value
     End If
@@ -796,14 +882,14 @@ End Sub
 
 ''' <summary>   Handles the local lockout button click event. </summary>
 Private Sub LocalLockoutButton_Click()
-    This.ViewModel.OnLocalLockout
+    This.ViewModel.LocalLockoutCommand
 End Sub
 
 ''' <summary>   Handles the click event of the power on reset.  </summary>
 Private Sub PowerOnResetButton_Click()
     ' initialize if necessary
     Initialize_
-    This.ViewModel.OnPowerOneResetButtonClick
+    This.ViewModel.PowerOnResetCommand
 End Sub
 
 ''' <summary>   Handles the read after write (Auto Assert TALK) set button click event. </summary>
@@ -842,6 +928,142 @@ Private Sub SRQButton_Click()
 End Sub
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' GPIB-Lan Executables
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Gets or sets the condition indicating that the Auto Asset TALK get command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Auto Asset TALK get command can be executed. </value>
+Public Property Get AutoAssertTalkGetExecutable() As Boolean
+    AutoAssertTalkGetExecutable = Me.ReadAfterWriteGetButton.Enabled
+End Property
+
+Public Property Let AutoAssertTalkGetExecutable(ByVal a_value As Boolean)
+    Me.ReadAfterWriteGetButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Auto Asset TALK Set command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Auto Asset TALK get command can be executed. </value>
+Public Property Get AutoAssertTalkSetExecutable() As Boolean
+    AutoAssertTalkSetExecutable = Me.ReadAfterWriteSetButton.Enabled
+End Property
+
+Public Property Let AutoAssertTalkSetExecutable(ByVal a_value As Boolean)
+    Me.ReadAfterWriteSetButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Gpib Address Get Command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Gpib Address Get Command can be executed. </value>
+Public Property Get GpibAddressGetExecutable() As Boolean
+    GpibAddressGetExecutable = Me.GpibAddressGetButton.Enabled
+End Property
+
+Public Property Let GpibAddressGetExecutable(ByVal a_value As Boolean)
+     Me.GpibAddressGetButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Gpib Address Set Command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Gpib Address Set Command can be executed. </value>
+Public Property Get GpibAddressSetExecutable() As Boolean
+    GpibAddressSetExecutable = Me.GpibAddressSetButton.Enabled
+End Property
+
+Public Property Let GpibAddressSetExecutable(ByVal a_value As Boolean)
+     Me.GpibAddressSetButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Read Timeout Get command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Read Timeout Get command can be executed. </value>
+Public Property Get GpibLanReadTimeoutGetExecutable() As Boolean
+    GpibLanReadTimeoutGetExecutable = Me.ReadTimeoutGetButton.Enabled
+End Property
+
+Public Property Let GpibLanReadTimeoutGetExecutable(ByVal a_value As Boolean)
+     Me.ReadTimeoutGetButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Read Timeout Set command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Read Timeout Set command can be executed. </value>
+Public Property Get GpibLanReadTimeoutSetExecutable() As Boolean
+    GpibLanReadTimeoutSetExecutable = Me.ReadTimeoutSetButton.Enabled
+End Property
+
+Public Property Let GpibLanReadTimeoutSetExecutable(ByVal a_value As Boolean)
+     Me.ReadTimeoutSetButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Service Requested command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Service Requested command can be executed. </value>
+Public Property Get ServiceRequestedExecutable() As Boolean
+    ServiceRequestedExecutable = Me.SRQButton.Enabled
+End Property
+
+Public Property Let ServiceRequestedExecutable(ByVal a_value As Boolean)
+    Me.SRQButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Read Status Byte command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Read Status Byte command can be executed. </value>
+Public Property Get ReadStatusByteExecutable() As Boolean
+    ReadStatusByteExecutable = Me.ReadStatusByteButton.Enabled
+End Property
+
+Public Property Let ReadStatusByteExecutable(ByVal a_value As Boolean)
+    Me.ReadStatusByteButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Go To Local command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Go To Local command can be executed. </value>
+Public Property Get GoToLocalExecutable() As Boolean
+    GoToLocalExecutable = Me.GoToLocalButton.Enabled
+End Property
+
+Public Property Let GoToLocalExecutable(ByVal a_value As Boolean)
+    Me.GoToLocalButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Local Lockout command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Local Lockout command can be executed. </value>
+Public Property Get LocalLockoutExecutable() As Boolean
+    LocalLockoutExecutable = Me.LocalLockoutButton.Enabled
+End Property
+
+Public Property Let LocalLockoutExecutable(ByVal a_value As Boolean)
+    Me.LocalLockoutButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the serial poll command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Serial Poll command can be executed. </value>
+Public Property Get SerialPollExecutable() As Boolean
+    ReadStatusByteExecutable = Me.SerialPollButton.Enabled
+End Property
+
+Public Property Let SerialPollExecutable(ByVal a_value As Boolean)
+    Me.SerialPollButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets  the condition indicating that the Selective Device Clear command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Selective Device Clear command can be executed. </value>
+Public Property Get SelectiveDeviceClearExecutable() As Boolean
+    SelectiveDeviceClearExecutable = Me.SDCButton.Enabled
+End Property
+
+Public Property Let SelectiveDeviceClearExecutable(ByVal a_value As Boolean)
+    Me.SDCButton.Enabled = a_value
+End Property
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 ' K2700 Settings
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
@@ -857,6 +1079,23 @@ Public Property Let TimerInterval(ByVal a_value As Integer)
         Me.Range(m_timerIntervalCell).Value = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.TimerInterval = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Channel Count. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get ChannelCount() As Integer
+    If 0 = Len(Me.Range(m_channelNumberCell).Value) Then Me.Range(m_channelNumberCell).Value = 0
+    ChannelCount = VBA.CInt(Me.Range(m_channelNumberCell).Value)
+End Property
+
+''' <summary>   Sets the Channel Count. </summary>
+''' <param name="a_value">   [Integer] the Channel Count value. </value>
+Public Property Let ChannelCount(ByVal a_value As Integer)
+    If Me.ChannelCount <> a_value Then
+        Me.Range(m_channelNumberCell).Value = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ChannelCount = a_value
     End If
 End Property
 
@@ -963,7 +1202,7 @@ End Property
 
 ''' <summary>   Sets the Front Inputs Caption. </summary>
 ''' <param name="a_value">   [String] the front inputs caption. </Caption>
-Public Property Let FrontInputsCaption(ByVal a_value As Boolean)
+Public Property Let FrontInputsCaption(ByVal a_value As String)
     If Me.FrontInputsCaption <> a_value Then
         Me.Range(m_inputsCell).Value = a_value
         If Not This.ViewModel Is Nothing Then _
@@ -1020,6 +1259,100 @@ Public Property Let MeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.Measurement
     End If
 End Property
 
+''' <summary>   Gets the Monitoring State. </summary>
+''' <value>   [String]. </value>
+Public Property Get MonitoringState() As String
+    MonitoringState = Me.Range(m_monitoringStateCell).Value
+End Property
+
+''' <summary>   Sets the Monitoring State. </summary>
+''' <param name="a_value">   [String] the Monitoring State value. </value>
+Public Property Let MonitoringState(ByVal a_value As String)
+    If Me.MonitoringState <> a_value Then
+        Me.Range(m_monitoringStateCell).Value = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.MonitoringState = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Pause Requested condition. </summary>
+''' <remarks>   When true, a pause request is sent to the timer so that the timer
+'''             event is not handled and the timer is paused on the next event. </remarks>
+''' <value>   [Boolean]. </value>
+Public Property Get PauseRequested() As Boolean
+    PauseRequested = This.PauseRequested
+End Property
+
+''' <summary>   Sets the Pause Requested condition. </summary>
+''' <param name="a_value">   [Boolean] the Pause Requested value. </value>
+Friend Property Let PauseRequested(ByVal a_value As Boolean)
+    If This.PauseRequested <> a_value Then
+        This.PauseRequested = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Stop Requested condition. </summary>
+''' <remarks>   When true, a Stop request is sent to the timer so that the timer
+'''             event is not handled and the timer is Stopd on the next event. </remarks>
+''' <value>   [Boolean]. </value>
+Public Property Get StopRequested() As Boolean
+    StopRequested = This.StopRequested
+End Property
+
+''' <summary>   Sets the Stop Requested condition. </summary>
+''' <param name="a_value">   [Boolean] the Stop Requested value. </value>
+Friend Property Let StopRequested(ByVal a_value As Boolean)
+    If This.StopRequested <> a_value Then
+        This.StopRequested = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Sense Function Name. </summary>
+''' <value>   [String]. </value>
+Public Property Get SenseFunctionName() As String
+    SenseFunctionName = Me.SenseFunctionComboBox.Text
+End Property
+
+''' <summary>   Sets the Sense Function Name. </summary>
+''' <param name="a_value">   [String] the Sense Function Name. </value>
+Public Property Let SenseFunctionName(ByVal a_value As String)
+    If Me.SenseFunctionName <> a_value Then
+        Me.SenseFunctionComboBox.Text = a_value
+    End If
+End Property
+
+''' <summary>   Gets the  Sense Function Caption. </summary>
+''' <value>   [String]. </value>
+Public Property Get SenseFunctionCaption() As String
+    SenseFunctionCaption = Me.Range(m_functionNameCell).Value
+End Property
+
+''' <summary>   Sets the  Sense Function Caption. </summary>
+''' <param name="a_value">   [String] the  Sense Function Caption. </value>
+Public Property Let SenseFunctionCaption(ByVal a_value As String)
+    If Me.SenseFunctionCaption <> a_value Then
+        Me.Range(m_functionNameCell).Value = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.SenseFunctionCaption = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Sense Function Unit. </summary>
+''' <value>   [String]. </value>
+Public Property Get SenseFunctionUnit() As String
+    SenseFunctionUnit = Me.Range(m_functionUnitCell).Value
+End Property
+
+''' <summary>   Sets the Sense Function Unit. </summary>
+''' <param name="a_value">   [String] the Sense Function Unit value. </value>
+Public Property Let SenseFunctionUnit(ByVal a_value As String)
+    If Me.SenseFunctionUnit <> a_value Then
+        Me.Range(m_functionUnitCell).Value = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.SenseFunctionUnit = a_value
+    End If
+End Property
+
 ''' <summary>   Gets the Measured channel number from the active cell value. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get MeasuredChannelNumber() As Integer
@@ -1067,15 +1400,35 @@ Public Property Let ReadingOffset(ByVal a_value As Double)
 End Property
 
 ''' <summary>   Gets the Measured Value. </summary>
-''' <value>   [Integer]. </value>
+''' <value>   [Double]. </value>
 Public Property Get MeasuredValue() As Double
     MeasuredValue = This.MeasuredValue
 End Property
 
 ''' <summary>   Sets the Measured Value. </summary>
-''' <param name="a_value">   [Double] the Measured Value. </param>
+''' <param name="a_value">   [Double] the Measured Value. </value>
 Public Property Let MeasuredValue(ByVal a_value As Double)
-    This.MeasuredValue = a_value
+    If This.MeasuredValue <> a_value Then
+        This.MeasuredValue = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.MeasuredValue = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Measured Value Format. </summary>
+''' <value>   [String]. </value>
+Public Property Get MeasuredValueFormat() As String
+    MeasuredValueFormat = Me.Range(m_readingFormatCell).Value
+End Property
+
+''' <summary>   Sets the Measured Value Format. </summary>
+''' <param name="a_value">   [String] the Measured Value Format value. </value>
+Public Property Let MeasuredValueFormat(ByVal a_value As String)
+    If Me.MeasuredValueFormat <> a_value Then
+        Me.Range(m_readingFormatCell).Value = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.MeasuredValueFormat = a_value
+    End If
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -1094,6 +1447,8 @@ End Property
 Public Property Let AutoIncrementChannelNoEnabled(ByVal a_value As Boolean)
     If Me.AutoIncrementCheckBox.Value <> a_value Then
         Me.AutoIncrementCheckBox.Value = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.AutoIncrementChannelNoEnabled = a_value
     End If
 End Property
 
@@ -1146,18 +1501,6 @@ err_Handler:
     
 End Sub
 
-''' <summary>   Gets the execution (Can Execute) status of the Clear Reading command. </summary>
-''' <value>   [Boolean] True if the Clear Readings command can be executed. </value>
-Public Property Get ClearReadingsExecutable() As Boolean
-    ClearReadingsExecutable = Me.ClearReadingsButton.Enabled
-End Property
-
-''' <summary>   Sets the execution (Can Execute) status of the Clear Reading command. </summary>
-''' <param name="a_value">   [Boolean] true if the command is executable. </param>
-Public Property Let ClearReadingsExecutable(ByVal a_value As Boolean)
-    Me.ClearReadingsButton.Enabled = a_value
-End Property
-
 ''' <summary>   Handles the click event of the Clear Radings button. </summary>
 Private Sub ClearReadingsButton_Click()
     This.ViewModel.ClearReadingsCommand
@@ -1176,6 +1519,8 @@ End Property
 Public Property Let ExternalTrigMonitoringEnabled(ByVal a_value As Boolean)
     If Me.ExternalTriggerOptionButton.Value <> a_value Then
         Me.ExternalTriggerOptionButton.Value = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ExternalTrigMonitoringEnabled = a_value
     End If
 End Property
 
@@ -1202,7 +1547,7 @@ Private Sub ExternalTriggerOptionButton_Change()
 
         ' Commands for click
         If Me.ExternalTriggerOptionButton.Value Then
-            This.ViewModel.ExternalSenseFunctionName = Me.FunctionComboBox.Text
+            This.ViewModel.ExternalSenseFunctionName = Me.SenseFunctionComboBox.Text
             This.LastCommandOutcome = This.ViewModel.ConfigureExternalTriggerReadingCommand(This.LastCommandDetails)
         End If
         
@@ -1212,7 +1557,7 @@ Private Sub ExternalTriggerOptionButton_Change()
 
         ' Commands for change from within the sheet
         If Me.ExternalTriggerOptionButton.Value Then
-            This.ViewModel.ExternalSenseFunctionName = Me.FunctionComboBox.Text
+            This.ViewModel.ExternalSenseFunctionName = Me.SenseFunctionComboBox.Text
             This.LastCommandOutcome = This.ViewModel.ConfigureExternalTriggerReadingCommand(This.LastCommandDetails)
         End If
 
@@ -1231,7 +1576,7 @@ err_Handler:
     
     ' Commands for change from outside the sheet
     If Me.ExternalTriggerOptionButton.Value Then
-        This.ViewModel.ExternalSenseFunctionName = Me.FunctionComboBox.Text
+        This.ViewModel.ExternalSenseFunctionName = Me.SenseFunctionComboBox.Text
         This.LastCommandOutcome = This.ViewModel.ConfigureExternalTriggerReadingCommand(This.LastCommandDetails)
     End If
     
@@ -1263,7 +1608,7 @@ Private Sub ImmediateTriggerOptionButton_Change()
 
         ' Commands for click
         If ImmediateTriggerOptionButton.Value Then
-            This.ViewModel.ImmediateSenseFunctionName = Me.FunctionComboBox.Text
+            This.ViewModel.ImmediateSenseFunctionName = Me.SenseFunctionComboBox.Text
             This.LastCommandOutcome = This.ViewModel.ConfigureImmediateTriggerReadingsCommand(This.LastCommandDetails)
         End If
     
@@ -1273,7 +1618,7 @@ Private Sub ImmediateTriggerOptionButton_Change()
 
         ' Commands for change from within the sheet
         If ImmediateTriggerOptionButton.Value Then
-            This.ViewModel.ImmediateSenseFunctionName = Me.FunctionComboBox.Text
+            This.ViewModel.ImmediateSenseFunctionName = Me.SenseFunctionComboBox.Text
             This.LastCommandOutcome = This.ViewModel.ConfigureImmediateTriggerReadingsCommand(This.LastCommandDetails)
         End If
 
@@ -1292,7 +1637,7 @@ err_Handler:
     
     ' Commands for change from outside the sheet
     If ImmediateTriggerOptionButton.Value Then
-        This.ViewModel.ImmediateSenseFunctionName = Me.FunctionComboBox.Text
+        This.ViewModel.ImmediateSenseFunctionName = Me.SenseFunctionComboBox.Text
         This.LastCommandOutcome = This.ViewModel.ConfigureImmediateTriggerReadingsCommand(This.LastCommandDetails)
     End If
     
@@ -1398,6 +1743,8 @@ End Property
 Public Property Let SingleReadEnabled(ByVal a_value As Boolean)
     If Me.SingleMultipleCheckBox.Value <> a_value Then
         Me.SingleMultipleCheckBox.Value = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.SingleReadEnabled = a_value
     End If
 End Property
 
@@ -1450,26 +1797,26 @@ err_Handler:
 End Sub
 
 ''' <summary>   Populates the Function combo box. </summary>
-Public Sub PopulateFunctionComboBox()
+Public Sub PopulateSenseFunctionComboBox()
 
-    Const p_procedureName = "PopulateFunctionComboBox"
+    Const p_procedureName = "PopulateSenseFunctionComboBox"
     
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
     Dim p_fourWireResistanceIndex As Integer
-    Me.FunctionComboBox.Clear
+    Me.SenseFunctionComboBox.Clear
     Dim p_item As Variant
     Dim p_senseFunction As String
     For Each p_item In This.SenseFunctions
         p_senseFunction = VBA.CStr(p_item)
-        Me.FunctionComboBox.AddItem p_senseFunction
+        Me.SenseFunctionComboBox.AddItem p_senseFunction
         If "FRES" = p_senseFunction Then
-            p_fourWireResistanceIndex = Me.FunctionComboBox.Count
+            p_fourWireResistanceIndex = Me.SenseFunctionComboBox.Count
         End If
     Next
 
-    Me.FunctionComboBox.ListIndex = p_fourWireResistanceIndex
+    Me.SenseFunctionComboBox.ListIndex = p_fourWireResistanceIndex
    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1484,13 +1831,107 @@ err_Handler:
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
-    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
     GoTo exit_Handler
     
 End Sub
+
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+' K2700 executables
+' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+
+''' <summary>   Gets the execution (Can Execute) status of the Clear Reading command. </summary>
+''' <value>   [Boolean] True if the Clear Readings command can be executed. </value>
+Public Property Get ClearReadingsExecutable() As Boolean
+    ClearReadingsExecutable = Me.ClearReadingsButton.Enabled
+End Property
+
+''' <summary>   Sets the execution (Can Execute) status of the Clear Reading command. </summary>
+''' <param name="a_value">   [Boolean] true if the command is executable. </param>
+Public Property Let ClearReadingsExecutable(ByVal a_value As Boolean)
+    Me.ClearReadingsButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Query Inputs command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Query Inputs command can be executed. </value>
+Public Property Get QueryInputsExecutable() As Boolean
+    QueryInputsExecutable = Me.InputsCheckBox.Enabled
+End Property
+
+Public Property Let QueryInputsExecutable(ByVal a_value As Boolean)
+     Me.InputsCheckBox.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Measure command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Measure command can be executed. </value>
+Public Property Get MeasureExecutable() As Boolean
+    MeasureExecutable = Me.MeasureButton.Enabled
+End Property
+
+Public Property Let MeasureExecutable(ByVal a_value As Boolean)
+     Me.MeasureButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Immediate Trigger Option command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Immediate Trigger Option command  can be executed. </value>
+Public Property Get ImmediateTriggerOptionExecutable() As Boolean
+    ImmediateTriggerOptionExecutable = Me.ImmediateTriggerOptionButton.Enabled
+End Property
+
+Public Property Let ImmediateTriggerOptionExecutable(ByVal a_value As Boolean)
+     Me.ImmediateTriggerOptionButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the External Trigger Option command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the External Trigger Option command  can be executed. </value>
+Public Property Get ExternalTriggerOptionExecutable() As Boolean
+    ExternalTriggerOptionExecutable = Me.ExternalTriggerOptionButton.Enabled
+End Property
+
+Public Property Let ExternalTriggerOptionExecutable(ByVal a_value As Boolean)
+     Me.ExternalTriggerOptionButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the function name command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the function name command can be executed. </value>
+Public Property Get FunctionNameExecutable() As Boolean
+    FunctionNameExecutable = Me.SenseFunctionComboBox.Enabled
+End Property
+
+Public Property Let FunctionNameExecutable(ByVal a_value As Boolean)
+     Me.SenseFunctionComboBox.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Start Monitoring External Trigger command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Start Monitoring External Trigger command can be executed. </value>
+Public Property Get StartMonitoringExecutable() As Boolean
+    StartMonitoringExecutable = Me.StartMonitoringButton.Enabled
+End Property
+
+Public Property Let StartMonitoringExecutable(ByVal a_value As Boolean)
+     Me.StartMonitoringButton.Enabled = a_value
+End Property
+
+''' <summary>   Gets or sets the condition indicating that the Stop Monitoring External Trigger command
+'''             can be executed. </summary>
+''' <value>   [Boolean] True if the Stop Monitoring External Trigger command can be executed. </value>
+Public Property Get StopMonitoringExecutable() As Boolean
+    StopMonitoringExecutable = Me.StopMonitoringButton.Enabled
+End Property
+
+Public Property Let StopMonitoringExecutable(ByVal a_value As Boolean)
+     Me.StopMonitoringButton.Enabled = a_value
+End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 ' View Model Settings
@@ -1503,10 +1944,57 @@ Public Property Get DesignMode() As Boolean
 End Property
 
 ''' <summary>   Sets the design mode for unit testing and restoration of state. </summary>
-''' <summary>   Sets the design mode for unit testing. </summary>
 ''' <param name="a_value">   [Boolean] true if in design mode. </param>
 Public Property Let DesignMode(ByVal a_value As Boolean)
     This.DesignMode = a_value
+End Property
+
+''' <summary>   Gets the Elapsed Time in milliseconds. </summary>
+''' <value>   [Double]. </value>
+Public Property Get ElapsedTime() As Double
+    ElapsedTime = This.ElapsedTime
+End Property
+
+''' <summary>   Sets the Elapsed Time in milliseconds. </summary>
+''' <param name="a_value">   [Double] the Elapsed Time in milliseconds. </value>
+Public Property Let ElapsedTime(ByVal a_value As Double)
+    If Me.ElapsedTime <> a_value Then
+        This.ElapsedTime = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ElapsedTime = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Elapsed Time Format. </summary>
+''' <value>   [String]. </value>
+Public Property Get ElapsedTimeFormat() As String
+    ElapsedTimeFormat = Me.Range(m_elapsedTimeFormatCell).Value
+End Property
+
+''' <summary>   Sets the Elapsed Time Format. </summary>
+''' <param name="a_value">   [String] the elapsed time format. </value>
+Public Property Let ElapsedTimeFormat(ByVal a_value As String)
+    If Me.ElapsedTimeFormat <> a_value Then
+        Me.Range(m_elapsedTimeFormatCell).Value = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ElapsedTimeFormat = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Elapsed Time Caption. </summary>
+''' <value>   [String]. </value>
+Public Property Get ElapsedTimeCaption() As String
+    ElapsedTimeCaption = Me.Range(m_elapsedTimeCell).Value
+End Property
+
+''' <summary>   Sets the Elapsed Time Caption. </summary>
+''' <param name="a_value">   [String] the elapsed time Caption. </value>
+Public Property Let ElapsedTimeCaption(ByVal a_value As String)
+    If Me.ElapsedTimeCaption <> a_value Then
+        Me.Range(m_elapsedTimeCell).Value = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.ElapsedTimeCaption = a_value
+    End If
 End Property
 
 ''' <summary>   Gets the Last Error Message. </summary>
@@ -1666,12 +2154,22 @@ Private Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Cha
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
+    Me.MeasuredReading = a_eventArgs.Reading
+    Me.MeasuredChannelNumber = a_eventArgs.ChannelNumber
+        
+    Dim p_value As Double
+    Dim p_details As String
+    
     If VBA.vbNullString = a_eventArgs.Reading Then
-        SetReading a_eventArgs.ChannelNumber, -1#
+        p_value = -1#
     Else
-        ' let the observer make these updates.
-        SetReading a_eventArgs.ChannelNumber, CDbl(a_eventArgs.Reading)
+        If Not cc_isr_Core.StringExtensions.TryParseDouble(a_eventArgs.Reading, p_value, p_details) Then
+            p_value = -1#
+        End If
     End If
+    Me.MeasuredValue = p_value
+    
+    Me.SetReading a_eventArgs.ChannelNumber, p_value
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -1686,7 +2184,8 @@ err_Handler:
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
-    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1696,32 +2195,286 @@ End Sub
 
 Public Sub Synchronize()
 
-    This.Connected = This.ViewModel.Connected
-    This.DesignMode = This.ViewModel.DesignMode
-    
+    This.ViewModel.GpibAddress = Me.PrimaryGpibAddress
+    This.ViewModel.GpibLanControllerPort = This.GpibLanControllerPort
+    This.ViewModel.MaximumChannelNumber = Me.MaximumChannelNumber
+    This.ViewModel.ReadingOffset = Me.ReadingOffset
+    This.ViewModel.SessionTimeout = Me.SessionTimeout
+    This.ViewModel.SocketAddress = Me.SocketAddress
+    This.ViewModel.TimerInterval = Me.TimerInterval
+
+    Me.AutoAssertTalk = This.ViewModel.AutoAssertTalk
+    Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
+    Me.BottomCard = This.ViewModel.BottomCard
+    Me.BottomCardFunctionScanList = This.ViewModel.BottomCardFunctionScanList
+    Me.ChannelCount = This.ViewModel.ChannelCount
+    Me.Connected = This.ViewModel.Connected
+    Me.DesignMode = This.ViewModel.DesignMode
+    Me.ElapsedTime = This.ViewModel.ElapsedTime
+    Me.ElapsedTimeFormat = This.ViewModel.ElapsedTimeFormat
+    Me.ElapsedTimeCaption = This.ViewModel.ElapsedTimeCaption
+    Me.ExternalTrigMonitoringEnabled = This.ViewModel.ExternalTrigMonitoringEnabled
     Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
-    Me.ReadingOffset = This.ViewModel.ReadingOffset
-    Me.ClearReadingsExecutable = This.ViewModel.ClearExecutionStateExecutable
-    
-    Me.CloseConnectionExecutable = This.ViewModel.CloseConnectionExecutable
-    Me.OpenConnectionExecutable = This.ViewModel.OpenConnectionExecutable
-    
-    Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
-    Me.MeasuredReading = This.ViewModel.MeasuredReading
-    Me.MeasuredValue = This.ViewModel.MeasuredValue
+    Me.FrontInputsCaption = This.ViewModel.FrontInputsCaption
+    Me.PrimaryGpibAddress = This.ViewModel.GpibAddress
+    Me.Host = This.ViewModel.Host
     Me.LastErrorMessage = This.ViewModel.LastErrorMessage
     Me.LastMessage = This.ViewModel.LastMessage
+    Me.MessageToSend = This.ViewModel.MessageToSend
+    Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
+    Me.MeasuredReading = This.ViewModel.MeasuredReading
+    Me.MeasuredValueFormat = This.ViewModel.MeasuredValueFormat
+    Me.MeasuredValue = This.ViewModel.MeasuredValue
+    Me.MeasurementMode = This.ViewModel.MeasurementMode
+    Me.MonitoringState = This.ViewModel.MonitoringState
+    Me.PauseRequested = This.ViewModel.PauseRequested
+    Me.Port = This.ViewModel.Port
+    Me.ReadingOffset = This.ViewModel.ReadingOffset
+    Me.ReadStatusAfterWriteEnabled = This.ViewModel.ReadStatusAfterWriteEnabled
+    Me.ReceivedMessage = This.ViewModel.ReceivedMessage
+    Me.ReceivedMessageLength = This.ViewModel.ReceivedMessageLength
+    Me.ScpiCommands = This.ViewModel.ScpiCommands
     Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
-        
-    Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
+    Me.SenseFunctionName = This.ViewModel.SenseFunctionName
+    Me.SenseFunctionCaption = This.ViewModel.SenseFunctionCaption
+    Me.SenseFunctions = This.ViewModel.SenseFunctions
+    Me.SenseFunctionUnit = This.ViewModel.SenseFunctionUnit
+    Me.SentMessage = This.ViewModel.SentMessage
+    Me.SerialPollByte = This.ViewModel.SerialPollByte
+    Me.ServiceRequested = This.ViewModel.ServiceRequested
     Me.SingleReadEnabled = This.ViewModel.SingleReadEnabled
-    Me.ExternalTrigMonitoringEnabled = This.ViewModel.ExternalTrigMonitoringEnabled
-        
+    Me.SocketAddress = This.ViewModel.SocketAddress
+    Me.SocketId = This.ViewModel.SocketId
+    Me.StandardByte = This.ViewModel.StandardByte
+    Me.StatusByte = This.ViewModel.StatusByte
+    Me.StopRequested = This.ViewModel.StopRequested
+    ' Me.TargetChannelNumber = This.ViewModel.TargetChannelNumber
+    Me.TopCard = This.ViewModel.TopCard
+    Me.TopCardFunctionScanList = This.ViewModel.TopCardFunctionScanList
+    
+    Me.AutoAssertTalkSetExecutable = This.ViewModel.AutoAssertTalkSetExecutable
+    Me.AutoAssertTalkGetExecutable = This.ViewModel.AutoAssertTalkGetExecutable
+    Me.ClearExecutionStateExecutable = This.ViewModel.ClearExecutionStateExecutable
+    Me.ClearReadingsExecutable = This.ViewModel.ClearReadingsExecutable
+    Me.CloseConnectionExecutable = This.ViewModel.CloseConnectionExecutable
+    Me.ExternalTriggerOptionExecutable = This.ViewModel.ExternalTriggerOptionExecutable
+    Me.FunctionNameExecutable = This.ViewModel.FunctionNameExecutable
+    Me.GoToLocalExecutable = This.ViewModel.GoToLocalExecutable
+    Me.GpibAddressGetExecutable = This.ViewModel.GpibAddressGetExecutable
+    Me.GpibAddressSetExecutable = This.ViewModel.GpibAddressSetExecutable
+    Me.GpibLanReadTimeoutGetExecutable = This.ViewModel.GpibLanReadTimeoutGetExecutable
+    Me.GpibLanReadTimeoutSetExecutable = This.ViewModel.GpibLanReadTimeoutSetExecutable
+    Me.ImmediateTriggerOptionExecutable = This.ViewModel.ImmediateTriggerOptionExecutable
+    Me.LocalLockoutExecutable = This.ViewModel.LocalLockoutExecutable
+    Me.MeasureExecutable = This.ViewModel.MeasureExecutable
+    
+    'Me.MessageToSendExecutable = This.ViewModel.MessageToSendExecutable
+    
+    Me.OpenConnectionExecutable = This.ViewModel.OpenConnectionExecutable
+    Me.QueryExecutable = This.ViewModel.QueryExecutable
+    Me.QueryInputsExecutable = This.ViewModel.QueryInputsExecutable
+    Me.QueryStatusByteExecutable = This.ViewModel.QueryStatusByteExecutable
+    Me.ReadExecutable = This.ViewModel.ReadExecutable
+    Me.ReadStandardByteExecutable = This.ViewModel.ReadStandardEventStatusExecutable
+    Me.ReadStatusByteExecutable = This.ViewModel.ReadStatusByteExecutable
+    Me.ResetKnownStateExecutable = This.ViewModel.ResetKnownStateExecutable
+    Me.SelectiveDeviceClearExecutable = This.ViewModel.SelectiveDeviceClearExecutable
+    Me.SerialPollExecutable = This.ViewModel.ReadStatusByteExecutable
+    Me.ServiceRequestedExecutable = This.ViewModel.ServiceRequestedExecutable
+    Me.StartMonitoringExecutable = This.ViewModel.StartMonitoringExecutable
+    Me.StopMonitoringExecutable = This.ViewModel.StopMonitoringExecutable
+    Me.WriteExecutable = This.ViewModel.WriteExecutable
+    
 End Sub
 
 ''' <summary>   Handles the property change event of the viwe model. </summary>
 ''' <param name="a_propertyName">   [String] the property name. </param>
-Private Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
+Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
+
+    Const p_procedureName = "HandleViewModelPropertyChanged"
+
+    Select Case a_propertyName
+
+        Case "Host"
+            Me.Host = This.ViewModel.Host
+        Case "Port"
+            Me.Port = This.ViewModel.Port
+        Case "SocketAddress"
+            Me.SocketAddress = This.ViewModel.SocketAddress
+        Case "SocketId"
+            Me.SocketId = This.ViewModel.SocketId
+        Case "SessionTimeout"
+            Me.SessionTimeout = This.ViewModel.SessionTimeout
+        Case "PauseRequested"
+            Me.PauseRequested = This.ViewModel.PauseRequested
+        Case "StopRequested"
+            Me.StopRequested = This.ViewModel.StopRequested
+        Case "TimerInterval"
+            Me.TimerInterval = This.ViewModel.TimerInterval
+        Case "Connected"
+            Me.Connected = This.ViewModel.Connected
+        Case "MessageToSend"
+            Me.MessageToSend = This.ViewModel.MessageToSend
+        Case "SentMessage"
+            Me.SentMessage = This.ViewModel.SentMessage
+        Case "ReceivedMessage"
+            Me.ReceivedMessage = This.ViewModel.ReceivedMessage
+        Case "ReceivedMessageLength"
+            Me.ReceivedMessageLength = This.ViewModel.ReceivedMessageLength
+        Case "ElapsedTime"
+            Me.ElapsedTime = This.ViewModel.ElapsedTime
+        Case "ElapsedTimeFormat"
+            Me.ElapsedTimeFormat = This.ViewModel.ElapsedTimeFormat
+        Case "ElapsedTimeCaption"
+            Me.ElapsedTimeCaption = This.ViewModel.ElapsedTimeCaption
+        Case "LastErrorMessage"
+            Me.LastErrorMessage = This.ViewModel.LastErrorMessage
+        Case "LastMessage"
+            Me.LastMessage = This.ViewModel.LastMessage
+        Case "SerialPollByte"
+            Me.SerialPollByte = This.ViewModel.SerialPollByte
+        Case "StatusByte"
+            Me.StatusByte = This.ViewModel.StatusByte
+        Case "StandardByte"
+            Me.StandardByte = This.ViewModel.StandardByte
+        Case "ServiceRequested"
+            Me.ServiceRequested = This.ViewModel.ServiceRequested
+        Case "GpibAddress"
+            Me.GpibAddress = This.ViewModel.GpibAddress
+        Case "AutoAssertTalk"
+            Me.AutoAssertTalk = This.ViewModel.AutoAssertTalk
+        Case "GpibLanReadTimeout"
+            Me.AutoAssertTalk = This.ViewModel.AutoAssertTalk
+            
+        Case "TopCard"
+            Me.TopCard = This.ViewModel.TopCard
+        Case "BottomCard"
+            Me.BottomCard = This.ViewModel.BottomCard
+        Case "TopCardFunctionScanList"
+            Me.TopCardFunctionScanList = This.ViewModel.TopCardFunctionScanList
+        Case "BottomCardFunctionScanList"
+            Me.BottomCardFunctionScanList = This.ViewModel.BottomCardFunctionScanList
+        Case "FrontInputsRequired"
+            Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
+        Case "FrontInputsValue"
+        Case "FrontInputsCaption"
+            Me.FrontInputsCaption = This.ViewModel.FrontInputsCaption
+        Case "SelectedChannelNumber"
+            Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
+        Case "ChannelCount"
+            Me.ChannelCount = This.ViewModel.ChannelCount
+        Case "TargetChannelNumber"
+            Me.TargetChannelNumber = This.ViewModel.TargetChannelNumber
+        Case "MeasuredChannelNumber"
+            Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
+        Case "SenseFunctionName"
+            Me.SenseFunctionName = This.ViewModel.SenseFunctionName
+        Case "SenseFunctionCaption"
+            Me.SenseFunctionCaption = This.ViewModel.SenseFunctionCaption
+        Case "SenseFunctionUnit"
+            Me.SenseFunctionUnit = This.ViewModel.SenseFunctionUnit
+        Case "MeasuredReading"
+            Me.MeasuredReading = This.ViewModel.MeasuredReading
+        Case "MeasuredValueFormat"
+            Me.MeasuredValueFormat = This.ViewModel.MeasuredValueFormat
+        
+        Case "MeasuredValue"
+            Me.MeasuredValue = This.ViewModel.MeasuredValue
+        Case "ExternalTrigMonitoringEnabled"
+            Me.ExternalTrigMonitoringEnabled = This.ViewModel.ExternalTrigMonitoringEnabled
+        Case "MonitoringState"
+            Me.MonitoringState = This.ViewModel.MonitoringState
+        Case "AutoIncrementChannelNoEnabled"
+            Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
+        Case "SingleReadEnabled"
+            Me.SingleReadEnabled = This.ViewModel.SingleReadEnabled
+        Case "SenseFunctions"
+            Me.SenseFunctions = This.ViewModel.SenseFunctions
+        Case "ScpiCommands"
+            Me.ScpiCommands = This.ViewModel.ScpiCommands
+        Case "Measuring"
+            Me.Measuring = This.ViewModel.Measuring
+        Case "MeasurementMode"
+            Me.MeasurementMode = This.ViewModel.MeasurementMode
+        Case "ReadStatusAfterWriteEnabled"
+            Me.ReadStatusAfterWriteEnabled = This.ViewModel.ReadStatusAfterWriteEnabled
+        Case "ReadingOffset"
+            Me.ReadingOffset = This.ViewModel.ReadingOffset
+        Case "MonitoringState"
+            Me.MonitoringState = This.ViewModel.MonitoringState
+        Case "DesignMode"
+            Me.DesignMode = This.ViewModel.DesignMode
+        
+        Case "OpenConnectionExecutable"
+            This.OpenConnectionExecutable = This.ViewModel.OpenConnectionExecutable
+        Case "CloseConnectionExecutable"
+            This.CloseConnectionExecutable = This.ViewModel.CloseConnectionExecutable
+        Case "ToggleConnectionExecutable"
+        Case "ResetKnownStateExecutable"
+            This.ResetKnownStateExecutable = This.ViewModel.ResetKnownStateExecutable
+        Case "ClearExecutionStateExecutable"
+            This.ClearExecutionStateExecutable = This.ViewModel.ClearExecutionStateExecutable
+        Case "QueryExecutable"
+            This.QueryExecutable = This.ViewModel.QueryExecutable
+        Case "ReadExecutable"
+            This.ReadExecutable = This.ViewModel.ReadExecutable
+        Case "QueryStatusByteExecutable"
+            This.QueryStatusByteExecutable = This.ViewModel.QueryStatusByteExecutable
+        Case "ReadStandardEventStatusExecutable"
+            This.ReadStandardEventStatusExecutable = This.ViewModel.ReadStandardEventStatusExecutable
+        Case "ReadStatusAfterWriteExecutable"
+            This.ReadStatusAfterWriteExecutable = This.ViewModel.ReadStatusAfterWriteExecutable
+        Case "WriteExecutable"
+            This.WriteExecutable = This.ViewModel.WriteExecutable
+        Case "QueryInputsExecutable"
+            This.QueryInputsExecutable = This.ViewModel.QueryInputsExecutable
+        Case "ClearReadingsExecutable"
+            This.ClearReadingsExecutable = This.ViewModel.ClearReadingsExecutable
+        Case "MeasureExecutable"
+            This.MeasureExecutable = This.ViewModel.MeasureExecutable
+        Case "StartMonitoringExecutable"
+            This.StartMonitoringExecutable = This.ViewModel.StartMonitoringExecutable
+        Case "StopMonitoringExecutable"
+            This.StopMonitoringExecutable = This.ViewModel.StopMonitoringExecutable
+        Case "ImmediateTriggerOptionExecutable"
+            This.ImmediateTriggerOptionExecutable = This.ViewModel.ImmediateTriggerOptionExecutable
+        Case "ExternalTriggerOptionExecutable"
+            This.ExternalTriggerOptionExecutable = This.ViewModel.ExternalTriggerOptionExecutable
+        Case "SelectiveDeviceClearExecutable"
+            This.SelectiveDeviceClearExecutable = This.ViewModel.SelectiveDeviceClearExecutable
+        Case "GoToLocalExecutable"
+            This.GoToLocalExecutable = This.ViewModel.GoToLocalExecutable
+        Case "LocalLockoutExecutable"
+            This.LocalLockoutExecutable = This.ViewModel.LocalLockoutExecutable
+        Case "AutoAssertTalkSetExecutable"
+            This.AutoAssertTalkSetExecutable = This.ViewModel.AutoAssertTalkSetExecutable
+        Case "AutoAssertTalkGetExecutable"
+            This.AutoAssertTalkGetExecutable = This.ViewModel.AutoAssertTalkGetExecutable
+        Case "ReadStatusByteExecutable"
+            This.ReadStatusByteExecutable = This.ViewModel.ReadStatusByteExecutable
+        Case "ServiceRequestedExecutable"
+            This.ServiceRequestedExecutable = This.ViewModel.ServiceRequestedExecutable
+        Case "GpibAddressGetExecutable"
+            This.GpibAddressGetExecutable = This.ViewModel.GpibAddressGetExecutable
+        Case "GpibAddressSetExecutable"
+            This.GpibAddressSetExecutable = This.ViewModel.GpibAddressSetExecutable
+        Case "GpibLanReadTimeoutGetExecutable"
+            This.GpibLanReadTimeoutGetExecutable = This.ViewModel.GpibLanReadTimeoutGetExecutable
+        Case "GpibLanReadTimeoutSetExecutable"
+            This.GpibLanReadTimeoutSetExecutable = This.ViewModel.GpibLanReadTimeoutSetExecutable
+        Case "MessageToSendExecutable"
+            This.MessageToSendExecutable = This.ViewModel.MessageToSendExecutable
+        Case "FunctionNameExecutable"
+            This.FunctionNameExecutable = This.ViewModel.FunctionNameExecutable
+
+    End Select
+    
+End Sub
+
+
+''' <summary>   Handles the property change event of the viwe model. </summary>
+''' <param name="a_propertyName">   [String] the property name. </param>
+Private Sub HandleViewModelPropertyChanged1(ByVal a_propertyName As String)
 
     Const p_procedureName = "HandleViewModelPropertyChanged"
 
@@ -1897,7 +2650,7 @@ Private Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
         Case "MessageToSendExecutable"
             CommandsComboBox.Enabled = This.ViewModel.MessageToSendExecutable
         Case "FunctionNameExecutable"
-            FunctionComboBox.Enabled = This.ViewModel.FunctionNameExecutable
+            SenseFunctionComboBox.Enabled = This.ViewModel.FunctionNameExecutable
 
     End Select
     
@@ -1907,14 +2660,19 @@ End Sub
 ''' <param name="a_eventArgs">   [<see cref="cc_isr_Core.PropertyChangedEventArgs"/>] event arguments. </param>
 Private Sub m_viewModel_PropertyChanged(ByVal a_eventArgs As cc_isr_Core.PropertyChangedEventArgs)
 
-    Const p_procedureName = "m_K2700ViewModel_PropertyChanged"
+    Const p_procedureName = "m_viewModel_PropertyChanged"
     
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    HandleViewModelPropertyChanged a_eventArgs.PropertyName
-
+    If Not a_eventArgs Is Nothing Then
     
+        Dim p_propertyName As String
+        p_propertyName = a_eventArgs.PropertyName
+        HandleViewModelPropertyChanged p_propertyName
+    
+    End If
+   
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
@@ -1925,10 +2683,14 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' append a description
+    Err.Description = Err.Description & ". Property name: '" & p_propertyName & "'."
     
     ' display the error message
-    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1936,15 +2698,9 @@ err_Handler:
     
 End Sub
 
-
 ' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ' Worksheet events
 ' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Private Sub Worksheet_Deactivate()
-
-    Me.Dispose
-    
-End Sub
 
 ''' <summary>   Handles work sheet change events. </summary>
 ''' <remarks> The check box change event also causes a click event.
@@ -1958,79 +2714,77 @@ Private Sub OnWorksheetChange(ByVal a_range As Excel.Range)
     Select Case a_range.Address
         
         Case m_socketHostCell
-            This.ViewModel.SocketAddress = Me.Range(m_socketHostCell).Value & ":" & _
-                Me.Range(m_socketPortCell).Value
+            This.ViewModel.SocketAddress = Me.Host & ":" & Me.Port
         Case m_socketPortCell
-            This.ViewModel.SocketAddress = Me.Range(m_socketHostCell).Value & ":" & _
-                Me.Range(m_socketPortCell).Value
+            This.ViewModel.SocketAddress = Me.Host & ":" & Me.Port
         Case m_socketAddressCell
             This.ViewModel.SocketAddress = Me.SocketAddress
         Case m_socketIdCell
-            This.ViewModel.SocketId = Me.Range(m_socketIdCell).Value
+            This.ViewModel.SocketId = Me.SocketId
         Case m_sessionTimeoutCell
             This.ViewModel.SessionTimeout = Me.SessionTimeout
             
         Case m_connectedCell
             ' connected is read only
-            ' This.ViewModel.Connected = Me.Range(m_connectedCell).Value
+            ' This.ViewModel.Connected = me.Connected
         Case m_sentMessageCell
-            This.ViewModel.SentMessage = Me.Range(m_sentMessageCell).Value
+            This.ViewModel.SentMessage = Me.SentMessage
         Case m_receivedMessageLengthCell
-            This.ViewModel.ReceivedMessageLength = Me.Range(m_receivedMessageLengthCell).Value
+            This.ViewModel.ReceivedMessageLength = Me.ReceivedMessageLength
         Case m_receivedMessageCell
-            This.ViewModel.ReceivedMessage = Me.Range(m_receivedMessageCell).Value
+            This.ViewModel.ReceivedMessage = Me.ReceivedMessage
         Case m_elapsedTimeCell
-            This.ViewModel.ElapsedTimeCaption = Me.Range(m_elapsedTimeCell).Value
+            This.ViewModel.ElapsedTimeCaption = Me.ElapsedTimeCaption
         Case m_elapsedTimeFormatCell
-            This.ViewModel.ElapsedTimeFormat = Me.Range(m_elapsedTimeFormatCell).Value
+            This.ViewModel.ElapsedTimeFormat = Me.ElapsedTimeFormat
         Case m_lastMessageCell
-            This.ViewModel.LastMessage = Me.Range(m_lastMessageCell).Value
+            This.ViewModel.LastMessage = Me.LastMessage
         Case m_lastErrorMessageCell
-            This.ViewModel.LastErrorMessage = Me.Range(m_lastErrorMessageCell).Value
+            This.ViewModel.LastErrorMessage = LastErrorMessage
         Case m_serialPollCell
-            This.ViewModel.SerialPollByte = Me.Range(m_serialPollCell).Value
+            This.ViewModel.SerialPollByte = Me.SerialPollByte
         Case m_statusByteCell
-            This.ViewModel.StatusByte = Me.Range(m_statusByteCell).Value
+            This.ViewModel.StatusByte = Me.StatusByte
         Case m_standardByteCell
-            This.ViewModel.StandardByte = Me.Range(m_standardByteCell).Value
+            This.ViewModel.StandardByte = Me.StandardByte
 
         Case m_srqCell
-            This.ViewModel.ServiceRequested = Me.Range(m_srqCell).Value
+            This.ViewModel.ServiceRequested = Me.ServiceRequested
         Case m_gpibAddressCell
-            This.ViewModel.GpibAddress = Me.Range(m_gpibAddressCell).Value
+            This.ViewModel.GpibAddress = Me.PrimaryGpibAddress
         Case m_readTimeoutCell
-            This.ViewModel.GpibLanReadTimeout = Me.Range(m_readTimeoutCell).Value
+            This.ViewModel.GpibLanReadTimeout = Me.GpibLanReadTimeout
         Case m_autoAssertTalkCell
-            This.ViewModel.AutoAssertTalk = VBA.CBool(Me.Range(m_autoAssertTalkCell).Value)
+            This.ViewModel.AutoAssertTalk = AutoAssertTalk
         Case m_timerIntervalCell
-            This.ViewModel.TimerInterval = Me.Range(m_timerIntervalCell).Value
+            This.ViewModel.TimerInterval = Me.TimerInterval
 
         Case m_readingFormatCell
-            This.ViewModel.MeasuredValueFormat = Me.Range(m_readingFormatCell).Value
+            This.ViewModel.MeasuredValueFormat = Me.MeasuredValueFormat
         Case m_topCardCell
-            This.ViewModel.TopCard = Me.Range(m_topCardCell).Value
+            This.ViewModel.TopCard = Me.TopCard
         Case m_bottomCardCell
-            This.ViewModel.TopCard = Me.Range(m_bottomCardCell).Value
+            This.ViewModel.BottomCard = Me.BottomCard
         Case m_topCardScanListCell
-            This.ViewModel.TopCardFunctionScanList = Me.Range(m_topCardScanListCell).Value
+            This.ViewModel.TopCardFunctionScanList = Me.TopCardFunctionScanList
         Case m_bottomCardScanListCell
-            This.ViewModel.BottomCardFunctionScanList = Me.Range(m_bottomCardScanListCell).Value
+            This.ViewModel.BottomCardFunctionScanList = Me.BottomCardFunctionScanList
         Case m_inputsCell
-            This.ViewModel.FrontInputsCaption = Me.Range(m_inputsCell).Value
+            This.ViewModel.FrontInputsCaption = Me.FrontInputsCaption
         Case m_channelNumberCell
-            This.ViewModel.SelectedChannelNumber = Me.Range(m_channelNumberCell).Value
+            This.ViewModel.SelectedChannelNumber = Me.SelectedChannelNumber
         Case m_channelCountCell
-            This.ViewModel.ChannelCount = Me.Range(m_channelCountCell).Value
+            This.ViewModel.ChannelCount = Me.ChannelCount
         Case m_functionNameCell
-            This.ViewModel.SenseFunctionCaption = Me.Range(m_functionNameCell).Value
+            This.ViewModel.SenseFunctionCaption = Me.SenseFunctionCaption
         Case m_functionValueCell
             This.ViewModel.MeasuredReading = MeasuredReading
         Case m_functionUnitCell
-            This.ViewModel.SenseFunctionUnit = Me.Range(m_functionUnitCell).Value
+            This.ViewModel.SenseFunctionUnit = Me.SenseFunctionUnit
         Case m_monitoringStateCell
-            This.ViewModel.MonitoringState = Me.Range(m_monitoringStateCell).Value
+            This.ViewModel.MonitoringState = Me.MonitoringState
         Case m_readingOffsetCell
-            This.ViewModel.ReadingOffset = Me.Range(m_readingOffsetCell).Value
+            This.ViewModel.ReadingOffset = Me.ReadingOffset
 
     End Select
 
@@ -2043,7 +2797,8 @@ End Sub
 '''              Note: Make sure to not implement the click event,
 Private Sub Worksheet_Change(ByVal a_range As Excel.Range)
 
-    OnWorksheetChange a_range
+    If Not This.ViewModel Is Nothing Then _
+        OnWorksheetChange a_range
 
 End Sub
 

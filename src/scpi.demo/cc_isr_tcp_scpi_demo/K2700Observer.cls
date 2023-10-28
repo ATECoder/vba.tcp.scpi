@@ -13,6 +13,13 @@ Attribute VB_Exposed = True
 
 Option Explicit
 
+Private Const m_byRow As Boolean = True
+Private Const m_displayIncrement As Integer = 1
+Private Const m_measurementRow As Integer = 2
+Private Const m_measurementCol As Integer = 14
+Private Const m_channelRow As Integer = 2
+Private Const m_channelCol As Integer = 13
+
 Private WithEvents m_viewModel As K2700ViewModel
 Attribute m_viewModel.VB_VarHelpID = -1
 
@@ -189,7 +196,7 @@ Friend Function Initialize(ByVal a_viewModel As K2700ViewModel) As K2700Observer
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Set This.K2700Sheet = K2700Sheet.Initialize()
+    Set This.K2700Sheet = K2700Sheet.Initialize(a_viewModel)
     
     Set This.ViewModel = a_viewModel
     
@@ -824,7 +831,7 @@ End Property
 ''' <param name="a_value">       [double] the value. </param>
 Public Sub SetReading(ByVal a_channelNo As Integer, ByVal a_value As Double)
     If Not This.K2700Sheet Is Nothing Then _
-        SetReading_ a_channelNo, a_value, This.K2700Sheet.ByRow, This.K2700Sheet.DisplayIncrement
+        SetReading_ a_channelNo, a_value, m_byRow, m_displayIncrement
 End Sub
 
 ''' <summary>   Sets the Channel display. </summary>
@@ -835,15 +842,15 @@ End Sub
 Private Sub SetReading_(ByVal a_channelNo As Integer, ByVal a_value As Double, _
     ByVal a_byRow As Boolean, ByVal a_increment As Integer)
 
-    Me.MeasurementRow = IIf(a_byRow, This.K2700Sheet.MeasurementRow + a_increment * (a_channelNo - 1), _
-        This.K2700Sheet.MeasurementRow)
-    Me.MeasurementColumn = IIf(a_byRow, This.K2700Sheet.MeasurementCol, _
-        This.K2700Sheet.MeasurementCol + a_increment * (a_channelNo - 1))
+    Me.MeasurementRow = IIf(a_byRow, m_measurementRow + a_increment * (a_channelNo - 1), _
+        m_measurementRow)
+    Me.MeasurementColumn = IIf(a_byRow, m_measurementCol, _
+        m_measurementCol + a_increment * (a_channelNo - 1))
    
-    Me.ChannelRow = IIf(a_byRow, This.K2700Sheet.ChannelRow + a_increment * (a_channelNo - 1), _
-        This.K2700Sheet.ChannelRow)
-    Me.ChannelColumn = IIf(a_byRow, This.K2700Sheet.ChannelCol, _
-        This.K2700Sheet.ChannelCol + a_increment * (a_channelNo - 1))
+    Me.ChannelRow = IIf(a_byRow, m_channelRow + a_increment * (a_channelNo - 1), _
+        m_channelRow)
+    Me.ChannelColumn = IIf(a_byRow, m_channelCol, _
+        m_channelCol + a_increment * (a_channelNo - 1))
    
     Me.ChannelCellValue = This.ChannelNumberCaptionPrefix & VBA.CStr(a_channelNo)
     Me.MeasurementCellValue = VBA.CStr(a_value)
