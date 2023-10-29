@@ -1,6 +1,13 @@
 # Change log
 All notable changes to these libraries will be documented in this file in a format based on [Keep a Change log]
 
+## [1.0.8702] - 2023-10-29
+* View model: change accessibility of most let properties to Friend;
+* Add arguments to view model commands.
+* K2700: Set Device properties when setting the K2700 properties.
+* K2700 Sheet: Initialize the socket address.
+* not tested.
+
 ## [1.0.8698] - 2023-10-25
 * Fix the demo.
 * Add document info.

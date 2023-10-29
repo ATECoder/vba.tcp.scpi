@@ -89,7 +89,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 2
+    RunTest 1
     AfterAll
 End Sub
 
@@ -97,77 +97,6 @@ End Sub
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' Test 01 TestShouldInitialize passed. Elapsed time: 4609.5 ms.
-''' Test 02 TestShouldBeConnected passed. Elapsed time: 34.2 ms.
-'''     Serial Poll is 16 in 8.6 ms.
-''' Test 03 TestShouldReadCards passed. Elapsed time: 10.8 ms.
-''' Test 04 TestInitialStateShouldRestore passed. Elapsed time: 13155.9 ms.
-''' Test 05 TestSyntaxErrorShouldRecover passed. Elapsed time: 166.4 ms.
-'''     Serial Poll is 4 in 4.9 ms.
-''' Test 06 TestClosedConnectionShouldRestore passed. Elapsed time: 7647.8 ms.
-''' Test 07 TestImmediateModeShouldConfigure passed. Elapsed time: 2396.0 ms.
-''' Test 08 TestExternalModeShouldConfigure passed. Elapsed time: 2474.9 ms.
-''' Test 09 TestTriggerPollingShouldStartStop passed. Elapsed time: 2155.3 ms.
-''' Awaiting triggers...
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00136353E+02'.
-'''  1 : 100.136353
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00134216E+02'.
-'''  2 : 100.134216
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00134689E+02'.
-'''  3 : 100.134689
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00135223E+02'.
-'''  4 : 100.135223
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00134422E+02'.
-'''  5 : 100.134422
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00135017E+02'.
-'''  6 : 100.135017
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00135025E+02'.
-'''  7 : 100.135025
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00133934E+02'.
-'''  8 : 100.133934
-''' Test 10 TestTriggerPollingShouldRead passed. Elapsed time: 9017.2 ms.
-''' Test 11 TestTriggerMonitoringShouldStartStop passed. Elapsed time: 6234.8 ms.
-''' Waiting for trigger....
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00134773E+02'.
-'''  1 : 100.134773
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00135361E+02'.
-'''  2 : 100.135361
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00135979E+02'.
-'''  3 : 100.135979
-''' Test 12 TestTriggerMonitoringShouldRead passed. Elapsed time: 11310.5 ms.
-'''  1 : 100.146591
-''' Test 13 TestK2700SheetShouldMeasureImmediately passed. Elapsed time: 2460.0 ms.
-''' Test 14 TestK2700SheetMonitoringShouldStartStop passed. Elapsed time: 5591.8 ms.
-''' Waiting for trigger....
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00135345E+02'.
-'''  1 : 100.135345
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00135422E+02'.
-'''  2 : 100.135422
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00135277E+02'.
-'''  3 : 100.135277
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00135765E+02'.
-'''  4 : 100.135765
-''' Test 15 TestK2700SheetMonitoringShouldRead passed. Elapsed time: 11354.8 ms.
-''' 19:08:24 Power on reset starting. This could take 3 seconds. Please wait...
-''' 19:08:31 done power on reset.
-''' Test 16 TestOpenConnectionWithPowerOnResetShouldConnect passed. Elapsed time: 7321.8 ms.
-''' Ran 16 out of 16 tests.
-''' Passed: 16; Failed: 0; Inconclusive: 0.
 ''' </code>
 ''' </remarks>
 Public Sub RunAllTests()
@@ -220,7 +149,7 @@ Public Sub BeforeAll()
     
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Primed to run all tests.")
 
-    This.Name = "K2700ViewModelTests"
+    This.Name = "K2700ViewTests"
     
     ' initialize test settings
     Set This.TestStopper = cc_isr_Core_IO.Factory.NewStopwatch
@@ -232,6 +161,10 @@ Public Sub BeforeAll()
     This.ImmediateSenseFunctionName = "RES"
     This.ExternalSenseFunctionName = "FRES"
     
+    ' card scan list uses immediate mode sense function
+    This.TopCardFunctionScanList = ":FUNC 'RES',(@101,120)"
+    This.BottomCardFunctionScanList = VBA.vbNullString
+    
     ' set a temporary error tracer
     Dim p_errTrace As New DeviceErrorsTracer
     Set This.ErrTracer = p_errTrace
@@ -240,21 +173,16 @@ Public Sub BeforeAll()
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
     
     ' Prime all tests
-    
-    ' card scan list uses immediate mode sense function
-    This.TopCardFunctionScanList = ":FUNC 'RES',(@101,120)"
-    This.BottomCardFunctionScanList = VBA.vbNullString
-    
     Set This.ViewModel = cc_isr_Tcp_Scpi.Factory.NewK2700ViewModel
     
     Set This.ErrTracer = p_errTrace.Initialize(This.ViewModel.Device)
     
-    ' initialize the view before initializing the view model
-    ' but after the view initial setting are set. The view initial
+    ' initialize the view (K2700 Sheet) before initializing the view model
+    ' but after the view initial setting are set (see K2700Sheet.Initialize). The view initial
     ' settings are then applied to the view model.
     Set This.K2700Sheet = K2700Sheet.Initialize(This.ViewModel)
     
-    ' issue the open connection command. This initializes the view model.
+    ' open the connection using the open connection command. This initializes the view model.
     This.ViewModel.OpenConnectionCommand
     
     If This.ViewModel.Connected Then
@@ -1686,7 +1614,6 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' TestShouldInitialize passed. in 11.3 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -2013,8 +1940,6 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' TestShouldInitialize passed. in 11.3 ms.
-''' TestShouldBeConnected passed. in 16.8 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -2209,7 +2134,6 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' TestShouldReadCards passed. in 13.2 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -2264,7 +2188,6 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' TestInitialStateShouldRestore passed. in 12234.4 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -2428,7 +2351,6 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' TestSyntaxErrorShouldRecover passed. in 145.6 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -2542,7 +2464,6 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' TestClosedConnectionShouldRestore passed. in 5733.7 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -3052,27 +2973,6 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' Awaiting triggers...
-'''  1 : 100.115234
-'''  2 : 100.114975
-'''  3 : 100.116783
-'''  4 : 100.117149
-'''  5 : 100.115334
-'''  6 : 100.115814
-'''  7 : 100.116417
-''' Test 10 TestTriggerPollingShouldRead passed. Elapsed time: 11113.5 ms.
-''' This was recorded after adding *CLS after receiving the trigger.
-''' Awaiting triggers...
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00121643E+02'.
-'''  1 : 100.121643
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00123245E+02'.
-'''  2 : 100.123245
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00122681E+02'.
-'''  3 : 100.122681
-''' Test 10 TestTriggerPollingShouldRead passed. Elapsed time: 16133.3 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -3194,7 +3094,6 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' Test 11 TestTriggerMonitoringShouldStartStop passed. Elapsed time: 8220.0 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -3253,14 +3152,6 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' Waiting for trigger....
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00122772E+02'.
-'''  1 : 100.122772
-''' Status byte:  65 ; SRQ: True; Cleared status byte:  1
-''' Reading: '+1.00122467E+02'.
-'''  2 : 100.122467
-''' Test 12 TestTriggerMonitoringShouldRead passed. Elapsed time: 13419.9 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
@@ -3319,9 +3210,6 @@ End Function
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' 8:40:13 Power on reset starting. This could take 3 seconds. Please wait...
-''' 8:40:19 done power on reset.
-''' Test 16 TestOpenConnectionWithPowerOnResetShouldConnect passed. Elapsed time: 6517.1 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where

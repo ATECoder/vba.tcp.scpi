@@ -123,6 +123,7 @@ Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As K2700Sheet
     Set This.ViewModel = a_viewModel
     
     ' set the initial values that are provided by the user interface
+    Me.SocketAddress = Me.Host & ":" & VBA.CStr(Me.Port)
     Me.GpibLanControllerPort = 1234
     This.ChannelNumberCaptionPrefix = "ch"
     Me.MaximumChannelNumber = 48
@@ -221,7 +222,7 @@ End Sub
 ''' <summary>   Gets or sets the socket address. </summary>
 ''' <value>   [String]. </value
 Public Property Get SocketAddress() As String
-    If 0 = Len(Me.Range(m_socketAddressCell).Value) Then Me.Range(m_socketAddressCell).Value = "192.168.0.252"
+    If 0 = Len(Me.Range(m_socketAddressCell).Value) Then Me.Range(m_socketAddressCell).Value = "192.168.0.252:1234"
     SocketAddress = VBA.CStr(Me.Range(m_socketAddressCell).Value)
 End Property
 
@@ -564,6 +565,8 @@ Public Sub PopulateCommandsComboBox()
     
     ' Trap errors to the error handler
     On Error GoTo err_Handler
+    
+    If This.ScpiCommands Is Nothing Then Exit Sub
     
     Me.CommandsComboBox.Clear
     Dim p_item As Variant
@@ -1822,6 +1825,8 @@ Public Sub PopulateSenseFunctionComboBox()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
+    If This.SenseFunctions Is Nothing Then Exit Sub
+
     Dim p_fourWireResistanceIndex As Integer
     Me.SenseFunctionComboBox.Clear
     Dim p_item As Variant
@@ -2213,6 +2218,8 @@ End Sub
 
 Public Sub Synchronize()
 
+    Const p_procedureName = "Synchronize"
+
     This.ViewModel.GpibAddress = Me.PrimaryGpibAddress
     This.ViewModel.GpibLanControllerPort = This.GpibLanControllerPort
     This.ViewModel.MaximumChannelNumber = Me.MaximumChannelNumber
@@ -2221,6 +2228,11 @@ Public Sub Synchronize()
     This.ViewModel.SocketAddress = Me.SocketAddress
     This.ViewModel.TimerInterval = Me.TimerInterval
 
+    If Not This.ViewModel.HasValidSocketAddress Then _
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " Invalid socket address: '" & Me.SocketAddress & "'."
+    
     Me.AutoAssertTalk = This.ViewModel.AutoAssertTalk
     Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
     Me.BottomCard = This.ViewModel.BottomCard
