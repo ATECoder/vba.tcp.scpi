@@ -329,7 +329,7 @@ Private Sub OpenConnectionButton_Click()
     ' initialize if necessary
     Initialize_
     
-    This.ViewModel.OpenConnectionCommand
+    This.ViewModel.OpenConnectionCommand Me.SocketAddress, Me.SessionTimeout
 End Sub
 
 ''' <summary>   Gets the execution (Can Execute) status of the Close Connection command. </summary>
@@ -364,8 +364,6 @@ End Property
 Public Property Let MessageToSend(ByVal a_value As String)
     If Me.MessageToSend <> a_value Then
         Me.CommandsComboBox.Text = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.MessageToSend = a_value
     End If
 End Property
 
@@ -463,8 +461,6 @@ End Property
 Public Property Let ReadStatusAfterWriteEnabled(ByVal a_value As Boolean)
     If Me.ReadStatusAfterWriteEnabled <> a_value Then
         Me.ReadStatusAfterWriteCheckBox.Value = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ReadStatusAfterWriteEnabled = a_value
     End If
 End Property
 

@@ -30,6 +30,7 @@ Private Const m_displayIncrement As Integer = 1
 Private Type this_
     FocusedControlName As String
     DesignMode As Boolean
+    ChannelNumberCaptionPrefix As String
 End Type
 
 Private This As this_
@@ -37,6 +38,7 @@ Private This As this_
 ''' <summary>   Initializes and returns an instance of this object. </summary>
 Public Function Initialize() As UserSheet
     
+    This.ChannelNumberCaptionPrefix = "ch"
     Me.AutoScanToggleExecutable = False
     Me.AutoScanToggleValue = False
     Me.AutoSingleToggleExecutable = False
@@ -62,6 +64,12 @@ End Property
 ''' <param name="a_value">   [Boolean] true if in design mode. </param>
 Public Property Let DesignMode(ByVal a_value As Boolean)
     This.DesignMode = a_value
+End Property
+
+''' <summary>   Gets the Channel Number Caption Prefix. </summary>
+''' <value>   [String]. </value>
+Public Property Get ChannelNumberCaptionPrefix() As String
+    ChannelNumberCaptionPrefix = This.ChannelNumberCaptionPrefix
 End Property
 
 ''' <summary>   Set the sheet date and time display. </summary>
@@ -128,7 +136,7 @@ Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
         ' select this cell as the active cell
         Me.GetSelectedChannelNumberRange(a_value).Activate
         ' set the active cell number.
-        ActiveCell.Value = "R" & VBA.CStr(a_value)
+        ActiveCell.Value = DataView.ChannelNumberCaptionPrefix & VBA.CStr(a_value)
     End If
 
 End Property

@@ -16,12 +16,6 @@ Option Explicit
 Private WithEvents m_viewModel As K2700ViewModel
 Attribute m_viewModel.VB_VarHelpID = -1
 
-Private Const m_sessionTimeoutCell As String = "B1"
-Private Const m_socketAddressCell As String = "C2"
-Private Const m_timerIntervalCell As String = "C22"
-Private Const m_lastMessageCell As String = "B4"
-Private Const m_lastErrorMessageCell As String = "B33"
-
 Private Const m_measurementRow As Integer = 7 ' 2
 Private Const m_measurementCol As Integer = 2 ' 23
 Private Const m_channelRow As Integer = 7 ' 2
@@ -32,7 +26,7 @@ Private Const m_displayIncrement As Integer = 2
 Private Type this_
 
     ViewModel As K2700ViewModel
-    DataAcquisitionSheet As DataSheet
+    DataSheet As DataSheet
 
     PrimaryGpibAddress As Integer
     GpibLanControllerPort As Long
@@ -48,13 +42,13 @@ Private Type this_
     LastCommandDetails As String
     LastCommandOutcome As Boolean
         
+    ChannelNumberCaptionPrefix As String
     MeasurementRow As Integer
     MeasurementColumn As Integer
     ChannelRow As Integer
     ChannelColumn As Integer
     ChannelCellValue As String
     MeasurementCellValue As String
-    ChannelNumberCaptionPrefix As String
 
     MeasuredChannelNumber As Integer
     MeasuredReading As String
@@ -64,6 +58,12 @@ Private Type this_
     CloseConnectionExecutable As Boolean
     OpenConnectionExecutable As Boolean
     DesignMode As Boolean
+    
+    ContinuousSenseFunctionName As String
+    ImmediateSenseFunctionName As String
+    ImmediateFrontInputsRequired As Boolean
+    ExternalSenseFunctionName As String
+    ExternalFrontInputsRequired As Boolean
     
 End Type
 
@@ -75,9 +75,6 @@ Private This As this_
 
 ''' <summary>   Handles the Class Initialize event. </summary>
 Private Sub Class_Initialize()
-
-    This.ChannelNumberCaptionPrefix = "R"
-
 End Sub
 
 ''' <summary>   Handles the Class Terminate event. </summary>
@@ -93,7 +90,7 @@ Public Sub Dispose()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Set This.DataAcquisitionSheet = Nothing
+    Set This.DataSheet = Nothing
 
     Set m_viewModel = Nothing
     
@@ -113,7 +110,7 @@ err_Handler:
     
     ' display the error message
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -131,7 +128,7 @@ Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As DataView
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Set This.DataAcquisitionSheet = DataSheet.Initialize()
+    Set This.DataSheet = DataSheet.Initialize(a_viewModel)
     
     Set This.ViewModel = a_viewModel
     
@@ -157,7 +154,7 @@ err_Handler:
     
     ' display the error message
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -176,28 +173,6 @@ End Property
 ' User interface control
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
-''' <summary>   Gets the design mode for unit testing and restoration of state. </summary>
-''' <value>   [Boolean]. </value>
-Public Property Get DesignMode() As Boolean
-    
-    If This.DataAcquisitionSheet Is Nothing Then
-        DesignMode = This.DesignMode
-    Else
-        DesignMode = This.DataAcquisitionSheet.DesignMode
-    End If
-
-End Property
-
-''' <summary>   Sets the design mode for unit testing and restoration of state. </summary>
-''' <param name="a_value">   [Boolean] true if in design mode. </param>
-Public Property Let DesignMode(ByVal a_value As Boolean)
-    If Me.DesignMode <> a_value Then
-        If Not This.DataAcquisitionSheet Is Nothing Then _
-            This.DataAcquisitionSheet.DesignMode = a_value
-        This.DesignMode = a_value
-    End If
-End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 '
@@ -232,7 +207,7 @@ err_Handler:
     
     ' report the last error.
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -253,7 +228,7 @@ Public Sub OnOpenConnectionButtonClick()
     ' exit if already connected
     If This.ViewModel.Connected Then Exit Sub
         
-    This.ViewModel.OpenConnectionCommand
+    This.ViewModel.OpenConnectionCommand This.DataSheet.SocketAddress, This.DataSheet.SessionTimeout
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -269,7 +244,7 @@ err_Handler:
     
     ' report the last error.
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -280,10 +255,10 @@ End Sub
 ''' <summary>   Gets the execution (Can Execute) status of the Open Connection command. </summary>
 ''' <value>   [Boolean] true if the command is executable. </value>
 Public Property Get OpenConnectionExecutable() As Boolean
-    If This.DataAcquisitionSheet Is Nothing Then
+    If This.DataSheet Is Nothing Then
         OpenConnectionExecutable = This.OpenConnectionExecutable
     Else
-        OpenConnectionExecutable = This.DataAcquisitionSheet.OpenConnectionExecutable
+        OpenConnectionExecutable = This.DataSheet.OpenConnectionExecutable
     End If
 End Property
 
@@ -292,8 +267,8 @@ End Property
 Public Property Let OpenConnectionExecutable(ByVal a_value As Boolean)
     If Me.OpenConnectionExecutable <> a_value Then
         
-        If Not This.DataAcquisitionSheet Is Nothing Then _
-            This.DataAcquisitionSheet.OpenConnectionExecutable = a_value
+        If Not This.DataSheet Is Nothing Then _
+            This.DataSheet.OpenConnectionExecutable = a_value
         
         This.OpenConnectionExecutable = a_value
     
@@ -329,7 +304,7 @@ err_Handler:
     
     ' report the last error.
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -341,10 +316,10 @@ End Sub
 ''' <summary>   Gets the execution (Can Execute) status of the Close Connection command. </summary>
 ''' <value>   [Boolean] true if the command is executable. </value>
 Public Property Get CloseConnectionExecutable() As Boolean
-    If This.DataAcquisitionSheet Is Nothing Then
+    If This.DataSheet Is Nothing Then
         CloseConnectionExecutable = This.CloseConnectionExecutable
     Else
-        CloseConnectionExecutable = This.DataAcquisitionSheet.CloseConnectionExecutable
+        CloseConnectionExecutable = This.DataSheet.CloseConnectionExecutable
     End If
 End Property
 
@@ -353,8 +328,8 @@ End Property
 Public Property Let CloseConnectionExecutable(ByVal a_value As Boolean)
     If Me.CloseConnectionExecutable <> a_value Then
         
-        If Not This.DataAcquisitionSheet Is Nothing Then _
-            This.DataAcquisitionSheet.CloseConnectionExecutable = a_value
+        If Not This.DataSheet Is Nothing Then _
+            This.DataSheet.CloseConnectionExecutable = a_value
         
         This.CloseConnectionExecutable = a_value
     
@@ -364,18 +339,18 @@ End Property
 ''' <summary>   Gets the execution (Can Execute) status of the Clear Reading command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is executable. </param>
 Public Property Get ClearReadingsExecutable() As Boolean
-    If This.DataAcquisitionSheet.ClearReadingsButton Is Nothing Then
+    If This.DataSheet.ClearReadingsButton Is Nothing Then
         ClearReadingsExecutable = This.ClearReadingExecutable
     Else
-        ClearReadingsExecutable = This.DataAcquisitionSheet.ClearReadingsButton.Enabled
+        ClearReadingsExecutable = This.DataSheet.ClearReadingsButton.Enabled
     End If
 End Property
 
 ''' <summary>   Sets the execution (Can Execute) status of the Clear Reading command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is executable. </param>
 Public Property Let ClearReadingsExecutable(ByVal a_value As Boolean)
-    If Not This.DataAcquisitionSheet.ClearReadingsButton Is Nothing Then
-        This.DataAcquisitionSheet.ClearReadingsButton.Enabled = a_value
+    If Not This.DataSheet.ClearReadingsButton Is Nothing Then
+        This.DataSheet.ClearReadingsButton.Enabled = a_value
     End If
     This.ClearReadingExecutable = a_value
 End Property
@@ -383,7 +358,7 @@ End Property
 ''' <summary>   Handles the Clear Messages Button Click Event. </summary>
 Public Sub OnClearMessages()
     If Not This.ViewModel Is Nothing Then
-        This.ViewModel.LastErrorMessage = VBA.vbNullString
+        This.ViewModel.OnError VBA.vbNullString
         This.ViewModel.LastMessage = VBA.vbNullString
     End If
 End Sub
@@ -391,7 +366,7 @@ End Sub
 ''' <summary>   Handles the Clear Messages Button Click Event. </summary>
 Public Sub OnClearReadings()
     If Not This.ViewModel Is Nothing Then
-        This.ViewModel.ClearReadingsCommand
+        This.ViewModel.ClearReadingsCommand This.ReadingOffset
     End If
 End Sub
 
@@ -484,8 +459,6 @@ End Property
 Public Property Let SessionTimeout(ByVal a_value As Integer)
     If This.SessionTimeout <> a_value Then
         This.SessionTimeout = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SessionTimeout = a_value
     End If
 End Property
 
@@ -500,8 +473,6 @@ End Property
 Public Property Let SocketAddress(ByVal a_value As String)
     If This.SocketAddress <> a_value Then
         This.SocketAddress = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SocketAddress = a_value
     End If
 End Property
 
@@ -516,8 +487,6 @@ End Property
 Public Property Let TimerInterval(ByVal a_value As Integer)
     If This.TimerInterval <> a_value Then
         This.TimerInterval = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.TimerInterval = a_value
     End If
 End Property
 
@@ -535,10 +504,10 @@ Public Property Let LastErrorMessage(ByVal a_value As String)
         This.LastErrorMessage = a_value
         
         If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.LastErrorMessage = a_value
+            This.ViewModel.OnError a_value
             
-        If Not This.DataAcquisitionSheet Is Nothing Then _
-            This.DataAcquisitionSheet.LastErrorMessage = a_value
+        If Not This.DataSheet Is Nothing Then _
+            This.DataSheet.LastErrorMessage = a_value
             
     End If
 End Property
@@ -558,10 +527,108 @@ Public Property Let LastMessage(ByVal a_value As String)
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.LastMessage = a_value
     
-        If Not This.DataAcquisitionSheet Is Nothing Then _
-            This.DataAcquisitionSheet.LastMessage = a_value
+        If Not This.DataSheet Is Nothing Then _
+            This.DataSheet.LastMessage = a_value
             
     End If
+End Property
+
+' . . . . . . . . . . . . . . . . . . . . . . . . .
+' K2700: Measurement Mode: Continuous
+' . . . . . . . . . . . . . . . . . . . . . . . . .
+
+''' <summary>   Gets the Sense Function Name for continuous mode. </summary>
+''' <value>   [String]. </value>
+Public Property Get ContinuousSenseFunctionName() As String
+    ContinuousSenseFunctionName = This.ContinuousSenseFunctionName
+End Property
+
+''' <summary>   Sets the Sense Function Name for continuous mode. </summary>
+''' <param name="a_value">   [String] the Continuous Sense Function Name. </value>
+Friend Property Let ContinuousSenseFunctionName(ByVal a_value As String)
+    If This.ContinuousSenseFunctionName <> a_value Then
+        This.ContinuousSenseFunctionName = a_value
+    End If
+End Property
+
+' . . . . . . . . . . . . . . . . . . . . . . . . .
+' K2700: Measurement Mode: Immediate
+' . . . . . . . . . . . . . . . . . . . . . . . . .
+
+''' <summary>   Gets the Sense Function Name for Immediate trigger mode. </summary>
+''' <value>   [String]. </value>
+Public Property Get ImmediateSenseFunctionName() As String
+    ImmediateSenseFunctionName = This.ImmediateSenseFunctionName
+End Property
+
+''' <summary>   Sets the Sense Function Name for Immediate trigger  mode. </summary>
+''' <param name="a_value">   [String] the Sense Function Name. </value>
+Public Property Let ImmediateSenseFunctionName(ByVal a_value As String)
+    If This.ImmediateSenseFunctionName <> a_value Then
+        This.ImmediateSenseFunctionName = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Front Inputs Required for Immediate trigger mode. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get ImmediateFrontInputsRequired() As Boolean
+    ImmediateFrontInputsRequired = This.ImmediateFrontInputsRequired
+End Property
+
+''' <summary>   Sets the Front Inputs Required for Immediate trigger  mode. </summary>
+''' <param name="a_value">   [Boolean] the Front Inputs Required. </value>
+Public Property Let ImmediateFrontInputsRequired(ByVal a_value As Boolean)
+    If This.ImmediateFrontInputsRequired <> a_value Then
+        This.ImmediateFrontInputsRequired = a_value
+    End If
+End Property
+
+' . . . . . . . . . . . . . . . . . . . . . . . . .
+' K2700: Measurement Mode: External Trigger
+' . . . . . . . . . . . . . . . . . . . . . . . . .
+
+''' <summary>   Gets the Sense Function Name for External trigger mode. </summary>
+''' <value>   [String]. </value>
+Public Property Get ExternalSenseFunctionName() As String
+    ExternalSenseFunctionName = This.ExternalSenseFunctionName
+End Property
+
+''' <summary>   Sets the Sense Function Name for External trigger mode. </summary>
+''' <param name="a_value">   [String] the Sense Function Name. </value>
+Public Property Let ExternalSenseFunctionName(ByVal a_value As String)
+    If This.ExternalSenseFunctionName <> a_value Then
+        This.ExternalSenseFunctionName = a_value
+    End If
+End Property
+
+''' <summary>   Gets the Front Inputs Required for External trigger mode. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get ExternalFrontInputsRequired() As Boolean
+    ExternalFrontInputsRequired = This.ExternalFrontInputsRequired
+End Property
+
+''' <summary>   Sets the Front Inputs Required for External trigger  mode. </summary>
+''' <param name="a_value">   [Boolean] the Front Inputs Required. </value>
+Public Property Let ExternalFrontInputsRequired(ByVal a_value As Boolean)
+    If This.ExternalFrontInputsRequired <> a_value Then
+        This.ExternalFrontInputsRequired = a_value
+    End If
+End Property
+
+' . . . . . . . . . . . . . . . . . . . . . . . . .
+' K2700: Reading
+' . . . . . . . . . . . . . . . . . . . . . . . . .
+
+''' <summary>   Gets the Channel Number Caption Prefix. </summary>
+''' <value>   [String]. </value>
+Public Property Get ChannelNumberCaptionPrefix() As String
+    ChannelNumberCaptionPrefix = This.ChannelNumberCaptionPrefix
+End Property
+
+''' <summary>   Sets the Channel Number Caption Prefix. </summary>
+''' <param name="a_value">   [String] the Channel Number Caption Prefix. </value>
+Public Property Let ChannelNumberCaptionPrefix(ByVal a_value As String)
+    This.ChannelNumberCaptionPrefix = a_value
 End Property
 
 ''' <summary>   Gets the Measured Channel Number. </summary>
@@ -686,10 +753,10 @@ End Property
 ''' <summary>   Gets the Measurement Cell Value. </summary>
 ''' <value>   [String]. </value>
 Public Property Get MeasurementCellValue() As String
-    If This.DataAcquisitionSheet Is Nothing Then
+    If This.DataSheet Is Nothing Then
         MeasurementCellValue = This.MeasurementCellValue
     Else
-        MeasurementCellValue = This.DataAcquisitionSheet.Cells(Me.MeasurementRow, Me.MeasurementColumn).Value
+        MeasurementCellValue = This.DataSheet.Cells(Me.MeasurementRow, Me.MeasurementColumn).Value
     End If
 End Property
 
@@ -699,8 +766,8 @@ Public Property Let MeasurementCellValue(ByVal a_value As String)
     If Me.MeasurementCellValue <> a_value Then
         This.MeasurementCellValue = a_value
         
-        If Not This.DataAcquisitionSheet Is Nothing Then _
-            This.DataAcquisitionSheet.Cells(Me.MeasurementRow, Me.MeasurementColumn).Value = a_value
+        If Not This.DataSheet Is Nothing Then _
+            This.DataSheet.Cells(Me.MeasurementRow, Me.MeasurementColumn).Value = a_value
         
         
     End If
@@ -709,10 +776,10 @@ End Property
 ''' <summary>   Gets the channel cell Value. </summary>
 ''' <value>   [String]. </value>
 Public Property Get ChannelCellValue() As String
-    If This.DataAcquisitionSheet Is Nothing Then
+    If This.DataSheet Is Nothing Then
         ChannelCellValue = This.ChannelCellValue
     Else
-        ChannelCellValue = This.DataAcquisitionSheet.Cells(Me.ChannelRow, Me.ChannelColumn).Value
+        ChannelCellValue = This.DataSheet.Cells(Me.ChannelRow, Me.ChannelColumn).Value
     End If
 End Property
 
@@ -723,8 +790,8 @@ Public Property Let ChannelCellValue(ByVal a_value As String)
         
         This.ChannelCellValue = a_value
         
-        If Not This.DataAcquisitionSheet Is Nothing Then _
-            This.DataAcquisitionSheet.Cells(Me.ChannelRow, Me.ChannelColumn).Value = a_value
+        If Not This.DataSheet Is Nothing Then _
+            This.DataSheet.Cells(Me.ChannelRow, Me.ChannelColumn).Value = a_value
         
     End If
 End Property
@@ -792,6 +859,12 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.MeasurementMode = This.ViewModel.MeasurementMode
         Case "ReadingOffset"
             Me.ReadingOffset = This.ViewModel.ReadingOffset
+        Case "ContinuousSenseFunctionName"
+            Me.ContinuousSenseFunctionName = This.ViewModel.ContinuousSenseFunctionName
+        Case "ImmediateSenseFunctionName"
+            Me.ImmediateSenseFunctionName = This.ViewModel.ImmediateSenseFunctionName
+        Case "ExternalSenseFunctionName"
+            Me.ExternalSenseFunctionName = This.ViewModel.ExternalSenseFunctionName
         
         Case "ClearReadingsExecutable"
             Me.ClearReadingsExecutable = This.ViewModel.ClearReadingsExecutable
@@ -799,8 +872,6 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.CloseConnectionExecutable = This.ViewModel.CloseConnectionExecutable
         Case "OpenConnectionExecutable"
             Me.OpenConnectionExecutable = This.ViewModel.OpenConnectionExecutable
-        Case "DesignMode"
-            Me.DesignMode = This.ViewModel.DesignMode
 
     End Select
     
@@ -818,13 +889,14 @@ Friend Sub Synchronize()
     ' set the view model settings that come from the ViewModel user interface
     
     ' set user interface settings
-    Me.GpibLanControllerPort = This.DataAcquisitionSheet.GpibLanControllerPort
-    Me.PrimaryGpibAddress = This.DataAcquisitionSheet.PrimaryGpibAddress
-    Me.MaximumChannelNumber = This.DataAcquisitionSheet.MaxResistanceCount
-    Me.SocketAddress = This.DataAcquisitionSheet.SocketAddress
-    Me.SessionTimeout = This.DataAcquisitionSheet.SessionTimeout
-    Me.TimerInterval = This.DataAcquisitionSheet.TimerInterval
-    Me.BeepAllowed = This.DataAcquisitionSheet.BeepAllowed
+    Me.ChannelNumberCaptionPrefix = This.DataSheet.ChannelNumberCaptionPrefix
+    Me.GpibLanControllerPort = This.DataSheet.GpibLanControllerPort
+    Me.PrimaryGpibAddress = This.DataSheet.PrimaryGpibAddress
+    Me.MaximumChannelNumber = This.DataSheet.MaxResistanceCount
+    Me.SocketAddress = This.DataSheet.SocketAddress
+    Me.SessionTimeout = This.DataSheet.SessionTimeout
+    Me.TimerInterval = This.DataSheet.TimerInterval
+    Me.BeepAllowed = This.DataSheet.BeepAllowed
     
     This.ViewModel.SocketAddress = This.SocketAddress
     This.ViewModel.GpibLanControllerPort = This.GpibLanControllerPort
@@ -881,7 +953,7 @@ err_Handler:
     
     ' display the error message
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -900,7 +972,7 @@ Friend Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Chan
     On Error GoTo err_Handler
     
     Me.MeasuredReading = a_eventArgs.Reading
-    Me.MeasuredChannelNumber = a_eventArgs.ChannelNumber
+    Me.MeasuredChannelNumber = a_eventArgs.channelnumber
         
     Dim p_value As Double
     Dim p_details As String
@@ -930,7 +1002,7 @@ err_Handler:
     
     ' display the error message
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next

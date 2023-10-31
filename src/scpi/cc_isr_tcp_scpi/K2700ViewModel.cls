@@ -8,24 +8,10 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-''' <summary>   A public creatable singleton View Model for the
+''' <summary>   A public creatable View Model for the
 '''             2700 instrument control. </summary>
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Option Explicit
-
-''' <summary>   Values that represent mesaurement mode options. </summary>
-Public Enum MeasurementModeOption
-    ''' <summary>   An enum constant representing the none option. </summary>
-    None = 0
-    ''' <summary>   An enum constant representing the continuous trigger option. </summary>
-    Continuous = 1
-    ''' <summary>   An enum constant representing the immediate trigger option. </summary>
-    Immediate = 2
-    ''' <summary>   An enum constant representing the external trigger option. </summary>
-    External = 3
-    ''' <summary>   An enum constant representing the external trigger monitoring option. </summary>
-    Monitoring = 4
-End Enum
 
 ''' <summary>   Represents an observer pattern subject that can notify observers
 '''             when a property value changes. </summary>
@@ -78,7 +64,6 @@ Private Type this_
     MeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
     Measuring As Boolean
     MaximumChannelNumber As Integer
-    DesignMode As Boolean
 
     ' Winsock properties
     Host As String
@@ -133,7 +118,9 @@ Private Type this_
     MeasuredChannelNumber As Integer
     ContinuousSenseFunctionName As String
     ImmediateSenseFunctionName As String
+    ImmediateFrontInputsRequired As Boolean
     ExternalSenseFunctionName As String
+    ExternalFrontInputsRequired As Boolean
     SenseFunctionName As String
     SenseFunctionCaption As String
     SenseFunctionUnit As String
@@ -154,7 +141,6 @@ Private Type this_
     HandlingTimerEvent As Boolean
     ' indicates that the timer started; used to monitor timer state.
     TimerStarted As Boolean
-    TimerControlled As Boolean
 
     ' Service request monitoring properties
     MonitoringState As String
@@ -221,6 +207,9 @@ Private Sub Class_Initialize()
     This.ContinuousSenseFunctionName = "FRES"
     This.ImmediateSenseFunctionName = "RES"
     This.ExternalSenseFunctionName = "FRES"
+    This.ImmediateFrontInputsRequired = False
+    This.ExternalSenseFunctionName = "FRES"
+    This.ExternalFrontInputsRequired = True
     This.MeasuredValueFormat = "0.0"
     This.GpibLanControllerPort = 1234
     This.ReadAfterWriteDelay = 1
@@ -351,21 +340,6 @@ End Sub
 ' User Interface Control
 ' + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Gets the design mode for unit testing and restoration of state. </summary>
-''' <value>   [Boolean]. </value>
-Public Property Get DesignMode() As Boolean
-    DesignMode = This.DesignMode
-End Property
-
-''' <summary>   Sets the design mode for unit testing and restoration of state. </summary>
-''' <param name="a_value">   [Boolean] true if in design mode. </param>
-Friend Property Let DesignMode(ByVal a_value As Boolean)
-    If This.DesignMode <> a_value Then
-        This.DesignMode = a_value
-        Me.OnPropertyChanged "DesignMode"
-    End If
-End Property
-
 ''' <summary>   Gets the instrument beep sound on each reading is enabled. </summary>
 ''' <remarks>   True if instrument beep sound on each reading is enabled. </remarks>
 ''' <value>   [Boolean]. </value>
@@ -443,6 +417,12 @@ Friend Property Let LastErrorMessage(ByVal a_value As String)
     End If
 End Property
 
+''' <summary>   Reports an error. </summary>
+''' <param name="a_value">   [String] the last error message value. </value>
+Public Sub OnError(ByVal a_value As String)
+    Me.LastErrorMessage = a_value
+End Sub
+
 ''' <summary>   Gets the Last Message. </summary>
 ''' <value>   [String]. </value>
 Public Property Get LastMessage() As String
@@ -457,6 +437,15 @@ Friend Property Let LastMessage(ByVal a_value As String)
         Me.OnPropertyChanged "LastMessage"
     End If
 End Property
+
+''' <summary>   Clears the last error message and the Last Message. </summary>
+''' <param name="a_lastErrorMessage">   [Optional, String, Empty] the last error message value. </value>
+''' <param name="a_lastMessage">        [Optional, String, Empty] the last message value. </value>
+Public Sub ClearMessages(Optional ByVal a_lastErrorMessage As String = VBA.vbNullString, _
+    Optional ByVal a_lastMessage As String = VBA.vbNullString)
+    Me.LastErrorMessage = a_lastErrorMessage
+    Me.LastMessage = a_lastMessage
+End Sub
 
 ''' <summary>   Internal. Restarts the stop watch and clears the elapsed time cell. </summary>
 Friend Sub RestartStopper()
@@ -888,7 +877,7 @@ Public Property Get ToggleConnectionExecutable() As Boolean
 End Property
 
 ''' <summary>   Tries to issue power on reset. </summary>
-''' <param name="a_details">   [String] Details why the method failed. </param>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
 ''' <param name="a_delay">     [Double] the post seset delay. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function TryPing(ByRef a_details As String, ByVal a_delay As Double) As Boolean
@@ -1210,8 +1199,7 @@ End Property
 
 ''' <summary>   Tries to read (<c>*STB?</c>) the device status byte. </summary>
 ''' <remarks>   This method updates the <see cref="K2700ViewModel.StatusByte"/>. </remarks>
-''' <param name="a_details">   [Out, String] Details the information of why the instrument
-'''                            failed to restore state. </param>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean] true if success. </returns>
 Public Function TryQueryStatusByte(ByRef a_details As String) As Boolean
 
@@ -1701,7 +1689,7 @@ End Property
 
 ''' <summary>   Sends the instrument to is Clear Execution State and returns
 ''' success or failure. </summary>
-''' <param name="a_details">   [String] Details why the method failed. </param>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function TryClearExecutionState(ByVal a_details As String) As Boolean
 
@@ -1726,7 +1714,7 @@ Public Function TryClearExecutionState(ByVal a_details As String) As Boolean
 End Function
 
 ''' <summary>   Handles the Clear Execution State command event. </summary>
-''' <param name="a_details">   [String] Details why the method failed. </param>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function ClearExecutionStateCommand(ByVal a_details As String) As Boolean
 
@@ -1804,7 +1792,7 @@ End Property
 
 ''' <summary>   Sends the instrument to is reset known State and returns
 ''' success or failure. </summary>
-''' <param name="a_details">   [String] Details why the method failed. </param>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function TryResetKnownState(ByVal a_details As String) As Boolean
 
@@ -1829,7 +1817,7 @@ Public Function TryResetKnownState(ByVal a_details As String) As Boolean
 End Function
 
 ''' <summary>   Handles the Reset Known State command event. </summary>
-''' <param name="a_details">   [String] Details why the method failed. </param>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function ResetKnownStateCommand(ByVal a_details As String) As Boolean
 
@@ -2479,8 +2467,7 @@ End Property
 ''' <param name="canQuery">    [Optional, Boolean, False] True if the <c>*STB?</c>
 '''                            can be used to query the status byte in case
 '''                            <see cref="TcpSession.GpibLanControllerAttached"/> is false. </param>
-''' <param name="a_details">   [Out, String] Details the information of why the instrument
-'''                            failed to restore state. </param>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean] true if success. </returns>
 Public Function TryReadStatusByte(ByRef a_details As String, Optional ByVal a_canQuery As Boolean = False) As Boolean
 
@@ -2721,7 +2708,7 @@ End Property
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
 
 ''' <summary>   Tries to issue power on reset. </summary>
-''' <param name="a_details">   [String] Details why the method failed. </param>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
 ''' <param name="a_delay">     [Double] the post seset delay. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function TryPowerOnReset(ByRef a_details As String, ByVal a_delay As Double) As Boolean
@@ -2869,7 +2856,7 @@ End Property
 '''                                   port number, e.g., <c>192.168.0.252:1234</c>. </value>
 ''' <param name="a_sessionTimeout">   [Integer] the timeout value in milliseconds. </value>
 ''' <param name="a_delay">            [Double] the post seset delay. </param>
-''' <param name="a_details">          [String] Details why the method failed. </param>
+''' <param name="a_details">          [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function TryOpenConnectionPowerOnReset(ByVal a_socketAddress As String, ByVal a_sessionTimeout As Long, _
     ByVal a_delay As Double, ByRef a_details As String) As Boolean
@@ -3064,10 +3051,10 @@ End Property
 
 ''' <summary>   Sets the maximum Channel Number. </summary>
 ''' <param name="a_value">   [Integer] the maximum Channel Number value. </value>
-Friend Property Let MaximumChannelNumber(ByVal a_value As Integer)
+Public Property Let MaximumChannelNumber(ByVal a_value As Integer)
     If This.MaximumChannelNumber <> a_value Then
         This.MaximumChannelNumber = a_value
-        Me.OnPropertyChanged "MaximumChannelNumber "
+        Me.OnPropertyChanged "MaximumChannelNumber"
     End If
 End Property
 
@@ -3132,7 +3119,6 @@ Friend Property Let MeasuredChannelNumber(ByVal a_value As Integer)
 End Property
 
 ''' <summary>   Gets the Auto Increment Channel Number Enabled. </summary>
-''' <remarks>   Indicates that front inputs are Value for this mode. </remarks>
 ''' <value>   [Boolean]. </value>
 Public Property Get AutoIncrementChannelNoEnabled() As Boolean
     AutoIncrementChannelNoEnabled = This.AutoIncrementChannelNoEnabled
@@ -3148,7 +3134,6 @@ Friend Property Let AutoIncrementChannelNoEnabled(ByVal a_value As Boolean)
 End Property
 
 ''' <summary>   Gets the Single Read Enabled. </summary>
-''' <remarks>   Indicates that front inputs are Value for this mode. </remarks>
 ''' <value>   [Boolean]. </value>
 Public Property Get SingleReadEnabled() As Boolean
     SingleReadEnabled = This.SingleReadEnabled
@@ -3192,7 +3177,7 @@ End Property
 
 ''' <summary>   Sets the Front Inputs has value condition. </summary>
 ''' <param name="a_Value">   [Boolean] true if Front Inputs value was read from the instrument. </Validated>
-Public Property Let FrontInputsHasValue(ByVal a_value As Boolean)
+Friend Property Let FrontInputsHasValue(ByVal a_value As Boolean)
     If This.FrontInputsHasValue <> a_value Then
         This.FrontInputsHasValue = a_value
         Me.OnPropertyChanged "FrontInputsHasValue"
@@ -3287,10 +3272,12 @@ Friend Property Let QueryInputsExecutable(ByVal a_value As Boolean)
 End Property
 
 ''' <summary>   Returns true if the inputs are valid for front or rear settings. </summary>
-''' <param name"a_userMessage">   [Out, String] User message. </param>
-''' <param name"a_promptUser">    [Boolean] User message. </param>
+''' <param name="a_frontInputs">    [Boolean] True if readings are made from the front inputs. </param>
+''' <param name"a_userMessage">      [Out, String] User message. </param>
+''' <param name"a_promptUser">       [Boolean] true to prompt user. </param>
 ''' <returns>   [Boolean]. </returns>
-Public Function ValidateInputs(ByRef a_userMessage As String, ByVal a_promptUser As Boolean) As Boolean
+Public Function ValidateInputs(ByVal a_frontInputs As Boolean, _
+    ByRef a_userMessage As String, ByVal a_promptUser As Boolean) As Boolean
 
     ' synchronize.
     ' Me.Device.TryQueryOperationCompleted(p_details)
@@ -3312,15 +3299,17 @@ Public Function ValidateInputs(ByRef a_userMessage As String, ByVal a_promptUser
     ' indicate that front inputs has a value.
     Me.FrontInputsHasValue = True
     
+    Me.FrontInputsRequired = a_frontInputs
+    
     ' check if front or rear
-    If This.FrontInputsRequired And Not This.FrontInputsValue Then
+    If a_frontInputs And Not This.FrontInputsValue Then
 
         ' set the proper message
         p_userMessage = "Please release the front panel INPUTS button to its FRONT (F) position and try again."
 
         p_success = False
     
-    ElseIf Not This.FrontInputsRequired And This.FrontInputsValue Then
+    ElseIf Not a_frontInputs And This.FrontInputsValue Then
 
         ' set the proper message
         p_userMessage = "Please depress the front panel INPUTS button to its REAR (R) position and try again."
@@ -3418,10 +3407,13 @@ End Sub
 ''' <param name="a_info">        [String] info about the measurement state. </param>
 ''' <param name="a_measuring">   [Boolean] <see cref="Measuring"/>. </param>
 Public Sub OnMeasurementStateChanged(ByVal a_mode As cc_isr_Tcp_Scpi.MeasurementModeOption, _
-    ByVal a_info As String, ByVal a_measuring As Boolean)
+    ByVal a_info As String, ByVal a_measuring As Boolean, ByVal a_singleRead As Boolean)
     
     ' turn off the flag handling a timer event.
     This.HandlingTimerEvent = False
+    
+    ' set the single read mode.
+    Me.SingleReadEnabled = a_singleRead
     
     ' set the measuring state:
     Me.Measuring = a_measuring
@@ -3576,8 +3568,7 @@ Friend Property Let SenseFunctionUnit(ByVal a_value As String)
 End Property
 
 ''' <summary>   Tries to validate the expected function by name. </summary>
-''' <param name="a_details">   [Out, String] Details the information of why the instrument
-'''                            failed to restore state. </param>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
 Friend Function TryValidateSenseFunction(ByVal a_functionName As String, _
     ByRef a_details As String) As Boolean
@@ -3728,18 +3719,21 @@ Friend Property Let ReadingOffset(ByVal a_value As Double)
     End If
 End Property
 
-''' <summary>   Internal. Clears the readings. </summary>
-Friend Sub ClearReadings()
+''' <summary>   Clears the readings. </summary>
+''' <param name="a_readingOffset">   [Double] the Reading Offset value. </value>
+Public Sub ClearReadings(ByVal a_readingOffset As Double)
 
     Const p_procedureName = "ClearReadings"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
-
+    
+    Me.ReadingOffset = a_readingOffset
+    
     Dim p_channelNumber As Integer
     For p_channelNumber = 1 To Me.MaximumChannelNumber
         VBA.DoEvents
-        OnChannelMeasured p_channelNumber, Me.ReadingOffset
+        OnChannelMeasured p_channelNumber, a_readingOffset
     Next p_channelNumber
   
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -3767,14 +3761,15 @@ err_Handler:
 End Sub
 
 ''' <summary>   Clears the readings. </summary>
-Public Sub ClearReadingsCommand()
+''' <param name="a_readingOffset">   [Double] the Reading Offset value. </value>
+Public Sub ClearReadingsCommand(ByVal a_readingOffset As Double)
 
     Const p_procedureName = "ClearReadingsCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.ClearReadings
+    Me.ClearReadings a_readingOffset
   
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -3818,12 +3813,231 @@ Friend Property Let ClearReadingsExecutable(ByVal a_value As Boolean)
 End Property
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
+' K2700: Measurement Mode Configuration
+' . . . . . . . . . . . . . . . . . . . . . . . . .
+
+''' <summary>   Internal. Tries to configure a measurement mode. </summary>
+''' <remarks>   This method requires that instrument be connected as per
+''' <see cref=TryRestoreInitialState"/>. </remarks>
+''' <param name="a_mode">      [<see cref="cc_isr_Tcp_Scpi.MeasureMode"/>] defines the
+'''                            measurment settings. </value>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
+''' <returns>   [Boolean]. </returns>
+Friend Function TryConfigureMeasure(ByVal a_mode As cc_isr_Tcp_Scpi.MeasureMode, _
+    ByRef a_details As String) As Boolean
+
+    Const p_procedureName = "TryConfigureMeasure"
+    
+    Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
+    Dim p_details As String: p_details = VBA.vbNullString
+
+    ' notify of the changing measurement state
+    Me.OnMeasurementStateChanging
+
+    ' it looks like we need to validate because the instrument inputs can be changed at any time/
+    Dim p_inputsValidationRequired As Boolean
+    p_inputsValidationRequired = cc_isr_Tcp_Scpi.MeasurementModeOption.External = a_mode.Mode Or _
+        cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate = a_mode.Mode
+
+    If p_success And p_inputsValidationRequired Then
+    
+        ' unfortunately, reading the inputs after the reset belore returns an incorrect value
+        ' so this was moved as a workaround
+        
+        If p_inputsValidationRequired Then
+            
+            Me.FrontInputsRequired = a_mode.FrontInputs
+            
+            p_success = Me.ValidateInputs(a_mode.FrontInputs, p_details, True)
+        
+            Me.LastMessage = p_details
+            
+        End If
+        
+    End If
+
+    If p_success Then
+    
+        ' reset if changing modes.
+        If a_mode.Mode <> This.MeasurementMode Then
+            
+            p_success = This.K2700.Device.TryResetClear(p_details)
+        
+            If Not p_success Then _
+                p_details = "Failed resetting and clearing the IEEE488 device; " & p_details
+        
+        Else
+        
+            p_success = This.K2700.Device.TryClearExecutionState(p_details)
+        
+            If Not p_success Then _
+                p_details = "Failed clearing the IEEE488 device execution state; " & p_details
+        
+        End If
+    
+        If Not p_success Then
+        
+            ' if instrument failed to reset, attempt to restore its initial state
+            
+            p_success = Me.TryRestoreInitialState(p_details)
+            
+            If p_success Then
+            
+                ' return failure if the initial state failed to restore
+                p_success = Not Me.ShouldRestoreInitialState(p_details)
+                
+                If Not p_success Then _
+                    p_details = "Restoring initial state failed; " & p_details
+        
+            Else
+            
+                p_details = "Failed restoring initial state; " & p_details
+            
+            End If
+        
+        End If
+        
+    End If
+
+    Dim p_modeCaption As String: p_modeCaption = VBA.vbNullString
+    If p_success Then
+    
+        ' set the sense function
+        Me.SenseFunctionName = a_mode.SenseFunction
+        
+        If a_mode.SingleRead Then
+            Me.SelectedChannelNumber = a_mode.ChannelNumber
+        Else
+            Me.TargetChannelNumber = a_mode.ChannelNumber
+        End If
+        
+        Select Case a_mode.Mode
+            
+            Case cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous
+            
+                p_modeCaption = "continuous trigger mode"
+                ' configure measuring a single value on each read.
+                p_success = This.K2700.TryConfigureContinuousFunctionAutoRange(This.SenseFunctionName, p_details)
+            
+            Case cc_isr_Tcp_Scpi.MeasurementModeOption.External
+            
+                Me.TargetChannelNumber = a_mode.ChannelNumber
+                p_modeCaption = "external trigger mode"
+                ' Configure external triggering reading
+                p_success = This.K2700.TryConfigureExternalTriggerReading(This.SenseFunctionName, p_details)
+                    
+            Case cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
+            
+                p_modeCaption = "immediate trigger mode"
+            
+                ' set the instrument function scan list; this updates only if the
+                ' function changed.
+                This.K2700.RouteSystem.DefineFunctionScanLists This.SenseFunctionName
+            
+                ' show the results.
+                Me.TopCardFunctionScanList = This.K2700.RouteSystem.FunctionScanList(1)
+                Me.BottomCardFunctionScanList = This.K2700.RouteSystem.FunctionScanList(2)
+            
+                ' configure measuring a single value on each read.
+                p_success = This.K2700.TryConfigureSingleFunctionReading(This.SenseFunctionName, p_details)
+            
+        End Select
+            
+        If Not p_success Then _
+            p_details = "Failed configuring the " & p_modeCaption & "; " & p_details
+    
+    End If
+    
+    If p_success Then
+    
+        ' validate the sense function.
+        p_success = Me.TryValidateSenseFunction(This.SenseFunctionName, p_details)
+    
+        If Not p_success Then _
+            p_details = "Failed setting the 2700 instrument sense function; " & p_details
+    
+    End If
+
+    ' enable the mode executables and conditions.
+    If p_success Then
+        Me.OnMeasurementStateChanged a_mode.Mode, p_modeCaption, True, Me.SingleReadEnabled
+    Else
+        Me.OnMeasurementStateChanged Me.MeasurementMode, "unchanged", False, Me.SingleReadEnabled
+    End If
+    
+    If Not p_success Then _
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+            " failed configuring measurement; " & p_details
+
+    TryConfigureMeasure = p_success
+    
+End Function
+
+''' <summary>   Configure measure mode. </summary>
+''' <param name="a_mode">      [<see cref="cc_isr_Tcp_Scpi.MeasureMode"/>] defines the
+'''                            measurment settings. </value>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
+''' <returns>   [Boolean]. </returns>
+Public Function ConfigureMeasureCommand(ByVal a_mode As cc_isr_Tcp_Scpi.MeasureMode, _
+    ByRef a_details As String) As Boolean
+
+    Const p_procedureName = "ConfigureMeasureCommand"
+
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+
+    Dim p_success As Boolean: p_success = False
+    Dim p_details As String: p_details = VBA.vbNullString
+    
+    ' configure for continuous trigger
+
+    p_success = Me.TryConfigureMeasure(a_mode, p_details)
+    
+    ' throw an error if failed to configure
+    
+    If Not p_success Then
+        a_details = "Failed configuring measure; " & p_details
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+            " " & a_details
+    End If
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    ConfigureMeasureCommand = p_success
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+
+    p_success = False
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+
+    ' enqueue the error or append its source to the last error.
+    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
+    
+    ' display the error message
+    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+
+    ' this primarily is for unit testing.
+    a_details = Me.LastErrorMessage
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . .
 ' K2700: Measurement Mode: Initial
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
 
 ''' <summary>   Internal. Tries to configure the intial trigger mode to continuous trigger mode. </summary>
-''' <param name="a_details">   [Out, String] Details the information of why the instrument
-'''                            failed to restore state. </param>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
 Friend Function TryConfigureIntitialTriggerMode(ByRef a_details As String) As Boolean
 
@@ -3866,9 +4080,10 @@ Friend Function TryConfigureIntitialTriggerMode(ByRef a_details As String) As Bo
  
     ' enable the mode executables and conditions.
     If p_success Then
-        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous, "continuous", False
+        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous, _
+            "continuous", False, Me.SingleReadEnabled
     Else
-        Me.OnMeasurementStateChanged Me.MeasurementMode, "unchanged", False
+        Me.OnMeasurementStateChanged Me.MeasurementMode, "unchanged", False, Me.SingleReadEnabled
     End If
 
     If Not p_success Then _
@@ -3940,162 +4155,6 @@ Friend Property Let ContinuousSenseFunctionName(ByVal a_value As String)
     End If
 End Property
 
-''' <summary>   Internal. Tries to configure the continuous trigger mode. </summary>
-''' <param name="a_senseFunction">   [String] the Continuous Sense Function Name. </value>
-''' <param name="a_details">         [Out, String] Details the information of why the instrument
-'''                                  failed to restore state. </param>
-''' <returns>   [Boolean]. </returns>
-Friend Function TryConfigureContinuousMode(ByVal a_senseFunction As String, ByRef a_details As String) As Boolean
-
-    Const p_procedureName = "TryConfigureContinuousMode"
-    
-    Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
-    Dim p_details As String: p_details = VBA.vbNullString
-
-    ' notify of the changing measurement state
-    Me.OnMeasurementStateChanging
-
-    If p_success Then
-    
-        ' reset if changing modes.
-        If cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous <> This.MeasurementMode Then
-            
-            p_success = This.K2700.Device.TryResetClear(p_details)
-        
-            If Not p_success Then _
-                p_details = "Failed resetting and clearing the IEEE488 device state; " & p_details
-        
-        Else
-        
-            ' clear execution state
-            p_success = This.K2700.Device.TryClearExecutionState(p_details)
-        
-            If Not p_success Then _
-                p_details = "Failed clearing the IEEE488 device execution state; " & p_details
-        
-        End If
-    
-        If Not p_success Then
-        
-            ' if instrument failed to reset, attempt to restore its initial state
-            
-            p_success = Me.TryRestoreInitialState(p_details)
-            
-            If p_success Then
-            
-                ' return failure if the initial state failed to restore
-                p_success = Not Me.ShouldRestoreInitialState(p_details)
-                
-                If Not p_success Then _
-                    p_details = "Restoring initial state failed; " & p_details
-        
-            Else
-            
-                p_details = "Failed restoring initial state; " & p_details
-            
-            End If
-        
-        End If
-        
-    End If
-    
-    If p_success Then
-        
-        Me.ContinuousSenseFunctionName = a_senseFunction
-        
-        Me.SenseFunctionName = This.ContinuousSenseFunctionName
-    
-        ' configure measuring a single value on each read.
-        p_success = This.K2700.TryConfigureContinuousFunctionAutoRange(This.SenseFunctionName, p_details)
-        
-        If Not p_success Then _
-            p_details = "Failed configuring the 2700 continuous trigger mode; " & p_details
-        
-    End If
-
-    If p_success Then
-    
-        ' validate the sense function.
-        p_success = Me.TryValidateSenseFunction(This.SenseFunctionName, p_details)
-    
-        If Not p_success Then _
-            p_details = "Failed setting the 2700 instrument sense function; " & p_details
-    
-    End If
-    
-    ' enable the mode executables and conditions.
-    If p_success Then
-        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous, "continuous", False
-    Else
-        Me.OnMeasurementStateChanged Me.MeasurementMode, "unchanged", False
-    End If
-    
-    If Not p_success Then _
-        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-            " failed configuring continuous mode; " & p_details
-
-    TryConfigureContinuousMode = p_success
-    
-End Function
-
-''' <summary>   Configure continuous trigger mode. </summary>
-''' <param name="a_senseFunction">   [String] the Continuous Sense Function Name. </value>
-''' <param name="a_details">         [Out, String] Details why the command failed. </param>
-''' <returns>   [Boolean] True if the command succeeded. </returns>
-Public Function ConfigureContinuousModeCommand(ByVal a_senseFunction As String, _
-    ByVal a_details As String) As Boolean
-
-    Const p_procedureName = "ConfigureContinuousModeCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Dim p_success As Boolean: p_success = False
-    Dim p_details As String: p_details = VBA.vbNullString
-    
-    ' configure for continuous trigger
-
-    p_success = Me.TryConfigureContinuousMode(a_senseFunction, p_details)
-    
-    ' throw an error if failed to configure
-    
-    If Not p_success Then
-        a_details = "Failed configuring continuous trigger mode; " & p_details
-        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " " & a_details
-    End If
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    ConfigureContinuousModeCommand = p_success
-    On Error GoTo 0
-    Exit Function
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-
-    p_success = False
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' enqueue the error or append its source to the last error.
-    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' this primarily is for unit testing.
-    a_details = Me.LastErrorMessage
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Function
-
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
 ' K2700: Measurement Mode: Immediate
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -4115,13 +4174,28 @@ Friend Property Let ImmediateSenseFunctionName(ByVal a_value As String)
     End If
 End Property
 
+''' <summary>   Gets the Front Inputs Required for Immediate trigger mode. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get ImmediateFrontInputsRequired() As Boolean
+    ImmediateFrontInputsRequired = This.ImmediateFrontInputsRequired
+End Property
+
+''' <summary>   Sets the Front Inputs Required for Immediate trigger  mode. </summary>
+''' <param name="a_value">   [Boolean] the Front Inputs Required. </value>
+Friend Property Let ImmediateFrontInputsRequired(ByVal a_value As Boolean)
+    If This.ImmediateFrontInputsRequired <> a_value Then
+        This.ImmediateFrontInputsRequired = a_value
+        Me.OnPropertyChanged "ImmediateFrontInputsRequired"
+    End If
+End Property
+
 ''' <summary>   Tries to measure immediately. </summary>
 ''' <remarks>   This method assumes that the inputs were validated before configuring the
 ''' measurement state. </remarks>
-''' <param name="a_details">   [Out, String] Details the information of why the instrument
-'''                            failed to restore state. </param>
+''' <param name="a_readingOffset">   [Double] the zero reading. </param>
+''' <param name="a_details">         [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
-Public Function TryMeasureImmediately(ByRef a_details As String) As Boolean
+Public Function TryMeasureImmediately(ByVal a_readingOffset As Double, ByRef a_details As String) As Boolean
 
     Const p_procedureName = "TryMeasureImmediately"
     
@@ -4134,7 +4208,7 @@ Public Function TryMeasureImmediately(ByRef a_details As String) As Boolean
     If This.AutoIncrementChannelNoEnabled Then
     
         ' Clear all cells
-        Me.ClearReadings
+        Me.ClearReadings a_readingOffset
 
         ' scan all channels
         For p_channelNumber = 1 To Me.ChannelCount
@@ -4193,10 +4267,10 @@ End Function
 ''' <summary>   Takes a single or multiple readings from the front or rear panel. </summary>
 ''' <remarks>   This method assumes that the inputs were verified upon configuring the
 ''' measurement mode. </remarks>
-''' <param name="a_details">   [Out, String] Details the information of why the instrument
-'''                            failed to restore state. </param>
+''' <param name="a_readingOffset">   [Double] the zero reading. </param>
+''' <param name="a_details">         [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
-Public Function MeasureImmediatelyCommand(ByRef a_details As String) As Boolean
+Public Function MeasureImmediatelyCommand(ByVal a_readingOffset As Double, ByRef a_details As String) As Boolean
 
     Const p_procedureName = "MeasureImmediatelyCommand"
 
@@ -4217,7 +4291,7 @@ Public Function MeasureImmediatelyCommand(ByRef a_details As String) As Boolean
         Me.ExternalTriggerOptionExecutable = False
     
         ' throw an error if measurement failed
-        p_success = Me.TryMeasureImmediately(p_details)
+        p_success = Me.TryMeasureImmediately(a_readingOffset, p_details)
         
         If Not p_success Then
         
@@ -4238,7 +4312,8 @@ Public Function MeasureImmediatelyCommand(ByRef a_details As String) As Boolean
 exit_Handler:
 
     ' turn off the measuring state
-    Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate, "Done", False
+    Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate, _
+        "Done", False, Me.SingleReadEnabled
 
     MeasureImmediatelyCommand = p_success
     
@@ -4273,10 +4348,12 @@ err_Handler:
 End Function
 
 ''' <summary>   Validates the Inputs and takes a single or multiple readings from the front or rear panel. </summary>
-''' <param name="a_details">   [Out, String] Details the information of why the instrument
-'''                            failed to restore state. </param>
+''' <param name="a_readingOffset">   [Double] the zero reading. </param>
+''' <param name="a_frontInputs">     [Boolean] True if readings are made from the front inputs. </param>
+''' <param name="a_details">         [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
-Public Function ValidateInputsAndMeasureCommand(ByRef a_details As String) As Boolean
+Public Function ValidateInputsAndMeasureCommand(ByVal a_readingOffset As Double, _
+    ByVal a_frontInputs As Boolean, a_details As String) As Boolean
 
     Const p_procedureName = "ValidateInputsAndMeasureCommand"
 
@@ -4297,11 +4374,11 @@ Public Function ValidateInputsAndMeasureCommand(ByRef a_details As String) As Bo
     
     ' validate inputs returns incorrect values at this point.
     ' it must have something to do with the configuration
-    p_success = Me.ValidateInputs(p_details, True)
+    p_success = Me.ValidateInputs(a_frontInputs, p_details, True)
     If Not p_success Then
         ' this cludge was added.
         cc_isr_Core_IO.Factory.NewStopwatch.Wait 50 ' 25 this was not enough
-        p_success = Me.ValidateInputs(p_details, True)
+        p_success = Me.ValidateInputs(a_frontInputs, p_details, True)
     End If
     
     If p_success Then
@@ -4312,7 +4389,7 @@ Public Function ValidateInputsAndMeasureCommand(ByRef a_details As String) As Bo
         Me.ExternalTriggerOptionExecutable = False
     
         ' throw an error if measurement failed
-        p_success = Me.TryMeasureImmediately(p_details)
+        p_success = Me.TryMeasureImmediately(a_readingOffset, p_details)
         
         If Not p_success Then
         
@@ -4398,183 +4475,6 @@ Friend Property Let ImmediateTriggerOptionExecutable(ByVal a_value As Boolean)
     End If
 End Property
 
-''' <summary>   Tries to configure the immediate trigger reading mode. </summary>
-''' <remarks>   This method requires that instrument be connected as per
-''' <see cref="TryRestoreInitialState"/> and inputs are set as required.
-''' This method enables the immediate reading executable (Measure) and
-''' disables trigger monitoring executable. </remarks>
-''' <param name="a_senseFunction">   [String] the Continuous Sense Function Name. </value>
-''' <param name="a_details">         [Out, String] Details why the command failed. </param>
-''' <returns>   [Boolean]. </returns>
-Public Function TryConfigureImmediateTriggerReadings(ByVal a_senseFunction As String, _
-    ByRef a_details As String) As Boolean
-
-    Const p_procedureName = "TryConfigureImmediateTriggerReadings"
-    
-    Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
-    Dim p_details As String: p_details = VBA.vbNullString
-
-    ' notify of the changing measurement state
-    Me.OnMeasurementStateChanging
-
-    If p_success Then
-    
-        ' unfortunately, reading the inputs after the reset belore returns an incorrect value
-        ' so this was moved as a workaround
-        
-        ' it looks like we need to validate because the instrument inputs can be changed at any time/
-        If True Then ' Not Me.FrontInputsHasValue Or (This.FrontInputsRequired <> Not This.FrontInputsValue) Then
-            
-            p_success = Me.ValidateInputs(p_details, True)
-        
-            Me.LastMessage = p_details
-            
-        End If
-        
-    End If
-
-    If p_success Then
-    
-        ' reset if changing modes.
-        If cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate <> This.MeasurementMode Then
-            
-            p_success = This.K2700.Device.TryResetClear(p_details)
-        
-            If Not p_success Then _
-                p_details = "Failed resetting and clearing the IEEE488 device state; " & p_details
-        
-        Else
-        
-            ' clear execution state
-            p_success = This.K2700.Device.TryClearExecutionState(p_details)
-        
-            If Not p_success Then _
-                p_details = "Failed clearing the IEEE488 device execution state; " & p_details
-        
-        End If
-    
-        If Not p_success Then
-        
-            ' if instrument failed to reset, attempt to restore its initial state
-            
-            p_success = Me.TryRestoreInitialState(p_details)
-            
-            If p_success Then
-            
-                ' return failure if the initial state failed to restore
-                p_success = Not Me.ShouldRestoreInitialState(p_details)
-                
-                If Not p_success Then _
-                    p_details = "Restoring initial state failed; " & p_details
-        
-            Else
-            
-                p_details = "Failed restoring initial state; " & p_details
-            
-            End If
-        
-        End If
-        
-    End If
-    
-    If p_success Then
-    
-        ' set the sense function for the immeidate trigger measurement mode.
-        This.ImmediateSenseFunctionName = a_senseFunction
-        Me.SenseFunctionName = This.ImmediateSenseFunctionName
-    
-        ' set the instrument function scan list; this updates only if the
-        ' function changed.
-        This.K2700.RouteSystem.DefineFunctionScanLists This.SenseFunctionName
-    
-        ' show the results.
-        Me.TopCardFunctionScanList = This.K2700.RouteSystem.FunctionScanList(1)
-        Me.BottomCardFunctionScanList = This.K2700.RouteSystem.FunctionScanList(2)
-    
-        ' configure measuring a single value on each read.
-        p_success = This.K2700.TryConfigureSingleFunctionReading(This.SenseFunctionName, p_details)
-        
-        If Not p_success Then _
-            p_details = "Failed configuring the 2700 immediate trigger reading mode; " & p_details
-        
-    End If
-    
-    If p_success Then
-    
-        ' validate the sense function.
-        p_success = Me.TryValidateSenseFunction(This.SenseFunctionName, p_details)
-    
-        If Not p_success Then _
-            p_details = "Failed setting the 2700 instrument sense function; " & p_details
-    
-    End If
-    
-    ' enable the mode executables and conditions.
-    If p_success Then
-        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate, "immediate mode", True
-    Else
-        Me.OnMeasurementStateChanged Me.MeasurementMode, "unchanged", False
-    End If
-    
-    If Not p_success Then _
-        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-            " failed configuring immediate trigger readings; " & p_details
-    
-    TryConfigureImmediateTriggerReadings = p_success
-
-End Function
-
-''' <summary>   Configures immediate trigger reading mode. </summary>
-''' <param name="a_details">   [Out, String] Details why the command failed. </param>
-''' <returns>   [Boolean] True if the command succeeded. </returns>
-Public Function ConfigureImmediateTriggerReadingsCommand(ByVal a_senseFunction As String, _
-    ByRef a_details As String) As Boolean
-
-    Const p_procedureName = "ConfigureImmediateTriggerReadingsCommand"
-
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    Dim p_success As Boolean: p_success = False
-    Dim p_details As String: p_details = VBA.vbNullString
-    
-    ' configure for immediate trigger readings
-    p_success = Me.TryConfigureImmediateTriggerReadings(a_senseFunction, p_details)
-    
-    If Not p_success Then _
-        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-            " failed configuring immediate trigger readings measurement state; " & Me.LastMessage
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    ConfigureImmediateTriggerReadingsCommand = p_success
-    On Error GoTo 0
-    Exit Function
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-    
-    p_success = False
-    
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' enqueue the error or append its source to the last error.
-    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' this primarily is for unit testing.
-    a_details = Me.LastErrorMessage
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Function
-
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
 ' K2700: Measurement Mode: External Trigger
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -4591,6 +4491,21 @@ Friend Property Let ExternalSenseFunctionName(ByVal a_value As String)
     If This.ExternalSenseFunctionName <> a_value Then
         This.ExternalSenseFunctionName = a_value
         Me.OnPropertyChanged "ExternalSenseFunctionName"
+    End If
+End Property
+
+''' <summary>   Gets the Front Inputs Required for External trigger mode. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get ExternalFrontInputsRequired() As Boolean
+    ExternalFrontInputsRequired = This.ExternalFrontInputsRequired
+End Property
+
+''' <summary>   Sets the Front Inputs Required for External trigger  mode. </summary>
+''' <param name="a_value">   [Boolean] the Front Inputs Required. </value>
+Friend Property Let ExternalFrontInputsRequired(ByVal a_value As Boolean)
+    If This.ExternalFrontInputsRequired <> a_value Then
+        This.ExternalFrontInputsRequired = a_value
+        Me.OnPropertyChanged "ExternalFrontInputsRequired"
     End If
 End Property
 
@@ -4611,196 +4526,6 @@ Friend Property Let ExternalTriggerOptionExecutable(ByVal a_value As Boolean)
     End If
 End Property
 
-''' <summary>   Internal. Tries to configure the external trigger reading mode. </summary>
-''' <remarks>   This method requires that instrument be connected as per
-''' <see cref=TryRestoreInitialState"/> and inputs are set as required.
-''' This method enables the trigger monitoring executable and disables the
-''' immediate reading executable (Measure). </remarks>
-''' <param name="a_senseFunction">   [String] the Continuous Sense Function Name. </value>
-''' <param name="a_details">         [Out, String] Details why the command failed. </param>
-''' <returns>   [Boolean]. </returns>
-Friend Function TryConfigureExternalTriggerReading(ByVal a_senseFunction As String, _
-    ByRef a_details As String) As Boolean
-
-    Const p_procedureName = "TryConfigureExternalTriggerReading"
-    
-    Dim p_success As Boolean: p_success = True: a_details = VBA.vbNullString
-    Dim p_details As String: p_details = VBA.vbNullString
-
-    ' notify of the changing measurement state
-    Me.OnMeasurementStateChanging
-
-    If p_success Then
-    
-        ' unfortunately, reading the inputs after the reset belore returns an incorrect value
-        ' so this was moved as a workaround
-        
-        ' it looks like we need to validate because the instrument inputs can be changed at any time/
-        If True Then ' Not Me.FrontInputsHasValue Or (This.FrontInputsRequired <> Not This.FrontInputsValue) Then
-            
-            p_success = Me.ValidateInputs(p_details, True)
-        
-            Me.LastMessage = p_details
-            
-        End If
-        
-    End If
-
-    If p_success Then
-    
-        ' reset if changing modes.
-        If cc_isr_Tcp_Scpi.MeasurementModeOption.External <> This.MeasurementMode Then
-            
-            p_success = This.K2700.Device.TryResetClear(p_details)
-        
-            If Not p_success Then _
-                p_details = "Failed resetting and clearing the IEEE488 device; " & p_details
-        
-        Else
-        
-            p_success = This.K2700.Device.TryClearExecutionState(p_details)
-        
-            If Not p_success Then _
-                p_details = "Failed clearing the IEEE488 device execution state; " & p_details
-        
-        End If
-    
-        If Not p_success Then
-        
-            ' if instrument failed to reset, attempt to restore its initial state
-            
-            p_success = Me.TryRestoreInitialState(p_details)
-            
-            If p_success Then
-            
-                ' return failure if the initial state failed to restore
-                p_success = Not Me.ShouldRestoreInitialState(p_details)
-                
-                If Not p_success Then _
-                    p_details = "Restoring initial state failed; " & p_details
-        
-            Else
-            
-                p_details = "Failed restoring initial state; " & p_details
-            
-            End If
-        
-        End If
-        
-    End If
-
-    If p_success Then
-    
-        ' Configure external triggering reading requiring the front panel
-        This.ExternalSenseFunctionName = a_senseFunction
-        Me.SenseFunctionName = This.ExternalSenseFunctionName
-        
-        p_success = This.K2700.TryConfigureExternalTriggerReading(This.SenseFunctionName, p_details)
-        
-        If Not p_success Then _
-            p_details = "Failed configuring the 2700 external trigger reading mode; " & p_details
-    
-    End If
-    
-    ' this is done in the previous command.
-    ' This.Session.WriteLine ":TRIG:SOUR IMM"
-    ' This.Session.WriteLine ":TRIG:SOUR EXT"
-    
-    ' clear the serial poll register
-    ' these are also part of the previous command.
-    ' This.Session.WriteLine "*ESE 0"
-    ' This.Session.WriteLine "*SRE 63"
-    
-    ' clear the measurement event enable register
-    ' This.Session.WriteLine "STAT:PRES"
-    
-    ' enable the reading available bit of the measurement event register.
-    ' This.Session.WriteLine "STAT:MEAS:ENAB 32"
-    
-    ' This.Device.QueryServiceRequestStatus
-    
-    ' move this to starting the monitoring.
-    ' initiate awaiting for the external trigger
-    ' This.Session.WriteLine ":INIT;*CLS"
-
-    If p_success Then
-    
-        ' validate the sense function.
-        p_success = Me.TryValidateSenseFunction(This.SenseFunctionName, p_details)
-    
-        If Not p_success Then _
-            p_details = "Failed setting the 2700 instrument sense function; " & p_details
-    
-    End If
-
-    ' enable the mode executables and conditions.
-    If p_success Then
-        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.External, "external trigger mode", True
-    Else
-        Me.OnMeasurementStateChanged Me.MeasurementMode, "unchanged", False
-    End If
-    
-    If Not p_success Then _
-        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-            " failed configuring external trigger readings; " & p_details
-
-    TryConfigureExternalTriggerReading = p_success
-    
-End Function
-
-''' <summary>   Configures external trigger reading mode. </summary>
-''' <param name="a_details">   [Out, String] Details why the command failed. </param>
-''' <returns>   [Boolean] True if the command succeeded. </returns>
-Public Function ConfigureExternalTriggerReadingCommand(ByVal a_senseFunction As String, _
-    ByRef a_details As String) As Boolean
-
-    Const p_procedureName = "ConfigureExternalTriggerReadingCommand"
-
-    ' Trap errors to the error handler
-    
-    On Error GoTo err_Handler
-
-    Dim p_success As Boolean: p_success = False
-    Dim p_details As String: p_details = VBA.vbNullString
-    
-    ' configure for external trigger readings
-    p_success = Me.TryConfigureExternalTriggerReading(a_senseFunction, p_details)
-    
-    If Not p_success Then _
-        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
-            " failed configuring external trigger reading measurement state; " & p_details
-   
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    ConfigureExternalTriggerReadingCommand = p_success
-    On Error GoTo 0
-    Exit Function
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    p_success = False
-    
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-
-    ' enqueue the error or append its source to the last error.
-    cc_isr_Core_IO.UserDefinedErrors.EnqueueErrorObject
-    
-    ' display the error message
-    Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-
-    ' this primarily is for unit testing.
-    a_details = Me.LastErrorMessage
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-
-End Function
-
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
 ' K2700: Measurement Mode: External Trigger Monitring
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -4812,9 +4537,9 @@ Public Property Get MonitoringState() As String
 End Property
 
 ''' <summary>   Internal. Starts monitoring the instrument for external triggered measurements. </summary>
-''' <param name="a_timerControlled">   [Optional, Boolean, True] true time controlled; otherwise, the timer event
-''' handler will be polled. </value>
-Public Sub StartMonitoringExternalTriggers(Optional ByVal a_timerControlled As Boolean = True)
+''' <param name="a_readingOffset">   [Double] the Reading Offset value. </value>
+''' <param name="a_timerInterval">   [Integer] the timer interval; 0 if contolled with polling for unit testing. </value>
+Public Sub StartMonitoringExternalTriggers(ByVal a_readingOffset As Double, ByVal a_timerInterval As Integer)
 
     Const p_procedureName = "StartMonitoringExternalTriggers"
 
@@ -4824,7 +4549,7 @@ Public Sub StartMonitoringExternalTriggers(Optional ByVal a_timerControlled As B
     If This.AutoIncrementChannelNoEnabled Then
     
         ' Clear all readings
-        Me.ClearReadings
+        Me.ClearReadings a_readingOffset
 
     End If
 
@@ -4846,10 +4571,9 @@ Public Sub StartMonitoringExternalTriggers(Optional ByVal a_timerControlled As B
     ' initiate awaiting for the external trigger
     ' this is handled by the K2700.MonitorExternalTrigger method.
     ' This.Session.WriteLine ":INIT;*CLS"
+    Me.TimerInterval = a_timerInterval
 
-    This.TimerControlled = a_timerControlled
-    
-    If This.TimerControlled Then
+    If Me.TimerControlled Then
     
        ' start the timer
        Me.StartTimer Me.TimerInterval
@@ -4860,7 +4584,8 @@ Public Sub StartMonitoringExternalTriggers(Optional ByVal a_timerControlled As B
     Else
         
         ' if not using timer, go to monitoring mode
-        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring, "Trigger monitoring commenced", True
+        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring, _
+            "Trigger monitoring commenced", True, Me.SingleReadEnabled
         
     End If
  
@@ -4892,14 +4617,17 @@ err_Handler:
 End Sub
 
 ''' <summary>   Starts monitoring the instrument for external triggered measurements. </summary>
-Public Sub StartMonitoringExternalTriggersCommand()
+''' <param name="a_readingOffset">   [Double] the Reading Offset value. </value>
+''' <param name="a_timerInterval">   [Integer] the timer interval; 0 if contolled with polling for unit testing. </value>
+Public Sub StartMonitoringExternalTriggersCommand(ByVal a_readingOffset As Double, _
+    ByVal a_timerInterval As Integer)
 
     Const p_procedureName = "StartMonitoringExternalTriggersCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.StartMonitoringExternalTriggers
+    Me.StartMonitoringExternalTriggers a_readingOffset, a_timerInterval
  
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -4966,7 +4694,7 @@ Friend Sub StopMonitoringExternalTriggers()
     ' request a stop of external trigger monitoring.
     Me.StopRequested = True
     
-    If This.TimerControlled Then
+    If Me.TimerControlled Then
     
         Dim p_stopper As cc_isr_Core_IO.Stopwatch
         Set p_stopper = cc_isr_Core_IO.Factory.NewStopwatch
@@ -5003,7 +4731,8 @@ exit_Handler:
 
     ' if necessary turn off measuring state
     If cc_isr_Tcp_Scpi.MeasurementModeOption.None <> This.MeasurementMode Then _
-        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.None, "Trigger monitoring done", False
+        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.None, _
+            "Trigger monitoring done", False, Me.SingleReadEnabled
 
     On Error GoTo 0
     Exit Sub
@@ -5149,7 +4878,7 @@ End Property
 ''' <value>   [Boolean] True if external trigger monitoring is timer controlled; otherwise,
 ''' external trigger monitoring is polled, which is solely for testing purposes. </value>
 Public Property Get TimerControlled() As Boolean
-    TimerControlled = This.TimerControlled
+    TimerControlled = This.TimerInterval > 0
 End Property
 
 ''' <summary>   Gets the Timer Started condition. </summary>
@@ -5181,6 +4910,164 @@ End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + +
 '
+' Data Acquisition
+'
+' + + + + + + + + + + + + + + + + + + + + + + + + +
+
+' . . . . . . . . . . . . . . . . . . . . . . . . .
+' Data Acquisition: Auto scan
+' . . . . . . . . . . . . . . . . . . . . . . . . .
+
+''' <summary>   Starts an immediate triggering and take multiple readings. </summary>
+''' <remarks>   In immeidate scan we have the following settings:
+''' Auto Increment channel number: True;
+''' Front Inputs Required: False;
+''' Single Readings: False;
+''' Triggering Mode: Immediate.
+''' </remarks>
+''' <param name="a_mode">            [<see cref="cc_isr_Tcp_Scpi.MeasureMode"/>] the measure configuration. </param>
+''' <param name="a_readingOffset">   [Double] the Reading Offset value. </value>
+''' <param name="a_details">         [Out, String] Details the failure information if any. </param>
+''' <returns>   [Boolean] True if the command succeeded. </returns>
+Public Function StartMeasureCommand(ByVal a_mode As cc_isr_Tcp_Scpi.MeasureMode, _
+    ByVal a_readingOffset As Double, _
+    ByRef a_details As String) As Boolean
+
+    Const p_procedureName As String = "StartMeasureCommand"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_success As Boolean: p_success = True
+    Dim p_details As String: p_details = VBA.vbNullString
+
+    ' next set immediate triggering mode.
+    p_success = Me.ConfigureMeasureCommand(a_mode, p_details)
+    
+    If p_success Then
+    
+        ' next takes the measurements
+    
+        If Me.MeasureExecutable Then
+            ' make an immediate measure of one or all channels.
+            p_success = Me.MeasureImmediatelyCommand(a_readingOffset, p_details)
+        Else
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " Measure command not enabled."
+        End If
+    
+    End If
+    
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If Not p_success Then _
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & "; " & p_details
+    StartMeasureCommand = p_success
+
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' report the last error.
+    If Not Me Is Nothing Then _
+        Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    p_details = Me.LastErrorMessage
+    p_success = False
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Function
+
+''' <summary>   Starts external trigger monitoring in multiple or single readings mode. </summary>
+''' <remarks>   In manual scan we have the following settings:
+''' Auto Increment channel number: True;
+''' Front Inputs Required: True;
+''' Single Readings: False;
+''' Triggering Mode: External.
+''' </remarks>
+''' <param name="a_timerInterval">   [Integer] the timer interval; 0 if contolled with polling for unit testing. </value>
+''' <param name="a_mode">            [<see cref="cc_isr_Tcp_Scpi.MeasureMode"/>] the measure configuration. </param>
+''' <param name="a_readingOffset">   [Double] the Reading Offset value. </value>
+''' <param name="a_details">         [Out, String] Details the failure information if any. </param>
+''' <returns>   [Boolean] True if the command succeeded. </returns>
+Public Function StartMonitoringCommand(ByVal a_timerInterval As Integer, _
+    ByVal a_mode As cc_isr_Tcp_Scpi.MeasureMode, _
+    ByVal a_readingOffset As Double, _
+    a_details As String) As Boolean
+
+    Const p_procedureName As String = "StartMonitoringCommand"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    Dim p_success As Boolean: p_success = True
+    Dim p_details As String: p_details = VBA.vbNullString
+
+    ' next set external triggering triggering mode.
+    p_success = Me.ConfigureMeasureCommand(a_mode, p_details)
+   
+    If p_success Then
+    
+        ' next start external trigger monitoring
+        ' this should wait for monitoring to commence or raise an error.
+        If Me.StartMonitoringExecutable Then
+            Me.StartMonitoringExternalTriggersCommand a_readingOffset, a_timerInterval
+        Else
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " Start monitoring command not enabled."
+        End If
+    
+    End If
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    If Not p_success Then _
+        a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & "; " & p_details
+    StartMonitoringCommand = p_success
+
+    On Error GoTo 0
+    Exit Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    
+    ' report the last error.
+    If Not Me Is Nothing Then _
+        Me.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    p_details = Me.LastErrorMessage
+    p_success = False
+    
+    ' on error, stop monitoring
+    On Error Resume Next
+    
+    ' stop external trigger monitoring
+    ' this should wait for monitoring to stop
+    Me.StopMonitoringExternalTriggersCommand
+
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
+
+End Function
+
+' + + + + + + + + + + + + + + + + + + + + + + + + +
+'
 ' View Model Events
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -5189,6 +5076,14 @@ End Property
 ''' <para name="a_channelNumber">   [integer] The channel number. </param>
 ''' <para name="a_reading">         [double] The reading. </param>
 Private Sub OnChannelMeasured(ByVal a_channelNumber As Integer, ByVal a_reading As String)
+
+    ' set the measurement information
+    Me.MeasuredChannelNumber = a_channelNumber
+    
+    ' this also sets the measured value.
+    Me.MeasuredReading = a_reading
+    
+    ' raise the measurement event.
     RaiseEvent ChannelMeasured( _
             cc_isr_Tcp_Scpi.Factory.NewChannelReadingEventArgs.Initialize(a_channelNumber, _
                                                                           a_reading))
@@ -5274,8 +5169,9 @@ exit_Handler:
         Me.PauseTimer
         
         ' if not using the timer, go to none mode.
-        If Not This.TimerControlled Then _
-            Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.None, "Trigger monitoring done", False
+        If Not Me.TimerControlled Then _
+            Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.None, _
+                "Trigger monitoring done", False, Me.SingleReadEnabled
         
 #If False Then
         
@@ -5349,7 +5245,8 @@ Public Sub StartTimer(Optional ByVal a_interval As Long = 500)
     This.HandlingTimerEvent = False
     Me.PauseRequested = False
     Me.TimerStarted = True
-    Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring, "Trigger monitoring commenced", True
+    Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring, _
+        "Trigger monitoring commenced", True, Me.SingleReadEnabled
     If m_eventTimer Is Nothing Then
         Set m_eventTimer = cc_isr_Core.Factory.NewEventTimer.Initialize(a_interval)
         m_eventTimer.StartTimer
@@ -5384,7 +5281,8 @@ Private Sub m_eventTimer_Tick()
     If This.PauseRequested Then
         This.TimerStarted = False
         If Not m_eventTimer Is Nothing Then m_eventTimer.PauseTimer
-        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.None, "Trigger monitoring done", False
+        Me.OnMeasurementStateChanged cc_isr_Tcp_Scpi.MeasurementModeOption.None, _
+            "Trigger monitoring done", False, Me.SingleReadEnabled
     Else
         Me.HandleTimerEvent
     End If
@@ -5494,8 +5392,7 @@ End Sub
 ''' <see cref="TcpSession.EndOfIdentity"/>, <see cref="TcpSession.AutoAssertTalk"/>,
 ''' <see cref="TcpSession.LocalLockout"/>.
 ''' </remarks>
-''' <param name="a_details">   [Out, String] Details the information of why the instrument
-'''                            failed to restore state. </param>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
 Public Function TryReadSessionState(ByRef a_details As String) As Boolean
 
     Const p_procedureName As String = "TryReadSessionState"
@@ -5584,8 +5481,7 @@ End Function
 
 ''' <summary>   Configures the 2700 Multimeter scanner initial state. </summary>
 ''' <remarks>   Call this method upon connecting and restoring Initial State. </remarks>
-''' <param name="a_details">   [Out, String] Details the information of why the instrument
-'''                            failed to restore state. </param>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
 Public Function TryConfigureInitialState(ByRef a_details As String) As Boolean
 
     Const p_procedureName As String = "TryConfigureInitialState"
@@ -5620,7 +5516,7 @@ End Function
 ''' <summary>   Returns true and a message if the specified sense function matched neither
 ''' one of sense functions of the defferent measurement modes. </summary>
 ''' <param name="a_senseFunctionName">   [String] The actual sense function name. </param>
-''' <param name="a_details">         [String] Details why the sense function needs to be restored. </param>
+''' <param name="a_details">             [String] Details why the sense function needs to be restored. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function ShouldRestoreSenseFunction(ByVal a_senseFunctionName As String, _
     ByRef a_details As String) As Boolean
@@ -5643,7 +5539,7 @@ End Function
 ''' <summary>   Returns true and a message if the view model state does not match the expected restore state. </summary>
 ''' <remarks>   This is the expected state for making resistance measurements. In future releases
 ''' we could define a set of states. </remarks>
-''' <param name="a_details">   [String] Details why the view model needs to be resotred
+''' <param name="a_details">   [Out, String] Details why the view model needs to be resotred
 '''                            to its Initial State. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function ShouldRestoreInitialState(ByRef a_details As String) As Boolean
@@ -5673,7 +5569,7 @@ End Function
 ''' - The instrument is set to its Initial State if sense function needs to be restored;
 '''     - otherwise, the instrument is set to its clear Initial State.
 ''' </remarks>
-''' <param name="a_details">   [String] Details why the view model needs to be resotred
+''' <param name="a_details">   [Out, String] Details why the view model needs to be resotred
 '''                            to its Initial State. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function TryRestoreInitialState(ByRef a_details As String)
@@ -5791,7 +5687,7 @@ Private Sub m_socket_ConnectionChanged(ByVal a_eventArgs As cc_isr_Winsock.Conne
     ' notify of connection state.
     Me.ConnectionExecutableSetter
     
-    Me.OnMeasurementStateChanged Me.MeasurementMode, "connection changed", Me.Measuring
+    Me.OnMeasurementStateChanged Me.MeasurementMode, "connection changed", Me.Measuring, Me.SingleReadEnabled
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:

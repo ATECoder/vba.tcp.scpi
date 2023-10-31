@@ -109,11 +109,9 @@ Private Type this_
     
     ' IEEE488 executables
     ClearExecutionStateExecutable As Boolean
-    MessageToSendExecutable As Boolean
     QueryExecutable As Boolean
     ReadExecutable As Boolean
     QueryStatusByteExecutable As Boolean
-    ReadStatusAfterWriteExecutable As Boolean
     ReadStandardEventStatusExecutable As Boolean
     ResetKnownStateExecutable As Boolean
     ServiceRequestedExecutable As Boolean
@@ -160,7 +158,7 @@ Private This As this_
 Public Sub OnConnect()
     If This.ToggleConnectionExecutable Then
         If This.OpenConnectionExecutable Then
-            This.ViewModel.OpenConnectionCommand
+            This.ViewModel.OpenConnectionCommand This.SocketAddress, This.SessionTimeout
         ElseIf This.CloseConnectionExecutable Then
             This.ViewModel.CloseConnectionCommand
         Else
@@ -193,9 +191,10 @@ Public Sub OnClearExecutionState()
 End Sub
 
 ''' <summary>   Handles the Query button click event. </summary>
-Public Sub OnQuery()
+''' <param name="a_value">   [String] the Message to Send. </value>
+Public Sub OnQuery(ByVal a_value As String)
     If This.QueryExecutable Then
-        This.ViewModel.QueryCommand
+        This.ViewModel.QueryCommand a_value
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnQuery", _
@@ -256,9 +255,12 @@ Public Sub OnResetKnownState()
 End Sub
 
 ''' <summary>   Handles the Write button click event. </summary>
-Public Sub OnWrite()
+''' <param name="a_value">        [String] the Message to Send. </value>
+''' <param name="a_readStatus">   [String] reads server request and standard event
+'''                                statuses depending on this being a query message. </value>
+Public Sub OnWrite(ByVal a_value As String, ByVal a_readStatus As Boolean)
     If This.WriteExecutable Then
-        This.ViewModel.WriteCommand
+        This.ViewModel.WriteCommand a_value, a_readStatus
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnWrite", _
@@ -299,9 +301,10 @@ Public Sub OnGpibAddressGet()
 End Sub
 
 ''' <summary>   Handles the GPIB Address set button click event. </summary>
-Public Sub OnGpibAddressSet()
+''' <param name="a_value">   [Integer] the Primary Gpib Address value. </value>
+Public Sub OnGpibAddressSet(ByVal a_value As Integer)
     If This.GpibAddressSetExecutable Then
-        This.ViewModel.GpibAddressSetCommand
+        This.ViewModel.GpibAddressSetCommand a_value
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnGpibAddressSet", _
@@ -323,9 +326,10 @@ Public Sub OnLocalLockout()
 End Sub
 
 ''' <summary>   Handles the Auto Asset TALK Set button click event. </summary>
-Public Sub OnAutoAssertTalkSet()
+''' <param name="a_value">   [Boolean] True to Auto Assert Talk upon write. </value>
+Public Sub OnAutoAssertTalkSet(ByVal a_value As Boolean)
     If This.AutoAssertTalkSetExecutable Then
-        This.ViewModel.AutoAssertTalkSetCommand
+        This.ViewModel.AutoAssertTalkSetCommand a_value
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnAutoAssertTalkSet", _
@@ -411,7 +415,7 @@ End Sub
 
 Public Sub OnClearReadings()
     If This.ClearReadingsExecutable Then
-        This.ViewModel.ClearReadingsCommand
+        This.ViewModel.ClearReadingsCommand This.ReadingOffset
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnClearReadings", _
@@ -428,8 +432,20 @@ End Sub
 ''' <summary>   Handles the external trigger option button change and click events. </summary>
 Public Sub OnExternalTriggerOptionChange(ByVal a_value As Boolean)
     If This.ExternalTriggerOptionExecutable Then
-        If a_value Then _
-            Me.LastCommandOutcome = This.ViewModel.ConfigureExternalTriggerReadingCommand(Me.LastCommandDetails)
+        If a_value Then
+        
+            Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
+            p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+            p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
+            p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
+            p_mode.SenseFunction = DataView.ExternalSenseFunctionName
+            p_mode.BeepEnabled = True
+            p_mode.AutoIncrementChannel = False
+            p_mode.SingleRead = True
+            p_mode.channelnumber = This.SelectedChannelNumber
+        
+            Me.LastCommandOutcome = This.ViewModel.ConfigureMeasureCommand(p_mode, Me.LastCommandDetails)
+        End If
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & ".OnExternalTriggerOptionChange", _
@@ -444,8 +460,20 @@ End Sub
 Public Sub OnImmediateTriggerOptionChange(ByVal a_value As Boolean)
 
     If This.ImmediateTriggerOptionExecutable Then
-        If a_value Then _
-            Me.LastCommandOutcome = This.ViewModel.ConfigureImmediateTriggerReadingsCommand(Me.LastCommandDetails)
+        If a_value Then
+            
+            Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
+            p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+            p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
+            p_mode.FrontInputs = DataView.ImmediateFrontInputsRequired
+            p_mode.SenseFunction = DataView.ImmediateSenseFunctionName
+            p_mode.BeepEnabled = True
+            p_mode.AutoIncrementChannel = False
+            p_mode.SingleRead = True
+            p_mode.channelnumber = This.SelectedChannelNumber
+        
+            Me.LastCommandOutcome = This.ViewModel.ConfigureMeasureCommand(p_mode, Me.LastCommandDetails)
+        End If
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnImmediateTriggerOptionChange", _
@@ -458,7 +486,7 @@ End Sub
 Public Sub OnMeasure()
     If This.MeasureExecutable Then
         ' make an immediate measure of one or all channels.
-        Me.LastCommandOutcome = This.ViewModel.MeasureImmediatelyCommand(Me.LastCommandDetails)
+        Me.LastCommandOutcome = This.ViewModel.MeasureImmediatelyCommand(This.ReadingOffset, Me.LastCommandDetails)
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnMeasure", _
@@ -469,7 +497,7 @@ End Sub
 ''' <summary>   Handles the external trigger toggle button. </summary>
 Public Sub OnMonitorExtTrigToggleButtonChange(ByVal a_value As Boolean)
     If This.StartMonitoringExecutable Then
-        This.ViewModel.StartMonitoringExternalTriggersCommand
+        This.ViewModel.StartMonitoringExternalTriggersCommand This.ReadingOffset, This.TimerInterval
     ElseIf This.StopMonitoringExecutable Then
         This.ViewModel.StopMonitoringExternalTriggersCommand
     Else
@@ -549,8 +577,6 @@ End Property
 Public Property Let SocketAddress(ByVal a_value As String)
     If This.SocketAddress <> a_value Then
         This.SocketAddress = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SocketAddress = a_value
     End If
 End Property
 
@@ -579,8 +605,6 @@ End Property
 Public Property Let SessionTimeout(ByVal a_value As Integer)
     If This.SessionTimeout <> a_value Then
         This.SessionTimeout = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SessionTimeout = a_value
     End If
 End Property
 
@@ -601,8 +625,6 @@ End Property
 Public Property Let MessageToSend(ByVal a_value As String)
     If This.MessageToSend <> a_value Then
         This.MessageToSend = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.MessageToSend = a_value
     End If
 End Property
 
@@ -617,8 +639,6 @@ End Property
 Public Property Let SentMessage(ByVal a_value As String)
     If This.SentMessage <> a_value Then
         This.SentMessage = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SentMessage = a_value
     End If
 End Property
 
@@ -633,8 +653,6 @@ End Property
 Public Property Let ReceivedMessage(ByVal a_value As String)
     If This.ReceivedMessage <> a_value Then
         This.ReceivedMessage = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ReceivedMessage = a_value
     End If
 End Property
 
@@ -649,8 +667,6 @@ End Property
 Public Property Let ReceivedMessageLength(ByVal a_value As Integer)
     If This.ReceivedMessageLength <> a_value Then
         This.ReceivedMessageLength = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ReceivedMessageLength = a_value
     End If
 End Property
 
@@ -665,8 +681,6 @@ End Property
 Public Property Let StatusByte(ByVal a_value As Integer)
     If This.StatusByte <> a_value Then
         This.StatusByte = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.StatusByte = a_value
     End If
 End Property
 
@@ -681,8 +695,6 @@ End Property
 Public Property Let StandardByte(ByVal a_value As Integer)
     If This.StandardByte <> a_value Then
         This.StandardByte = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.StandardByte = a_value
     End If
 End Property
 
@@ -697,8 +709,6 @@ End Property
 Public Property Let ReadStatusAfterWriteEnabled(ByVal a_value As Boolean)
     If This.ReadStatusAfterWriteEnabled <> a_value Then
         This.ReadStatusAfterWriteEnabled = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ReadStatusAfterWriteEnabled = a_value
     End If
 End Property
 
@@ -713,8 +723,6 @@ End Property
 Public Property Let ScpiCommands(ByVal a_value As Collection)
     If Not cc_isr_Core.CollectionExtensions.AreEqual(This.ScpiCommands, a_value) Then
         Set This.ScpiCommands = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ScpiCommands = a_value
     End If
 End Property
 
@@ -735,8 +743,6 @@ End Property
 Public Property Let SerialPollByte(ByVal a_value As Integer)
     If This.SerialPollByte <> a_value Then
         This.SerialPollByte = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SerialPollByte = a_value
     End If
 End Property
 
@@ -751,8 +757,6 @@ End Property
 Public Property Let ServiceRequested(ByVal a_value As Integer)
     If This.ServiceRequested <> a_value Then
         This.ServiceRequested = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ServiceRequested = a_value
     End If
 End Property
 
@@ -767,8 +771,6 @@ End Property
 Public Property Let GpibAddress(ByVal a_value As Integer)
     If This.GpibAddress <> a_value Then
         This.GpibAddress = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.GpibAddress = a_value
     End If
 End Property
 
@@ -783,8 +785,6 @@ End Property
 Public Property Let AutoAssertTalk(ByVal a_value As Boolean)
     If This.AutoAssertTalk <> a_value Then
         This.AutoAssertTalk = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.AutoAssertTalk = a_value
     End If
 End Property
 
@@ -817,8 +817,6 @@ End Property
 Public Property Let GpibLanReadTimeout(ByVal a_value As Integer)
     If This.GpibLanReadTimeout <> a_value Then
         This.GpibLanReadTimeout = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.GpibLanReadTimeout = a_value
     End If
 End Property
 
@@ -839,8 +837,6 @@ End Property
 Public Property Let TopCard(ByVal a_value As String)
     If This.TopCard <> a_value Then
         This.TopCard = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.TopCard = a_value
     End If
 End Property
 
@@ -855,8 +851,6 @@ End Property
 Public Property Let TopCardFunctionScanList(ByVal a_value As String)
     If This.TopCardFunctionScanList <> a_value Then
         This.TopCardFunctionScanList = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.TopCardFunctionScanList = a_value
     End If
 End Property
 
@@ -871,8 +865,6 @@ End Property
 Public Property Let BottomCard(ByVal a_value As String)
     If This.BottomCard <> a_value Then
         This.BottomCard = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.BottomCard = a_value
     End If
 End Property
 
@@ -887,8 +879,6 @@ End Property
 Public Property Let BottomCardFunctionScanList(ByVal a_value As String)
     If This.BottomCardFunctionScanList <> a_value Then
         This.BottomCardFunctionScanList = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.BottomCardFunctionScanList = a_value
     End If
 End Property
 
@@ -955,8 +945,6 @@ End Property
 Public Property Let FrontInputsRequired(ByVal a_value As Boolean)
     If This.FrontInputsRequired <> a_value Then
         This.FrontInputsRequired = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.FrontInputsRequired = a_value
     End If
 End Property
 
@@ -972,8 +960,6 @@ End Property
 Public Property Let ReadingBeepEnabled(ByVal a_value As Boolean)
     If This.ReadingBeepEnabled <> a_value Then
         This.ReadingBeepEnabled = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ReadingBeepEnabled = a_value
     End If
 End Property
 
@@ -989,8 +975,6 @@ End Property
 Public Property Let FrontInputsValue(ByVal a_value As Boolean)
     If This.FrontInputsValue <> a_value Then
         This.FrontInputsValue = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.FrontInputsValue = a_value
     End If
 End Property
 
@@ -1005,8 +989,6 @@ End Property
 Public Property Let FrontInputsCaption(ByVal a_value As String)
     If This.FrontInputsCaption <> a_value Then
         This.FrontInputsCaption = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.FrontInputsCaption = a_value
     End If
 End Property
 
@@ -1021,8 +1003,6 @@ End Property
 Public Property Let ChannelCount(ByVal a_value As Integer)
     If This.ChannelCount <> a_value Then
         This.ChannelCount = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ChannelCount = a_value
     End If
 End Property
 
@@ -1037,8 +1017,6 @@ End Property
 Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
     If This.SelectedChannelNumber <> a_value Then
         This.SelectedChannelNumber = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SelectedChannelNumber = a_value
     End If
 End Property
 
@@ -1053,8 +1031,6 @@ End Property
 Public Property Let TargetChannelNumber(ByVal a_value As Integer)
     If This.TargetChannelNumber <> a_value Then
         This.TargetChannelNumber = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.TargetChannelNumber = a_value
     End If
 End Property
 
@@ -1069,8 +1045,6 @@ End Property
 Public Property Let MeasuredChannelNumber(ByVal a_value As Integer)
     If This.MeasuredChannelNumber <> a_value Then
         This.MeasuredChannelNumber = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.MeasuredChannelNumber = a_value
     End If
 End Property
 
@@ -1085,8 +1059,6 @@ End Property
 Public Property Let ContinuousSenseFunctionName(ByVal a_value As String)
     If This.ContinuousSenseFunctionName <> a_value Then
         This.ContinuousSenseFunctionName = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ContinuousSenseFunctionName = a_value
     End If
 End Property
 
@@ -1101,8 +1073,6 @@ End Property
 Public Property Let ImmediateSenseFunctionName(ByVal a_value As String)
     If This.ImmediateSenseFunctionName <> a_value Then
         This.ImmediateSenseFunctionName = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ImmediateSenseFunctionName = a_value
     End If
 End Property
 
@@ -1117,8 +1087,6 @@ End Property
 Public Property Let ExternalSenseFunctionName(ByVal a_value As String)
     If This.ExternalSenseFunctionName <> a_value Then
         This.ExternalSenseFunctionName = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ExternalSenseFunctionName = a_value
     End If
 End Property
 
@@ -1147,8 +1115,6 @@ End Property
 Public Property Let SenseFunctionCaption(ByVal a_value As String)
     If This.SenseFunctionCaption <> a_value Then
         This.SenseFunctionCaption = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SenseFunctionCaption = a_value
     End If
 End Property
 
@@ -1163,8 +1129,6 @@ End Property
 Public Property Let SenseFunctionUnit(ByVal a_value As String)
     If This.SenseFunctionUnit <> a_value Then
         This.SenseFunctionUnit = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SenseFunctionUnit = a_value
     End If
 End Property
 
@@ -1179,8 +1143,6 @@ End Property
 Public Property Let MeasuredReading(ByVal a_value As String)
     If This.MeasuredReading <> a_value Then
         This.MeasuredReading = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.MeasuredReading = a_value
     End If
 End Property
 
@@ -1195,8 +1157,6 @@ End Property
 Public Property Let MeasuredValueFormat(ByVal a_value As String)
     If This.MeasuredValueFormat <> a_value Then
         This.MeasuredValueFormat = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.MeasuredValueFormat = a_value
     End If
 End Property
 
@@ -1211,8 +1171,6 @@ End Property
 Public Property Let MeasuredValue(ByVal a_value As Double)
     If This.MeasuredValue <> a_value Then
         This.MeasuredValue = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.MeasuredValue = a_value
     End If
 End Property
 
@@ -1227,8 +1185,6 @@ End Property
 Public Property Let SenseFunctions(ByVal a_value As Collection)
     If Not cc_isr_Core.CollectionExtensions.AreEqual(This.SenseFunctions, a_value) Then
         Set This.SenseFunctions = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SenseFunctions = a_value
     End If
 End Property
 
@@ -1243,8 +1199,6 @@ End Property
 Public Property Let ReadingOffset(ByVal a_value As Double)
     If This.ReadingOffset <> a_value Then
         This.ReadingOffset = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ReadingOffset = a_value
     End If
 End Property
 
@@ -1259,8 +1213,6 @@ End Property
 Public Property Let MonitoringState(ByVal a_value As String)
     If This.MonitoringState <> a_value Then
         This.MonitoringState = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.MonitoringState = a_value
     End If
 End Property
 
@@ -1277,8 +1229,6 @@ End Property
 Public Property Let ExternalTrigMonitoringEnabled(ByVal a_value As Boolean)
     If This.ExternalTrigMonitoringEnabled <> a_value Then
         This.ExternalTrigMonitoringEnabled = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ExternalTrigMonitoringEnabled = a_value
     End If
 End Property
 
@@ -1294,8 +1244,6 @@ End Property
 Public Property Let AutoIncrementChannelNoEnabled(ByVal a_value As Boolean)
     If This.AutoIncrementChannelNoEnabled <> a_value Then
         This.AutoIncrementChannelNoEnabled = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.AutoIncrementChannelNoEnabled = This.AutoIncrementChannelNoEnabled
     End If
 End Property
 
@@ -1311,8 +1259,6 @@ End Property
 Public Property Let SingleReadEnabled(ByVal a_value As Boolean)
     If This.SingleReadEnabled <> a_value Then
         This.SingleReadEnabled = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SingleReadEnabled = a_value
     End If
 End Property
 
@@ -1365,8 +1311,6 @@ End Property
 Public Property Let TimerInterval(ByVal a_value As Integer)
     If This.TimerInterval <> a_value Then
         This.TimerInterval = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.TimerInterval = a_value
     End If
 End Property
 
@@ -1381,8 +1325,6 @@ End Property
 Public Property Let ElapsedTime(ByVal a_value As Double)
     If This.ElapsedTime <> a_value Then
         This.ElapsedTime = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ElapsedTime = a_value
     End If
 End Property
 
@@ -1397,8 +1339,6 @@ End Property
 Public Property Let ElapsedTimeFormat(ByVal a_value As String)
     If This.ElapsedTimeFormat <> a_value Then
         This.ElapsedTimeFormat = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ElapsedTimeFormat = a_value
     End If
 End Property
 
@@ -1413,8 +1353,6 @@ End Property
 Public Property Let ElapsedTimeCaption(ByVal a_value As String)
     If This.ElapsedTimeCaption <> a_value Then
         This.ElapsedTimeCaption = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ElapsedTimeCaption = a_value
     End If
 End Property
 
@@ -1429,8 +1367,6 @@ End Property
 Public Property Let LastErrorMessage(ByVal a_value As String)
     If This.LastErrorMessage <> a_value Then
         This.LastErrorMessage = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.LastErrorMessage = a_value
     End If
 End Property
 
@@ -1445,8 +1381,6 @@ End Property
 Public Property Let LastMessage(ByVal a_value As String)
     If This.LastMessage <> a_value Then
         This.LastMessage = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.LastMessage = a_value
     End If
 End Property
 
@@ -1546,13 +1480,6 @@ Public Property Get QueryStatusByteExecutable() As Boolean
     QueryStatusByteExecutable = This.QueryStatusByteExecutable
 End Property
 
-''' <summary>   Gets the condition indicating that the Read Status After Write command
-'''             can be executed. </summary>
-''' <value>   [Boolean] True if the Read Status After Write command can be executed. </value>
-Public Property Get ReadStatusAfterWriteExecutable() As Boolean
-    ReadStatusAfterWriteExecutable = This.ReadStatusAfterWriteExecutable
-End Property
-
 ''' <summary>   Gets the condition indicating that the Read Standard Event Status command
 '''             can be executed. </summary>
 ''' <value>   [Boolean] True if the Read Standard Event Status command can be executed. </value>
@@ -1565,13 +1492,6 @@ End Property
 ''' <value>   [Boolean] True if the Write command can be executed. </value>
 Public Property Get WriteExecutable() As Boolean
     WriteExecutable = This.WriteExecutable
-End Property
-
-''' <summary>   Gets the condition indicating that Message To Send command
-'''             can be executed. </summary>
-''' <value>   [Boolean] True if the Message to Send command can be executed. </value>
-Public Property Get MessageToSendExecutable() As Boolean
-    MessageToSendExecutable = This.MessageToSendExecutable
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -1737,7 +1657,7 @@ Friend Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Chan
     On Error GoTo err_Handler
     
     Me.MeasuredReading = a_eventArgs.Reading
-    Me.MeasuredChannelNumber = a_eventArgs.ChannelNumber
+    Me.MeasuredChannelNumber = a_eventArgs.channelnumber
         
     Dim p_value As Double
     Dim p_details As String
@@ -1764,7 +1684,7 @@ err_Handler:
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
     
     ' display the error message
-    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1798,8 +1718,6 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.TimerInterval = This.ViewModel.TimerInterval
         Case "Connected"
             Me.Connected = This.ViewModel.Connected
-        Case "MessageToSend"
-            Me.MessageToSend = This.ViewModel.MessageToSend
         Case "SentMessage"
             Me.SentMessage = This.ViewModel.SentMessage
         Case "ReceivedMessage"
@@ -1881,8 +1799,6 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.Measuring = This.ViewModel.Measuring
         Case "MeasurementMode"
             Me.MeasurementMode = This.ViewModel.MeasurementMode
-        Case "ReadStatusAfterWriteEnabled"
-            Me.ReadStatusAfterWriteEnabled = This.ViewModel.ReadStatusAfterWriteEnabled
         Case "ReadingOffset"
             Me.ReadingOffset = This.ViewModel.ReadingOffset
         Case "MonitoringState"
@@ -1905,8 +1821,6 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             This.QueryStatusByteExecutable = This.ViewModel.QueryStatusByteExecutable
         Case "ReadStandardEventStatusExecutable"
             This.ReadStandardEventStatusExecutable = This.ViewModel.ReadStandardEventStatusExecutable
-        Case "ReadStatusAfterWriteExecutable"
-            This.ReadStatusAfterWriteExecutable = This.ViewModel.ReadStatusAfterWriteExecutable
         Case "WriteExecutable"
             This.WriteExecutable = This.ViewModel.WriteExecutable
         Case "QueryInputsExecutable"
@@ -1945,8 +1859,6 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             This.GpibLanReadTimeoutGetExecutable = This.ViewModel.GpibLanReadTimeoutGetExecutable
         Case "GpibLanReadTimeoutSetExecutable"
             This.GpibLanReadTimeoutSetExecutable = This.ViewModel.GpibLanReadTimeoutSetExecutable
-        Case "MessageToSendExecutable"
-            This.MessageToSendExecutable = This.ViewModel.MessageToSendExecutable
         Case "FunctionNameExecutable"
             This.FunctionNameExecutable = This.ViewModel.FunctionNameExecutable
 
@@ -1987,7 +1899,6 @@ Friend Sub Synchronize()
     Me.Host = This.ViewModel.Host
     Me.LastErrorMessage = This.ViewModel.LastErrorMessage
     Me.LastMessage = This.ViewModel.LastMessage
-    Me.MessageToSend = This.ViewModel.MessageToSend
     Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
     Me.MeasuredReading = This.ViewModel.MeasuredReading
     Me.MeasuredValueFormat = This.ViewModel.MeasuredValueFormat
@@ -1997,7 +1908,6 @@ Friend Sub Synchronize()
     Me.PauseRequested = This.ViewModel.PauseRequested
     Me.Port = This.ViewModel.Port
     Me.ReadingOffset = This.ViewModel.ReadingOffset
-    Me.ReadStatusAfterWriteEnabled = This.ViewModel.ReadStatusAfterWriteEnabled
     Me.ReceivedMessage = This.ViewModel.ReceivedMessage
     Me.ReceivedMessageLength = This.ViewModel.ReceivedMessageLength
     Me.ScpiCommands = This.ViewModel.ScpiCommands
@@ -2027,7 +1937,6 @@ Friend Sub Synchronize()
     This.ReadExecutable = This.ViewModel.ReadExecutable
     This.QueryStatusByteExecutable = This.ViewModel.QueryStatusByteExecutable
     This.ReadStandardEventStatusExecutable = This.ViewModel.ReadStandardEventStatusExecutable
-    This.ReadStatusAfterWriteExecutable = This.ViewModel.ReadStatusAfterWriteExecutable
     This.WriteExecutable = This.ViewModel.WriteExecutable
     This.QueryInputsExecutable = This.ViewModel.QueryInputsExecutable
     This.ClearReadingsExecutable = This.ViewModel.ClearReadingsExecutable
@@ -2047,7 +1956,6 @@ Friend Sub Synchronize()
     This.GpibAddressSetExecutable = This.ViewModel.GpibAddressSetExecutable
     This.GpibLanReadTimeoutGetExecutable = This.ViewModel.GpibLanReadTimeoutGetExecutable
     This.GpibLanReadTimeoutSetExecutable = This.ViewModel.GpibLanReadTimeoutSetExecutable
-    This.MessageToSendExecutable = This.ViewModel.MessageToSendExecutable
     This.FunctionNameExecutable = This.ViewModel.FunctionNameExecutable
     
 End Sub
@@ -2086,7 +1994,7 @@ err_Handler:
     Err.Description = Err.Description & ". Property name: '" & p_propertyName & "'."
     
     ' display the error message
-    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -2141,7 +2049,7 @@ err_Handler:
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
     
     ' display the error message
-    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -2174,7 +2082,7 @@ err_Handler:
     cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
     
     ' display the error message
-    This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next

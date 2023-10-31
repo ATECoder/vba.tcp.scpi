@@ -30,10 +30,10 @@ Private Type this_
     ViewModel As cc_isr_Tcp_Scpi.K2700ViewModel
     ViewModelOwner As Boolean
     FocusedControlName As String
+    DesignMode As Boolean
     ContinuousSenseFunctionName As String
     ImmediateSenseFunctionName As String
     ExternalSenseFunctionName As String
-    ChannelNumberCaptionPrefix As String
 End Type
 
 Private This As this_
@@ -43,7 +43,7 @@ Private This As this_
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Initializes and returns an instance of this object. </summary>
-Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As DataSheet
+Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As K2700Sheet
     
     Const p_procedureName = "Initialize"
 
@@ -57,7 +57,13 @@ Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As DataSheet
     Set This.ViewModel = a_viewModel
     
     ' set the initial values that are provided by the user interface
+    Me.GpibLanControllerPort = 1234
     This.ChannelNumberCaptionPrefix = "ch"
+    Me.MaximumChannelNumber = 48
+    Me.FrontInputsRequired = True
+    Me.SingleReadEnabled = True
+    Me.ImmediateTriggerOptionButton.Value = True
+    Me.ExternalTriggerOptionButton.Value = False
     
     ' initialize the views before initializing the view model
     ' the view model gets initialized upon connecting.
@@ -80,7 +86,7 @@ err_Handler:
     
     ' display the error message
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -131,7 +137,7 @@ err_Handler:
     
     ' display the error message
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -225,6 +231,19 @@ End Sub
 Private Sub ClearReadingsButton_Click()
     DataView.OnClearReadings
 End Sub
+
+''' <summary>   Gets the design mode for unit testing and restoration of state. </summary>
+''' <value>   [Boolean]. </value>
+Public Property Get DesignMode() As Boolean
+    DesignMode = This.DesignMode
+End Property
+
+''' <summary>   Sets the design mode for unit testing and restoration of state. </summary>
+''' <summary>   Sets the design mode for unit testing. </summary>
+''' <param name="a_value">   [Boolean] true if in design mode. </param>
+Public Property Let DesignMode(ByVal a_value As Boolean)
+    This.DesignMode = a_value
+End Property
 
 ''' <summary>   Gets the execution Can Execute) status of the Open Connection command. </summary>
 ''' <value>   [Boolean]. </value>

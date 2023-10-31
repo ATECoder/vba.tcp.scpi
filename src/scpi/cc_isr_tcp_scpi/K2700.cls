@@ -189,8 +189,7 @@ End Property
 
 ''' <summary>   Initializes the k2700 legacy mode. </summary>
 ''' <param name="a_address">    [String] An IPv4 dotted-decimal host address and post. </param>
-''' <param name="a_details">    [Out, String] Details the information of why the instrument
-'''                             failed to restore state. </param>
+''' <param name="a_details">    [Out, String] Details the failure information if any. </param>
 ''' <param name="a_function">   [Optional, String, 'RES'] The measurement function. </param>
 ''' <param name="a_timeout">    [Optional, Long, 3000] The session read timeout in milliseconds. </param>
 ''' <returns>   [Boolean] True if the device was initialized. </returns>
@@ -305,8 +304,7 @@ End Sub
 
 ''' <summary>   Performs a single read from the front panel. </summary>
 ''' <param name="a_reading">         [Out, String] The reading. </param>
-''' <param name="a_details">         [Out, String] Details the information of why the instrument
-'''                                  failed to restore state. </param>
+''' <param name="a_details">         [Out, String] Details the failure information if any. </param>
 ''' <param name="a_channelNumber">   [Optional, Integer, 0] The channel number. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function TryTakeFrontReading(ByRef a_reading As String, ByRef a_details As String, _
@@ -342,8 +340,7 @@ End Function
 ''' <param name="a_channelNumber">   The device channel number. </param>
 ''' <param name="a_reading">         [Out, String] The reading or empty if
 ''                                   the channel number is out of range for this device. </param>
-''' <param name="a_details">         [Out, String] Details the information of why the instrument
-'''                                  failed to restore state. </param>
+''' <param name="a_details">         [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function TryTakeRearReading(ByVal a_channelNumber As Integer, _
     ByRef a_reading As String, ByRef a_details As String) As Boolean
@@ -409,8 +406,7 @@ End Function
 ''' <summary>   Configure continuous trigger mode for the specified function
 ''' abdpower line cycles. </summary>
 ''' <param name="a_function">          [String] The measurement function. </param>
-''' <param name="a_details">           [Out, String] Details the information of why the instrument
-'''                                    failed to restore state. </param>
+''' <param name="a_details">           [Out, String] Details the failure information if any. </param>
 ''' <param name="a_powerLineCycles">   [Optional, Double, 1] number of power line cycle for
 '''                                    the reading aperture. </param>
 ''' <returns>   [Boolean]. </returns>
@@ -453,8 +449,7 @@ End Function
 ''' <summary>   Restore the continuous trigger mode. </summary>
 ''' <remarks>   This is typically called to restore continuous mode without
 ''' changing the function mode. </remarks>
-''' <param name="a_details">   [Out, String] Details the information of why the instrument
-'''                            failed to restore state. </param>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function TryRestoreContinuousReading(ByRef a_details As String) As Boolean
 
@@ -482,9 +477,8 @@ Public Function TryRestoreContinuousReading(ByRef a_details As String) As Boolea
 End Function
 
 ''' <summary>   Configures single function reading. </summary>
-''' <param name="a_function">    [String] The measurement function. </param>
-''' <param name="a_details">     [Out, String] Details the information of why the instrument
-'''                              failed to restore state. </param>
+''' <param name="a_function">   [String] The measurement function. </param>
+''' <param name="a_details">    [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function TryConfigureSingleFunctionReading(ByVal a_function As String, _
     ByRef a_details As String) As Boolean
@@ -538,8 +532,7 @@ End Property
 
 ''' <summary>   Sets the instrument to detect the measurement available bit
 '''             of the status register upon receiving an external trigger. </summary>
-''' <param name="a_details">           [Out, String] Details the information of why the instrument
-'''                                    failed to restore state. </param>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function TryEnableMeasurementAvailableMonitoring(ByRef a_details As String) As Boolean
 
@@ -593,9 +586,8 @@ End Function
 
 ''' <summary> Sets the instrument to read using external trigger. </summary>
 ''' <remarks>   Typically, readings will be fetched when the instrument requests service. </remarks>
-''' <param name="a_function">        [String] The measurement function. </param>
-''' <param name="a_details">         [Out, String] Details the information of why the instrument
-'''                                  failed to restore state. </param>
+''' <param name="a_function">   [String] The measurement function. </param>
+''' <param name="a_details">    [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function TryConfigureExternalTriggerReading(ByVal a_function As String, _
     ByRef a_details As String) As Boolean
@@ -662,10 +654,9 @@ End Function
 ''' </code>
 ''' Test 10 TestTriggerPollingShouldRead passed. Elapsed time: 20856.2 ms.
 ''' </remarks>
-''' <param name="a_channelNumber">     [Integer] The channel number. </param>
-''' <param name="a_isDone">            [Boolean] True if done. </param>
-''' <param name="a_details">           [Out, String] Details the information of why the instrument
-'''                                    failed to restore state. </param>
+''' <param name="a_channelNumber">   [Integer] The channel number. </param>
+''' <param name="a_isDone">          [Boolean] True if done. </param>
+''' <param name="a_details">         [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function TryMonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDone As Boolean, _
     ByRef a_details As String) As Boolean
@@ -869,9 +860,12 @@ End Property
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Raises the <see cref="ChannelMeasured"/> event. </summary>
+''' <remarks>   Lacking an internal definition for unit testing, this method
+''' is made public so as the unit test the propagation of measured values and
+''' channel numbers. </remarks>
 ''' <para name="a_channelNumber">   [integer] The channel number. </param>
 ''' <para name="a_reading">         [double] The reading. </param>
-Private Sub OnChannelMeasured(ByVal a_channelNumber As Integer, ByVal a_reading As String)
+Public Sub OnChannelMeasured(ByVal a_channelNumber As Integer, ByVal a_reading As String)
     RaiseEvent ChannelMeasured( _
             Factory.NewChannelReadingEventArgs.Initialize(a_channelNumber, _
                                                           a_reading))
@@ -928,8 +922,7 @@ End Property
 
 ''' <summary>   Configures the 2700 Multimeter scanner initial state. </summary>
 ''' <remarks>   Call this method upon connecting and restoring Initial State. </remarks>
-''' <param name="a_details">   [Out, String] Details the information of why the instrument
-'''                            failed to restore state. </param>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function TryConfigureInitialState(ByRef a_details As String) As Boolean
 
@@ -978,8 +971,7 @@ End Function
 ''' - Execution state is cleared.
 ''' - the cards are read.
 ''' </remarks>
-''' <param name="a_details">   [Out, String] Details the information of why the instrument
-'''                            failed to restore state. </param>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean] true if restored. </returns>
 Public Function TryRestoreInitialState(ByRef a_details As String) As Boolean
 

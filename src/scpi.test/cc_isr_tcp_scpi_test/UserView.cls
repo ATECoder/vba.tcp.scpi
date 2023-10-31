@@ -19,7 +19,7 @@ Attribute m_viewModel.VB_VarHelpID = -1
 Private Type this_
 
     ViewModel As K2700ViewModel
-    UserSampleSheet As UserSheet
+    UserSheet As UserSheet
     DesignMode As Boolean
     
     Connected As Boolean
@@ -63,7 +63,7 @@ Private This As this_
 
 ''' <summary>   Handles the Class Initialize event. </summary>
 Private Sub Class_Initialize()
-    This.ChannelNumberCaptionPrefix = "R"
+    This.ChannelNumberCaptionPrefix = "ch"
     This.ChannelNumberTitle = "resistance number"
     This.AutoSampleFrontInputs = False
 End Sub
@@ -81,7 +81,7 @@ Public Sub Dispose()
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Set This.UserSampleSheet = Nothing
+    Set This.UserSheet = Nothing
     
     Set m_viewModel = Nothing
     
@@ -101,7 +101,7 @@ err_Handler:
     
     ' display the error message
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -119,7 +119,7 @@ Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As UserView
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Set This.UserSampleSheet = UserSheet.Initialize()
+    Set This.UserSheet = UserSheet.Initialize()
     
     Set This.ViewModel = a_viewModel
     
@@ -145,7 +145,7 @@ err_Handler:
     
     ' display the error message
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -184,10 +184,10 @@ End Property
 ''' <value>   [Boolean]. </value>
 Public Property Get DesignMode() As Boolean
     
-    If This.UserSampleSheet Is Nothing Then
+    If This.UserSheet Is Nothing Then
         DesignMode = This.DesignMode
     Else
-        DesignMode = This.UserSampleSheet.DesignMode
+        DesignMode = This.UserSheet.DesignMode
     End If
 
 End Property
@@ -196,8 +196,8 @@ End Property
 ''' <param name="a_value">   [Boolean] true if in design mode. </param>
 Public Property Let DesignMode(ByVal a_value As Boolean)
     If Me.DesignMode <> a_value Then
-        If Not This.UserSampleSheet Is Nothing Then _
-            This.UserSampleSheet.DesignMode = a_value
+        If Not This.UserSheet Is Nothing Then _
+            This.UserSheet.DesignMode = a_value
         This.DesignMode = a_value
     End If
 End Property
@@ -207,74 +207,6 @@ End Property
 ' Data Acquisition Methods
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
-
-''' <summary>   Starts an immediate triggering and take multiple readings. </summary>
-''' <remarks>   In auto scan we have the following settings:
-''' Auto Increment channel number: True;
-''' Front Inputs Required: False;
-''' Single Readings: False;
-''' Triggering Mode: Immediate.
-''' </remarks>
-Public Sub StartAutoScan()
-
-    Const p_procedureName As String = "StartAutoScan"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    This.UserSampleSheet.DisplayStartDateTime
-    Me.AutoIncrementChannelNoEnabled = True
-    Me.FrontInputsRequired = This.AutoSampleFrontInputs
-    Me.SingleReadEnabled = False
-    This.ViewModel.ReadingBeepEnabled = False
-    
-    ' next set immediate triggering mode.
-    
-    If This.ViewModel.ImmediateTriggerOptionExecutable Then
-        Me.LastCommandOutcome = This.ViewModel.ConfigureImmediateTriggerReadingsCommand(Me.LastCommandDetails)
-    Else
-        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " Immediate trigger command not enabled."
-    End If
-    
-    If Me.LastCommandOutcome Then
-    
-        ' next takes the measurements
-    
-        If This.ViewModel.MeasureExecutable Then
-            ' make an immediate measure of one or all channels.
-            Me.LastCommandOutcome = This.ViewModel.MeasureImmediatelyCommand(Me.LastCommandDetails)
-        Else
-            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-                " Measure command not enabled."
-        End If
-    
-    End If
-        
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-    
-    ' report the last error.
-    If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
-
 
 ''' <summary>   Handles the Auto Scan toggle button. </summary>
 ''' <remarks>   In auto scan we have the following settings:
@@ -295,7 +227,20 @@ Public Sub OnAutoScanToggleButtonChange()
     If Me.AutoScanToggleValue And This.ViewModel.ImmediateTriggerOptionExecutable And _
         Not This.Measuring Then
         
-        Me.StartAutoScan
+        This.UserSheet.DisplayStartDateTime
+        
+        Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
+        p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+        p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
+        p_mode.FrontInputs = DataView.ImmediateFrontInputsRequired
+        p_mode.SenseFunction = DataView.ImmediateSenseFunctionName
+        p_mode.BeepEnabled = False
+        p_mode.AutoIncrementChannel = True
+        p_mode.SingleRead = False
+        p_mode.channelnumber = 1
+        
+        Me.LastCommandOutcome = This.ViewModel.StartMeasureCommand(p_mode, _
+            This.ReadingOffset, Me.LastCommandDetails)
     
     End If
     
@@ -313,7 +258,7 @@ err_Handler:
     
     ' report the last error.
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -325,10 +270,10 @@ End Sub
 ''' <value>   [Boolean] true if the command is executable. </value>
 Public Property Get AutoScanToggleExecutable() As Boolean
     
-    If This.UserSampleSheet Is Nothing Then
+    If This.UserSheet Is Nothing Then
         AutoScanToggleExecutable = This.AutoScanToggleExecutable
     Else
-        AutoScanToggleExecutable = This.UserSampleSheet.AutoScanToggleExecutable
+        AutoScanToggleExecutable = This.UserSheet.AutoScanToggleExecutable
     End If
 
 End Property
@@ -338,8 +283,8 @@ End Property
 Public Property Let AutoScanToggleExecutable(ByVal a_value As Boolean)
     If Me.AutoScanToggleExecutable <> a_value Then
         
-        If Not This.UserSampleSheet Is Nothing Then _
-            This.UserSampleSheet.AutoScanToggleExecutable = a_value
+        If Not This.UserSheet Is Nothing Then _
+            This.UserSheet.AutoScanToggleExecutable = a_value
         
         This.AutoScanToggleExecutable = a_value
     End If
@@ -349,10 +294,10 @@ End Property
 ''' <value>   [Boolean] true if the command is active. </value>
 Public Property Get AutoScanToggleValue() As Boolean
     
-    If This.UserSampleSheet Is Nothing Then
+    If This.UserSheet Is Nothing Then
         AutoScanToggleValue = This.AutoScanToggleValue
     Else
-        AutoScanToggleValue = This.UserSampleSheet.AutoScanToggleValue
+        AutoScanToggleValue = This.UserSheet.AutoScanToggleValue
     End If
 
 End Property
@@ -367,8 +312,8 @@ Public Property Let AutoScanToggleValue(ByVal a_value As Boolean)
     
         If Me.AutoScanToggleValue <> a_value Then
         
-            If Not This.UserSampleSheet Is Nothing Then _
-                This.UserSampleSheet.AutoScanToggleValue = a_value
+            If Not This.UserSheet Is Nothing Then _
+                This.UserSheet.AutoScanToggleValue = a_value
     
             This.AutoScanToggleValue = a_value
         End If
@@ -376,75 +321,6 @@ Public Property Let AutoScanToggleValue(ByVal a_value As Boolean)
     End If
 
 End Property
-
-''' <summary>   Starts immediate triggering and take a single reading. </summary>
-''' <remarks>   In auto single we have the following settings:
-''' Auto Increment channel number: False;
-''' Front Inputs Required: False;
-''' Single Readings: True;
-''' Triggering Mode: Immediate.
-''' </remarks>
-Public Sub StartAutoSingle()
-
-    Const p_procedureName As String = "StartAutoSingle"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-    
-    Me.SelectedChannelNumber = This.UserSampleSheet.SelectedChannelNumber
-    This.UserSampleSheet.DisplayStartDateTime
-
-    Me.AutoIncrementChannelNoEnabled = False
-    Me.FrontInputsRequired = This.AutoSampleFrontInputs
-    Me.SingleReadEnabled = True
-    This.ViewModel.ReadingBeepEnabled = False
-    
-    ' next set immediate triggering mode.
-    
-    If This.ViewModel.ImmediateTriggerOptionExecutable Then
-        Me.LastCommandOutcome = This.ViewModel.ConfigureImmediateTriggerReadingsCommand(Me.LastCommandDetails)
-    Else
-        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " Immediate trigger command not enabled."
-    End If
-    
-    If Me.LastCommandOutcome Then
-    
-        ' next takes the measurements
-    
-        If This.ViewModel.MeasureExecutable Then
-            ' make an immediate measure of one or all channels.
-            Me.LastCommandOutcome = This.ViewModel.MeasureImmediatelyCommand(Me.LastCommandDetails)
-        Else
-            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-                " Measure command not enabled."
-        End If
-    
-    End If
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-    
-    ' report the last error.
-    If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
 
 ''' <summary>   Handles the Auto Single toggle button. </summary>
 ''' <remarks>   In auto single we have the following settings:
@@ -472,7 +348,20 @@ Public Sub OnAutoSingleToggleButtonChange()
     If Me.AutoSingleToggleValue And This.ViewModel.ImmediateTriggerOptionExecutable And _
         Not Me.Measuring Then
     
-        Me.StartAutoSingle
+        This.UserSheet.DisplayStartDateTime
+        
+        Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
+        p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+        p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
+        p_mode.FrontInputs = DataView.ImmediateFrontInputsRequired
+        p_mode.SenseFunction = DataView.ImmediateSenseFunctionName
+        p_mode.BeepEnabled = False
+        p_mode.AutoIncrementChannel = False
+        p_mode.SingleRead = True
+        p_mode.channelnumber = This.UserSheet.SelectedChannelNumber
+
+        Me.LastCommandOutcome = This.ViewModel.StartMeasureCommand(p_mode, _
+            This.ReadingOffset, Me.LastCommandDetails)
         
     End If
     
@@ -490,7 +379,7 @@ err_Handler:
     
     ' report the last error.
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -502,10 +391,10 @@ End Sub
 ''' <value>   [Boolean] true if the command is executable. </value>
 Public Property Get AutoSingleToggleExecutable() As Boolean
     
-    If This.UserSampleSheet Is Nothing Then
+    If This.UserSheet Is Nothing Then
         AutoSingleToggleExecutable = This.AutoSingleToggleExecutable
     Else
-        AutoSingleToggleExecutable = This.UserSampleSheet.AutoSingleToggleExecutable
+        AutoSingleToggleExecutable = This.UserSheet.AutoSingleToggleExecutable
     End If
 
 End Property
@@ -516,8 +405,8 @@ Public Property Let AutoSingleToggleExecutable(ByVal a_value As Boolean)
     
     If Me.AutoSingleToggleExecutable <> a_value Then
         
-        If Not This.UserSampleSheet Is Nothing Then _
-            This.UserSampleSheet.AutoSingleToggleExecutable = a_value
+        If Not This.UserSheet Is Nothing Then _
+            This.UserSheet.AutoSingleToggleExecutable = a_value
 
         This.AutoSingleToggleExecutable = a_value
     End If
@@ -528,10 +417,10 @@ End Property
 ''' <value>   [Boolean] true if the command is active. </value>
 Public Property Get AutoSingleToggleValue() As Boolean
     
-    If This.UserSampleSheet Is Nothing Then
+    If This.UserSheet Is Nothing Then
         AutoSingleToggleValue = This.AutoSingleToggleValue
     Else
-        AutoSingleToggleValue = This.UserSampleSheet.AutoSingleToggleValue
+        AutoSingleToggleValue = This.UserSheet.AutoSingleToggleValue
     End If
 
 End Property
@@ -546,8 +435,8 @@ Public Property Let AutoSingleToggleValue(ByVal a_value As Boolean)
     
         If Me.AutoSingleToggleValue <> a_value Then
             
-            If Not This.UserSampleSheet Is Nothing Then _
-                This.UserSampleSheet.AutoSingleToggleValue = a_value
+            If Not This.UserSheet Is Nothing Then _
+                This.UserSheet.AutoSingleToggleValue = a_value
     
             This.AutoSingleToggleValue = a_value
         End If
@@ -555,84 +444,6 @@ Public Property Let AutoSingleToggleValue(ByVal a_value As Boolean)
     End If
     
 End Property
-
-''' <summary>   Starts external trigger monitoring in multiple readings mode. </summary>
-''' <remarks>   In manual scan we have the following settings:
-''' Auto Increment channel number: True;
-''' Front Inputs Required: True;
-''' Single Readings: False;
-''' Triggering Mode: External.
-''' </remarks>
-Public Sub StartManualScan()
-
-    Const p_procedureName As String = "StartManualScan"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    If This.ViewModel Is Nothing Then Exit Sub
-
-    This.UserSampleSheet.DisplayStartDateTime
-
-    This.ViewModel.TargetChannelNumber = 1
-    Me.AutoIncrementChannelNoEnabled = True
-    Me.FrontInputsRequired = True
-    Me.SingleReadEnabled = False
-    This.ViewModel.ReadingBeepEnabled = DataView.BeepAllowed
-    
-    ' next set external triggering triggering mode.
-    
-    If This.ViewModel.ExternalTriggerOptionExecutable Then
-        Me.LastCommandOutcome = This.ViewModel.ConfigureExternalTriggerReadingCommand(Me.LastCommandDetails)
-    Else
-        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " External trigger enable command not enabled."
-    End If
-    
-    If Me.LastCommandOutcome Then
-    
-        ' next start external trigger monitoring
-        ' this should wait for monitoring to commence or raise an error.
-        If This.ViewModel.StartMonitoringExecutable Then
-            This.ViewModel.StartMonitoringExternalTriggersCommand
-        Else
-            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-                " Start monitoring command not enabled."
-        End If
-    
-    End If
-           
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-    
-    ' report the last error.
-    If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' on error, stop monitoring
-    On Error Resume Next
-    
-    ' stop external trigger monitoring
-    ' this should wait for monitoring to stop
-    If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.StopMonitoringExternalTriggersCommand
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
 
 ''' <summary>   Stops external triggering monitoring. </summary>
 Public Sub StopManualTriggering()
@@ -664,7 +475,7 @@ err_Handler:
     
     ' report the last error.
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' on error, stop monitoring
     On Error Resume Next
@@ -699,8 +510,21 @@ Public Sub OnManualScanToggleButtonChange()
     If Me.ManualScanToggleValue And This.ViewModel.ExternalTriggerOptionExecutable And _
         Not This.Measuring Then
     
-        Me.StartManualScan
+        This.UserSheet.DisplayStartDateTime
         
+        Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
+        p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+        p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
+        p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
+        p_mode.SenseFunction = DataView.ExternalSenseFunctionName
+        p_mode.BeepEnabled = True
+        p_mode.AutoIncrementChannel = True
+        p_mode.SingleRead = False
+        p_mode.channelnumber = 1
+
+        Me.LastCommandOutcome = This.ViewModel.StartMonitoringCommand(DataView.TimerInterval, _
+            p_mode, This.ReadingOffset, Me.LastCommandDetails)
+
     ElseIf Not Me.ManualScanToggleValue And This.ViewModel.StopMonitoringExecutable And _
         This.Measuring Then
     
@@ -722,7 +546,7 @@ err_Handler:
     
     ' report the last error.
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' on error, stop monitoring
     On Error Resume Next
@@ -741,10 +565,10 @@ End Sub
 ''' <summary>   Gets the execution (Can Execute) status of the Manual Scan Toggle command. </summary>
 ''' <value>   [Boolean] true if the command is executable. </value>
 Public Property Get ManualScanToggleExecutable() As Boolean
-    If This.UserSampleSheet Is Nothing Then
+    If This.UserSheet Is Nothing Then
         ManualScanToggleExecutable = This.ManualScanToggleExecutable
     Else
-        ManualScanToggleExecutable = This.UserSampleSheet.ManualScanToggleExecutable
+        ManualScanToggleExecutable = This.UserSheet.ManualScanToggleExecutable
     End If
 End Property
 
@@ -753,8 +577,8 @@ End Property
 Public Property Let ManualScanToggleExecutable(ByVal a_value As Boolean)
     If Me.ManualScanToggleExecutable <> a_value Then
         
-        If Not This.UserSampleSheet Is Nothing Then _
-            This.UserSampleSheet.ManualScanToggleExecutable = a_value
+        If Not This.UserSheet Is Nothing Then _
+            This.UserSheet.ManualScanToggleExecutable = a_value
 
         This.ManualScanToggleExecutable = a_value
     End If
@@ -764,10 +588,10 @@ End Property
 ''' <value>   [Boolean] true if the command is active. </value>
 Public Property Get ManualScanToggleValue() As Boolean
     
-    If This.UserSampleSheet Is Nothing Then
+    If This.UserSheet Is Nothing Then
         ManualScanToggleValue = This.ManualScanToggleValue
     Else
-        ManualScanToggleValue = This.UserSampleSheet.ManualScanToggleValue
+        ManualScanToggleValue = This.UserSheet.ManualScanToggleValue
     End If
 
 End Property
@@ -782,8 +606,8 @@ Public Property Let ManualScanToggleValue(ByVal a_value As Boolean)
     
         If Me.ManualScanToggleValue <> a_value Then
             
-            If Not This.UserSampleSheet Is Nothing Then _
-                This.UserSampleSheet.ManualScanToggleValue = a_value
+            If Not This.UserSheet Is Nothing Then _
+                This.UserSheet.ManualScanToggleValue = a_value
     
             This.ManualScanToggleValue = a_value
         End If
@@ -791,84 +615,6 @@ Public Property Let ManualScanToggleValue(ByVal a_value As Boolean)
     End If
     
 End Property
-
-''' <summary>   Start the Manual Single monitoring. </summary>
-''' <remarks>   In manual Single we have the following settings:
-''' Auto Increment channel number: False;
-''' Front Inputs Required = True;
-''' Single Readings: True;
-''' Triggering Mode: External.
-''' </remarks>
-Public Sub StartManualSingle()
-
-    Const p_procedureName As String = "StartManualSingle"
-    
-    ' Trap errors to the error handler
-    On Error GoTo err_Handler
-
-    If This.ViewModel Is Nothing Then Exit Sub
-
-    Me.SelectedChannelNumber = This.UserSampleSheet.SelectedChannelNumber
-    This.UserSampleSheet.DisplayStartDateTime
-    
-    Me.AutoIncrementChannelNoEnabled = False
-    Me.FrontInputsRequired = True
-    Me.SingleReadEnabled = True
-    This.ViewModel.ReadingBeepEnabled = DataView.BeepAllowed
-    
-    ' next set external triggering triggering mode.
-    
-    If This.ViewModel.ExternalTriggerOptionExecutable Then
-        Me.LastCommandOutcome = This.ViewModel.ConfigureExternalTriggerReadingCommand(Me.LastCommandDetails)
-    Else
-        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-            ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-            " External trigger enable command not enabled."
-    End If
-    
-    If Me.LastCommandOutcome Then
-    
-        ' next start external trigger monitoring
-        ' this should wait for monitoring to commence or raise an error.
-        If This.ViewModel.StartMonitoringExecutable Then
-            This.ViewModel.StartMonitoringExternalTriggersCommand
-        Else
-            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
-                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
-                " Start monitoring command not enabled."
-        End If
-    
-    End If
-        
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
-    
-    ' report the last error.
-    If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
-    
-    ' on error, stop monitoring
-    On Error Resume Next
-    
-    ' stop external trigger monitoring
-    ' this should wait for monitoring to stop
-    If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.StopMonitoringExternalTriggersCommand
-
-    ' exit this procedure (not an active handler)
-    On Error Resume Next
-    GoTo exit_Handler
-
-End Sub
 
 ''' <summary>   Handles the Manual Single toggle button. </summary>
 ''' <remarks>   In manual Single we have the following settings:
@@ -889,8 +635,21 @@ Public Sub OnManualSingleToggleButtonChange()
     If Me.ManualSingleToggleValue And This.ViewModel.ExternalTriggerOptionExecutable And _
         Not This.Measuring Then
     
-        Me.StartManualSingle
+        This.UserSheet.DisplayStartDateTime
         
+        Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
+        p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+        p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
+        p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
+        p_mode.SenseFunction = DataView.ExternalSenseFunctionName
+        p_mode.BeepEnabled = True
+        p_mode.AutoIncrementChannel = False
+        p_mode.SingleRead = True
+        p_mode.channelnumber = This.UserSheet.SelectedChannelNumber
+
+        Me.LastCommandOutcome = This.ViewModel.StartMonitoringCommand(DataView.TimerInterval, _
+            p_mode, This.ReadingOffset, Me.LastCommandDetails)
+
     ElseIf Not Me.ManualSingleToggleValue And This.ViewModel.StopMonitoringExecutable And _
         This.Measuring Then
     
@@ -912,7 +671,7 @@ err_Handler:
     
     ' report the last error.
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' on error, stop monitoring
     On Error Resume Next
@@ -932,10 +691,10 @@ End Sub
 ''' <summary>   Gets the execution (Can Execute) status of the Manual Single Toggle command. </summary>
 ''' <value>   [Boolean] true if the command is executable. </value>
 Public Property Get ManualSingleToggleExecutable() As Boolean
-    If This.UserSampleSheet Is Nothing Then
+    If This.UserSheet Is Nothing Then
         ManualSingleToggleExecutable = This.ManualSingleToggleExecutable
     Else
-        ManualSingleToggleExecutable = This.UserSampleSheet.ManualSingleToggleExecutable
+        ManualSingleToggleExecutable = This.UserSheet.ManualSingleToggleExecutable
     End If
 End Property
 
@@ -944,8 +703,8 @@ End Property
 Public Property Let ManualSingleToggleExecutable(ByVal a_value As Boolean)
     If Me.ManualSingleToggleExecutable <> a_value Then
     
-        If Not This.UserSampleSheet Is Nothing Then _
-            This.UserSampleSheet.ManualSingleToggleExecutable = a_value
+        If Not This.UserSheet Is Nothing Then _
+            This.UserSheet.ManualSingleToggleExecutable = a_value
 
         This.ManualSingleToggleExecutable = a_value
     End If
@@ -955,10 +714,10 @@ End Property
 ''' <value>   [Boolean] true if the command is active. </value>
 Public Property Get ManualSingleToggleValue() As Boolean
     
-    If This.UserSampleSheet Is Nothing Then
+    If This.UserSheet Is Nothing Then
         ManualSingleToggleValue = This.ManualSingleToggleValue
     Else
-        ManualSingleToggleValue = This.UserSampleSheet.ManualSingleToggleValue
+        ManualSingleToggleValue = This.UserSheet.ManualSingleToggleValue
     End If
 
 End Property
@@ -973,8 +732,8 @@ Public Property Let ManualSingleToggleValue(ByVal a_value As Boolean)
     
         If Me.ManualSingleToggleValue <> a_value Then
         
-            If Not This.UserSampleSheet Is Nothing Then _
-                This.UserSampleSheet.ManualSingleToggleValue = a_value
+            If Not This.UserSheet Is Nothing Then _
+                This.UserSheet.ManualSingleToggleValue = a_value
     
             This.ManualSingleToggleValue = a_value
         End If
@@ -995,8 +754,6 @@ End Property
 Public Property Let AutoIncrementChannelNoEnabled(ByVal a_value As Boolean)
     If This.AutoIncrementChannelNoEnabled <> a_value Then
         This.AutoIncrementChannelNoEnabled = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.AutoIncrementChannelNoEnabled = a_value
     End If
 End Property
 
@@ -1096,7 +853,7 @@ Public Function TryParseSelectedChannelNumber(ByVal a_value As String, ByRef a_d
   
     Else
     
-        p_channelNo = VBA.CInt(Mid$(a_value, 2))
+        p_channelNo = VBA.CInt(Mid$(a_value, VBA.Len(This.ChannelNumberCaptionPrefix) + 1))
         
         If Not Me.IsValidChannelNumber(p_channelNo) Then
         
@@ -1135,11 +892,8 @@ Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
         If Me.IsValidChannelNumber(a_value) Then _
             Me.SelectedChannelNumberCaption = This.ChannelNumberCaptionPrefix & VBA.CStr(a_value)
         
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SelectedChannelNumber = a_value
-        
-        If Not This.UserSampleSheet Is Nothing Then _
-            This.UserSampleSheet.SelectedChannelNumber = a_value
+        If Not This.UserSheet Is Nothing Then _
+            This.UserSheet.SelectedChannelNumber = a_value
 
     End If
 
@@ -1157,8 +911,6 @@ End Property
 Public Property Let SingleReadEnabled(ByVal a_value As Boolean)
     If This.SingleReadEnabled <> a_value Then
         This.SingleReadEnabled = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.SingleReadEnabled = a_value
     End If
 End Property
 
@@ -1230,6 +982,18 @@ Friend Sub OnMeasurementStateChanged()
 
 End Sub
 
+''' <summary>   Gets the Channel Number Caption Prefix. </summary>
+''' <value>   [String]. </value>
+Public Property Get ChannelNumberCaptionPrefix() As String
+    ChannelNumberCaptionPrefix = This.ChannelNumberCaptionPrefix
+End Property
+
+''' <summary>   Sets the Channel Number Caption Prefix. </summary>
+''' <param name="a_value">   [String] the Channel Number Caption Prefix. </value>
+Public Property Let ChannelNumberCaptionPrefix(ByVal a_value As String)
+    This.ChannelNumberCaptionPrefix = a_value
+End Property
+
 ''' <summary>   Gets the Last Command Details. </summary>
 ''' <value>   [String]. </value>
 Public Property Get LastCommandDetails() As String
@@ -1290,8 +1054,6 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.ReadingOffset = This.ViewModel.ReadingOffset
         Case "Connected"
             Me.Connected = This.ViewModel.Connected
-        Case "DesignMode"
-            Me.DesignMode = This.ViewModel.DesignMode
     End Select
     
 End Sub
@@ -1306,7 +1068,8 @@ Friend Sub Synchronize()
     Const p_procedureName = "Synchronize"
 
     ' set the view model settings that come from the ViewModel user interface
-    Me.ReadingOffset = This.UserSampleSheet.InitialResistance
+    Me.ReadingOffset = This.UserSheet.InitialResistance
+    Me.ChannelNumberCaptionPrefix = This.UserSheet.ChannelNumberCaptionPrefix
     
     This.ViewModel.ReadingOffset = This.ReadingOffset
 
@@ -1357,7 +1120,7 @@ err_Handler:
     
     ' display the error message
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1399,7 +1162,7 @@ err_Handler:
     
     ' display the error message
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next
@@ -1437,7 +1200,7 @@ err_Handler:
     
     ' display the error message
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.LastErrorMessage = cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
     
     ' exit this procedure (not an active handler)
     On Error Resume Next

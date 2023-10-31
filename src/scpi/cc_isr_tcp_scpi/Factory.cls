@@ -33,6 +33,11 @@ Public Function NewK2700ViewModel() As K2700ViewModel
     Set NewK2700ViewModel = New K2700ViewModel
 End Function
 
+''' <summary>   Instantiates the <see cref="cc_isr_Tcp_Scpi.MeasureMode"/> object. </summary>
+''' <returns>   [<see cref="cc_isr_Tcp_Scpi.MeasureMode"/>]. </returns>
+Public Function NewMeasureMode() As cc_isr_Tcp_Scpi.MeasureMode
+    Set NewMeasureMode = New cc_isr_Tcp_Scpi.MeasureMode
+End Function
 
 ''' <summary>   Instantiates the <see cref="ScpiSystem"/> object. </summary>
 ''' <returns>   [<see cref="ScpiSystem"/>]. </returns>
