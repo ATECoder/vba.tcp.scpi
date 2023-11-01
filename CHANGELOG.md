@@ -1,10 +1,14 @@
 # Change log
 All notable changes to these libraries will be documented in this file in a format based on [Keep a Change log]
 
-## [1.0.8704] - 2023-10-29
+## [1.0.8705] - 2023-11-01
+* 
+
+## [1.0.8704] - 2023-10-31
 * Add delays to the write and query line methods.
 * Fix the query inputs method by prefixing the message with *OPC.
 * Fix how measurements are propagated from the view model.
+* Update the sheets and views.
 * Not tested.
 
 ## [1.0.8702] - 2023-10-29

@@ -32,9 +32,10 @@ Private Type this_
     ChannelNumber As Integer
     FrontInputs As Boolean
     Mode As cc_isr_Tcp_Scpi.MeasurementModeOption
+    ReadingOffset As Double
     SenseFunction As String
-    TimerInterval As Integer
     SingleRead As Boolean
+    TimerInterval As Integer
 End Type
 
 Private This As this_
@@ -62,7 +63,6 @@ End Property
 Public Property Let BeepEnabled(ByVal a_value As Boolean)
     This.BeepEnabled = a_value
 End Property
-
 
 ''' <summary>   Gets the Channel Number. </summary>
 ''' <value>   [Integer]. </value>
@@ -102,6 +102,20 @@ Public Property Let Mode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementModeOption)
     This.Mode = a_value
 End Property
 
+''' <summary>   Gets the Reading Offset representing, for example,
+''' the probe resistance of voltage bias. </summary>
+''' <value>   [Double]. </value>
+Public Property Get ReadingOffset() As Double
+    ReadingOffset = This.ReadingOffset
+End Property
+
+''' <summary>   Sets the Reading Offset representing, for example,
+''' the probe resistance of voltage bias. </summary>
+''' <param name="a_value">   [Double] the Reading Offset. </value>
+Public Property Let ReadingOffset(ByVal a_value As Double)
+    This.ReadingOffset = a_value
+End Property
+
 ''' <summary>   Gets the name of the sense function. </summary>
 ''' <value>   [String]. </value>
 Public Property Get SenseFunction() As String
@@ -125,4 +139,17 @@ End Property
 Public Property Let SingleRead(ByVal a_value As Boolean)
     This.SingleRead = a_value
 End Property
+
+''' <summary>   Gets the Timer Interval. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get TimerInterval() As Integer
+    TimerInterval = This.TimerInterval
+End Property
+
+''' <summary>   Sets the Timer Interval. </summary>
+''' <param name="a_value">   [Integer] the Timer Interval value. </value>
+Public Property Let TimerInterval(ByVal a_value As Integer)
+    This.TimerInterval = a_value
+End Property
+
 

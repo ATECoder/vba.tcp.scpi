@@ -98,7 +98,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 1
+    RunTest 2
     AfterAll
 End Sub
 
@@ -186,7 +186,7 @@ Public Sub RunAllTests()
     This.PassedCount = 0
     This.FailedCount = 0
     This.InconclusiveCount = 0
-    This.TestCount = 16
+    This.TestCount = 6
     Dim p_testNumber As Integer
     For p_testNumber = 1 To This.TestCount
         Set p_outcome = RunTest(p_testNumber)
@@ -262,11 +262,28 @@ Public Sub BeforeAll()
     ' but after the observer setting are set. The observer initial
     ' settings are then applied to the view model.
     Set This.Observer = K2700Observer.Initialize(This.ViewModel)
-    Set This.DataView = DataView.Initialize(This.ViewModel)
-    Set This.UserView = UserView.Initialize(This.ViewModel)
+    Dim a_dataSheet As DataSheet
+    Set a_dataSheet = DataSheet.Initialize(This.ViewModel)
+    Set This.DataView = DataView.Instance
+    Set This.UserView = UserView.Instance
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreNotEqual(0, This.DataView.GpibLanControllerPort, _
+            "Data view GPIB Lan Controller Port must be non-zero.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.DataView.GpibLanControllerPort, _
+            This.ViewModel.Session.GpibLanControllerPort, _
+            "Data view and Session should define the same GPIB Lan Controller Port.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreNotEqual(VBA.vbNullString, _
+            This.DataView.ChannelNumberCaptionPrefix, _
+            "Data view channel number caption prefix must not be empty.")
     
     ' issue the open connection command. This initializes the view model.
-    This.ViewModel.OpenConnectionCommand This.DataView.SocketAddress, This.DataView.SessionTimeout
+    If p_outcome.AssertSuccessful Then _
+        This.ViewModel.OpenConnectionCommand This.DataView.SocketAddress, This.DataView.SessionTimeout
     
     If This.ViewModel.Connected Then
         Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Primed to run all tests; K2700 View Model is connected.")
@@ -964,7 +981,7 @@ Public Function AssertImmediateModeShouldConfigure(ByVal a_mode As cc_isr_Tcp_Sc
             "View Model should be read the bottom card function scan list.")
     
     If p_outcome.AssertSuccessful Then
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.channelnumber, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.ChannelNumber, _
             This.ViewModel.SelectedChannelNumber, _
             "View model selected channelnumber should equal the expected value.")
     End If
@@ -990,14 +1007,14 @@ Public Function AssertImmediateModeShouldConfigure(ByVal a_mode As cc_isr_Tcp_Sc
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsValue, _
             This.Observer.FrontInputsValue, _
-            "Observer Front inputs state should equal view model inputs state for external trigger reading mode.")
+            "Observer Front inputs state should equal view model inputs state for immediate trigger reading mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
         
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, _
             This.UserView.FrontInputsRequired, _
-            "User View Front inputs state should equal view model inputs state for external trigger reading mode.")
+            "User View Front inputs state should equal view model inputs state for immediate trigger reading mode.")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -3603,13 +3620,15 @@ Public Function TestImmediateModeShouldConfigure() As cc_isr_Test_Fx.Assert
     
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
-    p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
-    p_mode.FrontInputs = DataView.ImmediateFrontInputsRequired
-    p_mode.SenseFunction = DataView.ImmediateSenseFunctionName
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = False
+    p_mode.ChannelNumber = This.UserView.SelectedChannelNumber
+    p_mode.FrontInputs = This.DataView.ImmediateFrontInputsRequired
+    p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
+    p_mode.ReadingOffset = This.UserView.ReadingOffset
+    p_mode.SenseFunction = This.DataView.ImmediateSenseFunctionName
     p_mode.SingleRead = True
-    p_mode.channelnumber = This.UserView.SelectedChannelNumber
+    p_mode.TimerInterval = This.DataView.TimerInterval
     
     ' start the immediate trigger reading mode
     
@@ -3685,13 +3704,15 @@ Public Function TestExternalModeShouldConfigure() As cc_isr_Test_Fx.Assert
     
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
-    p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
-    p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
-    p_mode.SenseFunction = DataView.ExternalSenseFunctionName
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = True
+    p_mode.ChannelNumber = 1
+    p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
+    p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
+    p_mode.ReadingOffset = This.UserView.ReadingOffset
+    p_mode.SenseFunction = This.DataView.ExternalSenseFunctionName
     p_mode.SingleRead = False
-    p_mode.channelnumber = 1
+    p_mode.TimerInterval = This.DataView.TimerInterval
     
     ' start the external trigger reading mode
     
@@ -3919,13 +3940,15 @@ Public Function AssetTriggersShouldPoll(ByVal a_mode As cc_isr_Tcp_Scpi.MeasureM
     
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
-    p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
-    p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
-    p_mode.SenseFunction = DataView.ExternalSenseFunctionName
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = True
+    p_mode.ChannelNumber = 1
+    p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
+    p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
+    p_mode.ReadingOffset = This.UserView.ReadingOffset
+    p_mode.SenseFunction = This.DataView.ExternalSenseFunctionName
     p_mode.SingleRead = False
-    p_mode.channelnumber = 1
+    p_mode.TimerInterval = This.DataView.TimerInterval
     
     ' start the external trigger mode
     
@@ -3992,13 +4015,15 @@ Public Function TestTriggerPollingShouldStartStop() As cc_isr_Test_Fx.Assert
     
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
-    p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
-    p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
-    p_mode.SenseFunction = DataView.ExternalSenseFunctionName
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = False
+    p_mode.ChannelNumber = This.UserView.SelectedChannelNumber
+    p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
+    p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
+    p_mode.ReadingOffset = This.UserView.ReadingOffset
+    p_mode.SenseFunction = This.DataView.ExternalSenseFunctionName
     p_mode.SingleRead = True
-    p_mode.channelnumber = This.UserView.SelectedChannelNumber
+    p_mode.TimerInterval = This.DataView.TimerInterval
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = AssetTriggersShouldPoll(p_mode, p_outcome, p_enabled, p_duration)
@@ -4082,13 +4107,15 @@ Public Function TestTriggerPollingShouldRead() As cc_isr_Test_Fx.Assert
     
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
-    p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
-    p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
-    p_mode.SenseFunction = DataView.ExternalSenseFunctionName
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = False
+    p_mode.ChannelNumber = This.UserView.SelectedChannelNumber
+    p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
+    p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
+    p_mode.ReadingOffset = This.UserView.ReadingOffset
+    p_mode.SenseFunction = This.DataView.ExternalSenseFunctionName
     p_mode.SingleRead = True
-    p_mode.channelnumber = This.UserView.SelectedChannelNumber
+    p_mode.TimerInterval = This.DataView.TimerInterval
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = AssetTriggersShouldPoll(p_mode, p_outcome, p_enabled, p_duration)
@@ -4151,13 +4178,15 @@ Public Function AssetTriggersShouldMonitor(ByVal a_timerInterval As Integer, _
     
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
-    p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
-    p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
-    p_mode.SenseFunction = DataView.ExternalSenseFunctionName
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = True
+    p_mode.ChannelNumber = 1
+    p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
+    p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
+    p_mode.ReadingOffset = This.UserView.ReadingOffset
+    p_mode.SenseFunction = This.DataView.ExternalSenseFunctionName
     p_mode.SingleRead = False
-    p_mode.channelnumber = 1
+    p_mode.TimerInterval = This.DataView.TimerInterval
     
     ' start the external trigger mode
     
@@ -4225,13 +4254,15 @@ Public Function TestTriggerMonitoringShouldStartStop() As cc_isr_Test_Fx.Assert
     
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
-    p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
-    p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
-    p_mode.SenseFunction = DataView.ExternalSenseFunctionName
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = False
+    p_mode.ChannelNumber = This.UserView.SelectedChannelNumber
+    p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
+    p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
+    p_mode.ReadingOffset = This.UserView.ReadingOffset
+    p_mode.SenseFunction = This.DataView.ExternalSenseFunctionName
     p_mode.SingleRead = True
-    p_mode.channelnumber = This.UserView.SelectedChannelNumber
+    p_mode.TimerInterval = This.DataView.TimerInterval
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = AssetTriggersShouldMonitor(p_timerInterval, p_mode, _
@@ -4303,13 +4334,15 @@ Public Function TestTriggerMonitoringShouldRead() As cc_isr_Test_Fx.Assert
     
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
-    p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
-    p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
-    p_mode.SenseFunction = DataView.ExternalSenseFunctionName
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = False
+    p_mode.ChannelNumber = This.UserView.SelectedChannelNumber
+    p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
+    p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
+    p_mode.ReadingOffset = This.UserView.ReadingOffset
+    p_mode.SenseFunction = This.DataView.ExternalSenseFunctionName
     p_mode.SingleRead = True
-    p_mode.channelnumber = This.UserView.SelectedChannelNumber
+    p_mode.TimerInterval = This.DataView.TimerInterval
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = AssetTriggersShouldMonitor(p_timerInterval, p_mode, p_outcome, p_enabled, p_duration)

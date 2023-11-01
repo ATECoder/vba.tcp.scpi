@@ -2,15 +2,12 @@
 
 ## GIT
 
-
-IEEE488:
-Add delay to write and query line methods.
-Add tests passed.
-
 SCPI:
-Add delay to the inputs query.
-Add *opc to the inputs query.
-
+Add timer interval and reading offset to the measure mode class.
+Validate setting of the GPIB-Lan port.
+Correct unit tests code.
+Use the data sheet to initialize the views.
+Passed first 6 view model tests.
 
 ## TODO
 

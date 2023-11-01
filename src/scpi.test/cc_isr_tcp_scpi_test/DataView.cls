@@ -117,8 +117,15 @@ err_Handler:
     
 End Sub
 
+''' <summary>   Returns this instance. </summary>
+''' <value>   [<see cref="DataView"/>]. </value>
+Public Property Get Instance() As DataView
+    Set Instance = Me
+End Property
+
 ''' <summary>   Initialize this object. </summary>
-Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As DataView
+''' <returns>   [<see cref="DataView"/>]. </returns>
+Public Function Initialize(ByVal a_viewModel As K2700ViewModel, a_dataSheet As DataSheet) As DataView
 
     Const p_procedureName = "Initialize"
     
@@ -127,9 +134,9 @@ Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As DataView
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Set This.DataSheet = DataSheet.Initialize(a_viewModel)
-    
     Set This.ViewModel = a_viewModel
+    
+    Set This.DataSheet = a_dataSheet
     
     Me.Synchronize
     
@@ -926,7 +933,7 @@ Friend Sub Synchronize()
     ' Me.BeepAllowed = This.DataSheet.BeepAllowed
     
     ' This.ViewModel.SocketAddress = This.SocketAddress
-    This.ViewModel.GpibLanControllerPort = This.GpibLanControllerPort
+    This.ViewModel.GpibLanControllerPort = Me.GpibLanControllerPort
     ' This.ViewModel.SessionTimeout = Me.SessionTimeout
     ' This.ViewModel.TimerInterval = Me.TimerInterval
     ' This.ViewModel.MaximumChannelNumber = Me.MaximumChannelNumber

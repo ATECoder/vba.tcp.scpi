@@ -20,6 +20,7 @@ Private Type this_
 
     ViewModel As K2700ViewModel
     UserSheet As UserSheet
+    DataSheet As DataSheet
     DesignMode As Boolean
     
     Connected As Boolean
@@ -82,6 +83,7 @@ Public Sub Dispose()
     On Error GoTo err_Handler
     
     Set This.UserSheet = Nothing
+    Set This.DataSheet = Nothing
     
     Set m_viewModel = Nothing
     
@@ -109,8 +111,15 @@ err_Handler:
     
 End Sub
 
+''' <summary>   Returns this instance. </summary>
+''' <value>   [<see cref="UserView"/>]. </value>
+Public Property Get Instance() As UserView
+    Set Instance = Me
+End Property
+
 ''' <summary>   Initialize this object. </summary>
-Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As UserView
+''' <returns>   [<see cref="UserView"/>]. </returns>
+Public Function Initialize(ByVal a_viewModel As K2700ViewModel, ByVal a_dataSheet As DataSheet) As UserView
 
     Const p_procedureName = "Initialize"
 
@@ -119,9 +128,10 @@ Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As UserView
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Set This.UserSheet = UserSheet.Initialize()
-    
     Set This.ViewModel = a_viewModel
+    
+    Set This.UserSheet = UserSheet.Initialize()
+    Set This.DataSheet = a_dataSheet
     
     Me.Synchronize
     
@@ -227,16 +237,17 @@ Public Sub OnAutoScanToggleButtonChange()
         
         Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
         Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
-        p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
-        p_mode.FrontInputs = DataView.ImmediateFrontInputsRequired
-        p_mode.SenseFunction = DataView.ImmediateSenseFunctionName
-        p_mode.BeepEnabled = False
         p_mode.AutoIncrementChannel = True
+        p_mode.BeepEnabled = False
+        p_mode.ChannelNumber = 1
+        p_mode.FrontInputs = This.DataSheet.ImmediateFrontInputsRequired
+        p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
+        p_mode.ReadingOffset = Me.ReadingOffset
+        p_mode.SenseFunction = This.DataSheet.ImmediateSenseFunctionName
         p_mode.SingleRead = False
-        p_mode.channelnumber = 1
+        p_mode.TimerInterval = This.DataSheet.TimerInterval
         
-        Me.LastCommandOutcome = This.ViewModel.StartMeasureCommand(p_mode, _
-            This.ReadingOffset, Me.LastCommandDetails)
+        Me.LastCommandOutcome = This.ViewModel.StartMeasureCommand(p_mode, Me.LastCommandDetails)
     
     End If
     
@@ -346,16 +357,17 @@ Public Sub OnAutoSingleToggleButtonChange()
         
         Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
         Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
-        p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
-        p_mode.FrontInputs = DataView.ImmediateFrontInputsRequired
-        p_mode.SenseFunction = DataView.ImmediateSenseFunctionName
-        p_mode.BeepEnabled = False
         p_mode.AutoIncrementChannel = False
+        p_mode.BeepEnabled = False
+        p_mode.ChannelNumber = This.UserSheet.SelectedChannelNumber
+        p_mode.FrontInputs = This.DataSheet.ImmediateFrontInputsRequired
+        p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
+        p_mode.ReadingOffset = Me.ReadingOffset
+        p_mode.SenseFunction = This.DataSheet.ImmediateSenseFunctionName
         p_mode.SingleRead = True
-        p_mode.channelnumber = This.UserSheet.SelectedChannelNumber
+        p_mode.TimerInterval = This.DataSheet.TimerInterval
 
-        Me.LastCommandOutcome = This.ViewModel.StartMeasureCommand(p_mode, _
-            This.ReadingOffset, Me.LastCommandDetails)
+        Me.LastCommandOutcome = This.ViewModel.StartMeasureCommand(p_mode, Me.LastCommandDetails)
         
     End If
     
@@ -506,16 +518,17 @@ Public Sub OnManualScanToggleButtonChange()
         
         Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
         Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
-        p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
-        p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
-        p_mode.SenseFunction = DataView.ExternalSenseFunctionName
-        p_mode.BeepEnabled = True
         p_mode.AutoIncrementChannel = True
+        p_mode.BeepEnabled = True
+        p_mode.ChannelNumber = 1
+        p_mode.FrontInputs = This.DataSheet.ExternalFrontInputsRequired
+        p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
+        p_mode.ReadingOffset = Me.ReadingOffset
+        p_mode.SenseFunction = This.DataSheet.ExternalSenseFunctionName
         p_mode.SingleRead = False
-        p_mode.channelnumber = 1
+        p_mode.TimerInterval = This.DataSheet.TimerInterval
 
-        Me.LastCommandOutcome = This.ViewModel.StartMonitoringCommand(DataView.TimerInterval, _
-            p_mode, This.ReadingOffset, Me.LastCommandDetails)
+        Me.LastCommandOutcome = This.ViewModel.StartMonitoringCommand(p_mode, Me.LastCommandDetails)
 
     ElseIf Not Me.ManualScanToggleValue And This.ViewModel.StopMonitoringExecutable And _
         This.Measuring Then
@@ -629,16 +642,17 @@ Public Sub OnManualSingleToggleButtonChange()
         
         Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
         Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
-        p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
-        p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
-        p_mode.SenseFunction = DataView.ExternalSenseFunctionName
-        p_mode.BeepEnabled = True
         p_mode.AutoIncrementChannel = False
+        p_mode.BeepEnabled = True
+        p_mode.ChannelNumber = This.UserSheet.SelectedChannelNumber
+        p_mode.FrontInputs = This.DataSheet.ExternalFrontInputsRequired
+        p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
+        p_mode.ReadingOffset = Me.ReadingOffset
+        p_mode.SenseFunction = This.DataSheet.ExternalSenseFunctionName
         p_mode.SingleRead = True
-        p_mode.channelnumber = This.UserSheet.SelectedChannelNumber
+        p_mode.TimerInterval = This.DataSheet.TimerInterval
 
-        Me.LastCommandOutcome = This.ViewModel.StartMonitoringCommand(DataView.TimerInterval, _
-            p_mode, This.ReadingOffset, Me.LastCommandDetails)
+        Me.LastCommandOutcome = This.ViewModel.StartMonitoringCommand(p_mode, Me.LastCommandDetails)
 
     ElseIf Not Me.ManualSingleToggleValue And This.ViewModel.StopMonitoringExecutable And _
         This.Measuring Then
@@ -1041,7 +1055,7 @@ Friend Sub Synchronize()
     ' Me.ReadingOffset = This.UserSheet.InitialResistance
     ' Me.ChannelNumberCaptionPrefix = This.UserSheet.ChannelNumberCaptionPrefix
     
-    ' This.ViewModel.ReadingOffset = This.ReadingOffset
+    ' This.ViewModel.ReadingOffset = Me.ReadingOffset
 
     ' Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
     ' Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired

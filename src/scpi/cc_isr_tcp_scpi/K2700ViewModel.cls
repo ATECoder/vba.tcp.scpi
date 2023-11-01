@@ -3898,6 +3898,10 @@ Friend Function TryConfigureMeasure(ByVal a_mode As cc_isr_Tcp_Scpi.MeasureMode,
     
         ' set the sense function
         Me.SenseFunctionName = a_mode.SenseFunction
+        Me.SingleReadEnabled = a_mode.SingleRead
+        Me.AutoIncrementChannelNoEnabled = a_mode.AutoIncrementChannel
+        Me.ReadingBeepEnabled = a_mode.BeepEnabled
+        Me.TimerInterval = a_mode.TimerInterval
         
         If a_mode.SingleRead Then
             Me.SelectedChannelNumber = a_mode.ChannelNumber
@@ -4919,12 +4923,10 @@ End Property
 ''' Single Readings: False;
 ''' Triggering Mode: Immediate.
 ''' </remarks>
-''' <param name="a_mode">            [<see cref="cc_isr_Tcp_Scpi.MeasureMode"/>] the measure configuration. </param>
-''' <param name="a_readingOffset">   [Double] the Reading Offset value. </value>
-''' <param name="a_details">         [Out, String] Details the failure information if any. </param>
+''' <param name="a_mode">      [<see cref="cc_isr_Tcp_Scpi.MeasureMode"/>] the measure configuration. </param>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean] True if the command succeeded. </returns>
 Public Function StartMeasureCommand(ByVal a_mode As cc_isr_Tcp_Scpi.MeasureMode, _
-    ByVal a_readingOffset As Double, _
     ByRef a_details As String) As Boolean
 
     Const p_procedureName As String = "StartMeasureCommand"
@@ -4944,7 +4946,7 @@ Public Function StartMeasureCommand(ByVal a_mode As cc_isr_Tcp_Scpi.MeasureMode,
     
         If Me.MeasureExecutable Then
             ' make an immediate measure of one or all channels.
-            p_success = Me.MeasureImmediatelyCommand(a_readingOffset, p_details)
+            p_success = Me.MeasureImmediatelyCommand(a_mode.ReadingOffset, p_details)
         Else
             cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
                 ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
@@ -4989,14 +4991,10 @@ End Function
 ''' Single Readings: False;
 ''' Triggering Mode: External.
 ''' </remarks>
-''' <param name="a_timerInterval">   [Integer] the timer interval; 0 if contolled with polling for unit testing. </value>
-''' <param name="a_mode">            [<see cref="cc_isr_Tcp_Scpi.MeasureMode"/>] the measure configuration. </param>
-''' <param name="a_readingOffset">   [Double] the Reading Offset value. </value>
-''' <param name="a_details">         [Out, String] Details the failure information if any. </param>
+''' <param name="a_mode">      [<see cref="cc_isr_Tcp_Scpi.MeasureMode"/>] the measure configuration. </param>
+''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean] True if the command succeeded. </returns>
-Public Function StartMonitoringCommand(ByVal a_timerInterval As Integer, _
-    ByVal a_mode As cc_isr_Tcp_Scpi.MeasureMode, _
-    ByVal a_readingOffset As Double, _
+Public Function StartMonitoringCommand(ByVal a_mode As cc_isr_Tcp_Scpi.MeasureMode, _
     a_details As String) As Boolean
 
     Const p_procedureName As String = "StartMonitoringCommand"
@@ -5015,7 +5013,7 @@ Public Function StartMonitoringCommand(ByVal a_timerInterval As Integer, _
         ' next start external trigger monitoring
         ' this should wait for monitoring to commence or raise an error.
         If Me.StartMonitoringExecutable Then
-            Me.StartMonitoringExternalTriggersCommand a_readingOffset, a_timerInterval
+            Me.StartMonitoringExternalTriggersCommand a_mode.ReadingOffset, a_mode.TimerInterval
         Else
             cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
                 ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _

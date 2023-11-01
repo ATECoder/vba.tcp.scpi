@@ -436,13 +436,15 @@ Public Sub OnExternalTriggerOptionChange(ByVal a_value As Boolean)
         
             Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
             Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
-            p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
-            p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
-            p_mode.SenseFunction = DataView.ExternalSenseFunctionName
             p_mode.BeepEnabled = True
             p_mode.AutoIncrementChannel = False
+            p_mode.ChannelNumber = This.SelectedChannelNumber
+            p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
+            p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
+            p_mode.ReadingOffset = UserView.ReadingOffset
+            p_mode.SenseFunction = DataView.ExternalSenseFunctionName
             p_mode.SingleRead = True
-            p_mode.channelnumber = This.SelectedChannelNumber
+            p_mode.TimerInterval = DataView.TimerInterval
         
             Me.LastCommandOutcome = This.ViewModel.ConfigureMeasureCommand(p_mode, Me.LastCommandDetails)
         End If
@@ -464,14 +466,16 @@ Public Sub OnImmediateTriggerOptionChange(ByVal a_value As Boolean)
             
             Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
             Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
-            p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
-            p_mode.FrontInputs = DataView.ImmediateFrontInputsRequired
-            p_mode.SenseFunction = DataView.ImmediateSenseFunctionName
-            p_mode.BeepEnabled = True
             p_mode.AutoIncrementChannel = False
+            p_mode.BeepEnabled = True
+            p_mode.ChannelNumber = This.SelectedChannelNumber
+            p_mode.FrontInputs = DataView.ImmediateFrontInputsRequired
+            p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
+            p_mode.ReadingOffset = UserView.ReadingOffset
+            p_mode.SenseFunction = DataView.ImmediateSenseFunctionName
             p_mode.SingleRead = True
-            p_mode.channelnumber = This.SelectedChannelNumber
-        
+            p_mode.TimerInterval = DataView.TimerInterval
+            
             Me.LastCommandOutcome = This.ViewModel.ConfigureMeasureCommand(p_mode, Me.LastCommandDetails)
         End If
     Else
@@ -1541,7 +1545,7 @@ Friend Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Chan
     On Error GoTo err_Handler
     
     Me.MeasuredReading = a_eventArgs.Reading
-    Me.MeasuredChannelNumber = a_eventArgs.channelnumber
+    Me.MeasuredChannelNumber = a_eventArgs.ChannelNumber
         
     Dim p_value As Double
     Dim p_details As String
@@ -1644,6 +1648,7 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
         Case "FrontInputsRequired"
             Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
         Case "FrontInputsValue"
+            Me.FrontInputsValue = This.ViewModel.FrontInputsValue
         Case "FrontInputsCaption"
             Me.FrontInputsCaption = This.ViewModel.FrontInputsCaption
         Case "SelectedChannelNumber"
@@ -1890,8 +1895,15 @@ End Sub
 ' Construction and cleanup
 ' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+''' <summary>    Gets the Initialization condition of this object. </summary>
+''' <value>   [Boolean] True if initialized. </value>
+Public Property Get Initialized() As Boolean
+    Initialized = Not This.ViewModel Is Nothing
+End Property
+
 ''' <summary>   Handles the Class Initialize event. </summary>
 Private Sub Class_Initialize()
+    This.GpibLanControllerPort = DataSheet.GpibLanControllerPort
     This.TopCard = VBA.vbNullString
 End Sub
 
@@ -1913,11 +1925,6 @@ Friend Function Initialize(ByVal a_viewModel As K2700ViewModel) As K2700Observer
     
     Set m_viewModel = a_viewModel
     
-    If Not This.Initialized Then
-    End If
-    
-    This.Initialized = True
-        
     Set Initialize = Me
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .

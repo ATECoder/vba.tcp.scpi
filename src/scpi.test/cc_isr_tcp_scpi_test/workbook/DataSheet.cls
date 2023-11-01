@@ -59,12 +59,19 @@ Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As DataSheet
     ' set the initial values that are provided by the user interface
     This.ChannelNumberCaptionPrefix = "ch"
     
-    If Not DataView.Initialized Then
-        ' initialize the views before initializing the view model
-        ' the view model gets initialized upon connecting.
-        DataView.Initialize a_viewModel
-        UserView.Initialize a_viewModel
+    If DataView.Initialized Then DataView.Dispose
+    If UserView.Initialized Then UserView.Dispose
+    
+    If DataView.Initialized Then
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & ".DataSheet." & p_procedureName, _
+            " Duplicate initiations."
     End If
+    
+    ' initialize the views before initializing the view model
+    ' the view model gets initialized upon connecting.
+    DataView.Initialize a_viewModel, Me
+    UserView.Initialize a_viewModel, Me
     
     Set Initialize = Me
 
