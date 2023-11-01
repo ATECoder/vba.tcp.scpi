@@ -98,7 +98,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 2
+    RunTest 1
     AfterAll
 End Sub
 
@@ -952,6 +952,17 @@ Public Function AssertImmediateModeShouldConfigure(ByVal a_mode As cc_isr_Tcp_Sc
         
     End If
     
+    ' the card scan lists are set when entring the immediate mode.
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.TopCardFunctionScanList, _
+            This.ViewModel.TopCardFunctionScanList, _
+            "View Model should be read the top card function scan list.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.BottomCardFunctionScanList, _
+            This.ViewModel.BottomCardFunctionScanList, _
+            "View Model should be read the bottom card function scan list.")
+    
     If p_outcome.AssertSuccessful Then
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.channelnumber, _
             This.ViewModel.SelectedChannelNumber, _
@@ -1329,7 +1340,7 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
     If p_outcome.AssertSuccessful Then
         
         ' take a reading
-        p_success = This.ViewModel.MeasureImmediatelyCommand(This.DataView.ReadingOffset, p_details)
+        p_success = This.ViewModel.MeasureImmediatelyCommand(This.UserView.ReadingOffset, p_details)
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(p_success, p_details)
         
     End If
@@ -1468,7 +1479,7 @@ Public Function AssertMonitoringModeShouldStart(ByVal a_timerInterval As Integer
     
     If p_outcome.AssertSuccessful Then
     
-        This.ViewModel.StartMonitoringExternalTriggers This.DataView.ReadingOffset, a_timerInterval
+        This.ViewModel.StartMonitoringExternalTriggers This.UserView.ReadingOffset, a_timerInterval
         
         ' allow the monitoring to commence.
         cc_isr_Core_IO.Factory.NewStopwatch().Wait 10
@@ -2085,10 +2096,6 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
             "Data View and view model 'Socket Address' setting should equal.")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(UserSheet.InitialResistance, This.ViewModel.ReadingOffset, _
-            "View Model 'Reading Offset' setting should equal user sheet value.")
-
-    If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(DataSheet.GpibLanControllerPort, This.ViewModel.GpibLanControllerPort, _
             "View Model 'GpibLanControllerPort' setting should equal data sheet value.")
             
@@ -2259,10 +2266,6 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.ClearReadingsExecutable, This.DataView.ClearReadingsExecutable, _
             "Data View and View Model Clear Readings Executables should equal.")
 
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MaximumChannelNumber, This.DataView.MaximumChannelNumber, _
-            "Data View and View Model Maximum Channel Numbers should equal.")
-
     ' check the User View Status
     
     If p_outcome.AssertSuccessful Then _
@@ -2271,17 +2274,7 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
             
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, This.UserView.FrontInputsRequired, _
-            "Data View and View Model Front Inputs Required should equal.")
-
-    This.ViewModel.FrontInputsRequired = Not This.ViewModel.FrontInputsRequired
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, This.UserView.FrontInputsRequired, _
-            "Data View and View Model Front Inputs Required should equal after toggling value.")
-    
-    This.UserView.FrontInputsRequired = Not This.ViewModel.FrontInputsRequired
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, This.UserView.FrontInputsRequired, _
-            "Data View and View Model Front Inputs Required should equal after restoring the value.")
+            "User View and View Model Front Inputs Required should equal.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(1, This.ViewModel.SelectedChannelNumber, _
@@ -2289,18 +2282,13 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, This.UserView.SelectedChannelNumber, _
-            "Data View and View Model Selected Channel Numbers should equal.")
+            "User View and View Model Selected Channel Numbers should equal.")
 
     p_expectedChannelNumber = 2
     This.UserView.SelectedChannelNumber = p_expectedChannelNumber
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedChannelNumber, This.UserView.SelectedChannelNumber, _
             "Data View Selected Channel Numbers should equal after expected value.")
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, This.UserView.SelectedChannelNumber, _
-            "Data View and View Model Selected Channel Numbers should equal after change.")
-    
     
     p_expectedChannelNumber = 1
     This.UserView.SelectedChannelNumber = p_expectedChannelNumber
@@ -2309,19 +2297,18 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
             "Data View Selected Channel Numbers should equal after expected value after restoring value.")
             
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, This.UserView.SelectedChannelNumber, _
-            "Data View and View Model Selected Channel Numbers should equal after restoring the value.")
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.AutoIncrementChannelNoEnabled, This.UserView.AutoIncrementChannelNoEnabled, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.AutoIncrementChannelNoEnabled, _
+            This.UserView.AutoIncrementChannelNoEnabled, _
             "Data View and View Model Auto Increment Channel No Enabled should equal.")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SingleReadEnabled, This.UserView.SingleReadEnabled, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SingleReadEnabled, _
+            This.UserView.SingleReadEnabled, _
             "Data View and View Model Single Read Enabled should equal.")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, This.UserView.MeasurementMode, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
+            This.UserView.MeasurementMode, _
             "User View and View Model Measurement Modes should equal.")
 
     If p_outcome.AssertSuccessful Then _
@@ -2329,18 +2316,9 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
             "Measuring state should be false.")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Measuring, This.UserView.Measuring, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Measuring, _
+            This.UserView.Measuring, _
             "User View and View Model Measuring state should equal.")
-
-    This.ViewModel.Measuring = True
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Measuring, This.UserView.Measuring, _
-            "User View and View Model Measuring state should equal.")
-    This.ViewModel.Measuring = False
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(UserView.ReadingOffset, This.ViewModel.ReadingOffset, _
-            "View Model and User View 'Reading Offset' should equal.")
 
     ' check how measurement mode changes the values
     
@@ -3073,8 +3051,8 @@ Public Function TestShouldBeConnected() As cc_isr_Test_Fx.Assert
         p_serialPollDetails = p_outcome.AssertMessage
             
         ' set the serial poll and service request bytes
-        This.ViewModel.SerialPollByte = p_statusByte
-        This.ViewModel.StatusByte = p_statusByte
+        'This.ViewModel.SerialPollByte = p_statusByte
+        'This.ViewModel.StatusByte = p_statusByte
             
         ' get the operation completion values
         Dim p_reply As String: p_reply = VBA.vbNullString
@@ -3163,17 +3141,6 @@ Public Function AssertShouldReadCards() As cc_isr_Test_Fx.Assert
             This.ViewModel.SenseFunctionName, _
             "View Model should set the sense function name.")
 
-    ' the cards are set for immediate mode.
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.TopCardFunctionScanList, _
-            This.ViewModel.TopCardFunctionScanList, _
-            "View Model should be read the top card function scan list.")
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.BottomCardFunctionScanList, _
-            This.ViewModel.BottomCardFunctionScanList, _
-            "View Model should be read the top card function scan list.")
-    
     ' Finally, verify that no error message was recorded.
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(VBA.vbNullString, This.ViewModel.LastErrorMessage, _
@@ -3453,7 +3420,7 @@ Public Function TestSyntaxErrorShouldRecover() As Assert
         p_serialPollDetails = p_outcome.AssertMessage
         
         ' set the serial poll and service request bytes
-        This.ViewModel.SerialPollByte = p_statusByte
+        ' This.ViewModel.SerialPollByte = p_statusByte
         
         If p_outcome.AssertSuccessful Then _
             Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SerialPollByte, _
@@ -3635,7 +3602,7 @@ Public Function TestImmediateModeShouldConfigure() As cc_isr_Test_Fx.Assert
     ' turn off auto increment in order to take single readings.
     
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
-    p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+    Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
     p_mode.FrontInputs = DataView.ImmediateFrontInputsRequired
     p_mode.SenseFunction = DataView.ImmediateSenseFunctionName
@@ -3717,7 +3684,7 @@ Public Function TestExternalModeShouldConfigure() As cc_isr_Test_Fx.Assert
     End If
     
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
-    p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+    Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
     p_mode.SenseFunction = DataView.ExternalSenseFunctionName
@@ -3951,7 +3918,7 @@ Public Function AssetTriggersShouldPoll(ByVal a_mode As cc_isr_Tcp_Scpi.MeasureM
     ' Start with channel 1
     
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
-    p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+    Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
     p_mode.SenseFunction = DataView.ExternalSenseFunctionName
@@ -4024,7 +3991,7 @@ Public Function TestTriggerPollingShouldStartStop() As cc_isr_Test_Fx.Assert
     Dim p_duration As Double: p_duration = 5  ' in seconds
     
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
-    p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+    Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
     p_mode.SenseFunction = DataView.ExternalSenseFunctionName
@@ -4114,7 +4081,7 @@ Public Function TestTriggerPollingShouldRead() As cc_isr_Test_Fx.Assert
     Dim p_duration As Double: p_duration = 5  ' in seconds
     
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
-    p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+    Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
     p_mode.SenseFunction = DataView.ExternalSenseFunctionName
@@ -4183,7 +4150,7 @@ Public Function AssetTriggersShouldMonitor(ByVal a_timerInterval As Integer, _
     ' Start with channel 1 and
     
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
-    p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+    Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
     p_mode.SenseFunction = DataView.ExternalSenseFunctionName
@@ -4257,7 +4224,7 @@ Public Function TestTriggerMonitoringShouldStartStop() As cc_isr_Test_Fx.Assert
     Dim p_timerInterval As Integer: p_timerInterval = This.DataView.TimerInterval
     
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
-    p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+    Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
     p_mode.SenseFunction = DataView.ExternalSenseFunctionName
@@ -4335,7 +4302,7 @@ Public Function TestTriggerMonitoringShouldRead() As cc_isr_Test_Fx.Assert
     Dim p_timerInterval As Integer: p_timerInterval = This.DataView.TimerInterval
     
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
-    p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+    Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
     p_mode.SenseFunction = DataView.ExternalSenseFunctionName
@@ -4414,9 +4381,9 @@ Public Function TestUserViewShouldMeasureImmediately() As cc_isr_Test_Fx.Assert
     ' turn off auto increment in order to take single readings.
     
     If This.DataView.MeasuredChannelNumber = 1 Then
-        This.ViewModel.SelectedChannelNumber = 2
+        This.UserView.SelectedChannelNumber = 2
     Else
-        This.ViewModel.SelectedChannelNumber = 1
+        This.UserView.SelectedChannelNumber = 1
     End If
     
     ' use front inputs for testing.

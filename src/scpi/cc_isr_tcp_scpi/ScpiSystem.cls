@@ -69,9 +69,13 @@ Public Sub BeeperEnabledSetter(ByVal a_value As Boolean)
 End Sub
 
 ''' <summary>   Query INPUTS switch (0=rear, 1=front). </summary>
+''' <remarks>   Prepending the command with the <c>*OPC</> reduced misreadings for the
+''' inputs switch state of the Keithley 2700 multimeter scanner instrument. </remarks>
+''' <param name="a_delay">   [Optional, Integer, 0] the millisecond duration to add to the
+'''                          <see cref="ReadAfterWriteDelay"/>. </param>
 ''' <value>   [Boolean] true if the inputs are set to the front panel. </value>
-Public Function QueryFrontSwitch() As Boolean
-    QueryFrontSwitch = "1" = This.Session.QueryLine(":SYST:FRSW?")
+Public Function QueryFrontSwitch(Optional ByVal a_delay As Integer = 0) As Boolean
+    QueryFrontSwitch = "1" = This.Session.QueryLine("*OPC;:SYST:FRSW?", a_delay)
 End Function
 
 ''' <summary>   Return to :SYST:PRES defaults. </summary>

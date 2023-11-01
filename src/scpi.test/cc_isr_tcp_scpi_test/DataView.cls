@@ -32,7 +32,6 @@ Private Type this_
     GpibLanControllerPort As Long
     MaximumChannelNumber As Integer
     MeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
-    ReadingOffset As Double
     BeepAllowed As Boolean
     SessionTimeout As Integer
     SocketAddress As String
@@ -255,24 +254,18 @@ End Sub
 ''' <summary>   Gets the execution (Can Execute) status of the Open Connection command. </summary>
 ''' <value>   [Boolean] true if the command is executable. </value>
 Public Property Get OpenConnectionExecutable() As Boolean
-    If This.DataSheet Is Nothing Then
-        OpenConnectionExecutable = This.OpenConnectionExecutable
-    Else
-        OpenConnectionExecutable = This.DataSheet.OpenConnectionExecutable
+    If Not This.DataSheet Is Nothing Then
+        This.OpenConnectionExecutable = This.DataSheet.OpenConnectionExecutable
     End If
+    OpenConnectionExecutable = This.OpenConnectionExecutable
 End Property
 
 ''' <summary>   Sets the execution (Can Execute) status of the Open Connection command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is executable. </param>
 Public Property Let OpenConnectionExecutable(ByVal a_value As Boolean)
-    If Me.OpenConnectionExecutable <> a_value Then
-        
-        If Not This.DataSheet Is Nothing Then _
-            This.DataSheet.OpenConnectionExecutable = a_value
-        
-        This.OpenConnectionExecutable = a_value
-    
-    End If
+    If Not This.DataSheet Is Nothing Then _
+        This.DataSheet.OpenConnectionExecutable = a_value
+    This.OpenConnectionExecutable = a_value
 End Property
 
 ''' <summary>   Handles the Close Connection button Click event. </summary>
@@ -316,34 +309,27 @@ End Sub
 ''' <summary>   Gets the execution (Can Execute) status of the Close Connection command. </summary>
 ''' <value>   [Boolean] true if the command is executable. </value>
 Public Property Get CloseConnectionExecutable() As Boolean
-    If This.DataSheet Is Nothing Then
-        CloseConnectionExecutable = This.CloseConnectionExecutable
-    Else
-        CloseConnectionExecutable = This.DataSheet.CloseConnectionExecutable
+    If Not This.DataSheet Is Nothing Then
+        This.CloseConnectionExecutable = This.DataSheet.CloseConnectionExecutable
     End If
+    CloseConnectionExecutable = This.CloseConnectionExecutable
 End Property
 
 ''' <summary>   Sets the execution (Can Execute) status of the Close Connection command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is executable. </param>
 Public Property Let CloseConnectionExecutable(ByVal a_value As Boolean)
-    If Me.CloseConnectionExecutable <> a_value Then
-        
-        If Not This.DataSheet Is Nothing Then _
-            This.DataSheet.CloseConnectionExecutable = a_value
-        
-        This.CloseConnectionExecutable = a_value
-    
-    End If
+    If Not This.DataSheet Is Nothing Then _
+        This.DataSheet.CloseConnectionExecutable = a_value
+    This.CloseConnectionExecutable = a_value
 End Property
 
 ''' <summary>   Gets the execution (Can Execute) status of the Clear Reading command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is executable. </param>
 Public Property Get ClearReadingsExecutable() As Boolean
-    If This.DataSheet.ClearReadingsButton Is Nothing Then
-        ClearReadingsExecutable = This.ClearReadingExecutable
-    Else
-        ClearReadingsExecutable = This.DataSheet.ClearReadingsButton.Enabled
+    If Not This.DataSheet Is Nothing Then
+        This.ClearReadingExecutable = This.DataSheet.ClearReadingsButton.Enabled
     End If
+    ClearReadingsExecutable = This.ClearReadingExecutable
 End Property
 
 ''' <summary>   Sets the execution (Can Execute) status of the Clear Reading command. </summary>
@@ -358,141 +344,156 @@ End Property
 ''' <summary>   Handles the Clear Messages Button Click Event. </summary>
 Public Sub OnClearMessages()
     If Not This.ViewModel Is Nothing Then
-        This.ViewModel.OnError VBA.vbNullString
-        This.ViewModel.LastMessage = VBA.vbNullString
+        This.ViewModel.ClearMessages
     End If
 End Sub
 
 ''' <summary>   Handles the Clear Messages Button Click Event. </summary>
 Public Sub OnClearReadings()
     If Not This.ViewModel Is Nothing Then
-        This.ViewModel.ClearReadingsCommand This.ReadingOffset
+        This.ViewModel.ClearReadingsCommand UserView.ReadingOffset, 1, This.MaximumChannelNumber
     End If
 End Sub
 
 ''' <summary>   Gets the primary GPIB address of the instrument. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get PrimaryGpibAddress() As Integer
+    If Not This.DataSheet Is Nothing Then
+        This.PrimaryGpibAddress = This.DataSheet.PrimaryGpibAddress
+    End If
     PrimaryGpibAddress = This.PrimaryGpibAddress
 End Property
 
 ''' <summary>   Sets the primary GPIB address of the instrument. </summary>
 ''' <param name="a_value">   [Integer] the primary GPIB address. </param>
 Public Property Let PrimaryGpibAddress(ByVal a_value As Integer)
-    If This.PrimaryGpibAddress <> a_value Then
-        This.PrimaryGpibAddress = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.GpibAddress = a_value
+    If Not This.DataSheet Is Nothing Then
+        ' read only: This.DataSheet.PrimaryGpibAddress = a_value
     End If
+    This.PrimaryGpibAddress = a_value
 End Property
 
 ''' <summary>   Gets the port number of the GPIB Lan controller. </summary>
 ''' <value>   [Long]. </value>
 Public Property Get GpibLanControllerPort() As Long
+    If Not This.DataSheet Is Nothing Then
+        This.GpibLanControllerPort = This.DataSheet.GpibLanControllerPort
+    End If
     GpibLanControllerPort = This.GpibLanControllerPort
 End Property
 
 ''' <summary>   Sets the port number of the GPIB Lan controller. </summary>
 ''' <param name="a_value">   [Long] the GPIB Lan controller port. </param>
 Public Property Let GpibLanControllerPort(ByVal a_value As Long)
-    If This.GpibLanControllerPort <> a_value Then
+    If Me.GpibLanControllerPort <> a_value Then
         This.GpibLanControllerPort = a_value
         If Not This.ViewModel Is Nothing Then _
             This.ViewModel.GpibLanControllerPort = a_value
+    End If
+    If Not This.DataSheet Is Nothing Then
+        ' read only: This.DataSheet.GpibLanControllerPort = a_value
     End If
 End Property
 
 ''' <summary>   Gets the maximum Channel Number. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get MaximumChannelNumber() As Integer
+    If Not This.DataSheet Is Nothing Then
+        This.MaximumChannelNumber = This.DataSheet.MaxResistanceCount
+    End If
     MaximumChannelNumber = This.MaximumChannelNumber
 End Property
 
 ''' <summary>   Sets the maximum Channel Number. </summary>
 ''' <param name="a_value">   [Integer] the maximum Channel Number value. </value>
 Public Property Let MaximumChannelNumber(ByVal a_value As Integer)
-    If This.MaximumChannelNumber <> a_value Then
-        This.MaximumChannelNumber = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.MaximumChannelNumber = a_value
+    If Not This.DataSheet Is Nothing Then
+        ' read only: This.DataSheet.MaxResistanceCount = a_value
     End If
-End Property
-
-''' <summary>   Gets the Reading Offset. </summary>
-''' <value>   [Boolean]. </value>
-Public Property Get ReadingOffset() As Double
-    ReadingOffset = This.ReadingOffset
-End Property
-
-''' <summary>   Sets the Reading Offset. </summary>
-''' <param name="a_value">   [Double] the Reading Offset value. </value>
-Public Property Let ReadingOffset(ByVal a_value As Double)
-    If This.ReadingOffset <> a_value Then
-        This.ReadingOffset = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ReadingOffset = a_value
-    End If
+    This.MaximumChannelNumber = a_value
 End Property
 
 ''' <summary>   Gets the instrument beep sound on each reading is enabled. </summary>
 ''' <remarks>   True if instrument beep sound on each reading is enabled. </remarks>
 ''' <value>   [Boolean]. </value>
 Public Property Get BeepAllowed() As Boolean
+    If Not This.DataSheet Is Nothing Then
+        This.BeepAllowed = This.DataSheet.BeepAllowed
+    End If
     BeepAllowed = This.BeepAllowed
 End Property
 
 ''' <summary>   Gets the instrument beep sound on each reading is enabled. </summary>
 ''' <param name="a_value">   [Boolean] instrument beep sound on each reading is enabled. </value>
 Public Property Let BeepAllowed(ByVal a_value As Boolean)
-    If This.BeepAllowed <> a_value Then _
+    If Me.BeepAllowed <> a_value Then
+        If Not This.DataSheet Is Nothing Then
+            This.DataSheet.BeepAllowedCheckBox.Value = a_value
+        End If
         This.BeepAllowed = a_value
+    End If
 End Property
 
 ''' <summary>   Gets the socket and session timeout in milliseconds. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get SessionTimeout() As Integer
+    If Not This.DataSheet Is Nothing Then
+        This.SessionTimeout = This.DataSheet.SessionTimeout
+    End If
     SessionTimeout = This.SessionTimeout
 End Property
 
 ''' <summary>   Sets the socket and session timeout in milliseconds. </summary>
 ''' <param name="a_value">   [Integer] the timeout value in milliseconds. </value>
 Public Property Let SessionTimeout(ByVal a_value As Integer)
-    If This.SessionTimeout <> a_value Then
-        This.SessionTimeout = a_value
+    If Not This.DataSheet Is Nothing Then
+        ' read only: This.DataSheet.SessionTimeout = a_value
     End If
+    This.SessionTimeout = a_value
 End Property
 
 ''' <summary>   Gets the Socket Address. </summary>
 ''' <value>   [String]. </value>
 Public Property Get SocketAddress() As String
+    If Not This.DataSheet Is Nothing Then
+        This.SocketAddress = This.DataSheet.SocketAddress
+    End If
     SocketAddress = This.SocketAddress
 End Property
 
 ''' <summary>   Sets the Socket Address. </summary>
 ''' <param name="a_value">   [String] the message value. </value>
 Public Property Let SocketAddress(ByVal a_value As String)
-    If This.SocketAddress <> a_value Then
-        This.SocketAddress = a_value
+    If Not This.DataSheet Is Nothing Then
+        ' read only: This.DataSheet.SocketAddress = a_value
     End If
+    This.SocketAddress = a_value
 End Property
 
 ''' <summary>   Gets the Timer Interval in milliseconds. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get TimerInterval() As Integer
+    If Not This.DataSheet Is Nothing Then
+        This.TimerInterval = This.DataSheet.TimerInterval
+    End If
     TimerInterval = This.TimerInterval
 End Property
 
 ''' <summary>   Sets the Timer Interval in milliseconds. </summary>
 ''' <param name="a_value">   [Integer] the Timer Interval in milliseconds value. </value>
 Public Property Let TimerInterval(ByVal a_value As Integer)
-    If This.TimerInterval <> a_value Then
-        This.TimerInterval = a_value
+    If Not This.DataSheet Is Nothing Then
+        ' read only: This.DataSheet.TimerInterval = a_value
     End If
+    This.TimerInterval = a_value
 End Property
 
 ''' <summary>   Gets the Last Error Message. </summary>
 ''' <value>   [String]. </value>
 Public Property Get LastErrorMessage() As String
+    If Not This.DataSheet Is Nothing Then
+        This.LastErrorMessage = This.DataSheet.LastErrorMessage
+    End If
     LastErrorMessage = This.LastErrorMessage
 End Property
 
@@ -515,6 +516,9 @@ End Property
 ''' <summary>   Gets the Last Message. </summary>
 ''' <value>   [String]. </value>
 Public Property Get LastMessage() As String
+    If Not This.DataSheet Is Nothing Then
+        This.LastMessage = This.DataSheet.LastMessage
+    End If
     LastMessage = This.LastMessage
 End Property
 
@@ -524,9 +528,6 @@ Public Property Let LastMessage(ByVal a_value As String)
     If This.LastMessage <> a_value Then
         This.LastMessage = a_value
         
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.LastMessage = a_value
-    
         If Not This.DataSheet Is Nothing Then _
             This.DataSheet.LastMessage = a_value
             
@@ -540,15 +541,16 @@ End Property
 ''' <summary>   Gets the Sense Function Name for continuous mode. </summary>
 ''' <value>   [String]. </value>
 Public Property Get ContinuousSenseFunctionName() As String
+    If Not This.DataSheet Is Nothing Then
+        This.ContinuousSenseFunctionName = This.DataSheet.ContinuousSenseFunctionName
+    End If
     ContinuousSenseFunctionName = This.ContinuousSenseFunctionName
 End Property
 
 ''' <summary>   Sets the Sense Function Name for continuous mode. </summary>
 ''' <param name="a_value">   [String] the Continuous Sense Function Name. </value>
 Friend Property Let ContinuousSenseFunctionName(ByVal a_value As String)
-    If This.ContinuousSenseFunctionName <> a_value Then
-        This.ContinuousSenseFunctionName = a_value
-    End If
+    This.ContinuousSenseFunctionName = a_value
 End Property
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -558,29 +560,37 @@ End Property
 ''' <summary>   Gets the Sense Function Name for Immediate trigger mode. </summary>
 ''' <value>   [String]. </value>
 Public Property Get ImmediateSenseFunctionName() As String
+    If Not This.DataSheet Is Nothing Then
+        This.ImmediateSenseFunctionName = This.DataSheet.ImmediateSenseFunctionName
+    End If
     ImmediateSenseFunctionName = This.ImmediateSenseFunctionName
 End Property
 
 ''' <summary>   Sets the Sense Function Name for Immediate trigger  mode. </summary>
 ''' <param name="a_value">   [String] the Sense Function Name. </value>
 Public Property Let ImmediateSenseFunctionName(ByVal a_value As String)
-    If This.ImmediateSenseFunctionName <> a_value Then
-        This.ImmediateSenseFunctionName = a_value
+    If Not This.DataSheet Is Nothing Then
+        ' read only: This.DataSheet.ImmediateSenseFunctionName = a_value
     End If
+    This.ImmediateSenseFunctionName = a_value
 End Property
 
 ''' <summary>   Gets the Front Inputs Required for Immediate trigger mode. </summary>
 ''' <value>   [Boolean]. </value>
 Public Property Get ImmediateFrontInputsRequired() As Boolean
+    If Not This.DataSheet Is Nothing Then
+        This.ImmediateFrontInputsRequired = This.DataSheet.ImmediateFrontInputsRequired
+    End If
     ImmediateFrontInputsRequired = This.ImmediateFrontInputsRequired
 End Property
 
 ''' <summary>   Sets the Front Inputs Required for Immediate trigger  mode. </summary>
 ''' <param name="a_value">   [Boolean] the Front Inputs Required. </value>
 Public Property Let ImmediateFrontInputsRequired(ByVal a_value As Boolean)
-    If This.ImmediateFrontInputsRequired <> a_value Then
-        This.ImmediateFrontInputsRequired = a_value
+    If Not This.DataSheet Is Nothing Then
+        ' read only: This.DataSheet.ImmediateFrontInputsRequired = a_value
     End If
+    This.ImmediateFrontInputsRequired = a_value
 End Property
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -590,29 +600,37 @@ End Property
 ''' <summary>   Gets the Sense Function Name for External trigger mode. </summary>
 ''' <value>   [String]. </value>
 Public Property Get ExternalSenseFunctionName() As String
+    If Not This.DataSheet Is Nothing Then
+        This.ExternalSenseFunctionName = This.DataSheet.ExternalSenseFunctionName
+    End If
     ExternalSenseFunctionName = This.ExternalSenseFunctionName
 End Property
 
 ''' <summary>   Sets the Sense Function Name for External trigger mode. </summary>
 ''' <param name="a_value">   [String] the Sense Function Name. </value>
 Public Property Let ExternalSenseFunctionName(ByVal a_value As String)
-    If This.ExternalSenseFunctionName <> a_value Then
-        This.ExternalSenseFunctionName = a_value
+    If Not This.DataSheet Is Nothing Then
+        ' read only: This.DataSheet.ExternalSenseFunctionName = a_value
     End If
+    This.ExternalSenseFunctionName = a_value
 End Property
 
 ''' <summary>   Gets the Front Inputs Required for External trigger mode. </summary>
 ''' <value>   [Boolean]. </value>
 Public Property Get ExternalFrontInputsRequired() As Boolean
+    If Not This.DataSheet Is Nothing Then
+        This.ExternalFrontInputsRequired = This.DataSheet.ExternalFrontInputsRequired
+    End If
     ExternalFrontInputsRequired = This.ExternalFrontInputsRequired
 End Property
 
 ''' <summary>   Sets the Front Inputs Required for External trigger  mode. </summary>
 ''' <param name="a_value">   [Boolean] the Front Inputs Required. </value>
 Public Property Let ExternalFrontInputsRequired(ByVal a_value As Boolean)
-    If This.ExternalFrontInputsRequired <> a_value Then
-        This.ExternalFrontInputsRequired = a_value
+    If Not This.DataSheet Is Nothing Then
+        ' read only: This.DataSheet.ExternalFrontInputsRequired = a_value
     End If
+    This.ExternalFrontInputsRequired = a_value
 End Property
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -622,60 +640,81 @@ End Property
 ''' <summary>   Gets the Channel Number Caption Prefix. </summary>
 ''' <value>   [String]. </value>
 Public Property Get ChannelNumberCaptionPrefix() As String
+    If Not This.DataSheet Is Nothing Then
+        This.ChannelNumberCaptionPrefix = This.DataSheet.ChannelNumberCaptionPrefix
+    End If
     ChannelNumberCaptionPrefix = This.ChannelNumberCaptionPrefix
 End Property
 
 ''' <summary>   Sets the Channel Number Caption Prefix. </summary>
 ''' <param name="a_value">   [String] the Channel Number Caption Prefix. </value>
 Public Property Let ChannelNumberCaptionPrefix(ByVal a_value As String)
+    If Not This.DataSheet Is Nothing Then
+        ' read only: This.DataSheet.ChannelNumberCaptionPrefix = a_value
+    End If
     This.ChannelNumberCaptionPrefix = a_value
 End Property
 
 ''' <summary>   Gets the Measured Channel Number. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get MeasuredChannelNumber() As Integer
+    If Not This.DataSheet Is Nothing Then
+        ' not defined This.MeasuredChannelNumber = This.DataSheet.MeasuredChannelNumber
+    End If
     MeasuredChannelNumber = This.MeasuredChannelNumber
 End Property
 
 ''' <summary>   Sets the Measured Channel Number. </summary>
 ''' <param name="a_value">   [Integer] the Measured Channel Number value. </value>
 Public Property Let MeasuredChannelNumber(ByVal a_value As Integer)
-    If This.MeasuredChannelNumber <> a_value Then
-        This.MeasuredChannelNumber = a_value
+    If Not This.DataSheet Is Nothing Then
+        ' not defined This.DataSheet.MeasuredChannelNumber = a_value
     End If
+    This.MeasuredChannelNumber = a_value
 End Property
 
 ''' <summary>   Gets the Measured Reading. </summary>
 ''' <value>   [String]. </value>
 Public Property Get MeasuredReading() As String
+    If Not This.DataSheet Is Nothing Then
+        ' not defined This.MeasuredReading = This.DataSheet.MeasuredReading
+    End If
     MeasuredReading = This.MeasuredReading
 End Property
 
 ''' <summary>   Sets the Measured Reading. </summary>
 ''' <param name="a_value">   [String] the Measured Reading value. </value>
 Public Property Let MeasuredReading(ByVal a_value As String)
-    If This.MeasuredReading <> a_value Then
-        This.MeasuredReading = a_value
+    If Not This.DataSheet Is Nothing Then
+        ' not defined This.DataSheet.MeasuredReading = a_value
     End If
+    This.MeasuredReading = a_value
 End Property
 
 ''' <summary>   Gets the Measured Value. </summary>
 ''' <value>   [Double]. </value>
 Public Property Get MeasuredValue() As Double
+    If Not This.DataSheet Is Nothing Then
+        ' not defined This.MeasuredValue = This.DataSheet.MeasuredValue
+    End If
     MeasuredValue = This.MeasuredValue
 End Property
 
 ''' <summary>   Sets the Measured Value. </summary>
 ''' <param name="a_value">   [Double] the Measured Value. </value>
 Public Property Let MeasuredValue(ByVal a_value As Double)
-    If This.MeasuredValue <> a_value Then
-        This.MeasuredValue = a_value
+    If Not This.DataSheet Is Nothing Then
+        ' not defined This.DataSheet.MeasuredValue = a_value
     End If
+    This.MeasuredValue = a_value
 End Property
 
 ''' <summary>   Gets the measurement mode. </summary>
 ''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
 Public Property Get MeasurementMode() As cc_isr_Tcp_Scpi.MeasurementModeOption
+    If Not This.DataSheet Is Nothing Then
+        ' not defined This.MeasurementMode = This.DataSheet.MeasurementMode
+    End If
     MeasurementMode = This.MeasurementMode
 End Property
 
@@ -683,9 +722,10 @@ End Property
 ''' <param name=-"a_value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>] the value. </param>
 ''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
 Public Property Let MeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementModeOption)
-    If This.MeasurementMode <> a_value Then
-        This.MeasurementMode = a_value
+    If Not This.DataSheet Is Nothing Then
+        ' not defined This.DataSheet.MeasurementMode = a_value
     End If
+    This.MeasurementMode = a_value
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -703,9 +743,7 @@ End Property
 ''' <summary>   Sets the Measurement Row. </summary>
 ''' <param name="a_value">   [Integer] the Measurement Row. </value>
 Public Property Let MeasurementRow(ByVal a_value As Integer)
-    If This.MeasurementRow <> a_value Then
-        This.MeasurementRow = a_value
-    End If
+    This.MeasurementRow = a_value
 End Property
 
 ''' <summary>   Gets the Measurement Column. </summary>
@@ -717,9 +755,7 @@ End Property
 ''' <summary>   Sets the Measurement Column. </summary>
 ''' <param name="a_value">   [Integer] the Measurement Column. </value>
 Public Property Let MeasurementColumn(ByVal a_value As Integer)
-    If This.MeasurementColumn <> a_value Then
-        This.MeasurementColumn = a_value
-    End If
+    This.MeasurementColumn = a_value
 End Property
 
 ''' <summary>   Gets the Channel Row. </summary>
@@ -731,9 +767,7 @@ End Property
 ''' <summary>   Sets the Channel Row. </summary>
 ''' <param name="a_value">   [Integer] the Channel Row. </value>
 Public Property Let ChannelRow(ByVal a_value As Integer)
-    If This.ChannelRow <> a_value Then
-        This.ChannelRow = a_value
-    End If
+    This.ChannelRow = a_value
 End Property
 
 ''' <summary>   Gets the Channel Column. </summary>
@@ -745,9 +779,7 @@ End Property
 ''' <summary>   Sets the Channel Column. </summary>
 ''' <param name="a_value">   [Integer] the Channel Column. </value>
 Public Property Let ChannelColumn(ByVal a_value As Integer)
-    If This.ChannelColumn <> a_value Then
-        This.ChannelColumn = a_value
-    End If
+    This.ChannelColumn = a_value
 End Property
 
 ''' <summary>   Gets the Measurement Cell Value. </summary>
@@ -765,11 +797,8 @@ End Property
 Public Property Let MeasurementCellValue(ByVal a_value As String)
     If Me.MeasurementCellValue <> a_value Then
         This.MeasurementCellValue = a_value
-        
         If Not This.DataSheet Is Nothing Then _
             This.DataSheet.Cells(Me.MeasurementRow, Me.MeasurementColumn).Value = a_value
-        
-        
     End If
 End Property
         
@@ -857,8 +886,6 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.MeasuredValue = This.ViewModel.MeasuredValue
         Case "MeasurementMode"
             Me.MeasurementMode = This.ViewModel.MeasurementMode
-        Case "ReadingOffset"
-            Me.ReadingOffset = This.ViewModel.ReadingOffset
         Case "ContinuousSenseFunctionName"
             Me.ContinuousSenseFunctionName = This.ViewModel.ContinuousSenseFunctionName
         Case "ImmediateSenseFunctionName"
@@ -889,20 +916,20 @@ Friend Sub Synchronize()
     ' set the view model settings that come from the ViewModel user interface
     
     ' set user interface settings
-    Me.ChannelNumberCaptionPrefix = This.DataSheet.ChannelNumberCaptionPrefix
-    Me.GpibLanControllerPort = This.DataSheet.GpibLanControllerPort
-    Me.PrimaryGpibAddress = This.DataSheet.PrimaryGpibAddress
-    Me.MaximumChannelNumber = This.DataSheet.MaxResistanceCount
-    Me.SocketAddress = This.DataSheet.SocketAddress
-    Me.SessionTimeout = This.DataSheet.SessionTimeout
-    Me.TimerInterval = This.DataSheet.TimerInterval
-    Me.BeepAllowed = This.DataSheet.BeepAllowed
+    ' Me.ChannelNumberCaptionPrefix = This.DataSheet.ChannelNumberCaptionPrefix
+    ' Me.GpibLanControllerPort = This.DataSheet.GpibLanControllerPort
+    ' Me.PrimaryGpibAddress = This.DataSheet.PrimaryGpibAddress
+    ' Me.MaximumChannelNumber = This.DataSheet.MaxResistanceCount
+    ' Me.SocketAddress = This.DataSheet.SocketAddress
+    ' Me.SessionTimeout = This.DataSheet.SessionTimeout
+    ' Me.TimerInterval = This.DataSheet.TimerInterval
+    ' Me.BeepAllowed = This.DataSheet.BeepAllowed
     
-    This.ViewModel.SocketAddress = This.SocketAddress
+    ' This.ViewModel.SocketAddress = This.SocketAddress
     This.ViewModel.GpibLanControllerPort = This.GpibLanControllerPort
-    This.ViewModel.SessionTimeout = Me.SessionTimeout
-    This.ViewModel.TimerInterval = Me.TimerInterval
-    This.ViewModel.MaximumChannelNumber = Me.MaximumChannelNumber
+    ' This.ViewModel.SessionTimeout = Me.SessionTimeout
+    ' This.ViewModel.TimerInterval = Me.TimerInterval
+    ' This.ViewModel.MaximumChannelNumber = Me.MaximumChannelNumber
 
     Me.LastErrorMessage = This.ViewModel.LastErrorMessage
     Me.LastMessage = This.ViewModel.LastMessage
@@ -910,7 +937,7 @@ Friend Sub Synchronize()
     Me.MeasuredReading = This.ViewModel.MeasuredReading
     Me.MeasuredValue = This.ViewModel.MeasuredValue
     Me.MeasurementMode = This.ViewModel.MeasurementMode
-    Me.ReadingOffset = This.ViewModel.ReadingOffset
+    ' Me.ReadingOffset = This.ViewModel.ReadingOffset
     
     Me.ClearReadingsExecutable = This.ViewModel.ClearReadingsExecutable
     Me.OpenConnectionExecutable = This.ViewModel.OpenConnectionExecutable
@@ -971,20 +998,23 @@ Friend Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Chan
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Me.MeasuredReading = a_eventArgs.Reading
-    Me.MeasuredChannelNumber = a_eventArgs.channelnumber
-        
-    Dim p_value As Double
-    Dim p_details As String
+    ' these two are populated by the property changed event.
+    ' Me.MeasuredReading = a_eventArgs.Reading
+    ' Me.MeasuredChannelNumber = a_eventArgs.channelnumber
     
-    If VBA.vbNullString = a_eventArgs.Reading Then
-        p_value = -1#
-    Else
-        If Not cc_isr_Core.StringExtensions.TryParseDouble(a_eventArgs.Reading, p_value, p_details) Then
-            p_value = -1#
-        End If
-    End If
-    Me.MeasuredValue = p_value
+    ' this is done in the view model
+    ' Dim p_value As Double
+    ' Dim p_details As String
+    ' If VBA.vbNullString = a_eventArgs.Reading Then
+    '     p_value = cc_isr_Ieee488.Syntax.NotANumber
+    ' Else
+    '   If Not cc_isr_Core.StringExtensions.TryParseDouble(a_eventArgs.Reading, p_value, p_details) Then
+    '         p_value = cc_isr_Ieee488.Syntax.NotANumber
+    '     End If
+    ' End If
+    
+    ' this is set by the property change event.
+    ' Me.MeasuredValue = p_value
     
     Me.SetReading This.MeasuredChannelNumber, This.MeasuredValue
     

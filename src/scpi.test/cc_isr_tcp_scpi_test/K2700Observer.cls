@@ -415,7 +415,7 @@ End Sub
 
 Public Sub OnClearReadings()
     If This.ClearReadingsExecutable Then
-        This.ViewModel.ClearReadingsCommand This.ReadingOffset
+        This.ViewModel.ClearReadingsCommand This.ReadingOffset, 1, This.ChannelCount
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnClearReadings", _
@@ -435,7 +435,7 @@ Public Sub OnExternalTriggerOptionChange(ByVal a_value As Boolean)
         If a_value Then
         
             Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
-            p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+            Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
             p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
             p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
             p_mode.SenseFunction = DataView.ExternalSenseFunctionName
@@ -463,7 +463,7 @@ Public Sub OnImmediateTriggerOptionChange(ByVal a_value As Boolean)
         If a_value Then
             
             Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
-            p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+            Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
             p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
             p_mode.FrontInputs = DataView.ImmediateFrontInputsRequired
             p_mode.SenseFunction = DataView.ImmediateSenseFunctionName
@@ -533,9 +533,7 @@ End Property
 ''' <summary>   Sets the Host. </summary>
 ''' <param name="a_value">   [String] the message value. </value>
 Public Property Let Host(ByVal a_value As String)
-    If This.Host <> a_value Then
-        This.Host = a_value
-    End If
+    This.Host = a_value
 End Property
 
 ''' <summary>   Gets the port number. </summary>
@@ -547,9 +545,7 @@ End Property
 ''' <summary>   Sets the Port. </summary>
 ''' <param name="a_value">   [Long] the Port. </value>
 Public Property Let Port(ByVal a_value As Long)
-    If This.Port <> a_value Then
-        This.Port = a_value
-    End If
+    This.Port = a_value
 End Property
 
 ''' <summary>   Gets the Connected state. </summary>
@@ -561,9 +557,7 @@ End Property
 ''' <summary>   Sets the Connected state. </summary>
 ''' <param name="a_value">   [Boolean] the Connected state. </value>
 Public Property Let Connected(ByVal a_value As Boolean)
-    If This.Connected <> a_value Then
-        This.Connected = a_value
-    End If
+    This.Connected = a_value
 End Property
 
 ''' <summary>   Gets the Socket Address. </summary>
@@ -575,9 +569,7 @@ End Property
 ''' <summary>   Sets the Socket Address. </summary>
 ''' <param name="a_value">   [String] the message value. </value>
 Public Property Let SocketAddress(ByVal a_value As String)
-    If This.SocketAddress <> a_value Then
-        This.SocketAddress = a_value
-    End If
+    This.SocketAddress = a_value
 End Property
 
 ''' <summary>   Gets the socket id. </summary>
@@ -589,9 +581,7 @@ End Property
 ''' <summary>   Sets the socket id. </summary>
 ''' <param name="a_value">   [Integer] the socket id. </value>
 Public Property Let SocketId(ByVal a_value As Integer)
-    If This.SocketId <> a_value Then
-        This.SocketId = a_value
-    End If
+    This.SocketId = a_value
 End Property
 
 ''' <summary>   Gets the socket and session timeout in milliseconds. </summary>
@@ -603,9 +593,7 @@ End Property
 ''' <summary>   Sets the socket and session timeout in milliseconds. </summary>
 ''' <param name="a_value">   [Integer] the timeout value in milliseconds. </value>
 Public Property Let SessionTimeout(ByVal a_value As Integer)
-    If This.SessionTimeout <> a_value Then
-        This.SessionTimeout = a_value
-    End If
+    This.SessionTimeout = a_value
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -623,9 +611,7 @@ End Property
 ''' <summary>   Sets the Message to Sent. </summary>
 ''' <param name="a_value">   [String] the Message to Sent. </value>
 Public Property Let MessageToSend(ByVal a_value As String)
-    If This.MessageToSend <> a_value Then
-        This.MessageToSend = a_value
-    End If
+    This.MessageToSend = a_value
 End Property
 
 ''' <summary>   Gets the Sent Message. </summary>
@@ -637,9 +623,7 @@ End Property
 ''' <summary>   Sets the Sent Message. </summary>
 ''' <param name="a_value">   [String] the message value. </value>
 Public Property Let SentMessage(ByVal a_value As String)
-    If This.SentMessage <> a_value Then
-        This.SentMessage = a_value
-    End If
+    This.SentMessage = a_value
 End Property
 
 ''' <summary>   Gets the Received Message. </summary>
@@ -651,9 +635,7 @@ End Property
 ''' <summary>   Sets the Received Message. </summary>
 ''' <param name="a_value">   [String] the message value. </value>
 Public Property Let ReceivedMessage(ByVal a_value As String)
-    If This.ReceivedMessage <> a_value Then
-        This.ReceivedMessage = a_value
-    End If
+    This.ReceivedMessage = a_value
 End Property
 
 ''' <summary>   Gets the Received Message Length. </summary>
@@ -665,9 +647,7 @@ End Property
 ''' <summary>   Sets the Received Message Length. </summary>
 ''' <param name="a_value">   [Integer] the Message Length value. </value>
 Public Property Let ReceivedMessageLength(ByVal a_value As Integer)
-    If This.ReceivedMessageLength <> a_value Then
-        This.ReceivedMessageLength = a_value
-    End If
+    This.ReceivedMessageLength = a_value
 End Property
 
 ''' <summary>   Gets the Status Byte. </summary>
@@ -679,9 +659,7 @@ End Property
 ''' <summary>   Sets the Status Byte. </summary>
 ''' <param name="a_value">   [Integer] the Status Byte value. </value>
 Public Property Let StatusByte(ByVal a_value As Integer)
-    If This.StatusByte <> a_value Then
-        This.StatusByte = a_value
-    End If
+    This.StatusByte = a_value
 End Property
 
 ''' <summary>   Gets the Standard Byte. </summary>
@@ -693,9 +671,7 @@ End Property
 ''' <summary>   Sets the Standard Byte. </summary>
 ''' <param name="a_value">   [Integer] the Standard Byte value. </value>
 Public Property Let StandardByte(ByVal a_value As Integer)
-    If This.StandardByte <> a_value Then
-        This.StandardByte = a_value
-    End If
+    This.StandardByte = a_value
 End Property
 
 ''' <summary>   Gets the Auto Status Read Enabled. </summary>
@@ -707,9 +683,7 @@ End Property
 ''' <summary>   Sets the Auto Status Read Enabled. </summary>
 ''' <param name="a_value">   [Boolean] the Auto Status Read Enabled value. </value>
 Public Property Let ReadStatusAfterWriteEnabled(ByVal a_value As Boolean)
-    If This.ReadStatusAfterWriteEnabled <> a_value Then
-        This.ReadStatusAfterWriteEnabled = a_value
-    End If
+    This.ReadStatusAfterWriteEnabled = a_value
 End Property
 
 ''' <summary>   Gets the Scpi Commands. </summary>
@@ -741,9 +715,7 @@ End Property
 ''' <summary>   Sets the Serial Poll Byte. </summary>
 ''' <param name="a_value">   [Integer] the Serial Poll Byte value. </value>
 Public Property Let SerialPollByte(ByVal a_value As Integer)
-    If This.SerialPollByte <> a_value Then
-        This.SerialPollByte = a_value
-    End If
+    This.SerialPollByte = a_value
 End Property
 
 ''' <summary>   Gets the Service Requested. </summary>
@@ -755,9 +727,7 @@ End Property
 ''' <summary>   Sets the Service Requested. </summary>
 ''' <param name="a_value">   [Integer] the Service Requested value. </value>
 Public Property Let ServiceRequested(ByVal a_value As Integer)
-    If This.ServiceRequested <> a_value Then
-        This.ServiceRequested = a_value
-    End If
+    This.ServiceRequested = a_value
 End Property
 
 ''' <summary>   Gets the Gpib Address. </summary>
@@ -769,9 +739,7 @@ End Property
 ''' <summary>   Sets the Gpib Address. </summary>
 ''' <param name="a_value">   [Integer] the Gpib Address value. </value>
 Public Property Let GpibAddress(ByVal a_value As Integer)
-    If This.GpibAddress <> a_value Then
-        This.GpibAddress = a_value
-    End If
+    This.GpibAddress = a_value
 End Property
 
 ''' <summary>   Gets the Read After Write Enabled. </summary>
@@ -783,9 +751,7 @@ End Property
 ''' <summary>   Sets the Read After Write Enabled. </summary>
 ''' <param name="a_value">   [Boolean] the value. </value>
 Public Property Let AutoAssertTalk(ByVal a_value As Boolean)
-    If This.AutoAssertTalk <> a_value Then
-        This.AutoAssertTalk = a_value
-    End If
+    This.AutoAssertTalk = a_value
 End Property
 
 ''' <summary>   Gets the port number of the GPIB Lan controller. </summary>
@@ -815,9 +781,7 @@ End Property
 '''             instrument to the Gpib-Lan device using the <c>++read</c> command. </summary>
 ''' <param name="a_value">   [Integer] the timeout value in milliseconds. </value>
 Public Property Let GpibLanReadTimeout(ByVal a_value As Integer)
-    If This.GpibLanReadTimeout <> a_value Then
-        This.GpibLanReadTimeout = a_value
-    End If
+    This.GpibLanReadTimeout = a_value
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -835,9 +799,7 @@ End Property
 ''' <summary>   Sets the Top Card name. </summary>
 ''' <param name="a_value">   [String] the Top Card name. </value>
 Public Property Let TopCard(ByVal a_value As String)
-    If This.TopCard <> a_value Then
-        This.TopCard = a_value
-    End If
+    This.TopCard = a_value
 End Property
 
 ''' <summary>   Gets the Top Card Function Scan List. </summary>
@@ -849,9 +811,7 @@ End Property
 ''' <summary>   Sets the Top Card Function Scan List. </summary>
 ''' <param name="a_value">   [String] the Top Card function scan list. </value>
 Public Property Let TopCardFunctionScanList(ByVal a_value As String)
-    If This.TopCardFunctionScanList <> a_value Then
-        This.TopCardFunctionScanList = a_value
-    End If
+    This.TopCardFunctionScanList = a_value
 End Property
 
 ''' <summary>   Gets the Bottom Card name. </summary>
@@ -863,9 +823,7 @@ End Property
 ''' <summary>   Sets the Bottom Card name. </summary>
 ''' <param name="a_value">   [String] the Bottom Card name. </value>
 Public Property Let BottomCard(ByVal a_value As String)
-    If This.BottomCard <> a_value Then
-        This.BottomCard = a_value
-    End If
+    This.BottomCard = a_value
 End Property
 
 ''' <summary>   Gets the Bottom Card Function Scan List. </summary>
@@ -877,9 +835,7 @@ End Property
 ''' <summary>   Sets the Bottom Card Function Scan List. </summary>
 ''' <param name="a_value">   [String] the Bottom Card function scan list. </value>
 Public Property Let BottomCardFunctionScanList(ByVal a_value As String)
-    If This.BottomCardFunctionScanList <> a_value Then
-        This.BottomCardFunctionScanList = a_value
-    End If
+    This.BottomCardFunctionScanList = a_value
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -897,11 +853,7 @@ End Property
 ''' <summary>   Sets the maximum Channel Number. </summary>
 ''' <param name="a_value">   [Integer] the maximum Channel Number value. </value>
 Public Property Let MaximumChannelNumber(ByVal a_value As Integer)
-    If This.MaximumChannelNumber <> a_value Then
-        This.MaximumChannelNumber = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.MaximumChannelNumber = a_value
-    End If
+    This.MaximumChannelNumber = a_value
 End Property
 
 ''' <summary>   Gets the measuring state. True when measurements are collected. </summary>
@@ -913,9 +865,7 @@ End Property
 ''' <summary>   Sets the measuring state. True when measurements are collected. </summary>
 ''' <param name="a_value">   [Boolean] the measuring state; true when measuring is active. </value>
 Public Property Let Measuring(ByVal a_value As Boolean)
-    If This.Measuring <> a_value Then
-        This.Measuring = a_value
-    End If
+    This.Measuring = a_value
 End Property
 
 ''' <summary>   Gets the measurement mode. </summary>
@@ -928,9 +878,7 @@ End Property
 ''' <param name=-"a_value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>] the value. </param>
 ''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
 Public Property Let MeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementModeOption)
-    If This.MeasurementMode <> a_value Then
-        This.MeasurementMode = a_value
-    End If
+    This.MeasurementMode = a_value
 End Property
 
 ''' <summary>   Gets the Front Inputs Required. </summary>
@@ -943,9 +891,7 @@ End Property
 ''' <summary>   Sets the Front Inputs Required. </summary>
 ''' <param name="a_value">   [Boolean] true if Front Inputs are Required. </value>
 Public Property Let FrontInputsRequired(ByVal a_value As Boolean)
-    If This.FrontInputsRequired <> a_value Then
-        This.FrontInputsRequired = a_value
-    End If
+    This.FrontInputsRequired = a_value
 End Property
 
 ''' <summary>   Gets the instrument beep sound on each reading is enabled. </summary>
@@ -958,9 +904,7 @@ End Property
 ''' <summary>   Gets the instrument beep sound on each reading is enabled. </summary>
 ''' <param name="a_value">   [Boolean] instrument beep sound on each reading is enabled. </value>
 Public Property Let ReadingBeepEnabled(ByVal a_value As Boolean)
-    If This.ReadingBeepEnabled <> a_value Then
-        This.ReadingBeepEnabled = a_value
-    End If
+    This.ReadingBeepEnabled = a_value
 End Property
 
 ''' <summary>   Gets the Front Inputs Value. </summary>
@@ -973,9 +917,7 @@ End Property
 ''' <summary>   Sets the Front Inputs Value. </summary>
 ''' <param name="a_value">   [Boolean] true if Front Inputs. </value>
 Public Property Let FrontInputsValue(ByVal a_value As Boolean)
-    If This.FrontInputsValue <> a_value Then
-        This.FrontInputsValue = a_value
-    End If
+    This.FrontInputsValue = a_value
 End Property
 
 ''' <summary>   Gets the Front Inputs Caption. </summary>
@@ -987,9 +929,7 @@ End Property
 ''' <summary>   Sets the Front Inputs Caption. </summary>
 ''' <param name="a_value">   [String] the Front Inputs Caption. </value>
 Public Property Let FrontInputsCaption(ByVal a_value As String)
-    If This.FrontInputsCaption <> a_value Then
-        This.FrontInputsCaption = a_value
-    End If
+    This.FrontInputsCaption = a_value
 End Property
 
 ''' <summary>   Gets the Channel Count. </summary>
@@ -1001,9 +941,7 @@ End Property
 ''' <summary>   Sets the Channel Count. </summary>
 ''' <param name="a_value">   [Integer] the Channel Count value. </value>
 Public Property Let ChannelCount(ByVal a_value As Integer)
-    If This.ChannelCount <> a_value Then
-        This.ChannelCount = a_value
-    End If
+    This.ChannelCount = a_value
 End Property
 
 ''' <summary>   Gets the Selected Channel Number. </summary>
@@ -1015,9 +953,7 @@ End Property
 ''' <summary>   Sets the Selected Channel Number. </summary>
 ''' <param name="a_value">   [Integer] the Selected Channel Number value. </value>
 Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
-    If This.SelectedChannelNumber <> a_value Then
-        This.SelectedChannelNumber = a_value
-    End If
+    This.SelectedChannelNumber = a_value
 End Property
 
 ''' <summary>   Gets the Target Channel Number. </summary>
@@ -1029,9 +965,7 @@ End Property
 ''' <summary>   Sets the Target Channel Number. </summary>
 ''' <param name="a_value">   [Integer] the Target Channel Number value. </value>
 Public Property Let TargetChannelNumber(ByVal a_value As Integer)
-    If This.TargetChannelNumber <> a_value Then
-        This.TargetChannelNumber = a_value
-    End If
+    This.TargetChannelNumber = a_value
 End Property
 
 ''' <summary>   Gets the Measured Channel Number. </summary>
@@ -1043,9 +977,7 @@ End Property
 ''' <summary>   Sets the Measured Channel Number. </summary>
 ''' <param name="a_value">   [Integer] the Measured Channel Number value. </value>
 Public Property Let MeasuredChannelNumber(ByVal a_value As Integer)
-    If This.MeasuredChannelNumber <> a_value Then
-        This.MeasuredChannelNumber = a_value
-    End If
+    This.MeasuredChannelNumber = a_value
 End Property
 
 ''' <summary>   Gets the Sense Function Name for continuous mode. </summary>
@@ -1057,9 +989,7 @@ End Property
 ''' <summary>   Sets the Sense Function Name for continuous mode. </summary>
 ''' <param name="a_value">   [String] the Sense Function Name. </value>
 Public Property Let ContinuousSenseFunctionName(ByVal a_value As String)
-    If This.ContinuousSenseFunctionName <> a_value Then
-        This.ContinuousSenseFunctionName = a_value
-    End If
+    This.ContinuousSenseFunctionName = a_value
 End Property
 
 ''' <summary>   Gets the Sense Function Name for Immediate trigger mode. </summary>
@@ -1071,9 +1001,7 @@ End Property
 ''' <summary>   Sets the Sense Function Name for Immediate trigger  mode. </summary>
 ''' <param name="a_value">   [String] the Sense Function Name. </value>
 Public Property Let ImmediateSenseFunctionName(ByVal a_value As String)
-    If This.ImmediateSenseFunctionName <> a_value Then
-        This.ImmediateSenseFunctionName = a_value
-    End If
+    This.ImmediateSenseFunctionName = a_value
 End Property
 
 ''' <summary>   Gets the Sense Function Name for External trigger mode. </summary>
@@ -1085,9 +1013,7 @@ End Property
 ''' <summary>   Sets the Sense Function Name for External trigger mode. </summary>
 ''' <param name="a_value">   [String] the Sense Function Name. </value>
 Public Property Let ExternalSenseFunctionName(ByVal a_value As String)
-    If This.ExternalSenseFunctionName <> a_value Then
-        This.ExternalSenseFunctionName = a_value
-    End If
+    This.ExternalSenseFunctionName = a_value
 End Property
 
 ''' <summary>   Gets the Sense Function Name. </summary>
@@ -1099,9 +1025,7 @@ End Property
 ''' <summary>   Internal. Sets the Sense Function Name. </summary>
 ''' <param name="a_value">   [String] the Sense Function Name. </value>
 Public Property Let SenseFunctionName(ByVal a_value As String)
-    If This.SenseFunctionName <> a_value Then
-        This.SenseFunctionName = a_value
-    End If
+    This.SenseFunctionName = a_value
 End Property
 
 ''' <summary>   Gets the  Sense Function Caption. </summary>
@@ -1113,9 +1037,7 @@ End Property
 ''' <summary>   Sets the  Sense Function Caption. </summary>
 ''' <param name="a_value">   [String] the  Sense Function Caption. </value>
 Public Property Let SenseFunctionCaption(ByVal a_value As String)
-    If This.SenseFunctionCaption <> a_value Then
-        This.SenseFunctionCaption = a_value
-    End If
+    This.SenseFunctionCaption = a_value
 End Property
 
 ''' <summary>   Gets the Sense Function Unit. </summary>
@@ -1127,9 +1049,7 @@ End Property
 ''' <summary>   Sets the Sense Function Unit. </summary>
 ''' <param name="a_value">   [String] the Sense Function Unit value. </value>
 Public Property Let SenseFunctionUnit(ByVal a_value As String)
-    If This.SenseFunctionUnit <> a_value Then
-        This.SenseFunctionUnit = a_value
-    End If
+    This.SenseFunctionUnit = a_value
 End Property
 
 ''' <summary>   Gets the Measured Reading. </summary>
@@ -1141,9 +1061,7 @@ End Property
 ''' <summary>   Sets the Measured Reading. </summary>
 ''' <param name="a_value">   [String] the Measured Reading value. </value>
 Public Property Let MeasuredReading(ByVal a_value As String)
-    If This.MeasuredReading <> a_value Then
-        This.MeasuredReading = a_value
-    End If
+    This.MeasuredReading = a_value
 End Property
 
 ''' <summary>   Gets the Measured Value Format. </summary>
@@ -1155,9 +1073,7 @@ End Property
 ''' <summary>   Sets the Measured Value Format. </summary>
 ''' <param name="a_value">   [String] the Measured Value Format value. </value>
 Public Property Let MeasuredValueFormat(ByVal a_value As String)
-    If This.MeasuredValueFormat <> a_value Then
-        This.MeasuredValueFormat = a_value
-    End If
+    This.MeasuredValueFormat = a_value
 End Property
 
 ''' <summary>   Gets the Measured Value. </summary>
@@ -1169,9 +1085,7 @@ End Property
 ''' <summary>   Sets the Measured Value. </summary>
 ''' <param name="a_value">   [Double] the Measured Value. </value>
 Public Property Let MeasuredValue(ByVal a_value As Double)
-    If This.MeasuredValue <> a_value Then
-        This.MeasuredValue = a_value
-    End If
+    This.MeasuredValue = a_value
 End Property
 
 ''' <summary>   Gets the Sense Functions. </summary>
@@ -1197,9 +1111,7 @@ End Property
 ''' <summary>   Sets the Reading Offset. </summary>
 ''' <param name="a_value">   [Double] the Reading Offset value. </value>
 Public Property Let ReadingOffset(ByVal a_value As Double)
-    If This.ReadingOffset <> a_value Then
-        This.ReadingOffset = a_value
-    End If
+    This.ReadingOffset = a_value
 End Property
 
 ''' <summary>   Gets the Monitoring State. </summary>
@@ -1211,9 +1123,7 @@ End Property
 ''' <summary>   Sets the Monitoring State. </summary>
 ''' <param name="a_value">   [String] the Monitoring State value. </value>
 Public Property Let MonitoringState(ByVal a_value As String)
-    If This.MonitoringState <> a_value Then
-        This.MonitoringState = a_value
-    End If
+    This.MonitoringState = a_value
 End Property
 
 ''' <summary>   Gets the External Trig Monitoring Enabled condition. </summary>
@@ -1227,9 +1137,7 @@ End Property
 ''' <summary>   Sets the External Trig Monitoring Enabled condition. </summary>
 ''' <param name="a_value">   [Boolean] the External Trig Monitoring Enabled value. </value>
 Public Property Let ExternalTrigMonitoringEnabled(ByVal a_value As Boolean)
-    If This.ExternalTrigMonitoringEnabled <> a_value Then
-        This.ExternalTrigMonitoringEnabled = a_value
-    End If
+    This.ExternalTrigMonitoringEnabled = a_value
 End Property
 
 ''' <summary>   Gets the Auto Increment Channel Number Enabled. </summary>
@@ -1242,9 +1150,7 @@ End Property
 ''' <summary>   Sets the Auto Increment Channel Number Enabled. </summary>
 ''' <param name="a_value">   [Boolean] the Auto Increment Channel Number Enabled value. </value>
 Public Property Let AutoIncrementChannelNoEnabled(ByVal a_value As Boolean)
-    If This.AutoIncrementChannelNoEnabled <> a_value Then
-        This.AutoIncrementChannelNoEnabled = a_value
-    End If
+    This.AutoIncrementChannelNoEnabled = a_value
 End Property
 
 ''' <summary>   Gets the Single Read Enabled. </summary>
@@ -1257,9 +1163,7 @@ End Property
 ''' <summary>   Sets the Single Read Enabled. </summary>
 ''' <param name="a_value">   [Boolean] the Single Read Enabled value. </value>
 Public Property Let SingleReadEnabled(ByVal a_value As Boolean)
-    If This.SingleReadEnabled <> a_value Then
-        This.SingleReadEnabled = a_value
-    End If
+    This.SingleReadEnabled = a_value
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -1279,9 +1183,7 @@ End Property
 ''' <summary>   Sets the Pause Requested condition. </summary>
 ''' <param name="a_value">   [Boolean] the Pause Requested value. </value>
 Friend Property Let PauseRequested(ByVal a_value As Boolean)
-    If This.PauseRequested <> a_value Then
-        This.PauseRequested = a_value
-    End If
+    This.PauseRequested = a_value
 End Property
 
 ''' <summary>   Gets the Stop Requested condition. </summary>
@@ -1295,9 +1197,7 @@ End Property
 ''' <summary>   Sets the Stop Requested condition. </summary>
 ''' <param name="a_value">   [Boolean] the Stop Requested value. </value>
 Friend Property Let StopRequested(ByVal a_value As Boolean)
-    If This.StopRequested <> a_value Then
-        This.StopRequested = a_value
-    End If
+    This.StopRequested = a_value
 End Property
 
 ''' <summary>   Gets the Timer Interval in milliseconds. </summary>
@@ -1309,9 +1209,7 @@ End Property
 ''' <summary>   Sets the Timer Interval in milliseconds. </summary>
 ''' <param name="a_value">   [Integer] the Timer Interval in milliseconds value. </value>
 Public Property Let TimerInterval(ByVal a_value As Integer)
-    If This.TimerInterval <> a_value Then
-        This.TimerInterval = a_value
-    End If
+    This.TimerInterval = a_value
 End Property
 
 ''' <summary>   Gets the Elapsed Time in milliseconds. </summary>
@@ -1323,9 +1221,7 @@ End Property
 ''' <summary>   Sets the Elapsed Time in milliseconds. </summary>
 ''' <param name="a_value">   [Double] the Elapsed Time in milliseconds. </value>
 Public Property Let ElapsedTime(ByVal a_value As Double)
-    If This.ElapsedTime <> a_value Then
-        This.ElapsedTime = a_value
-    End If
+    This.ElapsedTime = a_value
 End Property
 
 ''' <summary>   Gets the Elapsed Time Format. </summary>
@@ -1337,9 +1233,7 @@ End Property
 ''' <summary>   Sets the Elapsed Time Format. </summary>
 ''' <param name="a_value">   [String] the elapsed time format. </value>
 Public Property Let ElapsedTimeFormat(ByVal a_value As String)
-    If This.ElapsedTimeFormat <> a_value Then
-        This.ElapsedTimeFormat = a_value
-    End If
+    This.ElapsedTimeFormat = a_value
 End Property
 
 ''' <summary>   Gets the Elapsed Time Caption. </summary>
@@ -1351,9 +1245,7 @@ End Property
 ''' <summary>   Sets the Elapsed Time Caption. </summary>
 ''' <param name="a_value">   [String] the elapsed time Caption. </value>
 Public Property Let ElapsedTimeCaption(ByVal a_value As String)
-    If This.ElapsedTimeCaption <> a_value Then
-        This.ElapsedTimeCaption = a_value
-    End If
+    This.ElapsedTimeCaption = a_value
 End Property
 
 ''' <summary>   Gets the Last Error Message. </summary>
@@ -1365,9 +1257,7 @@ End Property
 ''' <summary>   Sets the Last Error Message. </summary>
 ''' <param name="a_value">   [String] the last error message value. </value>
 Public Property Let LastErrorMessage(ByVal a_value As String)
-    If This.LastErrorMessage <> a_value Then
-        This.LastErrorMessage = a_value
-    End If
+    This.LastErrorMessage = a_value
 End Property
 
 ''' <summary>   Gets the Last Message. </summary>
@@ -1379,9 +1269,7 @@ End Property
 ''' <summary>   Sets the Last Message. </summary>
 ''' <param name="a_value">   [String] the last message value. </value>
 Public Property Let LastMessage(ByVal a_value As String)
-    If This.LastMessage <> a_value Then
-        This.LastMessage = a_value
-    End If
+    This.LastMessage = a_value
 End Property
 
 ''' <summary>   Gets the Last Command Details. </summary>
@@ -1393,9 +1281,7 @@ End Property
 ''' <summary>   Sets the Last Command Details. </summary>
 ''' <param name="a_value">   [String] the last Command Details value. </value>
 Public Property Let LastCommandDetails(ByVal a_value As String)
-    If This.LastCommandDetails <> a_value Then
-        This.LastCommandDetails = a_value
-    End If
+    This.LastCommandDetails = a_value
 End Property
 
 ''' <summary>   Gets the Last Command Outcome. </summary>
@@ -1407,9 +1293,7 @@ End Property
 ''' <summary>   Sets the Last Command Outcome. </summary>
 ''' <param name="a_value">   [Boolean] the last Command Outcome value. </value>
 Public Property Let LastCommandOutcome(ByVal a_value As Boolean)
-    If This.LastCommandOutcome <> a_value Then
-        This.LastCommandOutcome = a_value
-    End If
+    This.LastCommandOutcome = a_value
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -1876,58 +1760,58 @@ Friend Sub Synchronize()
     Const p_procedureName = "Synchronize"
 
     ' set the view model settings that come from the Observer user interface
-    This.ViewModel.SocketAddress = This.SocketAddress
-    This.ViewModel.ReadingOffset = This.ReadingOffset
+    ' This.ViewModel.SocketAddress = This.SocketAddress
+    ' This.ViewModel.ReadingOffset = This.ReadingOffset
     This.ViewModel.GpibLanControllerPort = This.GpibLanControllerPort
-    This.ViewModel.SessionTimeout = Me.SessionTimeout
-    This.ViewModel.TimerInterval = Me.TimerInterval
-    This.ViewModel.MaximumChannelNumber = Me.MaximumChannelNumber
+    ' This.ViewModel.SessionTimeout = Me.SessionTimeout
+    ' This.ViewModel.TimerInterval = Me.TimerInterval
+    ' This.ViewModel.MaximumChannelNumber = Me.MaximumChannelNumber
 
-    Me.AutoAssertTalk = This.ViewModel.AutoAssertTalk
-    Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
-    Me.BottomCard = This.ViewModel.BottomCard
-    Me.BottomCardFunctionScanList = This.ViewModel.BottomCardFunctionScanList
-    Me.ChannelCount = This.ViewModel.ChannelCount
-    Me.Connected = This.ViewModel.Connected
-    Me.ElapsedTime = This.ViewModel.ElapsedTime
-    Me.ElapsedTimeFormat = This.ViewModel.ElapsedTimeFormat
-    Me.ElapsedTimeCaption = This.ViewModel.ElapsedTimeCaption
-    Me.ExternalTrigMonitoringEnabled = This.ViewModel.ExternalTrigMonitoringEnabled
-    Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
-    Me.FrontInputsCaption = This.ViewModel.FrontInputsCaption
-    Me.GpibAddress = This.ViewModel.GpibAddress
-    Me.Host = This.ViewModel.Host
-    Me.LastErrorMessage = This.ViewModel.LastErrorMessage
-    Me.LastMessage = This.ViewModel.LastMessage
-    Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
-    Me.MeasuredReading = This.ViewModel.MeasuredReading
-    Me.MeasuredValueFormat = This.ViewModel.MeasuredValueFormat
-    Me.MeasuredValue = This.ViewModel.MeasuredValue
-    Me.MeasurementMode = This.ViewModel.MeasurementMode
-    Me.MonitoringState = This.ViewModel.MonitoringState
-    Me.PauseRequested = This.ViewModel.PauseRequested
-    Me.Port = This.ViewModel.Port
-    Me.ReadingOffset = This.ViewModel.ReadingOffset
-    Me.ReceivedMessage = This.ViewModel.ReceivedMessage
-    Me.ReceivedMessageLength = This.ViewModel.ReceivedMessageLength
-    Me.ScpiCommands = This.ViewModel.ScpiCommands
-    Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
-    Me.SenseFunctionName = This.ViewModel.SenseFunctionName
-    Me.SenseFunctionCaption = This.ViewModel.SenseFunctionCaption
-    Me.SenseFunctions = This.ViewModel.SenseFunctions
-    Me.SenseFunctionUnit = This.ViewModel.SenseFunctionUnit
-    Me.SentMessage = This.ViewModel.SentMessage
-    Me.SerialPollByte = This.ViewModel.SerialPollByte
-    Me.ServiceRequested = This.ViewModel.ServiceRequested
-    Me.SingleReadEnabled = This.ViewModel.SingleReadEnabled
-    Me.SocketAddress = This.ViewModel.SocketAddress
-    Me.SocketId = This.ViewModel.SocketId
-    Me.StandardByte = This.ViewModel.StandardByte
-    Me.StatusByte = This.ViewModel.StatusByte
-    Me.StopRequested = This.ViewModel.StopRequested
-    Me.TargetChannelNumber = This.ViewModel.TargetChannelNumber
-    Me.TopCard = This.ViewModel.TopCard
-    Me.TopCardFunctionScanList = This.ViewModel.TopCardFunctionScanList
+    ' Me.AutoAssertTalk = This.ViewModel.AutoAssertTalk
+    ' Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
+    ' Me.BottomCard = This.ViewModel.BottomCard
+    ' Me.BottomCardFunctionScanList = This.ViewModel.BottomCardFunctionScanList
+    ' Me.ChannelCount = This.ViewModel.ChannelCount
+    ' Me.Connected = This.ViewModel.Connected
+    ' Me.ElapsedTime = This.ViewModel.ElapsedTime
+    ' Me.ElapsedTimeFormat = This.ViewModel.ElapsedTimeFormat
+    ' Me.ElapsedTimeCaption = This.ViewModel.ElapsedTimeCaption
+    ' Me.ExternalTrigMonitoringEnabled = This.ViewModel.ExternalTrigMonitoringEnabled
+    ' Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
+    ' Me.FrontInputsCaption = This.ViewModel.FrontInputsCaption
+    ' Me.GpibAddress = This.ViewModel.GpibAddress
+    ' Me.Host = This.ViewModel.Host
+    ' Me.LastErrorMessage = This.ViewModel.LastErrorMessage
+    ' Me.LastMessage = This.ViewModel.LastMessage
+    ' Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
+    ' Me.MeasuredReading = This.ViewModel.MeasuredReading
+    ' Me.MeasuredValueFormat = This.ViewModel.MeasuredValueFormat
+    ' Me.MeasuredValue = This.ViewModel.MeasuredValue
+    ' Me.MeasurementMode = This.ViewModel.MeasurementMode
+    ' Me.MonitoringState = This.ViewModel.MonitoringState
+    ' Me.PauseRequested = This.ViewModel.PauseRequested
+    ' Me.Port = This.ViewModel.Port
+    ' Me.ReadingOffset = This.ViewModel.ReadingOffset
+    ' Me.ReceivedMessage = This.ViewModel.ReceivedMessage
+    ' Me.ReceivedMessageLength = This.ViewModel.ReceivedMessageLength
+    ' Me.ScpiCommands = This.ViewModel.ScpiCommands
+    ' Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
+    ' Me.SenseFunctionName = This.ViewModel.SenseFunctionName
+    ' Me.SenseFunctionCaption = This.ViewModel.SenseFunctionCaption
+    ' Me.SenseFunctions = This.ViewModel.SenseFunctions
+    ' Me.SenseFunctionUnit = This.ViewModel.SenseFunctionUnit
+    ' Me.SentMessage = This.ViewModel.SentMessage
+    ' Me.SerialPollByte = This.ViewModel.SerialPollByte
+    ' Me.ServiceRequested = This.ViewModel.ServiceRequested
+    ' Me.SingleReadEnabled = This.ViewModel.SingleReadEnabled
+    ' Me.SocketAddress = This.ViewModel.SocketAddress
+    ' Me.SocketId = This.ViewModel.SocketId
+    ' Me.StandardByte = This.ViewModel.StandardByte
+    ' Me.StatusByte = This.ViewModel.StatusByte
+    ' Me.StopRequested = This.ViewModel.StopRequested
+    ' Me.TargetChannelNumber = This.ViewModel.TargetChannelNumber
+    ' Me.TopCard = This.ViewModel.TopCard
+    ' Me.TopCardFunctionScanList = This.ViewModel.TopCardFunctionScanList
     
     This.OpenConnectionExecutable = This.ViewModel.OpenConnectionExecutable
     This.CloseConnectionExecutable = This.ViewModel.CloseConnectionExecutable

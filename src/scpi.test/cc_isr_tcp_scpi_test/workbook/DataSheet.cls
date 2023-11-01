@@ -59,10 +59,12 @@ Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As DataSheet
     ' set the initial values that are provided by the user interface
     This.ChannelNumberCaptionPrefix = "ch"
     
-    ' initialize the views before initializing the view model
-    ' the view model gets initialized upon connecting.
-    DataView.Initialize a_viewModel
-    UserView.Initialize a_viewModel
+    If Not DataView.Initialized Then
+        ' initialize the views before initializing the view model
+        ' the view model gets initialized upon connecting.
+        DataView.Initialize a_viewModel
+        UserView.Initialize a_viewModel
+    End If
     
     Set Initialize = Me
 

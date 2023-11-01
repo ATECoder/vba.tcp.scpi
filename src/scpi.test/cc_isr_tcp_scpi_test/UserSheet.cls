@@ -59,6 +59,7 @@ Public Property Get ChannelNumberCaptionPrefix() As String
     ChannelNumberCaptionPrefix = This.ChannelNumberCaptionPrefix
 End Property
 
+
 ''' <summary>   Gets the design mode for unit testing and restoration of state. </summary>
 ''' <value>   [Boolean]. </value>
 Public Property Get DesignMode() As Boolean
@@ -70,6 +71,12 @@ End Property
 ''' <param name="a_value">   [Boolean] true if in design mode. </param>
 Public Property Let DesignMode(ByVal a_value As Boolean)
     This.DesignMode = a_value
+End Property
+
+''' <summary>   Gets the Channel Number Caption Prefix. </summary>
+''' <value>   [String]. </value>
+Public Property Get ChannelNumberCaptionPrefix() As String
+    ChannelNumberCaptionPrefix = This.ChannelNumberCaptionPrefix
 End Property
 
 ''' <summary>   Set the sheet date and time display. </summary>

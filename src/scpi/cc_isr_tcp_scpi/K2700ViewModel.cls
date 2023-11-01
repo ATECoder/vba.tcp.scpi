@@ -63,7 +63,6 @@ Private Type this_
     LastMessage As String
     MeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
     Measuring As Boolean
-    MaximumChannelNumber As Integer
 
     ' Winsock properties
     Host As String
@@ -3043,21 +3042,6 @@ End Property
 ' K2700: Channels
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
 
-''' <summary>   Gets the maximum Channel Number. </summary>
-''' <value>   [Integer]. </value>
-Public Property Get MaximumChannelNumber() As Integer
-    MaximumChannelNumber = This.MaximumChannelNumber
-End Property
-
-''' <summary>   Sets the maximum Channel Number. </summary>
-''' <param name="a_value">   [Integer] the maximum Channel Number value. </value>
-Public Property Let MaximumChannelNumber(ByVal a_value As Integer)
-    If This.MaximumChannelNumber <> a_value Then
-        This.MaximumChannelNumber = a_value
-        Me.OnPropertyChanged "MaximumChannelNumber"
-    End If
-End Property
-
 ''' <summary>   Gets the Channel Count. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get ChannelCount() As Integer
@@ -3720,20 +3704,25 @@ Friend Property Let ReadingOffset(ByVal a_value As Double)
 End Property
 
 ''' <summary>   Clears the readings. </summary>
-''' <param name="a_readingOffset">   [Double] the Reading Offset value. </value>
-Public Sub ClearReadings(ByVal a_readingOffset As Double)
+''' <param name="a_value">          [Double] the value to use for clearing the readings.
+'''                                 This value might represent a probe resistance or
+'''                                 DC offset voltage. </value>
+''' <param name="a_firstChannel">   [Integer] the first channel number. </value>
+''' <param name="a_lastChannel">    [Integer] the last channel number. </value>
+Public Sub ClearReadings(ByVal a_value As Double, _
+    ByVal a_firstChannel As Integer, ByVal a_lastChannel As Integer)
 
     Const p_procedureName = "ClearReadings"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Me.ReadingOffset = a_readingOffset
+    Me.ReadingOffset = a_value
     
     Dim p_channelNumber As Integer
-    For p_channelNumber = 1 To Me.MaximumChannelNumber
+    For p_channelNumber = a_firstChannel To a_lastChannel
         VBA.DoEvents
-        OnChannelMeasured p_channelNumber, a_readingOffset
+        OnChannelMeasured p_channelNumber, a_value
     Next p_channelNumber
   
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -3761,15 +3750,20 @@ err_Handler:
 End Sub
 
 ''' <summary>   Clears the readings. </summary>
-''' <param name="a_readingOffset">   [Double] the Reading Offset value. </value>
-Public Sub ClearReadingsCommand(ByVal a_readingOffset As Double)
+''' <param name="a_value">          [Double] the value to use for clearing the readings.
+'''                                 This value might represent a probe resistance or
+'''                                 DC offset voltage. </value>
+''' <param name="a_firstChannel">   [Integer] the first channel number. </value>
+''' <param name="a_lastChannel">    [Integer] the last channel number. </value>
+Public Sub ClearReadingsCommand(ByVal a_value As Double, _
+    ByVal a_firstChannel As Integer, ByVal a_lastChannel As Integer)
 
     Const p_procedureName = "ClearReadingsCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.ClearReadings a_readingOffset
+    Me.ClearReadings a_value, a_firstChannel, a_lastChannel
   
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -4208,7 +4202,7 @@ Public Function TryMeasureImmediately(ByVal a_readingOffset As Double, ByRef a_d
     If This.AutoIncrementChannelNoEnabled Then
     
         ' Clear all cells
-        Me.ClearReadings a_readingOffset
+        Me.ClearReadings a_readingOffset, 1, Me.ChannelCount
 
         ' scan all channels
         For p_channelNumber = 1 To Me.ChannelCount
@@ -4549,7 +4543,7 @@ Public Sub StartMonitoringExternalTriggers(ByVal a_readingOffset As Double, ByVa
     If This.AutoIncrementChannelNoEnabled Then
     
         ' Clear all readings
-        Me.ClearReadings a_readingOffset
+        Me.ClearReadings a_readingOffset, 1, Me.ChannelCount
 
     End If
 
@@ -5077,11 +5071,28 @@ End Function
 ''' <para name="a_reading">         [double] The reading. </param>
 Private Sub OnChannelMeasured(ByVal a_channelNumber As Integer, ByVal a_reading As String)
 
+    Const p_procedureName = "OnChannelMeasured"
+
     ' set the measurement information
     Me.MeasuredChannelNumber = a_channelNumber
     
     ' this also sets the measured value.
     Me.MeasuredReading = a_reading
+    
+    Dim p_value As Double
+    If VBA.Len(a_reading) = 0 Then
+        p_value = cc_isr_Ieee488.Syntax.NotANumber
+        Me.MeasuredValue = cc_isr_Ieee488.Syntax.NotANumber
+    Else
+        Dim p_details As String
+        If cc_isr_Core.StringExtensions.TryParseDouble(a_reading, p_value, p_details) Then
+            Me.MeasuredValue = p_value
+        Else
+            Me.MeasuredValue = cc_isr_Ieee488.Syntax.NotANumber
+            Me.LastErrorMessage = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
+                " Failed parsing reading; " & p_details
+        End If
+    End If
     
     ' raise the measurement event.
     RaiseEvent ChannelMeasured( _
@@ -5765,11 +5776,7 @@ Private Sub m_k2700_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Channel
     If This.ReadingBeepEnabled Then VBA.Beep
 
     ' notify the observer of a channel measurements
-    If VBA.vbNullString = a_eventArgs.Reading Then
-        OnChannelMeasured a_eventArgs.ChannelNumber, -1#
-    Else
-        OnChannelMeasured a_eventArgs.ChannelNumber, CDbl(a_eventArgs.Reading)
-    End If
+    OnChannelMeasured a_eventArgs.ChannelNumber, a_eventArgs.Reading
 
     If This.AutoIncrementChannelNoEnabled Then
 

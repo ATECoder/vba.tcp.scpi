@@ -465,7 +465,7 @@ Public Function TestFrontInputStateShouldRead() As cc_isr_Test_Fx.Assert
     End If
     
     Dim p_expectedFrontInputs As Boolean
-    p_expectedFrontInputs = This.K2700.ScpiSystem.QueryFrontSwitch()
+    p_expectedFrontInputs = This.K2700.ScpiSystem.QueryFrontSwitch(0)
     
     Dim p_actualFrontInputs As Boolean
     

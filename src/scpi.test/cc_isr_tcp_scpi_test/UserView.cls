@@ -168,10 +168,7 @@ End Property
 ''' <summary>   Sets the connected state. </summary>
 ''' <param name="a_value">   [Boolean] the connected state. </param>
 Public Property Let Connected(ByVal a_value As Boolean)
-    
-    If Me.Connected <> a_value Then
-        This.Connected = a_value
-    End If
+    This.Connected = a_value
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -184,11 +181,10 @@ End Property
 ''' <value>   [Boolean]. </value>
 Public Property Get DesignMode() As Boolean
     
-    If This.UserSheet Is Nothing Then
-        DesignMode = This.DesignMode
-    Else
-        DesignMode = This.UserSheet.DesignMode
+    If Not This.UserSheet Is Nothing Then
+        This.DesignMode = This.UserSheet.DesignMode
     End If
+    DesignMode = This.DesignMode
 
 End Property
 
@@ -230,7 +226,7 @@ Public Sub OnAutoScanToggleButtonChange()
         This.UserSheet.DisplayStartDateTime
         
         Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
-        p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+        Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
         p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
         p_mode.FrontInputs = DataView.ImmediateFrontInputsRequired
         p_mode.SenseFunction = DataView.ImmediateSenseFunctionName
@@ -270,11 +266,10 @@ End Sub
 ''' <value>   [Boolean] true if the command is executable. </value>
 Public Property Get AutoScanToggleExecutable() As Boolean
     
-    If This.UserSheet Is Nothing Then
-        AutoScanToggleExecutable = This.AutoScanToggleExecutable
-    Else
-        AutoScanToggleExecutable = This.UserSheet.AutoScanToggleExecutable
+    If Not This.UserSheet Is Nothing Then
+        This.AutoScanToggleExecutable = This.UserSheet.AutoScanToggleExecutable
     End If
+    AutoScanToggleExecutable = This.AutoScanToggleExecutable
 
 End Property
 
@@ -294,11 +289,10 @@ End Property
 ''' <value>   [Boolean] true if the command is active. </value>
 Public Property Get AutoScanToggleValue() As Boolean
     
-    If This.UserSheet Is Nothing Then
-        AutoScanToggleValue = This.AutoScanToggleValue
-    Else
-        AutoScanToggleValue = This.UserSheet.AutoScanToggleValue
+    If Not This.UserSheet Is Nothing Then
+        This.AutoScanToggleValue = This.UserSheet.AutoScanToggleValue
     End If
+    AutoScanToggleValue = This.AutoScanToggleValue
 
 End Property
 
@@ -351,7 +345,7 @@ Public Sub OnAutoSingleToggleButtonChange()
         This.UserSheet.DisplayStartDateTime
         
         Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
-        p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+        Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
         p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
         p_mode.FrontInputs = DataView.ImmediateFrontInputsRequired
         p_mode.SenseFunction = DataView.ImmediateSenseFunctionName
@@ -391,11 +385,10 @@ End Sub
 ''' <value>   [Boolean] true if the command is executable. </value>
 Public Property Get AutoSingleToggleExecutable() As Boolean
     
-    If This.UserSheet Is Nothing Then
-        AutoSingleToggleExecutable = This.AutoSingleToggleExecutable
-    Else
-        AutoSingleToggleExecutable = This.UserSheet.AutoSingleToggleExecutable
+    If Not This.UserSheet Is Nothing Then
+        This.AutoSingleToggleExecutable = This.UserSheet.AutoSingleToggleExecutable
     End If
+    AutoSingleToggleExecutable = This.AutoSingleToggleExecutable
 
 End Property
 
@@ -417,11 +410,10 @@ End Property
 ''' <value>   [Boolean] true if the command is active. </value>
 Public Property Get AutoSingleToggleValue() As Boolean
     
-    If This.UserSheet Is Nothing Then
-        AutoSingleToggleValue = This.AutoSingleToggleValue
-    Else
-        AutoSingleToggleValue = This.UserSheet.AutoSingleToggleValue
+    If Not This.UserSheet Is Nothing Then
+        This.AutoSingleToggleValue = This.UserSheet.AutoSingleToggleValue
     End If
+    AutoSingleToggleValue = This.AutoSingleToggleValue
 
 End Property
 
@@ -513,7 +505,7 @@ Public Sub OnManualScanToggleButtonChange()
         This.UserSheet.DisplayStartDateTime
         
         Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
-        p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+        Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
         p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
         p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
         p_mode.SenseFunction = DataView.ExternalSenseFunctionName
@@ -565,11 +557,10 @@ End Sub
 ''' <summary>   Gets the execution (Can Execute) status of the Manual Scan Toggle command. </summary>
 ''' <value>   [Boolean] true if the command is executable. </value>
 Public Property Get ManualScanToggleExecutable() As Boolean
-    If This.UserSheet Is Nothing Then
-        ManualScanToggleExecutable = This.ManualScanToggleExecutable
-    Else
-        ManualScanToggleExecutable = This.UserSheet.ManualScanToggleExecutable
+    If Not This.UserSheet Is Nothing Then
+        This.ManualScanToggleExecutable = This.UserSheet.ManualScanToggleExecutable
     End If
+    ManualScanToggleExecutable = This.ManualScanToggleExecutable
 End Property
 
 ''' <summary>   Sets the execution (Can Execute) status of the Manual Scan Toggle command. </summary>
@@ -588,11 +579,10 @@ End Property
 ''' <value>   [Boolean] true if the command is active. </value>
 Public Property Get ManualScanToggleValue() As Boolean
     
-    If This.UserSheet Is Nothing Then
-        ManualScanToggleValue = This.ManualScanToggleValue
-    Else
-        ManualScanToggleValue = This.UserSheet.ManualScanToggleValue
+    If Not This.UserSheet Is Nothing Then
+        This.ManualScanToggleValue = This.UserSheet.ManualScanToggleValue
     End If
+    ManualScanToggleValue = This.ManualScanToggleValue
 
 End Property
 
@@ -638,7 +628,7 @@ Public Sub OnManualSingleToggleButtonChange()
         This.UserSheet.DisplayStartDateTime
         
         Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
-        p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
+        Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
         p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
         p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
         p_mode.SenseFunction = DataView.ExternalSenseFunctionName
@@ -691,11 +681,10 @@ End Sub
 ''' <summary>   Gets the execution (Can Execute) status of the Manual Single Toggle command. </summary>
 ''' <value>   [Boolean] true if the command is executable. </value>
 Public Property Get ManualSingleToggleExecutable() As Boolean
-    If This.UserSheet Is Nothing Then
-        ManualSingleToggleExecutable = This.ManualSingleToggleExecutable
-    Else
-        ManualSingleToggleExecutable = This.UserSheet.ManualSingleToggleExecutable
+    If Not This.UserSheet Is Nothing Then
+        This.ManualSingleToggleExecutable = This.UserSheet.ManualSingleToggleExecutable
     End If
+    ManualSingleToggleExecutable = This.ManualSingleToggleExecutable
 End Property
 
 ''' <summary>   Sets the execution (Can Execute) status of the Manual Single Toggle command. </summary>
@@ -714,11 +703,10 @@ End Property
 ''' <value>   [Boolean] true if the command is active. </value>
 Public Property Get ManualSingleToggleValue() As Boolean
     
-    If This.UserSheet Is Nothing Then
-        ManualSingleToggleValue = This.ManualSingleToggleValue
-    Else
-        ManualSingleToggleValue = This.UserSheet.ManualSingleToggleValue
+    If Not This.UserSheet Is Nothing Then
+        This.ManualSingleToggleValue = This.UserSheet.ManualSingleToggleValue
     End If
+    ManualSingleToggleValue = This.ManualSingleToggleValue
 
 End Property
 
@@ -752,25 +740,21 @@ End Property
 ''' <summary>   Sets the Auto Increment Channel Number Enabled. </summary>
 ''' <param name="a_value">   [Boolean] the Auto Increment Channel Number Enabled value. </value>
 Public Property Let AutoIncrementChannelNoEnabled(ByVal a_value As Boolean)
-    If This.AutoIncrementChannelNoEnabled <> a_value Then
-        This.AutoIncrementChannelNoEnabled = a_value
-    End If
+    This.AutoIncrementChannelNoEnabled = a_value
 End Property
 
 ''' <summary>   Gets the Reading Offset. </summary>
 ''' <value>   [Boolean]. </value>
 Public Property Get ReadingOffset() As Double
+    If Not This.UserSheet Is Nothing Then _
+        This.ReadingOffset = This.UserSheet.InitialResistance
     ReadingOffset = This.ReadingOffset
 End Property
 
 ''' <summary>   Sets the Reading Offset. </summary>
 ''' <param name="a_value">   [Double] the Reading Offset value. </value>
 Public Property Let ReadingOffset(ByVal a_value As Double)
-    If This.ReadingOffset <> a_value Then
-        This.ReadingOffset = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.ReadingOffset = a_value
-    End If
+    This.ReadingOffset = a_value
 End Property
 
 ''' <summary>   Gets the condition for using front inputs for auto sample. </summary>
@@ -783,9 +767,7 @@ End Property
 ''' <summary>   Sets the condition for using front inputs for auto sample. </summary>
 ''' <param name="a_value">   [Boolean] true if Front Inputs are used for auto sampling. </value>
 Public Property Let AutoSampleFrontInputs(ByVal a_value As Boolean)
-    If This.AutoSampleFrontInputs <> a_value Then
-        This.AutoSampleFrontInputs = a_value
-    End If
+    This.AutoSampleFrontInputs = a_value
 End Property
 
 ''' <summary>   Gets the Front Inputs Required. </summary>
@@ -798,11 +780,7 @@ End Property
 ''' <summary>   Sets the Front Inputs Required. </summary>
 ''' <param name="a_value">   [Boolean] true if Front Inputs are Required. </value>
 Public Property Let FrontInputsRequired(ByVal a_value As Boolean)
-    If This.FrontInputsRequired <> a_value Then
-        This.FrontInputsRequired = a_value
-        If Not This.ViewModel Is Nothing Then _
-            This.ViewModel.FrontInputsRequired = a_value
-    End If
+    This.FrontInputsRequired = a_value
 End Property
 
 ''' <summary>   Gets the Selected Channel Number Caption. </summary>
@@ -844,8 +822,8 @@ Public Function TryParseSelectedChannelNumber(ByVal a_value As String, ByRef a_d
     
     Dim p_channelNo As Integer: p_channelNo = 0
     
-    If VBA.Left$(a_value, 1) <> This.ChannelNumberCaptionPrefix Then
-    
+    If VBA.Left$(a_value, VBA.Len(This.ChannelNumberCaptionPrefix)) <> This.ChannelNumberCaptionPrefix Then
+     
         a_details = "The selected value '" & a_value & _
                "' is not a valid " & This.ChannelNumberTitle & _
                ". Please select a valid " & This.ChannelNumberTitle & _
@@ -909,9 +887,7 @@ End Property
 ''' <summary>   Sets the Single Read Enabled. </summary>
 ''' <param name="a_value">   [Boolean] the Single Read Enabled value. </value>
 Public Property Let SingleReadEnabled(ByVal a_value As Boolean)
-    If This.SingleReadEnabled <> a_value Then
-        This.SingleReadEnabled = a_value
-    End If
+    This.SingleReadEnabled = a_value
 End Property
 
 ''' <summary>   Gets the measuring state. True when measurements are collected. </summary>
@@ -923,9 +899,7 @@ End Property
 ''' <summary>   Sets the measuring state. True when measurements are collected. </summary>
 ''' <param name="a_value">   [Boolean] the measuring state; true when measuring is active. </value>
 Public Property Let Measuring(ByVal a_value As Boolean)
-    If This.Measuring <> a_value Then
-        This.Measuring = a_value
-    End If
+    This.Measuring = a_value
 End Property
 
 ''' <summary>   Gets the measurement mode. </summary>
@@ -939,9 +913,7 @@ End Property
 ''' <param name=-"a_value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>] the value. </param>
 ''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
 Public Property Let MeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementModeOption)
-    If This.MeasurementMode <> a_value Then
-        This.MeasurementMode = a_value
-    End If
+    This.MeasurementMode = a_value
 End Property
 
 ''' <summary>   Handles the change of measurement state. </summary>
@@ -985,6 +957,8 @@ End Sub
 ''' <summary>   Gets the Channel Number Caption Prefix. </summary>
 ''' <value>   [String]. </value>
 Public Property Get ChannelNumberCaptionPrefix() As String
+    If Not This.UserSheet Is Nothing Then _
+        This.ChannelNumberCaptionPrefix = This.UserSheet.ChannelNumberCaptionPrefix
     ChannelNumberCaptionPrefix = This.ChannelNumberCaptionPrefix
 End Property
 
@@ -1003,9 +977,7 @@ End Property
 ''' <summary>   Sets the Last Command Details. </summary>
 ''' <param name="a_value">   [String] the last Command Details value. </value>
 Public Property Let LastCommandDetails(ByVal a_value As String)
-    If This.LastCommandDetails <> a_value Then
-        This.LastCommandDetails = a_value
-    End If
+    This.LastCommandDetails = a_value
 End Property
 
 ''' <summary>   Gets the Last Command Outcome. </summary>
@@ -1017,9 +989,7 @@ End Property
 ''' <summary>   Sets the Last Command Outcome. </summary>
 ''' <param name="a_value">   [Boolean] the last Command Outcome value. </value>
 Public Property Let LastCommandOutcome(ByVal a_value As Boolean)
-    If This.LastCommandOutcome <> a_value Then
-        This.LastCommandOutcome = a_value
-    End If
+    This.LastCommandOutcome = a_value
 End Property
 
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
@@ -1068,13 +1038,13 @@ Friend Sub Synchronize()
     Const p_procedureName = "Synchronize"
 
     ' set the view model settings that come from the ViewModel user interface
-    Me.ReadingOffset = This.UserSheet.InitialResistance
-    Me.ChannelNumberCaptionPrefix = This.UserSheet.ChannelNumberCaptionPrefix
+    ' Me.ReadingOffset = This.UserSheet.InitialResistance
+    ' Me.ChannelNumberCaptionPrefix = This.UserSheet.ChannelNumberCaptionPrefix
     
-    This.ViewModel.ReadingOffset = This.ReadingOffset
+    ' This.ViewModel.ReadingOffset = This.ReadingOffset
 
-    Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
-    Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
+    ' Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
+    ' Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
     Me.MeasurementMode = This.ViewModel.MeasurementMode
     Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
     Me.SingleReadEnabled = This.ViewModel.SingleReadEnabled

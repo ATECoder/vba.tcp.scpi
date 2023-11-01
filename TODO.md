@@ -2,6 +2,16 @@
 
 ## GIT
 
+
+IEEE488:
+Add delay to write and query line methods.
+Add tests passed.
+
+SCPI:
+Add delay to the inputs query.
+Add *opc to the inputs query.
+
+
 ## TODO
 
 ## Tests
