@@ -358,7 +358,7 @@ End Sub
 ''' <summary>   Handles the Clear Messages Button Click Event. </summary>
 Public Sub OnClearReadings()
     If Not This.ViewModel Is Nothing Then
-        This.ViewModel.ClearReadingsCommand UserView.ReadingOffset, 1, This.MaximumChannelNumber
+        This.ViewModel.ClearReadingsCommand UserView.ReadingOffset, 1, Me.MaximumChannelNumber
     End If
 End Sub
 
@@ -922,6 +922,7 @@ Friend Sub Synchronize()
 
     ' set the view model settings that come from the ViewModel user interface
     
+    ' these values are now derived in the properties:
     ' set user interface settings
     ' Me.ChannelNumberCaptionPrefix = This.DataSheet.ChannelNumberCaptionPrefix
     ' Me.GpibLanControllerPort = This.DataSheet.GpibLanControllerPort
@@ -934,17 +935,22 @@ Friend Sub Synchronize()
     
     ' This.ViewModel.SocketAddress = This.SocketAddress
     This.ViewModel.GpibLanControllerPort = Me.GpibLanControllerPort
+    
+    ' these value are set upon connecting.
     ' This.ViewModel.SessionTimeout = Me.SessionTimeout
     ' This.ViewModel.TimerInterval = Me.TimerInterval
     ' This.ViewModel.MaximumChannelNumber = Me.MaximumChannelNumber
+    
+    ' this value is set as part of the measurement mode.
+    ' Me.ReadingOffset = This.ViewModel.ReadingOffset
 
+    ' The initial values must be set for propery change to work.
     Me.LastErrorMessage = This.ViewModel.LastErrorMessage
     Me.LastMessage = This.ViewModel.LastMessage
     Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
     Me.MeasuredReading = This.ViewModel.MeasuredReading
     Me.MeasuredValue = This.ViewModel.MeasuredValue
     Me.MeasurementMode = This.ViewModel.MeasurementMode
-    ' Me.ReadingOffset = This.ViewModel.ReadingOffset
     
     Me.ClearReadingsExecutable = This.ViewModel.ClearReadingsExecutable
     Me.OpenConnectionExecutable = This.ViewModel.OpenConnectionExecutable

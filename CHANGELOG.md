@@ -1,8 +1,9 @@
 # Change log
 All notable changes to these libraries will be documented in this file in a format based on [Keep a Change log]
 
-## [1.0.8705] - 2023-11-01
-* 
+## [1.0.8707] - 2023-11-02
+* Complete fixing and running unit tests.
+* All Tests passed.
 
 ## [1.0.8704] - 2023-10-31
 * Add delays to the write and query line methods.

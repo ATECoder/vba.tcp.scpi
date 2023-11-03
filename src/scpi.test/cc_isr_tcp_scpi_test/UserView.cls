@@ -836,7 +836,8 @@ Public Function TryParseSelectedChannelNumber(ByVal a_value As String, ByRef a_d
     
     Dim p_channelNo As Integer: p_channelNo = 0
     
-    If VBA.Left$(a_value, VBA.Len(This.ChannelNumberCaptionPrefix)) <> This.ChannelNumberCaptionPrefix Then
+    If 0 >= VBA.InStr(1, VBA.Left$(a_value, VBA.Len(This.ChannelNumberCaptionPrefix)), _
+        This.ChannelNumberCaptionPrefix, VBA.VbCompareMethod.vbTextCompare) Then
      
         a_details = "The selected value '" & a_value & _
                "' is not a valid " & This.ChannelNumberTitle & _
@@ -1057,13 +1058,14 @@ Friend Sub Synchronize()
     
     ' This.ViewModel.ReadingOffset = Me.ReadingOffset
 
-    ' Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
-    ' Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
+    ' The initial values must be set for propery change to work.
     Me.MeasurementMode = This.ViewModel.MeasurementMode
     Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
     Me.SingleReadEnabled = This.ViewModel.SingleReadEnabled
     Me.Measuring = This.ViewModel.Measuring
     Me.Connected = This.ViewModel.Connected
+    Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
+    Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
     
     ' ensure that the measurement status is set.
     Me.OnMeasurementStateChanged

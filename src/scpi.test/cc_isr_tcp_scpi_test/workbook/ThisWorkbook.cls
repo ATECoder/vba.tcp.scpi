@@ -16,11 +16,13 @@ End Type
 
 Private This As this_
 
+
+
 ''' <summary>   Updates this workbook document info. </summary>
 Private Sub UpdateDocumentInfo()
     On Error Resume Next
     
-    Dim p_revision As String: p_revision = "1.0.8703"
+    Dim p_revision As String: p_revision = "1.0." & VBA.CStr(VBA.CInt(VBA.Now - VBA.DateValue("2000/1/1")))
     Dim p_created As Variant: p_created = VBA.DateValue("8/7/2023 10:01:01 AM")
     
     cc_isr_Core_IO.WorkbookExtensions.UpdateDocumentProperty _
