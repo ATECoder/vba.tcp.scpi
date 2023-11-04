@@ -89,7 +89,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 1
+    RunTest 13
     AfterAll
 End Sub
 
@@ -699,7 +699,7 @@ Public Function AssertExternalModeShouldValidate(ByVal a_mode As cc_isr_Tcp_Scpi
             "K2700 Sheet Target Channel Number should equal the view model channel number.")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.Mode, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(TriggerSourceOption.External, _
             This.ViewModel.K2700.TriggerSystem.SourceGetter(), _
             "External trigger source should be as expected.")
 
@@ -928,7 +928,7 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_mode As cc_isr_Tcp_Scp
             "View Model Sense channel should equal the expected value.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(cc_isr_Tcp_Scpi.TriggerSourceOption.Immediate, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(TriggerSourceOption.Immediate, _
             This.ViewModel.K2700.TriggerSystem.SourceGetter(), _
             "Immediate trigger source should be as expected.")
     
@@ -2671,7 +2671,7 @@ Public Function TestImmediateModeShouldConfigure() As cc_isr_Test_Fx.Assert
     p_mode.ReadingOffset = This.K2700Sheet.ReadingOffset
     p_mode.SenseFunction = This.ImmediateSenseFunctionName
     p_mode.SingleRead = True
-    p_mode.TimerInterval = This.K2700Sheet.TimerInterval
+    p_mode.TimerInterval = This.K2700Sheet.TimerIntervalGet
     
     ' start the immediate trigger reading mode
     
@@ -2755,7 +2755,7 @@ Public Function TestExternalModeShouldConfigure() As cc_isr_Test_Fx.Assert
     p_mode.ReadingOffset = This.K2700Sheet.ReadingOffset
     p_mode.SenseFunction = This.ExternalSenseFunctionName
     p_mode.SingleRead = False
-    p_mode.TimerInterval = This.K2700Sheet.TimerInterval
+    p_mode.TimerInterval = This.K2700Sheet.TimerIntervalGet
     
     ' start the external trigger reading mode
     
@@ -3268,7 +3268,7 @@ Public Function TestTriggerMonitoringShouldStartStop() As cc_isr_Test_Fx.Assert
     p_mode.ReadingOffset = This.K2700Sheet.ReadingOffset
     p_mode.SenseFunction = This.ExternalSenseFunctionName
     p_mode.SingleRead = False
-    p_mode.TimerInterval = This.K2700Sheet.TimerInterval
+    p_mode.TimerInterval = This.K2700Sheet.TimerIntervalGet
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = AssetTriggersShouldMonitor(p_mode, p_outcome, p_enabled, p_duration)
@@ -3346,7 +3346,7 @@ Public Function TestTriggerMonitoringShouldRead() As cc_isr_Test_Fx.Assert
     p_mode.ReadingOffset = This.K2700Sheet.ReadingOffset
     p_mode.SenseFunction = This.ExternalSenseFunctionName
     p_mode.SingleRead = False
-    p_mode.TimerInterval = This.K2700Sheet.TimerInterval
+    p_mode.TimerInterval = This.K2700Sheet.TimerIntervalGet
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = AssetTriggersShouldMonitor(p_mode, p_outcome, p_enabled, p_duration)

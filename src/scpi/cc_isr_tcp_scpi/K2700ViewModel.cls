@@ -123,6 +123,7 @@ Private Type this_
     SenseFunctionName As String
     SenseFunctionCaption As String
     SenseFunctionUnit As String
+    SenseFunctionUnicode As Integer
     MeasuredReading As String
     MeasuredValueFormat As String
     MeasuredValue As Double
@@ -3414,6 +3415,9 @@ Public Sub OnMeasurementStateChanged(ByVal a_mode As cc_isr_Tcp_Scpi.Measurement
     ' turn off the pause requested when monitoring started
     Me.PauseRequested = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring <> a_mode
 
+    ' enable selecting a new function when not monitoring
+    Me.FunctionNameExecutable = Me.Connected And (a_mode <> cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring)
+    
     ' disable the stop monitoring action
     Me.StopMonitoringExecutable = Me.Connected And (cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring = a_mode)
     
@@ -3465,56 +3469,67 @@ Public Sub OnSenseFunctionChanged()
         Case "CONT"
     
             Me.SenseFunctionCaption = "Continuity"
-            Me.SenseFunctionUnit = "T/F"
+            Me.SenseFunctionUnicode = VBA.Asc("1")
+            ' Me.SenseFunctionUnit = "T/F"
     
         Case "CURR:AC"
     
             Me.SenseFunctionCaption = "Current AC"
+            Me.SenseFunctionUnicode = VBA.Asc("A")
             Me.SenseFunctionUnit = "A"
     
         Case "CURR:DC"
     
             Me.SenseFunctionCaption = "Current DC"
+            Me.SenseFunctionUnicode = VBA.Asc("A")
             Me.SenseFunctionUnit = "A"
     
         Case "FREQ"
     
             Me.SenseFunctionCaption = "Frequency"
+            Me.SenseFunctionUnicode = 13200
             Me.SenseFunctionUnit = "Hz"
     
         Case "FRES"
     
             Me.SenseFunctionCaption = "4-Wire Res."
+            Me.SenseFunctionUnicode = 937
             Me.SenseFunctionUnit = VBA.Chr$(234)
     
         Case "PER"
     
             Me.SenseFunctionCaption = "Period"
+            Me.SenseFunctionUnicode = VBA.Asc("s")
             Me.SenseFunctionUnit = "s"
     
         Case "RES"
     
             Me.SenseFunctionCaption = "2-Wire Res."
+            Me.SenseFunctionUnicode = 937
             Me.SenseFunctionUnit = VBA.Chr$(234)
     
         Case "TEMP"
     
             Me.SenseFunctionCaption = "Temperature"
+            Me.SenseFunctionUnicode = VBA.Asc("K")
             Me.SenseFunctionUnit = "K"
     
         Case "VOLT:AC"
     
             Me.SenseFunctionCaption = "Voltage AC"
+            Me.SenseFunctionUnicode = VBA.Asc("v")
             Me.SenseFunctionUnit = "v"
     
         Case "VOLT:DC"
     
             Me.SenseFunctionCaption = "Voltage DC"
+            Me.SenseFunctionUnicode = VBA.Asc("v")
             Me.SenseFunctionUnit = "v"
     
         Case Else
     
             Me.SenseFunctionCaption = "unknown"
+            Me.SenseFunctionUnicode = VBA.Asc("?")
             Me.SenseFunctionUnit = "?"
 
     End Select
@@ -3544,10 +3559,25 @@ End Property
 
 ''' <summary>   Sets the Sense Function Unit. </summary>
 ''' <param name="a_value">   [String] the Sense Function Unit value. </value>
-Friend Property Let SenseFunctionUnit(ByVal a_value As String)
+Public Property Let SenseFunctionUnit(ByVal a_value As String)
     If This.SenseFunctionUnit <> a_value Then
         This.SenseFunctionUnit = a_value
         Me.OnPropertyChanged "SenseFunctionUnit"
+    End If
+End Property
+
+''' <summary>   Gets the Sense Function Unit. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get SenseFunctionUnicode() As Integer
+    SenseFunctionUnicode = This.SenseFunctionUnicode
+End Property
+
+''' <summary>   Sets the Sense Function Unit unicoide. </summary>
+''' <param name="a_value">   [Integer] the Sense Function Unit unicode value. </value>
+Friend Property Let SenseFunctionUnicode(ByVal a_value As Integer)
+    If This.SenseFunctionUnicode <> a_value Then
+        This.SenseFunctionUnicode = a_value
+        Me.OnPropertyChanged "SenseFunctionUnicode"
     End If
 End Property
 

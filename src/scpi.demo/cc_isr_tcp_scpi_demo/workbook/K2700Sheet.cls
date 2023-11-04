@@ -35,7 +35,8 @@ Private Const m_readTimeoutCell As String = "C15"
 Private Const m_autoAssertTalkCell As String = "C18"
 
 Private Const m_readingFormatCell As String = "C21"
-Private Const m_timerIntervalCell As String = "C22"
+Private Const m_timerIntervalGetCell As String = "C22"
+Private Const m_timerIntervalSetCell As String = "D22"
 Private Const m_topCardCell As String = "C23"
 Private Const m_bottomCardCell As String = "C24"
 Private Const m_topCardScanListCell As String = "C25"
@@ -46,10 +47,11 @@ Private Const m_targetChannelNumberCell As String = "D28"
 Private Const m_functionNameCell As String = "B29"
 Private Const m_functionValueCell As String = "C29"
 Private Const m_functionUnitCell As String = "D29"
+Private Const m_functionUnicodeCell As String = "E29"
 Private Const m_channelCountCell As String = "C30"
 Private Const m_monitoringStateCell As String = "C31"
 Private Const m_triggerModeCell As String = "C32"
-Private Const m_measuredChannelNumberCell As String = "D28"
+Private Const m_measuredChannelNumberCell As String = "E28"
 
 Private Const m_readingOffsetCell As String = "L4"
 
@@ -165,12 +167,8 @@ End Function
 ''' <summary>   Initializes this object if not initialized. </summary>
 Private Sub Initialize_()
 
-    If m_viewModel Is Nothing Then
-    
-        Me.Initialize cc_isr_Tcp_Scpi.Factory.NewK2700ViewModel
-        This.ViewModelOwner = True
-        
-    End If
+    Me.Initialize cc_isr_Tcp_Scpi.Factory.NewK2700ViewModel
+    This.ViewModelOwner = True
     
 End Sub
 
@@ -1072,16 +1070,29 @@ End Property
 ' K2700 Settings
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary> Get or sets the timer interval. </summary>
+''' <summary> Get or sets the timer interval to use for setting the actual timer interval. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get TimerInterval() As Integer
-    If 0 = Len(Me.Range(m_timerIntervalCell).Value) Then Me.Range(m_timerIntervalCell).Value = 500
-    TimerInterval = VBA.CInt(Me.Range(m_timerIntervalCell).Value)
+Public Property Get TimerIntervalGet() As Integer
+    If 0 = Len(Me.Range(m_timerIntervalGetCell).Value) Then Me.Range(m_timerIntervalGetCell).Value = 500
+    TimerIntervalGet = VBA.CInt(Me.Range(m_timerIntervalGetCell).Value)
 End Property
 
-Public Property Let TimerInterval(ByVal a_value As Integer)
-    If Me.TimerInterval <> a_value Then
-        Me.Range(m_timerIntervalCell).Value = a_value
+Public Property Let TimerIntervalGet(ByVal a_value As Integer)
+    If Me.TimerIntervalGet <> a_value Then
+        Me.Range(m_timerIntervalGetCell).Value = a_value
+    End If
+End Property
+
+''' <summary> Get or sets the timer interval that was set. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get TimerIntervalSet() As Integer
+    If 0 = Len(Me.Range(m_timerIntervalSetCell).Value) Then Me.Range(m_timerIntervalSetCell).Value = 500
+    TimerIntervalSet = VBA.CInt(Me.Range(m_timerIntervalSetCell).Value)
+End Property
+
+Public Property Let TimerIntervalSet(ByVal a_value As Integer)
+    If Me.TimerIntervalSet <> a_value Then
+        Me.Range(m_timerIntervalSetCell).Value = a_value
     End If
 End Property
 
@@ -1356,11 +1367,19 @@ Public Property Get SenseFunctionUnit() As String
     SenseFunctionUnit = Me.Range(m_functionUnitCell).Value
 End Property
 
-''' <summary>   Sets the Sense Function Unit. </summary>
-''' <param name="a_value">   [String] the Sense Function Unit value. </value>
-Public Property Let SenseFunctionUnit(ByVal a_value As String)
-    If Me.SenseFunctionUnit <> a_value Then
-        Me.Range(m_functionUnitCell).Value = a_value
+''' <summary>   Gets the Sense Function Unit Unicode value. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get SenseFunctionUnicode() As Integer
+    SenseFunctionUnicode = Me.Range(m_functionUnicodeCell).Value
+End Property
+
+''' <summary>   Sets the Sense Function Unit Unicode value. </summary>
+''' <param name="a_value">   [Integer] the Sense Function Unit value. </value>
+Public Property Let SenseFunctionUnicode(ByVal a_value As Integer)
+    If SenseFunctionUnicode <> a_value & a_value > 0 Then
+        Me.Range(m_functionUnicodeCell).Value = a_value
+        If Not This.ViewModel Is Nothing Then _
+            This.ViewModel.SenseFunctionUnit = StrConv(Me.SenseFunctionUnit, vbFromUnicode)
     End If
 End Property
 
@@ -1519,7 +1538,7 @@ Public Function OnExternalTriggerOption(ByRef a_details As String) As Boolean
     p_mode.ReadingOffset = Me.ReadingOffset
     p_mode.SenseFunction = Me.SenseFunctionComboBox.Text
     p_mode.SingleRead = Me.SingleReadEnabled
-    p_mode.TimerInterval = Me.TimerInterval
+    p_mode.TimerInterval = Me.TimerIntervalGet
     Set This.MeasureMode = p_mode
     OnExternalTriggerOption = This.ViewModel.ConfigureMeasureCommand(p_mode, a_details)
 
@@ -1546,7 +1565,7 @@ Public Function OnImmediateTriggerOption(ByRef a_details As String) As Boolean
     p_mode.ReadingOffset = Me.ReadingOffset
     p_mode.SenseFunction = Me.SenseFunctionComboBox.Text
     p_mode.SingleRead = Me.SingleReadEnabled
-    p_mode.TimerInterval = Me.TimerInterval
+    p_mode.TimerInterval = Me.TimerIntervalGet
     Set This.MeasureMode = p_mode
     OnImmediateTriggerOption = This.ViewModel.ConfigureMeasureCommand(p_mode, a_details)
 
@@ -1586,7 +1605,7 @@ End Sub
 Private Sub StartMonitoringButton_Click()
     If Not This.ViewModel Is Nothing Then _
         This.ViewModel.StartMonitoringExternalTriggersCommand This.MeasureMode.ReadingOffset, _
-            This.MeasureMode.TimerInterval
+            This.MeasureMode.TimerIntervalGet
 End Sub
 
 ''' <summary>   Handles the stop monitoring button click event. </summary>
@@ -2113,7 +2132,7 @@ Public Sub Synchronize()
     Me.SenseFunctionName = This.ViewModel.SenseFunctionName
     Me.SenseFunctionCaption = This.ViewModel.SenseFunctionCaption
     Me.SenseFunctions = This.ViewModel.SenseFunctions
-    Me.SenseFunctionUnit = This.ViewModel.SenseFunctionUnit
+    Me.SenseFunctionUnicode = This.ViewModel.SenseFunctionUnicode
     Me.SentMessage = This.ViewModel.SentMessage
     Me.SerialPollByte = This.ViewModel.SerialPollByte
     Me.ServiceRequested = This.ViewModel.ServiceRequested
@@ -2181,7 +2200,7 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
         Case "StopRequested"
             Me.StopRequested = This.ViewModel.StopRequested
         Case "TimerInterval"
-            Me.TimerInterval = This.ViewModel.TimerInterval
+            Me.TimerIntervalSet = This.ViewModel.TimerInterval
         Case "Connected"
             Me.Connected = This.ViewModel.Connected
         Case "SentMessage"
@@ -2241,8 +2260,8 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.SenseFunctionName = This.ViewModel.SenseFunctionName
         Case "SenseFunctionCaption"
             Me.SenseFunctionCaption = This.ViewModel.SenseFunctionCaption
-        Case "SenseFunctionUnit"
-            Me.SenseFunctionUnit = This.ViewModel.SenseFunctionUnit
+        Case "SenseFunctionUnicode"
+            Me.SenseFunctionUnicode = This.ViewModel.SenseFunctionUnicode
         Case "MeasuredReading"
             Me.MeasuredReading = This.ViewModel.MeasuredReading
         Case "MeasuredValueFormat"
