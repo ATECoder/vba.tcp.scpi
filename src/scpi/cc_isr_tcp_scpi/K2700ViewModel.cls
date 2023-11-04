@@ -3415,17 +3415,17 @@ Public Sub OnMeasurementStateChanged(ByVal a_mode As cc_isr_Tcp_Scpi.Measurement
     Me.PauseRequested = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring <> a_mode
 
     ' disable the stop monitoring action
-    Me.StopMonitoringExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring = a_mode
+    Me.StopMonitoringExecutable = Me.Connected And (cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring = a_mode)
     
     ' enable the start monitoring action in external mode
-    Me.StartMonitoringExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.External = a_mode
+    Me.StartMonitoringExecutable = Me.Connected And (cc_isr_Tcp_Scpi.MeasurementModeOption.External = a_mode)
     
     ' enable immediate readings in immediate mode
-    Me.MeasureExecutable = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate = a_mode
+    Me.MeasureExecutable = Me.Connected And (cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate = a_mode)
     
     ' enable toggling the configurations
-    Me.ImmediateTriggerOptionExecutable = a_mode <> cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
-    Me.ExternalTriggerOptionExecutable = a_mode <> cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
+    Me.ImmediateTriggerOptionExecutable = Me.Connected And (a_mode <> cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring)
+    Me.ExternalTriggerOptionExecutable = Me.Connected And (a_mode <> cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring)
     
     ' finally, indicates that external trigger monitoring is enabled thus updating the related commands.
     Me.ExternalTrigMonitoringEnabled = a_mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring

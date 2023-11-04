@@ -89,7 +89,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 16
+    RunTest 1
     AfterAll
 End Sub
 
@@ -783,10 +783,6 @@ Public Function AssertExternalModeShouldValidate(ByVal a_mode As cc_isr_Tcp_Scpi
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.ExternalTrigMonitoringEnabled, _
             "External trigger monitoring state should be off in external trigger reading mode.")
-
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.K2700Sheet.ExternalTrigMonitoringEnabled, _
-            "K2700 Sheet external trigger monitoring state should be off in external trigger reading mode.")
     
     Set AssertExternalModeShouldValidate = p_outcome
 
@@ -999,10 +995,6 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_mode As cc_isr_Tcp_Scp
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.ExternalTrigMonitoringEnabled, _
             "External trigger monitoring state should be off in immediate mode.")
-    
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.K2700Sheet.ExternalTrigMonitoringEnabled, _
-            "K2700 Sheet external trigger monitoring state should be off in immediate mode.")
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.AutoIncrementChannel, _
@@ -1288,10 +1280,6 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_mode As cc_isr_Tcp_Sc
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.ExternalTrigMonitoringEnabled, _
             "External trigger monitoring state should be on in trigger monitoring mode.")
     
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.K2700Sheet.ExternalTrigMonitoringEnabled, _
-            "K2700 Sheet external trigger monitoring state should be on in trigger monitoring mode.")
-    
     ' testing trigger monitoring uses auto increment to detect changes
     ' in channel number as readings are triggered.
     If p_outcome.AssertSuccessful Then _
@@ -1521,10 +1509,6 @@ Public Function AssertMonitoringModeStopShouldValidate(ByVal a_assert As cc_isr_
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.ViewModel.ExternalTrigMonitoringEnabled, _
             "External trigger monitoring state should be off after monitoring stopped.")
-            
-    If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(This.K2700Sheet.ExternalTrigMonitoringEnabled, _
-            "K2700 Sheet external trigger monitoring state should be off after monitoring stopped.")
             
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, _
@@ -3402,7 +3386,7 @@ End Function
 ''' With 1ms read after write delay.
 ''' 8:40:13 Power on reset starting. This could take 3 seconds. Please wait...
 ''' 8:40:19 done power on reset.
-''' Test 16 TestOpenConnectionWithPowerOnResetShouldConnect passed. Elapsed time: 6517.1 ms.
+''' Test 13 TestOpenConnectionWithPowerOnResetShouldConnect passed. Elapsed time: 6517.1 ms.
 ''' </code>
 ''' </remarks>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where

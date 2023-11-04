@@ -48,6 +48,7 @@ Private Const m_functionValueCell As String = "C29"
 Private Const m_functionUnitCell As String = "D29"
 Private Const m_channelCountCell As String = "C30"
 Private Const m_monitoringStateCell As String = "C31"
+Private Const m_triggerModeCell As String = "C32"
 Private Const m_measuredChannelNumberCell As String = "D28"
 
 Private Const m_readingOffsetCell As String = "L4"
@@ -130,8 +131,6 @@ Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As K2700Sheet
     Me.MaximumChannelNumber = 48
     Me.FrontInputsRequired = True
     Me.SingleReadEnabled = True
-    Me.ImmediateTriggerOptionButton.Value = True
-    Me.ExternalTriggerOptionButton.Value = False
     
     Me.Synchronize
     
@@ -320,6 +319,24 @@ Public Property Let OpenConnectionExecutable(ByVal a_value As Boolean)
     ' allow power on reset only if not connected.
     Me.PowerOnResetButton.Enabled = a_value
 End Property
+
+Private Sub m_viewModel_MeasurementStateChanged(ByVal a_eventArgs As cc_isr_Tcp_Scpi.StateChangedEventArgs)
+    
+    Dim p_caption As String
+    Select Case This.MeasurementMode
+        Case cc_isr_Tcp_Scpi.MeasurementModeOption.Continuous
+            p_caption = "Continuous"
+        Case cc_isr_Tcp_Scpi.MeasurementModeOption.External
+            p_caption = "External"
+        Case cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
+            p_caption = "Immediate"
+        Case cc_isr_Tcp_Scpi.MeasurementModeOption.Monitoring
+            p_caption = "Monitoring"
+        Case cc_isr_Tcp_Scpi.MeasurementModeOption.None
+            p_caption = "None"
+    End Select
+    TriggerMode = p_caption
+End Sub
 
 ''' <summary>   Handles open connection button click event. </summary>
 Private Sub OpenConnectionButton_Click()
@@ -647,7 +664,7 @@ End Sub
 ''' <summary>   Handles the Read Standard Event Status Byte button click event. </summary>
 Private Sub ReadStandardEventStatusButton_Click()
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.ReadStatusByteCommand
+        This.ViewModel.ReadStandardEventStatusCommand
 End Sub
 
 ''' <summary>   Handles the Reset Known State button click event. </summary>
@@ -1000,11 +1017,11 @@ End Property
 '''             can be executed. </summary>
 ''' <value>   [Boolean] True if the Read Status Byte command can be executed. </value>
 Public Property Get ReadStatusByteExecutable() As Boolean
-    ReadStatusByteExecutable = Me.ReadStatusByteButton.Enabled
+    ReadStatusByteExecutable = Me.SerialPollButton.Enabled
 End Property
 
 Public Property Let ReadStatusByteExecutable(ByVal a_value As Boolean)
-    Me.ReadStatusByteButton.Enabled = a_value
+    Me.SerialPollButton.Enabled = a_value
 End Property
 
 ''' <summary>   Gets or sets the condition indicating that the Go To Local command
@@ -1033,7 +1050,7 @@ End Property
 '''             can be executed. </summary>
 ''' <value>   [Boolean] True if the Serial Poll command can be executed. </value>
 Public Property Get SerialPollExecutable() As Boolean
-    ReadStatusByteExecutable = Me.SerialPollButton.Enabled
+    SerialPollExecutable = Me.SerialPollButton.Enabled
 End Property
 
 Public Property Let SerialPollExecutable(ByVal a_value As Boolean)
@@ -1071,15 +1088,15 @@ End Property
 ''' <summary>   Gets the Channel Count. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get ChannelCount() As Integer
-    If 0 = Len(Me.Range(m_channelNumberCell).Value) Then Me.Range(m_channelNumberCell).Value = 0
-    ChannelCount = VBA.CInt(Me.Range(m_channelNumberCell).Value)
+    If 0 = Len(Me.Range(m_channelCountCell).Value) Then Me.Range(m_channelCountCell).Value = 0
+    ChannelCount = VBA.CInt(Me.Range(m_channelCountCell).Value)
 End Property
 
 ''' <summary>   Sets the Channel Count. </summary>
 ''' <param name="a_value">   [Integer] the Channel Count value. </value>
 Public Property Let ChannelCount(ByVal a_value As Integer)
     If Me.ChannelCount <> a_value Then
-        Me.Range(m_channelNumberCell).Value = a_value
+        Me.Range(m_channelCountCell).Value = a_value
     End If
 End Property
 
@@ -1243,6 +1260,21 @@ Public Property Let MeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.Measurement
         This.MeasurementMode = a_value
     End If
 End Property
+
+''' <summary>   Gets the trigger mode. </summary>
+''' <value>   [String]. </value>
+Public Property Get TriggerMode() As String
+    TriggerMode = Me.Range(m_triggerModeCell).Value
+End Property
+
+''' <summary>   Gets the trigger mode. </summary>
+''' <param name="a_value">   [String] the trigger mode. </value>
+Public Property Let TriggerMode(ByVal a_value As String)
+    If Me.TriggerMode <> a_value Then
+        Me.Range(m_triggerModeCell).Value = a_value
+    End If
+End Property
+
 
 ''' <summary>   Gets the Monitoring State. </summary>
 ''' <value>   [String]. </value>
@@ -1472,34 +1504,6 @@ Private Sub ClearReadingsButton_Click()
         This.ViewModel.ClearReadingsCommand Me.ReadingOffset, 1, Me.MaximumChannelNumber
 End Sub
 
-''' <summary>   Gets the External Trig Monitoring Enabled condition. </summary>
-''' <remarks>   When true, a Stop request is sent to the timer so that the timer
-'''             event is not handled and the timer is Stopd on the next event. </remarks>
-''' <value>   [Boolean]. </value>
-Public Property Get ExternalTrigMonitoringEnabled() As Boolean
-    ExternalTrigMonitoringEnabled = Me.ExternalTriggerOptionButton.Value
-End Property
-
-''' <summary>   Sets the External Trig Monitoring Enabled condition. </summary>
-''' <param name="a_value">   [Boolean] the External Trig Monitoring Enabled value. </value>
-Public Property Let ExternalTrigMonitoringEnabled(ByVal a_value As Boolean)
-    If Me.ExternalTriggerOptionButton.Value <> a_value Then
-        Me.ExternalTriggerOptionButton.Value = a_value
-    End If
-End Property
-
-Private Sub ExternalTriggerOptionButton_GotFocus()
-    This.FocusedControlName = Me.ExternalTriggerOptionButton.Name
-    DoEvents
-End Sub
-
-Private Sub ExternalTriggerOptionButton_LostFocus()
-    This.FocusedControlName = VBA.vbNullString
-    DoEvents
-End Sub
-
-
-
 ''' <summary>   Handles the external trigger option button affirmative action event. </summary>
 ''' <param name="a_details">   [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
@@ -1521,56 +1525,10 @@ Public Function OnExternalTriggerOption(ByRef a_details As String) As Boolean
 
 End Function
 
-''' <summary>   Handles the external trigger option button change and click events. </summary>
-Private Sub ExternalTriggerOptionButton_Change()
-
-    On Error GoTo err_Handler:
-
-    If This.ViewModel Is Nothing Then Exit Sub
-    
-    If This.FocusedControlName = Me.ExternalTriggerOptionButton.Name Then
-
-        On Error GoTo 0
-
-        ' Commands for click
-        If Me.ExternalTriggerOptionButton.Value And Not This.ViewModel Is Nothing Then _
-            This.LastCommandOutcome = OnExternalTriggerOption(This.LastCommandDetails)
-        
-    Else
-
-        On Error GoTo 0
-
-        ' Commands for change from within the sheet
-        If Me.ExternalTriggerOptionButton.Value And Not This.ViewModel Is Nothing Then _
-            This.LastCommandOutcome = OnExternalTriggerOption(This.LastCommandDetails)
-
-    End If
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    On Error GoTo 0
-    
-    ' Commands for change from outside the sheet
-    If Me.ExternalTriggerOptionButton.Value And Not This.ViewModel Is Nothing Then _
+''' <summary>   Handles the external trigger button click event. </summary>
+Private Sub ExternalTriggerButton_Click()
+    If Not This.ViewModel Is Nothing Then _
         This.LastCommandOutcome = OnExternalTriggerOption(This.LastCommandDetails)
-    
-End Sub
-
-Private Sub ImmediateTriggerOptionButton_GotFocus()
-    This.FocusedControlName = Me.ImmediateTriggerOptionButton.Name
-    DoEvents
-End Sub
-
-Private Sub ImmediateTriggerOptionButton_LostFocus()
-    This.FocusedControlName = VBA.vbNullString
-    DoEvents
 End Sub
 
 ''' <summary>   Handles the immediate trigger option button affirmative action event. </summary>
@@ -1596,88 +1554,9 @@ End Function
 
 
 ''' <summary>   Configure immediate trigger mode and enables the read button. </summary>
-''' <remarks>   The check box change event also causes a click event.
-'''             This method issues the click event on actual click.
-'''             Note: Make sure to not implement the click event,
-Private Sub ImmediateTriggerOptionButton_Change()
-
-    On Error GoTo err_Handler:
-    
-    If This.FocusedControlName = Me.ImmediateTriggerOptionButton.Name Then
-
-        On Error GoTo 0
-
-        ' Commands for click
-        If ImmediateTriggerOptionButton.Value And Not This.ViewModel Is Nothing Then _
-            This.LastCommandOutcome = OnImmediateTriggerOption(This.LastCommandDetails)
-    
-    Else
-
-        On Error GoTo 0
-
-        ' Commands for change from within the sheet
-        If ImmediateTriggerOptionButton.Value And Not This.ViewModel Is Nothing Then _
-            This.LastCommandOutcome = OnImmediateTriggerOption(This.LastCommandDetails)
-
-    End If
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    On Error GoTo 0
-    
-    ' Commands for change from outside the sheet
-    If ImmediateTriggerOptionButton.Value And Not This.ViewModel Is Nothing Then _
+Private Sub ImmediateTriggerButton_Click()
+    If Not This.ViewModel Is Nothing Then _
         This.LastCommandOutcome = OnImmediateTriggerOption(This.LastCommandDetails)
-    
-End Sub
-
-Private Sub InputsCheckBox_GotFocus()
-    This.FocusedControlName = Me.InputsCheckBox.Name
-    DoEvents
-End Sub
-
-Private Sub InputsCheckBox_LostFocus()
-    This.FocusedControlName = VBA.vbNullString
-    DoEvents
-End Sub
-
-''' <summary>   Handles the Inputs check box change event. </summary>
-Private Sub InputsCheckBox_Change()
-    On Error GoTo err_Handler:
-    If This.FocusedControlName = Me.InputsCheckBox.Name Then
-        On Error GoTo 0
-        ' Commands for click
-        ' If Not This.ViewModel Is Nothing Then _
-        '     This.ViewModel.FrontInputsRequired = Me.InputsCheckBox.Value
-    Else
-        On Error GoTo 0
-        ' Commands for change from within the sheet
-        ' If Not This.ViewModel Is Nothing Then _
-        '     This.ViewModel.FrontInputsRequired = Me.InputsCheckBox.Value
-    End If
-    
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-exit_Handler:
-
-    On Error GoTo 0
-    Exit Sub
-
-' . . . . . . . . . . . . . . . . . . . . . . . . . . .
-err_Handler:
-  
-    On Error GoTo 0
-    
-    ' Commands for change from outside the sheet
-    ' If Not This.ViewModel Is Nothing Then _
-    '     This.ViewModel.FrontInputsRequired = Me.InputsCheckBox.Value
-    
 End Sub
 
 ''' <summary>   Gets the Front Inputs Required. </summary>
@@ -1796,7 +1675,7 @@ Public Sub PopulateSenseFunctionComboBox()
         p_senseFunction = VBA.CStr(p_item)
         Me.SenseFunctionComboBox.AddItem p_senseFunction
         If "FRES" = p_senseFunction Then
-            p_fourWireResistanceIndex = Me.SenseFunctionComboBox.Count
+            p_fourWireResistanceIndex = Me.SenseFunctionComboBox.ListCount
         End If
     Next
 
@@ -1844,11 +1723,11 @@ End Property
 '''             can be executed. </summary>
 ''' <value>   [Boolean] True if the Query Inputs command can be executed. </value>
 Public Property Get QueryInputsExecutable() As Boolean
-    QueryInputsExecutable = Me.InputsCheckBox.Enabled
+    QueryInputsExecutable = Me.QueryInputsButton.Enabled
 End Property
 
 Public Property Let QueryInputsExecutable(ByVal a_value As Boolean)
-     Me.InputsCheckBox.Enabled = a_value
+     Me.QueryInputsButton.Enabled = a_value
 End Property
 
 ''' <summary>   Gets or sets the condition indicating that the Measure command
@@ -1866,22 +1745,22 @@ End Property
 '''             can be executed. </summary>
 ''' <value>   [Boolean] True if the Immediate Trigger Option command  can be executed. </value>
 Public Property Get ImmediateTriggerOptionExecutable() As Boolean
-    ImmediateTriggerOptionExecutable = Me.ImmediateTriggerOptionButton.Enabled
+    ImmediateTriggerOptionExecutable = Me.ImmediateTriggerButton.Enabled
 End Property
 
 Public Property Let ImmediateTriggerOptionExecutable(ByVal a_value As Boolean)
-     Me.ImmediateTriggerOptionButton.Enabled = a_value
+     Me.ImmediateTriggerButton.Enabled = a_value
 End Property
 
 ''' <summary>   Gets or sets the condition indicating that the External Trigger Option command
 '''             can be executed. </summary>
 ''' <value>   [Boolean] True if the External Trigger Option command  can be executed. </value>
 Public Property Get ExternalTriggerOptionExecutable() As Boolean
-    ExternalTriggerOptionExecutable = Me.ExternalTriggerOptionButton.Enabled
+    ExternalTriggerOptionExecutable = Me.ExternalTriggerButton.Enabled
 End Property
 
 Public Property Let ExternalTriggerOptionExecutable(ByVal a_value As Boolean)
-     Me.ExternalTriggerOptionButton.Enabled = a_value
+     Me.ExternalTriggerButton.Enabled = a_value
 End Property
 
 ''' <summary>   Gets or sets the condition indicating that the function name command
@@ -2217,7 +2096,6 @@ Public Sub Synchronize()
     Me.ElapsedTime = This.ViewModel.ElapsedTime
     Me.ElapsedTimeFormat = This.ViewModel.ElapsedTimeFormat
     Me.ElapsedTimeCaption = This.ViewModel.ElapsedTimeCaption
-    Me.ExternalTrigMonitoringEnabled = This.ViewModel.ExternalTrigMonitoringEnabled
     Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
     Me.LastErrorMessage = This.ViewModel.LastErrorMessage
     Me.LastMessage = This.ViewModel.LastMessage
@@ -2374,8 +2252,6 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.MeasuredValue = This.ViewModel.MeasuredValue
         Case "MeasuredValueFormat"
             Me.MeasuredValueFormat = This.ViewModel.MeasuredValueFormat
-        Case "ExternalTrigMonitoringEnabled"
-            Me.ExternalTrigMonitoringEnabled = This.ViewModel.ExternalTrigMonitoringEnabled
         Case "MonitoringState"
             Me.MonitoringState = This.ViewModel.MonitoringState
         Case "AutoIncrementChannelNoEnabled"
@@ -2439,6 +2315,7 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.ReadStandardByteExecutable = This.ViewModel.ReadStandardEventStatusExecutable
         Case "ReadStatusByteExecutable"
             Me.ReadStatusByteExecutable = This.ViewModel.ReadStatusByteExecutable
+            Me.SerialPollExecutable = This.ViewModel.ReadStatusByteExecutable
         Case "ResetKnownStateExecutable"
             Me.ResetKnownStateExecutable = This.ViewModel.ResetKnownStateExecutable
         Case "SelectiveDeviceClearExecutable"
@@ -2515,8 +2392,6 @@ Private Sub OnWorksheetChange(ByVal a_range As Excel.Range)
         
         Case m_readingFormatCell
             This.ViewModel.MeasuredValueFormat = Me.MeasuredValueFormat
-        Case m_readingOffsetCell
-            This.ViewModel.ReadingOffset = Me.ReadingOffset
 
     End Select
 
