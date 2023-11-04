@@ -5360,7 +5360,7 @@ Friend Sub InitializeExecutablesState()
     Me.QueryExecutable = p_connected
     Me.ReadExecutable = p_connected
     Me.WriteExecutable = p_connected
-    Me.ReadStatusByteExecutable = p_connected
+    Me.QueryStatusByteExecutable = p_connected
     Me.ReadStandardEventStatusExecutable = p_connected
     Me.QueryInputsExecutable = p_connected
     Me.ImmediateTriggerOptionExecutable = p_connected

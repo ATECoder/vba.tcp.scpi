@@ -1029,7 +1029,7 @@ Friend Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Chan
     ' this is set by the property change event.
     ' Me.MeasuredValue = p_value
     
-    Me.SetReading This.MeasuredChannelNumber, This.MeasuredValue
+    Me.SetReading Me.MeasuredChannelNumber, Me.MeasuredValue
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:

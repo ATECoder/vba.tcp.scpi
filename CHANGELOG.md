@@ -1,6 +1,9 @@
 # Change log
 All notable changes to these libraries will be documented in this file in a format based on [Keep a Change log]
 
+## [1.0.8708] - 2023-11-03
+* Fix and test the demo.
+
 ## [1.0.8707] - 2023-11-02
 * Complete fixing and running unit tests.
 * All Tests passed.

@@ -2,13 +2,6 @@
 
 ## GIT
 
-SCPI:
-Add timer interval and reading offset to the measure mode class.
-Validate setting of the GPIB-Lan port.
-Correct unit tests code.
-Use the data sheet to initialize the views.
-Passed first 6 view model tests.
-
 ## TODO
 
 ## Tests

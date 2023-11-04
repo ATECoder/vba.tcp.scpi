@@ -186,7 +186,7 @@ Public Sub RunAllTests()
     This.PassedCount = 0
     This.FailedCount = 0
     This.InconclusiveCount = 0
-    This.TestCount = 6
+    This.TestCount = 16
     Dim p_testNumber As Integer
     For p_testNumber = 1 To This.TestCount
         Set p_outcome = RunTest(p_testNumber)
@@ -386,10 +386,9 @@ Public Sub BeforeEach()
     ' clear the error state.
     cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
     
-    If p_outcome.AssertSuccessful Then
+    If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.TryClearExecutionState(p_details), _
             p_details)
-    End If
    
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -628,30 +627,24 @@ Public Function AssertExternalModeShouldConfigure(ByVal a_mode As cc_isr_Tcp_Scp
         
     End If
     
-    If p_outcome.AssertSuccessful Then
+    If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.FrontInputsHasValue, _
             "View model front inputs should be validated.")
-    End If
     
-    If p_outcome.AssertSuccessful Then
+    If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, _
             This.ViewModel.FrontInputsValue, _
             "View model front input value should equal the required value.")
-    End If
     
-    If p_outcome.AssertSuccessful Then
-        
+    If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsValue, _
             This.Observer.FrontInputsValue, _
             "Observer Front inputs state should equal view model inputs state for external trigger reading mode.")
-    End If
     
-    If p_outcome.AssertSuccessful Then
-        
+    If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, _
             This.UserView.FrontInputsRequired, _
             "User View Front inputs state should equal view model inputs state for external trigger reading mode.")
-    End If
     
     If p_outcome.AssertSuccessful Then
         
@@ -659,42 +652,31 @@ Public Function AssertExternalModeShouldConfigure(ByVal a_mode As cc_isr_Tcp_Scp
         p_expectedMeasurementMode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
             "External trigger reading mode should be as expected.")
-    End If
     
-    If p_outcome.AssertSuccessful Then
-        
+    If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
             This.Observer.MeasurementMode, _
             "Observer measurement mode should equal expected value for external trigger reading mode.")
-    End If
     
-    If p_outcome.AssertSuccessful Then
-        
+    If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
             This.UserView.MeasurementMode, _
             "User View measurement mode should equal expected value for external trigger reading mode.")
-    End If
     
-    If p_outcome.AssertSuccessful Then
-        
+    If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
             This.DataView.MeasurementMode, _
             "Data View measurement mode should equal expected value for external trigger reading mode.")
-    End If
     
-    If p_outcome.AssertSuccessful Then
-        
+    If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
             This.DataView.MeasurementMode, _
             "Data acquisition view measurement mode should equal expected value for external trigger reading mode.")
-    End If
     
-    If p_outcome.AssertSuccessful Then
-        
+    If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
             This.UserView.MeasurementMode, _
             "User View measurement mode should equal expected value for external trigger reading mode.")
-    End If
     
     Set AssertExternalModeShouldConfigure = p_outcome
 
@@ -1321,11 +1303,11 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
 End Function
 
 ''' summary>   Asserts that trigger monitoring mode should be configured. </summary>
-''' <param name="a_timerInteger">   [Integer] the timer interval; 0 for poll monitoring of the timer event. </value>
-''' <param name="a_assert">         [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
+''' <param name="a_mode">     [<see cref="cc_isr_Tcp_Scpi.MeasureMode"/>] the measure configuration. </param>
+''' <param name="a_assert">   [<see cref="cc_isr_Test_Fx.Assert"/>] The assert status of the test method. </param>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
-Public Function AssertMonitoringModeShouldStart(ByVal a_timerInterval As Integer, _
+Public Function AssertMonitoringModeShouldStart(ByVal a_mode As cc_isr_Tcp_Scpi.MeasureMode, _
     ByVal a_assert As cc_isr_Test_Fx.Assert) As cc_isr_Test_Fx.Assert
     
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
@@ -1345,7 +1327,7 @@ Public Function AssertMonitoringModeShouldStart(ByVal a_timerInterval As Integer
     
     If p_outcome.AssertSuccessful Then
     
-        This.ViewModel.StartMonitoringExternalTriggers This.UserView.ReadingOffset, a_timerInterval
+        This.ViewModel.StartMonitoringExternalTriggers a_mode.ReadingOffset, a_mode.TimerInterval
         
         ' allow the monitoring to commence.
         cc_isr_Core_IO.Factory.NewStopwatch().Wait 10
@@ -1353,11 +1335,11 @@ Public Function AssertMonitoringModeShouldStart(ByVal a_timerInterval As Integer
     End If
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_timerInterval, This.ViewModel.TimerInterval, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.TimerInterval, This.ViewModel.TimerInterval, _
             "Timer interval should expected the expected value.")
     
-    If p_outcome.AssertSuccessful And (0 = a_timerInterval) Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_timerInterval, This.ViewModel.TimerInterval, _
+    If p_outcome.AssertSuccessful And (0 = a_mode.TimerInterval) Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.TimerInterval, This.ViewModel.TimerInterval, _
             "Timer interval should expected the expected value.")
     
     If p_outcome.AssertSuccessful Then _
@@ -2003,7 +1985,7 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.Connected, This.UserView.Connected, _
-            "Data View and View Model connection state should equal when connected.")
+            "user View and View Model connection state should equal when connected.")
             
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.FrontInputsRequired, This.UserView.FrontInputsRequired, _
@@ -3627,7 +3609,7 @@ Public Function AssetTriggersShouldPoll(ByVal a_mode As cc_isr_Tcp_Scpi.MeasureM
     ' start the monitoring mode turning timer monitoring off.
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = AssertMonitoringModeShouldStart(0, p_outcome)
+        Set p_outcome = AssertMonitoringModeShouldStart(a_mode, p_outcome)
     
     ' validate the monitoring mode
     
@@ -3852,7 +3834,7 @@ Public Function AssetTriggersShouldMonitor(ByVal a_mode As cc_isr_Tcp_Scpi.Measu
     ' start the monitoring mode
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = AssertMonitoringModeShouldStart(a_mode.TimerInterval, p_outcome)
+        Set p_outcome = AssertMonitoringModeShouldStart(a_mode, p_outcome)
     
     ' validate the monitoring mode
     
