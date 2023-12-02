@@ -95,7 +95,7 @@ Public Property Get FunctionalCapacity() As Integer
 
 End Property
 
-''' <summary>   Gets the device channel number that corresponds to the
+''' <summary>   Gets the device-level channel number that corresponds to the
 '''             multiplexer card First Channel Number. </summary>
 ''' <value> [Integer]. </value>
 Public Property Get DeviceFirstChannel() As Integer
@@ -104,7 +104,7 @@ Public Property Get DeviceFirstChannel() As Integer
 
 End Property
 
-''' <summary>   Sets the device channel number that corresponds to the
+''' <summary>   Sets the device-level channel number that corresponds to the
 '''             multiplexer card first channel number. </summary>
 ''' <param name="a_value">   [Integer] The device channel that corresponds to
 '''                          the first channel of this card. </param>
@@ -115,7 +115,7 @@ Public Property Let DeviceFirstChannel(ByVal a_value As Integer)
 
 End Property
 
-''' <summary>   Gets the device channel number that corresponds to the
+''' <summary>   Gets the device-level channel number that corresponds to the
 '''             multiplexer card last channel number. </summary>
 ''' <value> [Integer]. </value>
 Public Property Get DeviceLastChannel() As Integer
@@ -124,7 +124,7 @@ Public Property Get DeviceLastChannel() As Integer
 
 End Property
 
-''' <summary>   Sets the device channel number that corresponds to the
+''' <summary>   Sets the device-level channel number that corresponds to the
 '''             multiplexer card last channel number. </summary>
 ''' <param name="a_value">   [Integer] The device channel that corresponds to
 '''                          the last channel of this card. </param>
@@ -177,23 +177,24 @@ Public Property Get RouteMultipleCloseCommand() As String
 End Property
 
 ''' <summary>   Gets the scan channel for a channel and a slot. </summary>
-''' <param name="a_slotNumber">      [Integer] The slot number. </param>
-''' <param name="a_slotCapacity">    [Integer] The slot capacity for this instrument familty. </param>
-''' <param name="a_channelNumber">   [Integer] The channel number within the board.
-'''                                  capacity. Note that the channel number for
-'''                                  the route command may exceed to card capacity
-'''                                  e.g., channels 24 and 25 for 20 channels board. </param>
+''' <param name="a_slotNumber">           [Integer] The slot number. </param>
+''' <param name="a_slotCapacity">         [Integer] The slot capacity for this instrument familty. </param>
+''' <param name="a_boardChannelNumber">   [Integer] The channel number within the board.
+'''                                       capacity. Note that the channel number for
+'''                                       the route command may exceed to card capacity
+'''                                       e.g., channels 24 and 25 for 20 channels board. </param>
 ''' <returns>   [String]. </returns>
-Public Function GetSlotScanChannel(ByVal a_slotNumber As Integer, ByVal a_slotCapacity As Integer, ByVal a_channelNumber As Integer) As String
+Public Function GetSlotScanChannel(ByVal a_slotNumber As Integer, _
+    ByVal a_slotCapacity As Integer, ByVal a_boardChannelNumber As Integer) As String
 
     Dim p_channelNumber As Integer
-    p_channelNumber = a_slotNumber * a_slotCapacity + a_channelNumber
+    p_channelNumber = a_slotNumber * a_slotCapacity + a_boardChannelNumber
     GetSlotScanChannel = VBA.CStr(p_channelNumber)
     
 End Function
 
 ''' <summary>   Gets the scan channel, e.g., '113', for this card and the specified channel. </summary>
-''' <param name="a_deviceChannelNumber">   [Integer] The device channel number.
+''' <param name="a_deviceChannelNumber">   [Integer] The device-level channel number.
 '''                                        must be between ths first and last device channels
 '''                                        that correspond tothe first and last channels
 '''                                        of this board. </param>
@@ -204,7 +205,7 @@ Public Function BuildScanChannel(ByVal a_deviceChannelNumber As Integer) As Stri
         a_deviceChannelNumber > This.DeviceLastChannel Then
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidArgumentError, _
             ThisWorkbook.VBProject.Name & "." & VBA.Information.TypeName(Me) & ".BuildScanChannel", _
-            "Argument: 'a_ChannelNumber' = " & VBA.CStr(a_deviceChannelNumber) & _
+            "Argument: 'a_deviceChannelNumber' = " & VBA.CStr(a_deviceChannelNumber) & _
             " is out of range for this '" & This.Name & _
             "' with channels in the range [" & VBA.CStr(This.DeviceFirstChannel) & _
             "," & VBA.CStr(This.DeviceLastChannel) & "]."
@@ -216,7 +217,7 @@ Public Function BuildScanChannel(ByVal a_deviceChannelNumber As Integer) As Stri
 End Function
 
 ''' <summary>   Gets the scan list, e.g., <c>(@113)</c>, for this card and the specified channel. </summary>
-''' <param name="a_deviceChannelNumber">   [Integer] The device channel number.
+''' <param name="a_deviceChannelNumber">   [Integer] The device-level channel number.
 '''                                        must be between ths first and last device channels
 '''                                        that correspond to the first and last channels
 '''                                        of this board. </param>
@@ -229,7 +230,7 @@ End Function
 
 ''' <summary>   Builds the channel 'route' close command,
 '''             e.g., <c>:ROUT:CLOS (@124)</c>. </summary>
-''' <param name="a_deviceChannelNumber">   [Integer] The device channel number.
+''' <param name="a_deviceChannelNumber">   [Integer] The device-level channel number.
 '''                                        must be between ths first and last device channels
 '''                                        that correspond to the first and last channels
 '''                                        of this board. </param>

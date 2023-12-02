@@ -22,7 +22,7 @@ Private Const m_socketAddressCell As String = "B2"
 Private Const m_timerIntervalCell As String = "B3"
 Private Const m_lastMessageCell As String = "B4"
 Private Const m_lastErrorMessageCell As String = "B16"
-Private Const m_maxResistanceCount As Integer = 48
+Private Const m_MaxDutCount As Integer = 48
 Private Const m_gpibLanControllerPort As Long = 1234
 Private Const m_primaryGpibAddress As Integer = 16
 
@@ -33,7 +33,7 @@ Private Type this_
     ContinuousSenseFunctionName As String
     ImmediateSenseFunctionName As String
     ExternalSenseFunctionName As String
-    ChannelNumberCaptionPrefix As String
+    DutNumberCaptionPrefix As String
 End Type
 
 Private This As this_
@@ -57,7 +57,7 @@ Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As DataSheet
     Set This.ViewModel = a_viewModel
     
     ' set the initial values that are provided by the user interface
-    This.ChannelNumberCaptionPrefix = "ch"
+    This.DutNumberCaptionPrefix = "ch"
     
     If DataView.Initialized Then DataView.Dispose
     If UserView.Initialized Then UserView.Dispose
@@ -178,10 +178,10 @@ Public Property Get GpibLanControllerPort() As Long
     GpibLanControllerPort = m_gpibLanControllerPort
 End Property
 
-''' <summary>   Gets the maximum resistance count. </summary>
+''' <summary>   Gets the maximum Dut  Count. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get MaxResistanceCount() As Integer
-    MaxResistanceCount = m_maxResistanceCount
+Public Property Get MaxDutCount() As Integer
+    MaxDutCount = m_MaxDutCount
 End Property
 
 ''' <summary>   Gets the status of the Beep Allowed condition. </summary>
@@ -190,10 +190,10 @@ Public Property Get BeepAllowed() As Boolean
     BeepAllowed = Me.BeepAllowedCheckBox.Value
 End Property
 
-''' <summary>   Gets the Channel Number Caption Prefix. </summary>
+''' <summary>   Gets the DUT number Caption Prefix. </summary>
 ''' <value>   [String]. </value>
-Public Property Get ChannelNumberCaptionPrefix() As String
-    ChannelNumberCaptionPrefix = This.ChannelNumberCaptionPrefix
+Public Property Get DutNumberCaptionPrefix() As String
+    DutNumberCaptionPrefix = This.DutNumberCaptionPrefix
 End Property
 
 ''' <summary>   Gets the Last Error Message. </summary>

@@ -1,6 +1,10 @@
 # Change log
 All notable changes to these libraries will be documented in this file in a format based on [Keep a Change log]
 
+## [1.0.8735] - 2023-12-01
+* Add enumerating DUT.
+* Set manual mode Maximum DUT number to 48.
+
 ## [1.0.8708] - 2023-11-03
 * Fix and test the demo.
 

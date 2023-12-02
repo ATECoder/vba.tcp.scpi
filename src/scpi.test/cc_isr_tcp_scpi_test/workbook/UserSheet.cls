@@ -22,15 +22,15 @@ Private Const m_compensationFactorCell As String = "C9"
 
 Private Const m_measurementRow As Integer = 2
 Private Const m_measurementCol As Integer = 14
-Private Const m_channelRow As Integer = 2
-Private Const m_channelCol As Integer = 13
+Private Const m_dutNumberRow As Integer = 2
+Private Const m_dutNumberCol As Integer = 13
 Private Const m_byRow As Boolean = True
 Private Const m_displayIncrement As Integer = 1
 
 Private Type this_
     FocusedControlName As String
     DesignMode As Boolean
-    ChannelNumberCaptionPrefix As String
+    DutNumberCaptionPrefix As String
 End Type
 
 Private This As this_
@@ -38,7 +38,7 @@ Private This As this_
 ''' <summary>   Initializes and returns an instance of this object. </summary>
 Public Function Initialize() As UserSheet
     
-    This.ChannelNumberCaptionPrefix = "ch"
+    This.DutNumberCaptionPrefix = "ch"
     Me.AutoScanToggleExecutable = False
     Me.AutoScanToggleValue = False
     Me.AutoSingleToggleExecutable = False
@@ -53,10 +53,10 @@ Public Function Initialize() As UserSheet
 
 End Function
 
-''' <summary>   Gets the Channel Number Caption Prefix. </summary>
+''' <summary>   Gets the DUT number Caption Prefix. </summary>
 ''' <value>   [String]. </value>
-Public Property Get ChannelNumberCaptionPrefix() As String
-    ChannelNumberCaptionPrefix = This.ChannelNumberCaptionPrefix
+Public Property Get DutNumberCaptionPrefix() As String
+    DutNumberCaptionPrefix = This.DutNumberCaptionPrefix
 End Property
 
 ''' <summary>   Gets the design mode for unit testing and restoration of state. </summary>
@@ -106,27 +106,27 @@ Public Property Get InitialResistance() As Double
 End Property
 
 ''' <summary>   Gets the selected channge number range. </summary>
-''' <param name="a_channelNo">   [Integer] the selected channel number. </value>
+''' <param name="a_dutNumber">   [Integer] the selected DUT number. </value>
 ''' <value>   [<see cref="Excel.Range"/>]. </value>
-Public Function GetSelectedChannelNumberRange(ByVal a_channelNo As Integer) As Excel.Range
+Public Function GetSelectedDutNumberRange(ByVal a_dutNumber As Integer) As Excel.Range
 
     Dim p_row As Integer
-    p_row = IIf(m_byRow, m_channelRow + m_displayIncrement * (a_channelNo - 1), m_channelRow)
+    p_row = IIf(m_byRow, m_dutNumberRow + m_displayIncrement * (a_dutNumber - 1), m_dutNumberRow)
     Dim p_col As Integer
-    p_col = IIf(m_byRow, m_channelCol, m_channelCol + m_displayIncrement * (a_channelNo - 1))
-    Set GetSelectedChannelNumberRange = UserSheet.Cells(p_row, p_col)
+    p_col = IIf(m_byRow, m_dutNumberCol, m_dutNumberCol + m_displayIncrement * (a_dutNumber - 1))
+    Set GetSelectedDutNumberRange = UserSheet.Cells(p_row, p_col)
     
 End Function
 
-''' <summary>   Gets the selected channel number from the active cell value. </summary>
+''' <summary>   Gets the selected DUT number from the active cell value. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get SelectedChannelNumber() As Integer
-    SelectedChannelNumber = Me.GetActiveCellResistanceNo
+Public Property Get SelectedDutNumber() As Integer
+    SelectedDutNumber = Me.GetActiveCellDutNumber
 End Property
 
-''' <summary>   Sets the selected channel number. </summary>
-''' <param name="a_value">   [Integer] the selected channel number. </param>
-Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
+''' <summary>   Sets the selected DUT number. </summary>
+''' <param name="a_value">   [Integer] the selected DUT number. </param>
+Public Property Let SelectedDutNumber(ByVal a_value As Integer)
 
     If (0 <> a_value) And Not Me.ProtectContents Then
         If ThisWorkbook.ActiveSheet.Name <> UserSheet.Name Then
@@ -134,28 +134,28 @@ Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
             VBA.DoEvents
         End If
         ' select this cell as the active cell
-        Me.GetSelectedChannelNumberRange(a_value).Activate
+        Me.GetSelectedDutNumberRange(a_value).Activate
         ' set the active cell number.
-        ActiveCell.Value = DataView.ChannelNumberCaptionPrefix & VBA.CStr(a_value)
+        ActiveCell.Value = DataView.DutNumberCaptionPrefix & VBA.CStr(a_value)
     End If
 
 End Property
 
-''' <summary>   Parses the resistance channel number value from the value of the active cell. </summary>
+''' <summary>   Parses the DUT number value from the value of the active cell. </summary>
 ''' <returns>   [Integer] Returns 0 if invalid resistance cell was selected. </returns>
-Public Function GetActiveCellResistanceNo() As Integer
+Public Function GetActiveCellDutNumber() As Integer
 
-    Const p_procedureName = "GetActiveCellResistanceNo"
+    Const p_procedureName = "GetActiveCellDutNumber"
     
     Dim p_details As String: p_details = VBA.vbNullString
-    Dim p_channelNumber As Integer
-    p_channelNumber = UserView.TryParseSelectedChannelNumber(VBA.UCase$(ActiveCell.Value), p_details)
-    If 0 = p_channelNumber Then
+    Dim p_dutNumber As Integer
+    p_dutNumber = UserView.TryParseSelectedDutNumber(VBA.UCase$(ActiveCell.Value), p_details)
+    If 0 = p_dutNumber Then
         MsgBox p_details, VBA.VbMsgBoxStyle.vbOKOnly Or VBA.VbMsgBoxStyle.vbExclamation, _
-            "Invalid Resistance Number"
+            "Invalid device under test number"
     End If
     
-    GetActiveCellResistanceNo = p_channelNumber
+    GetActiveCellDutNumber = p_dutNumber
   
 End Function
 

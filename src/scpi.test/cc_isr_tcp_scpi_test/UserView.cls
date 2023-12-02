@@ -25,19 +25,19 @@ Private Type this_
     
     Connected As Boolean
     
-    AutoIncrementChannelNoEnabled As Boolean
+    AutoIncrementDutNumberEnabled As Boolean
     FrontInputsRequired As Boolean
     SingleReadEnabled As Boolean
     
     ReadingOffset As Double
     
-    SelectedChannelNumber As Integer
-    SelectedChannelNumberCaption As String
+    SelectedDutNumber As Integer
+    SelectedDutNumberCaption As String
     MeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
     Measuring As Boolean
     
-    ChannelNumberCaptionPrefix As String
-    ChannelNumberTitle As String
+    DutNumberCaptionPrefix As String
+    DutTitle As String
         
     LastCommandDetails As String
     LastCommandOutcome As Boolean
@@ -64,8 +64,8 @@ Private This As this_
 
 ''' <summary>   Handles the Class Initialize event. </summary>
 Private Sub Class_Initialize()
-    This.ChannelNumberCaptionPrefix = "ch"
-    This.ChannelNumberTitle = "resistance number"
+    This.DutNumberCaptionPrefix = "dut"
+    This.DutTitle = "resistance"
     This.AutoSampleFrontInputs = False
 End Sub
 
@@ -216,7 +216,7 @@ End Property
 
 ''' <summary>   Handles the Auto Scan toggle button. </summary>
 ''' <remarks>   In auto scan we have the following settings:
-''' Auto Increment channel number: True;
+''' Auto Increment DUT number: True;
 ''' Front Inputs Required: False;
 ''' Single Readings: False;
 ''' Triggering Mode: Immediate.
@@ -239,7 +239,7 @@ Public Sub OnAutoScanToggleButtonChange()
         Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
         p_mode.AutoIncrementChannel = True
         p_mode.BeepEnabled = False
-        p_mode.ChannelNumber = 1
+        p_mode.DutNumber = 1
         p_mode.FrontInputs = This.DataSheet.ImmediateFrontInputsRequired
         p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
         p_mode.ReadingOffset = Me.ReadingOffset
@@ -329,7 +329,7 @@ End Property
 
 ''' <summary>   Handles the Auto Single toggle button. </summary>
 ''' <remarks>   In auto single we have the following settings:
-''' Auto Increment channel number: False;
+''' Auto Increment DUT number: False;
 ''' Front Inputs Required: False;
 ''' Single Readings: True;
 ''' Triggering Mode: Immediate.
@@ -359,7 +359,7 @@ Public Sub OnAutoSingleToggleButtonChange()
         Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
         p_mode.AutoIncrementChannel = False
         p_mode.BeepEnabled = False
-        p_mode.ChannelNumber = This.UserSheet.SelectedChannelNumber
+        p_mode.DutNumber = This.UserSheet.SelectedDutNumber
         p_mode.FrontInputs = This.DataSheet.ImmediateFrontInputsRequired
         p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
         p_mode.ReadingOffset = Me.ReadingOffset
@@ -497,7 +497,7 @@ End Sub
 
 ''' <summary>   Handles the Manual Scan toggle button. </summary>
 ''' <remarks>   In manual scan we have the following settings:
-''' Auto Increment channel number: True;
+''' Auto Increment DUT number: True;
 ''' Front Inputs Required: True;
 ''' Single Readings: False;
 ''' Triggering Mode: External.
@@ -520,7 +520,7 @@ Public Sub OnManualScanToggleButtonChange()
         Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
         p_mode.AutoIncrementChannel = True
         p_mode.BeepEnabled = True
-        p_mode.ChannelNumber = 1
+        p_mode.DutNumber = 1
         p_mode.FrontInputs = This.DataSheet.ExternalFrontInputsRequired
         p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
         p_mode.ReadingOffset = Me.ReadingOffset
@@ -621,7 +621,7 @@ End Property
 
 ''' <summary>   Handles the Manual Single toggle button. </summary>
 ''' <remarks>   In manual Single we have the following settings:
-''' Auto Increment channel number: False;
+''' Auto Increment DUT number: False;
 ''' Front Inputs Required = True;
 ''' Single Readings: True;
 ''' Triggering Mode: External.
@@ -644,7 +644,7 @@ Public Sub OnManualSingleToggleButtonChange()
         Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
         p_mode.AutoIncrementChannel = False
         p_mode.BeepEnabled = True
-        p_mode.ChannelNumber = This.UserSheet.SelectedChannelNumber
+        p_mode.DutNumber = This.UserSheet.SelectedDutNumber
         p_mode.FrontInputs = This.DataSheet.ExternalFrontInputsRequired
         p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
         p_mode.ReadingOffset = Me.ReadingOffset
@@ -744,17 +744,17 @@ Public Property Let ManualSingleToggleValue(ByVal a_value As Boolean)
     
 End Property
 
-''' <summary>   Gets the Auto Increment Channel Number Enabled. </summary>
+''' <summary>   Gets the Auto Increment DUT number Enabled. </summary>
 ''' <remarks>   Indicates that front inputs are Value for this mode. </remarks>
 ''' <value>   [Boolean]. </value>
-Public Property Get AutoIncrementChannelNoEnabled() As Boolean
-    AutoIncrementChannelNoEnabled = This.AutoIncrementChannelNoEnabled
+Public Property Get AutoIncrementDutNumberEnabled() As Boolean
+    AutoIncrementDutNumberEnabled = This.AutoIncrementDutNumberEnabled
 End Property
 
-''' <summary>   Sets the Auto Increment Channel Number Enabled. </summary>
-''' <param name="a_value">   [Boolean] the Auto Increment Channel Number Enabled value. </value>
-Public Property Let AutoIncrementChannelNoEnabled(ByVal a_value As Boolean)
-    This.AutoIncrementChannelNoEnabled = a_value
+''' <summary>   Sets the Auto Increment DUT number Enabled. </summary>
+''' <param name="a_value">   [Boolean] the Auto Increment DUT number Enabled value. </value>
+Public Property Let AutoIncrementDutNumberEnabled(ByVal a_value As Boolean)
+    This.AutoIncrementDutNumberEnabled = a_value
 End Property
 
 ''' <summary>   Gets the Reading Offset. </summary>
@@ -797,96 +797,96 @@ Public Property Let FrontInputsRequired(ByVal a_value As Boolean)
     This.FrontInputsRequired = a_value
 End Property
 
-''' <summary>   Gets the Selected Channel Number Caption. </summary>
+''' <summary>   Gets the Selected DUT number Caption. </summary>
 ''' <value>   [String]. </value>
-Public Property Get SelectedChannelNumberCaption() As String
-    SelectedChannelNumberCaption = This.SelectedChannelNumberCaption
+Public Property Get SelectedDutNumberCaption() As String
+    SelectedDutNumberCaption = This.SelectedDutNumberCaption
 End Property
 
-Public Property Let SelectedChannelNumberCaption(ByVal a_value As String)
+Public Property Let SelectedDutNumberCaption(ByVal a_value As String)
     If Not This.ViewModel Is Nothing Then
-        If This.SelectedChannelNumberCaption <> a_value Then
-            This.SelectedChannelNumberCaption = a_value
+        If This.SelectedDutNumberCaption <> a_value Then
+            This.SelectedDutNumberCaption = a_value
             Dim p_details As String: p_details = VBA.vbNullString
-            Dim p_channelNumber As Integer
-            p_channelNumber = Me.TryParseSelectedChannelNumber(a_value, p_details)
-            If 0 < p_channelNumber And This.ViewModel.ChannelCount >= p_channelNumber Then
-                Me.SelectedChannelNumber = p_channelNumber
+            Dim p_dutNumber As Integer
+            p_dutNumber = Me.TryParseSelectedDutNumber(a_value, p_details)
+            If 0 < p_dutNumber And This.ViewModel.DutCount >= p_dutNumber Then
+                Me.SelectedDutNumber = p_dutNumber
             Else
                 MsgBox p_details, VBA.VbMsgBoxStyle.vbOKOnly Or VBA.VbMsgBoxStyle.vbExclamation, _
-                    "Invalid " & This.ChannelNumberTitle
+                    "Invalid " & This.DutTitle & " number."
             End If
         End If
     End If
 End Property
 
-''' <summary>   Returns true if the value is a valid channel number. </summary>
-''' <param name="a_value">   [Integer] the channel number. </value>
+''' <summary>   Returns true if the value is a valid DUT number. </summary>
+''' <param name="a_value">   [Integer] the DUT number. </value>
 ''' <returns>   [Boolean]. </returns>
 Public Function IsValidChannelNumber(ByVal a_value As Integer) As Boolean
-    IsValidChannelNumber = (0 < a_value) And (This.ViewModel.ChannelCount >= a_value)
+    IsValidChannelNumber = (0 < a_value) And (This.ViewModel.DutCount >= a_value)
 End Function
 
-''' <summary>   Gets a channel number from the channel number caption. </summary>
-''' <param name="a_value">   [String] the selected channel number caption, e.g., R2. </value>
-''' <returns>   [Integer] Returns 0 if invalid channel number caption was selected. </returns>
-Public Function TryParseSelectedChannelNumber(ByVal a_value As String, ByRef a_details As String) As Integer
+''' <summary>   Gets a DUT number from the DUT number caption. </summary>
+''' <param name="a_value">   [String] the selected DUT number caption, e.g., R2. </value>
+''' <returns>   [Integer] Returns 0 if invalid DUT number caption was selected. </returns>
+Public Function TryParseSelectedDutNumber(ByVal a_value As String, ByRef a_details As String) As Integer
 
-    Const p_procedureName = "TryParseSelectedChannelNumber"
+    Const p_procedureName = "TryParseSelectedDutNumber"
     
-    Dim p_channelNo As Integer: p_channelNo = 0
+    Dim p_dutNumber As Integer: p_dutNumber = 0
     
-    If 0 >= VBA.InStr(1, VBA.Left$(a_value, VBA.Len(This.ChannelNumberCaptionPrefix)), _
-        This.ChannelNumberCaptionPrefix, VBA.VbCompareMethod.vbTextCompare) Then
+    If 0 >= VBA.InStr(1, VBA.Left$(a_value, VBA.Len(This.DutNumberCaptionPrefix)), _
+        This.DutNumberCaptionPrefix, VBA.VbCompareMethod.vbTextCompare) Then
      
         a_details = "The selected value '" & a_value & _
-               "' is not a valid " & This.ChannelNumberTitle & _
-               ". Please select a valid " & This.ChannelNumberTitle & _
-               ", e.g., " & This.ChannelNumberCaptionPrefix & "2, and try again."
+               "' is not a valid " & This.DutTitle & _
+               " number. Please select a valid " & This.DutTitle & _
+               " number, e.g., " & This.DutNumberCaptionPrefix & "2, and try again."
   
     Else
     
-        p_channelNo = VBA.CInt(Mid$(a_value, VBA.Len(This.ChannelNumberCaptionPrefix) + 1))
+        p_dutNumber = VBA.CInt(Mid$(a_value, VBA.Len(This.DutNumberCaptionPrefix) + 1))
         
-        If Not Me.IsValidChannelNumber(p_channelNo) Then
+        If Not Me.IsValidChannelNumber(p_dutNumber) Then
         
             a_details = "The selected value '" & a_value & _
-                   "' yields an out of range " & This.ChannelNumberTitle & _
-                   "'. Valid " & This.ChannelNumberTitle & "s are between 1 and " & _
-                   VBA.CStr(This.ViewModel.ChannelCount) & _
-                   ". Please select a valid " & This.ChannelNumberTitle & _
-                   ", e.g., " & This.ChannelNumberCaptionPrefix & "2, and try again."
+                   "' yields an out of range " & This.DutTitle & _
+                   " number. Valid " & This.DutTitle & "numbers are between 1 and " & _
+                   VBA.CStr(This.ViewModel.DutCount) & _
+                   ". Please select a valid " & This.DutTitle & _
+                   " number, e.g., " & This.DutNumberCaptionPrefix & "2, and try again."
             
-            p_channelNo = 0
+            p_dutNumber = 0
             
         End If
     
     End If
   
-    TryParseSelectedChannelNumber = p_channelNo
+    TryParseSelectedDutNumber = p_dutNumber
   
 End Function
 
-''' <summary>   Gets the Selected Channel Number. </summary>
+''' <summary>   Gets the Selected DUT number. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get SelectedChannelNumber() As Integer
-    SelectedChannelNumber = This.SelectedChannelNumber
+Public Property Get SelectedDutNumber() As Integer
+    SelectedDutNumber = This.SelectedDutNumber
 End Property
 
-''' <summary>   Sets the Selected Channel Number. </summary>
-''' <param name="a_value">   [Integer] the Selected Channel Number value. </value>
-Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
+''' <summary>   Sets the Selected DUT number. </summary>
+''' <param name="a_value">   [Integer] the Selected DUT number value. </value>
+Public Property Let SelectedDutNumber(ByVal a_value As Integer)
     
-    If This.SelectedChannelNumber <> a_value Then
+    If This.SelectedDutNumber <> a_value Then
         
-        This.SelectedChannelNumber = a_value
+        This.SelectedDutNumber = a_value
         
-        ' emulate selecting a channel number if within range.
+        ' emulate selecting a DUT number if within range.
         If Me.IsValidChannelNumber(a_value) Then _
-            Me.SelectedChannelNumberCaption = This.ChannelNumberCaptionPrefix & VBA.CStr(a_value)
+            Me.SelectedDutNumberCaption = This.DutNumberCaptionPrefix & VBA.CStr(a_value)
         
         If Not This.UserSheet Is Nothing Then _
-            This.UserSheet.SelectedChannelNumber = a_value
+            This.UserSheet.SelectedDutNumber = a_value
 
     End If
 
@@ -969,18 +969,18 @@ Friend Sub OnMeasurementStateChanged()
 
 End Sub
 
-''' <summary>   Gets the Channel Number Caption Prefix. </summary>
+''' <summary>   Gets the DUT number Caption Prefix. </summary>
 ''' <value>   [String]. </value>
-Public Property Get ChannelNumberCaptionPrefix() As String
+Public Property Get DutNumberCaptionPrefix() As String
     If Not This.UserSheet Is Nothing Then _
-        This.ChannelNumberCaptionPrefix = This.UserSheet.ChannelNumberCaptionPrefix
-    ChannelNumberCaptionPrefix = This.ChannelNumberCaptionPrefix
+        This.DutNumberCaptionPrefix = This.UserSheet.DutNumberCaptionPrefix
+    DutNumberCaptionPrefix = This.DutNumberCaptionPrefix
 End Property
 
-''' <summary>   Sets the Channel Number Caption Prefix. </summary>
-''' <param name="a_value">   [String] the Channel Number Caption Prefix. </value>
-Public Property Let ChannelNumberCaptionPrefix(ByVal a_value As String)
-    This.ChannelNumberCaptionPrefix = a_value
+''' <summary>   Sets the DUT number Caption Prefix. </summary>
+''' <param name="a_value">   [String] the DUT number Caption Prefix. </value>
+Public Property Let DutNumberCaptionPrefix(ByVal a_value As String)
+    This.DutNumberCaptionPrefix = a_value
 End Property
 
 ''' <summary>   Gets the Last Command Details. </summary>
@@ -1025,10 +1025,10 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
 
         Case "FrontInputsRequired"
             Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
-        Case "SelectedChannelNumber"
-            Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
-        Case "AutoIncrementChannelNoEnabled"
-            Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
+        Case "SelectedDutNumber"
+            Me.SelectedDutNumber = This.ViewModel.SelectedDutNumber
+        Case "AutoIncrementDutNumberEnabled"
+            Me.AutoIncrementDutNumberEnabled = This.ViewModel.AutoIncrementDutNumberEnabled
         Case "SingleReadEnabled"
             Me.SingleReadEnabled = This.ViewModel.SingleReadEnabled
         Case "MeasurementMode"
@@ -1054,17 +1054,17 @@ Friend Sub Synchronize()
 
     ' set the view model settings that come from the ViewModel user interface
     ' Me.ReadingOffset = This.UserSheet.InitialResistance
-    ' Me.ChannelNumberCaptionPrefix = This.UserSheet.ChannelNumberCaptionPrefix
+    ' Me.DutNumberCaptionPrefix = This.UserSheet.DutNumberCaptionPrefix
     
     ' This.ViewModel.ReadingOffset = Me.ReadingOffset
 
     ' The initial values must be set for propery change to work.
     Me.MeasurementMode = This.ViewModel.MeasurementMode
-    Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
+    Me.SelectedDutNumber = This.ViewModel.SelectedDutNumber
     Me.SingleReadEnabled = This.ViewModel.SingleReadEnabled
     Me.Measuring = This.ViewModel.Measuring
     Me.Connected = This.ViewModel.Connected
-    Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
+    Me.AutoIncrementDutNumberEnabled = This.ViewModel.AutoIncrementDutNumberEnabled
     Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
     
     ' ensure that the measurement status is set.

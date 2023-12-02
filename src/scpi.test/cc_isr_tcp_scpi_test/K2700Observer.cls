@@ -36,7 +36,7 @@ Private Type this_
     LastMessage As String
     MeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
     Measuring As Boolean
-    MaximumChannelNumber As Integer
+    MaximumDutNumber As Integer
     
 
     ' Winsock properties
@@ -72,10 +72,10 @@ Private Type this_
     FrontInputsRequired As Boolean
     FrontInputsValue As Boolean
     FrontInputsCaption As String
-    ChannelCount As Integer
-    SelectedChannelNumber As Integer
-    TargetChannelNumber As Integer
-    MeasuredChannelNumber As Integer
+    DutCount As Integer
+    SelectedDutNumber As Integer
+    TargetDutNumber As Integer
+    MeasuredDutNumber As Integer
     ContinuousSenseFunctionName As String
     ImmediateSenseFunctionName As String
     ExternalSenseFunctionName As String
@@ -99,7 +99,7 @@ Private Type this_
 
     ' Service request monitoring properties
     MonitoringState As String
-    AutoIncrementChannelNoEnabled As Boolean
+    AutoIncrementDutNumberEnabled As Boolean
     SingleReadEnabled As Boolean
 
     ' Winsock connection executables
@@ -415,7 +415,7 @@ End Sub
 
 Public Sub OnClearReadings()
     If This.ClearReadingsExecutable Then
-        This.ViewModel.ClearReadingsCommand This.ReadingOffset, 1, This.ChannelCount
+        This.ViewModel.ClearReadingsCommand This.ReadingOffset, 1, This.DutCount
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnClearReadings", _
@@ -438,7 +438,7 @@ Public Sub OnExternalTriggerOptionChange(ByVal a_value As Boolean)
             Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
             p_mode.BeepEnabled = True
             p_mode.AutoIncrementChannel = False
-            p_mode.ChannelNumber = This.SelectedChannelNumber
+            p_mode.DutNumber = This.SelectedDutNumber
             p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
             p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
             p_mode.ReadingOffset = UserView.ReadingOffset
@@ -468,7 +468,7 @@ Public Sub OnImmediateTriggerOptionChange(ByVal a_value As Boolean)
             Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
             p_mode.AutoIncrementChannel = False
             p_mode.BeepEnabled = True
-            p_mode.ChannelNumber = This.SelectedChannelNumber
+            p_mode.DutNumber = This.SelectedDutNumber
             p_mode.FrontInputs = DataView.ImmediateFrontInputsRequired
             p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
             p_mode.ReadingOffset = UserView.ReadingOffset
@@ -848,16 +848,16 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Gets the maximum Channel Number. </summary>
+''' <summary>   Gets the maximum DUT number. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get MaximumChannelNumber() As Integer
-    MaximumChannelNumber = This.MaximumChannelNumber
+Public Property Get MaximumDutNumber() As Integer
+    MaximumDutNumber = This.MaximumDutNumber
 End Property
 
-''' <summary>   Sets the maximum Channel Number. </summary>
-''' <param name="a_value">   [Integer] the maximum Channel Number value. </value>
-Public Property Let MaximumChannelNumber(ByVal a_value As Integer)
-    This.MaximumChannelNumber = a_value
+''' <summary>   Sets the maximum DUT number. </summary>
+''' <param name="a_value">   [Integer] the maximum DUT number value. </value>
+Public Property Let MaximumDutNumber(ByVal a_value As Integer)
+    This.MaximumDutNumber = a_value
 End Property
 
 ''' <summary>   Gets the measuring state. True when measurements are collected. </summary>
@@ -936,52 +936,52 @@ Public Property Let FrontInputsCaption(ByVal a_value As String)
     This.FrontInputsCaption = a_value
 End Property
 
-''' <summary>   Gets the Channel Count. </summary>
+''' <summary>   Gets the DUT count. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get ChannelCount() As Integer
-    ChannelCount = This.ChannelCount
+Public Property Get DutCount() As Integer
+    DutCount = This.DutCount
 End Property
 
-''' <summary>   Sets the Channel Count. </summary>
-''' <param name="a_value">   [Integer] the Channel Count value. </value>
-Public Property Let ChannelCount(ByVal a_value As Integer)
-    This.ChannelCount = a_value
+''' <summary>   Sets the DUT count. </summary>
+''' <param name="a_value">   [Integer] the DUT count value. </value>
+Public Property Let DutCount(ByVal a_value As Integer)
+    This.DutCount = a_value
 End Property
 
-''' <summary>   Gets the Selected Channel Number. </summary>
+''' <summary>   Gets the Selected DUT number. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get SelectedChannelNumber() As Integer
-    SelectedChannelNumber = This.SelectedChannelNumber
+Public Property Get SelectedDutNumber() As Integer
+    SelectedDutNumber = This.SelectedDutNumber
 End Property
 
-''' <summary>   Sets the Selected Channel Number. </summary>
-''' <param name="a_value">   [Integer] the Selected Channel Number value. </value>
-Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
-    This.SelectedChannelNumber = a_value
+''' <summary>   Sets the Selected DUT number. </summary>
+''' <param name="a_value">   [Integer] the Selected DUT number value. </value>
+Public Property Let SelectedDutNumber(ByVal a_value As Integer)
+    This.SelectedDutNumber = a_value
 End Property
 
-''' <summary>   Gets the Target Channel Number. </summary>
+''' <summary>   Gets the Target DUT number. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get TargetChannelNumber() As Integer
-    TargetChannelNumber = This.TargetChannelNumber
+Public Property Get TargetDutNumber() As Integer
+    TargetDutNumber = This.TargetDutNumber
 End Property
 
-''' <summary>   Sets the Target Channel Number. </summary>
-''' <param name="a_value">   [Integer] the Target Channel Number value. </value>
-Public Property Let TargetChannelNumber(ByVal a_value As Integer)
-    This.TargetChannelNumber = a_value
+''' <summary>   Sets the Target DUT number. </summary>
+''' <param name="a_value">   [Integer] the Target DUT number value. </value>
+Public Property Let TargetDutNumber(ByVal a_value As Integer)
+    This.TargetDutNumber = a_value
 End Property
 
-''' <summary>   Gets the Measured Channel Number. </summary>
+''' <summary>   Gets the Measured DUT number. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get MeasuredChannelNumber() As Integer
-    MeasuredChannelNumber = This.MeasuredChannelNumber
+Public Property Get MeasuredDutNumber() As Integer
+    MeasuredDutNumber = This.MeasuredDutNumber
 End Property
 
-''' <summary>   Sets the Measured Channel Number. </summary>
-''' <param name="a_value">   [Integer] the Measured Channel Number value. </value>
-Public Property Let MeasuredChannelNumber(ByVal a_value As Integer)
-    This.MeasuredChannelNumber = a_value
+''' <summary>   Sets the Measured DUT number. </summary>
+''' <param name="a_value">   [Integer] the Measured DUT number value. </value>
+Public Property Let MeasuredDutNumber(ByVal a_value As Integer)
+    This.MeasuredDutNumber = a_value
 End Property
 
 ''' <summary>   Gets the Sense Function Name for continuous mode. </summary>
@@ -1144,17 +1144,17 @@ Public Property Let ExternalTrigMonitoringEnabled(ByVal a_value As Boolean)
     This.ExternalTrigMonitoringEnabled = a_value
 End Property
 
-''' <summary>   Gets the Auto Increment Channel Number Enabled. </summary>
+''' <summary>   Gets the Auto Increment DUT number Enabled. </summary>
 ''' <remarks>   Indicates that front inputs are Value for this mode. </remarks>
 ''' <value>   [Boolean]. </value>
-Public Property Get AutoIncrementChannelNoEnabled() As Boolean
-    AutoIncrementChannelNoEnabled = This.AutoIncrementChannelNoEnabled
+Public Property Get AutoIncrementDutNumberEnabled() As Boolean
+    AutoIncrementDutNumberEnabled = This.AutoIncrementDutNumberEnabled
 End Property
 
-''' <summary>   Sets the Auto Increment Channel Number Enabled. </summary>
-''' <param name="a_value">   [Boolean] the Auto Increment Channel Number Enabled value. </value>
-Public Property Let AutoIncrementChannelNoEnabled(ByVal a_value As Boolean)
-    This.AutoIncrementChannelNoEnabled = a_value
+''' <summary>   Sets the Auto Increment DUT number Enabled. </summary>
+''' <param name="a_value">   [Boolean] the Auto Increment DUT number Enabled value. </value>
+Public Property Let AutoIncrementDutNumberEnabled(ByVal a_value As Boolean)
+    This.AutoIncrementDutNumberEnabled = a_value
 End Property
 
 ''' <summary>   Gets the Single Read Enabled. </summary>
@@ -1535,17 +1535,17 @@ Public Property Get ToggleMonitoringExecutable() As Boolean
     ToggleMonitoringExecutable = This.StartMonitoringExecutable Or This.StopMonitoringExecutable
 End Property
 
-''' <summary>   Handles the <see cref=cc_isr_Tcp_Scpi.K2700ViewModel"/>.<see cref="cc_isr_Tcp_Scpi.ChannelMeasured"/> event. </summary>
-''' <param name="a_eventArgs">   [<see cref="cc_isr_Tcp_Scpi.ChannelReadingEventArgs"/>] event arguments. </param>
-Friend Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.ChannelReadingEventArgs)
+''' <summary>   Handles the <see cref=cc_isr_Tcp_Scpi.K2700ViewModel"/>.<see cref="cc_isr_Tcp_Scpi.DutMeasured"/> event. </summary>
+''' <param name="a_eventArgs">   [<see cref="cc_isr_Tcp_Scpi.DutReadingEventArgs"/>] event arguments. </param>
+Friend Sub m_viewModel_DutMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.DutReadingEventArgs)
 
-    Const p_procedureName = "m_viewModel_ChannelMeasured"
+    Const p_procedureName = "m_viewModel_DutMeasured"
     
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
     Me.MeasuredReading = a_eventArgs.Reading
-    Me.MeasuredChannelNumber = a_eventArgs.ChannelNumber
+    Me.MeasuredDutNumber = a_eventArgs.DutNumber
         
     Dim p_value As Double
     Dim p_details As String
@@ -1651,14 +1651,14 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.FrontInputsValue = This.ViewModel.FrontInputsValue
         Case "FrontInputsCaption"
             Me.FrontInputsCaption = This.ViewModel.FrontInputsCaption
-        Case "SelectedChannelNumber"
-            Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
-        Case "ChannelCount"
-            Me.ChannelCount = This.ViewModel.ChannelCount
-        Case "TargetChannelNumber"
-            Me.TargetChannelNumber = This.ViewModel.TargetChannelNumber
-        Case "MeasuredChannelNumber"
-            Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
+        Case "SelectedDutNumber"
+            Me.SelectedDutNumber = This.ViewModel.SelectedDutNumber
+        Case "DutCount"
+            Me.DutCount = This.ViewModel.DutCount
+        Case "TargetDutNumber"
+            Me.TargetDutNumber = This.ViewModel.TargetDutNumber
+        Case "MeasuredDutNumber"
+            Me.MeasuredDutNumber = This.ViewModel.MeasuredDutNumber
         Case "SenseFunctionName"
             Me.SenseFunctionName = This.ViewModel.SenseFunctionName
         Case "SenseFunctionCaption"
@@ -1676,8 +1676,8 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.ExternalTrigMonitoringEnabled = This.ViewModel.ExternalTrigMonitoringEnabled
         Case "MonitoringState"
             Me.MonitoringState = This.ViewModel.MonitoringState
-        Case "AutoIncrementChannelNoEnabled"
-            Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
+        Case "AutoIncrementDutNumberEnabled"
+            Me.AutoIncrementDutNumberEnabled = This.ViewModel.AutoIncrementDutNumberEnabled
         Case "SingleReadEnabled"
             Me.SingleReadEnabled = This.ViewModel.SingleReadEnabled
         Case "SenseFunctions"
@@ -1770,14 +1770,14 @@ Friend Sub Synchronize()
     This.ViewModel.GpibLanControllerPort = This.GpibLanControllerPort
     ' This.ViewModel.SessionTimeout = Me.SessionTimeout
     ' This.ViewModel.TimerInterval = Me.TimerInterval
-    ' This.ViewModel.MaximumChannelNumber = Me.MaximumChannelNumber
+    ' This.ViewModel.MaximumDutNumber = Me.MaximumDutNumber
 
     ' The initial values must be set for propery change to work.
     Me.AutoAssertTalk = This.ViewModel.AutoAssertTalk
-    Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
+    Me.AutoIncrementDutNumberEnabled = This.ViewModel.AutoIncrementDutNumberEnabled
     Me.BottomCard = This.ViewModel.BottomCard
     Me.BottomCardFunctionScanList = This.ViewModel.BottomCardFunctionScanList
-    Me.ChannelCount = This.ViewModel.ChannelCount
+    Me.DutCount = This.ViewModel.DutCount
     Me.Connected = This.ViewModel.Connected
     Me.ElapsedTime = This.ViewModel.ElapsedTime
     Me.ElapsedTimeFormat = This.ViewModel.ElapsedTimeFormat
@@ -1789,7 +1789,7 @@ Friend Sub Synchronize()
     Me.Host = This.ViewModel.Host
     Me.LastErrorMessage = This.ViewModel.LastErrorMessage
     Me.LastMessage = This.ViewModel.LastMessage
-    Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
+    Me.MeasuredDutNumber = This.ViewModel.MeasuredDutNumber
     Me.MeasuredReading = This.ViewModel.MeasuredReading
     Me.MeasuredValueFormat = This.ViewModel.MeasuredValueFormat
     Me.MeasuredValue = This.ViewModel.MeasuredValue
@@ -1801,7 +1801,7 @@ Friend Sub Synchronize()
     Me.ReceivedMessage = This.ViewModel.ReceivedMessage
     Me.ReceivedMessageLength = This.ViewModel.ReceivedMessageLength
     Me.ScpiCommands = This.ViewModel.ScpiCommands
-    Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
+    Me.SelectedDutNumber = This.ViewModel.SelectedDutNumber
     Me.SenseFunctionName = This.ViewModel.SenseFunctionName
     Me.SenseFunctionCaption = This.ViewModel.SenseFunctionCaption
     Me.SenseFunctions = This.ViewModel.SenseFunctions
@@ -1815,7 +1815,7 @@ Friend Sub Synchronize()
     Me.StandardByte = This.ViewModel.StandardByte
     Me.StatusByte = This.ViewModel.StatusByte
     Me.StopRequested = This.ViewModel.StopRequested
-    Me.TargetChannelNumber = This.ViewModel.TargetChannelNumber
+    Me.TargetDutNumber = This.ViewModel.TargetDutNumber
     Me.TopCard = This.ViewModel.TopCard
     Me.TopCardFunctionScanList = This.ViewModel.TopCardFunctionScanList
        

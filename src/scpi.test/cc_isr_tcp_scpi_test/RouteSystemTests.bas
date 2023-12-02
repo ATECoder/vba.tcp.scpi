@@ -633,7 +633,7 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunctionName As
     
     Dim p_cardName As String
     Dim p_card As MultiplexerCard
-    Dim p_channelNumber As Integer
+    Dim p_deviceChannelNumber As Integer
     Dim p_options As String: p_options = "7700,7702"
     p_expectedCount = 2
     If p_outcome.AssertSuccessful Then
@@ -643,21 +643,21 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunctionName As
     End If
     
     p_cardName = "7700"
-    p_channelNumber = 1
+    p_deviceChannelNumber = 1
     If p_outcome.AssertSuccessful Then
         
         ' build the scan lists here so as to set the channel numbers properly.
         p_routeSystem.BuildFunctionScanLists a_senseFunctionName
         
-        Set p_card = p_routeSystem.SelectMultiplexerCard(p_channelNumber)
+        Set p_card = p_routeSystem.SelectMultiplexerCard(p_deviceChannelNumber)
         Set p_outcome = cc_isr_Test_Fx.Assert.IsNotNothing(p_card, _
-            "A card should be selected for channel " & CStr(p_channelNumber) & ".")
+            "A card should be selected for channel " & CStr(p_deviceChannelNumber) & ".")
     End If
         
     If p_outcome.AssertSuccessful Then
-        Set p_card = p_routeSystem.SelectMultiplexerCard(p_channelNumber)
+        Set p_card = p_routeSystem.SelectMultiplexerCard(p_deviceChannelNumber)
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_cardName, p_card.Name, _
-            "The expected card should be selected for channel " & CStr(p_channelNumber) & ".")
+            "The expected card should be selected for channel " & CStr(p_deviceChannelNumber) & ".")
     End If
     
     Dim p_expectedFunctionScanList As String
@@ -671,25 +671,25 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunctionName As
     End If
     
     If p_outcome.AssertSuccessful Then
-        p_channelNumber = p_channelNumber + p_card.FunctionalCapacity - 1
-        Set p_card = p_routeSystem.SelectMultiplexerCard(p_channelNumber)
+        p_deviceChannelNumber = p_deviceChannelNumber + p_card.FunctionalCapacity - 1
+        Set p_card = p_routeSystem.SelectMultiplexerCard(p_deviceChannelNumber)
         Set p_outcome = cc_isr_Test_Fx.Assert.IsNotNothing(p_card, _
-            "A card should be selected for channel " & CStr(p_channelNumber) & ".")
+            "A card should be selected for channel " & CStr(p_deviceChannelNumber) & ".")
     End If
         
     If p_outcome.AssertSuccessful Then
-        Set p_card = p_routeSystem.SelectMultiplexerCard(p_channelNumber)
+        Set p_card = p_routeSystem.SelectMultiplexerCard(p_deviceChannelNumber)
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_cardName, p_card.Name, _
-            "The expected card should be selected for channel " & CStr(p_channelNumber) & ".")
+            "The expected card should be selected for channel " & CStr(p_deviceChannelNumber) & ".")
     End If
     
     Dim p_expectedScanList As String
     p_expectedScanList = "(@1" & VBA.CStr(p_card.FunctionalCapacity) & ")"
     Dim p_actualScanList As String
     If p_outcome.AssertSuccessful Then
-        p_actualScanList = p_card.BuildChannelScanList(p_channelNumber)
+        p_actualScanList = p_card.BuildChannelScanList(p_deviceChannelNumber)
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedScanList, p_actualScanList, _
-            "The expected scan list should be returned for card '" & p_cardName & "' and channel " & CStr(p_channelNumber) & ".")
+            "The expected scan list should be returned for card '" & p_cardName & "' and channel " & CStr(p_deviceChannelNumber) & ".")
     End If
     
     Dim p_expectedRouteCommand As String
@@ -702,17 +702,17 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunctionName As
     End If
     
     p_cardName = "7702"
-    p_channelNumber = p_channelNumber + 1
+    p_deviceChannelNumber = p_deviceChannelNumber + 1
     If p_outcome.AssertSuccessful Then
-        Set p_card = p_routeSystem.SelectMultiplexerCard(p_channelNumber)
+        Set p_card = p_routeSystem.SelectMultiplexerCard(p_deviceChannelNumber)
         Set p_outcome = cc_isr_Test_Fx.Assert.IsNotNothing(p_card, _
-            "A card should be selected for channel " & CStr(p_channelNumber) & ".")
+            "A card should be selected for channel " & CStr(p_deviceChannelNumber) & ".")
     End If
         
     If p_outcome.AssertSuccessful Then
-        Set p_card = p_routeSystem.SelectMultiplexerCard(p_channelNumber)
+        Set p_card = p_routeSystem.SelectMultiplexerCard(p_deviceChannelNumber)
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_cardName, p_card.Name, _
-            "The expected card should be selected for channel " & CStr(p_channelNumber) & ".")
+            "The expected card should be selected for channel " & CStr(p_deviceChannelNumber) & ".")
     End If
     
     If p_outcome.AssertSuccessful Then
@@ -723,23 +723,23 @@ Public Function Assert7700CardsShouldBuildScanLists(ByVal a_senseFunctionName As
     End If
     
     If p_outcome.AssertSuccessful Then
-        p_channelNumber = p_channelNumber + p_card.FunctionalCapacity - 1
-        Set p_card = p_routeSystem.SelectMultiplexerCard(p_channelNumber)
+        p_deviceChannelNumber = p_deviceChannelNumber + p_card.FunctionalCapacity - 1
+        Set p_card = p_routeSystem.SelectMultiplexerCard(p_deviceChannelNumber)
         Set p_outcome = cc_isr_Test_Fx.Assert.IsNotNothing(p_card, _
-            "A card should be selected for channel " & CStr(p_channelNumber) & ".")
+            "A card should be selected for channel " & CStr(p_deviceChannelNumber) & ".")
     End If
         
     If p_outcome.AssertSuccessful Then
-        Set p_card = p_routeSystem.SelectMultiplexerCard(p_channelNumber)
+        Set p_card = p_routeSystem.SelectMultiplexerCard(p_deviceChannelNumber)
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_cardName, p_card.Name, _
-            "The expected card should be selected for channel " & CStr(p_channelNumber) & ".")
+            "The expected card should be selected for channel " & CStr(p_deviceChannelNumber) & ".")
     End If
     
     p_expectedScanList = "(@2" & VBA.CStr(p_card.FunctionalCapacity) & ")"
     If p_outcome.AssertSuccessful Then
-        p_actualScanList = p_card.BuildChannelScanList(p_channelNumber)
+        p_actualScanList = p_card.BuildChannelScanList(p_deviceChannelNumber)
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedScanList, p_actualScanList, _
-            "The expected scan list should be returned for card '" & p_cardName & "' and channel " & CStr(p_channelNumber) & ".")
+            "The expected scan list should be returned for card '" & p_cardName & "' and channel " & CStr(p_deviceChannelNumber) & ".")
     End If
     
     p_expectedRouteCommand = ":ROUT:MULT:CLOS (@244,245)"

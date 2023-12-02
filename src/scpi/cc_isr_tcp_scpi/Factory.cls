@@ -10,7 +10,7 @@ Attribute VB_Exposed = True
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ''' <summary>   A public creatable singleton class for creating instances of this workbook
 '''             classes to share with external workbooks. </summary>
-''' <remarks>   Dependencies: ChannelReadingEventArgs.cls, K2700.cls, RouteSyste.cls, ScpiSystem.cls. <remarks>
+''' <remarks>   Dependencies: DutReadingEventArgs.cls, K2700.cls, RouteSyste.cls, ScpiSystem.cls. <remarks>
 ''' - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 Option Explicit
@@ -21,10 +21,10 @@ Public Function NewK2700() As K2700
     Set NewK2700 = New K2700
 End Function
 
-''' <summary>   Gets an instance of the <see cref="ChannelReadingEventArgs"/> class. </summary>
-''' <value>   [<see cref="ChannelReadingEventArgs"/>]. </returns>
-Public Property Get NewChannelReadingEventArgs() As ChannelReadingEventArgs
-    Set NewChannelReadingEventArgs = New ChannelReadingEventArgs
+''' <summary>   Gets an instance of the <see cref="DutReadingEventArgs"/> class. </summary>
+''' <value>   [<see cref="DutReadingEventArgs"/>]. </returns>
+Public Property Get NewDutReadingEventArgs() As DutReadingEventArgs
+    Set NewDutReadingEventArgs = New DutReadingEventArgs
 End Property
 
 ''' <summary>   Instantiates the <see cref="K2700ViewModel"/> object. </summary>

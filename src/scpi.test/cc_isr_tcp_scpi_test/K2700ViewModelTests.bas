@@ -278,8 +278,8 @@ Public Sub BeforeAll()
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreNotEqual(VBA.vbNullString, _
-            This.DataView.ChannelNumberCaptionPrefix, _
-            "Data view channel number caption prefix must not be empty.")
+            This.DataView.DutNumberCaptionPrefix, _
+            "Data view DUT number caption prefix must not be empty.")
     
     ' issue the open connection command. This initializes the view model.
     If p_outcome.AssertSuccessful Then _
@@ -653,6 +653,8 @@ Public Function AssertExternalModeShouldConfigure(ByVal a_mode As cc_isr_Tcp_Scp
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedMeasurementMode, This.ViewModel.MeasurementMode, _
             "External trigger reading mode should be as expected.")
     
+    End If
+    
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasurementMode, _
             This.Observer.MeasurementMode, _
@@ -715,19 +717,19 @@ Public Function AssertExternalModeShouldValidate(ByVal a_mode As cc_isr_Tcp_Scpi
             "User View measurement mode should equal expected value for external trigger reading mode.")
 
     ' testing trigger monitoring uses auto increment to detect changes
-    ' in channel number as readings are triggered.
+    ' in DUT number as readings are triggered.
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(a_mode.AutoIncrementChannel, _
-            "Auto increment channel number should be true for testing external trigger monitoring.")
+            "Auto increment DUT number should be true for testing external trigger monitoring.")
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.AutoIncrementChannel, _
-            This.ViewModel.AutoIncrementChannelNoEnabled, _
+            This.ViewModel.AutoIncrementDutNumberEnabled, _
             "View Model Auto Increment Channel No Enabled should equal the expected value.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.AutoIncrementChannelNoEnabled, _
-            This.UserView.AutoIncrementChannelNoEnabled, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.AutoIncrementDutNumberEnabled, _
+            This.UserView.AutoIncrementDutNumberEnabled, _
             "User View and View Model Auto Increment Channel No Enabled should equal.")
    
     If p_outcome.AssertSuccessful Then _
@@ -756,8 +758,8 @@ Public Function AssertExternalModeShouldValidate(ByVal a_mode As cc_isr_Tcp_Scpi
     End If
  
     If p_outcome.AssertSuccessful Then _
-       Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, This.Observer.TargetChannelNumber, _
-            "Observer Target Channel Number should equal the view model channel number.")
+       Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetDutNumber, This.Observer.TargetDutNumber, _
+            "Observer Target DUT number should equal the view model DUT number.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(cc_isr_Tcp_Scpi.TriggerSourceOption.External, _
@@ -918,8 +920,8 @@ Public Function AssertImmediateModeShouldConfigure(ByVal a_mode As cc_isr_Tcp_Sc
             "View Model should be read the bottom card function scan list.")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.ChannelNumber, _
-            This.ViewModel.SelectedChannelNumber, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.DutNumber, _
+            This.ViewModel.SelectedDutNumber, _
             "View model selected channelnumber should equal the expected value.")
 
     If p_outcome.AssertSuccessful Then _
@@ -1006,16 +1008,16 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_mode As cc_isr_Tcp_Scp
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(a_mode.AutoIncrementChannel, _
-            "Auto increment channel number should be False for testing immeidate trigger monitoring.")
+            "Auto increment DUT number should be False for testing immeidate trigger monitoring.")
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.AutoIncrementChannel, _
-            This.ViewModel.AutoIncrementChannelNoEnabled, _
+            This.ViewModel.AutoIncrementDutNumberEnabled, _
             "View Model Auto Increment Channel No Enabled should equal the expected value.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.AutoIncrementChannelNoEnabled, _
-            This.UserView.AutoIncrementChannelNoEnabled, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.AutoIncrementDutNumberEnabled, _
+            This.UserView.AutoIncrementDutNumberEnabled, _
             "User View and View Model Auto Increment Channel No Enabled should equal.")
    
     If p_outcome.AssertSuccessful Then _
@@ -1136,54 +1138,54 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_mode As cc_isr_Tcp_Scp
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.AutoIncrementChannel, _
-            This.ViewModel.AutoIncrementChannelNoEnabled, _
-            "Auto increment channel number should be as expected.")
+            This.ViewModel.AutoIncrementDutNumberEnabled, _
+            "Auto increment DUT number should be as expected.")
     
     ' with immediate mode and single reading, the selected channel is used to set the
     ' measured channel after a reading is triggered and the measurement event is handled
     ' by the observer.
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.ChannelNumber, This.ViewModel.SelectedChannelNumber, _
-            "The View Model selected channel number should equal the expected channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.DutNumber, This.ViewModel.SelectedDutNumber, _
+            "The View Model selected DUT number should equal the expected DUT number.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.SelectedChannelNumber > 0, _
-            "The View Model selected channel number '" & VBA.CStr(This.ViewModel.SelectedChannelNumber) & _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.SelectedDutNumber > 0, _
+            "The View Model selected DUT number '" & VBA.CStr(This.ViewModel.SelectedDutNumber) & _
             "' should be positive.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.SelectedChannelNumber <= This.ViewModel.ChannelCount, _
-            "The View Model selected channel number '" & VBA.CStr(This.ViewModel.SelectedChannelNumber) & _
-            "' should be smaller or equal the channel count '" & VBA.CStr(This.ViewModel.ChannelCount) & ".")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.SelectedDutNumber <= This.ViewModel.DutCount, _
+            "The View Model selected DUT number '" & VBA.CStr(This.ViewModel.SelectedDutNumber) & _
+            "' should be smaller or equal the DUT count '" & VBA.CStr(This.ViewModel.DutCount) & ".")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.Observer.SelectedChannelNumber, _
-            "The Observer selected channel number should be set to the View Model selected channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedDutNumber, _
+            This.Observer.SelectedDutNumber, _
+            "The Observer selected DUT number should be set to the View Model selected DUT number.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.UserView.SelectedChannelNumber, _
-            "The User View selected channel number should be set to the View Model selected channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedDutNumber, _
+            This.UserView.SelectedDutNumber, _
+            "The User View selected DUT number should be set to the View Model selected DUT number.")
     
     Set AssertImmediateModeShouldValidate = p_outcome
 
 End Function
 
-''' summary>   Returns the expected target channel number given the measured channel number. </summary>
+''' summary>   Returns the expected target DUT number given the measured DUT number. </summary>
 ''' <returns>   [Integer]. </returns>
-Public Function ExpectedTargetChannelNumber() As Integer
+Public Function ExpectedTargetDutNumber() As Integer
     
-    If This.ViewModel.AutoIncrementChannelNoEnabled Then
+    If This.ViewModel.AutoIncrementDutNumberEnabled Then
 
-        ' with multiple measurement, the target channel number increments after the measurement is made
-        ExpectedTargetChannelNumber = IIf(This.ViewModel.MeasuredChannelNumber < This.ViewModel.ChannelCount, _
-                This.ViewModel.MeasuredChannelNumber + 1, 1)
+        ' with multiple measurement, the target DUT number increments after the measurement is made
+        ExpectedTargetDutNumber = IIf(This.ViewModel.MeasuredDutNumber < This.ViewModel.DutCount, _
+                This.ViewModel.MeasuredDutNumber + 1, 1)
     Else
     
-        ' with single measurements, the channel number is the selected channel number.
-        ExpectedTargetChannelNumber = This.ViewModel.SelectedChannelNumber
+        ' with single measurements, the DUT number is the selected DUT number.
+        ExpectedTargetDutNumber = This.ViewModel.SelectedDutNumber
     
     End If
     
@@ -1213,8 +1215,8 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
     ' and the measured channel is the selected channel
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.SelectedChannelNumber > 0, _
-            "The selected channel number for immediate measurement should be positive.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.SelectedDutNumber > 0, _
+            "The selected DUT number for immediate measurement should be positive.")
     
     ' proceed with test assertions.
     
@@ -1228,24 +1230,24 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
         ' wait for the reading event to take shape.
         cc_isr_Core_IO.Factory.NewStopwatch().Wait 10
         
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.Observer.MeasuredChannelNumber, _
-            "Observer measured channel number should equal the selected channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedDutNumber, _
+            This.Observer.MeasuredDutNumber, _
+            "Observer measured DUT number should equal the selected DUT number.")
             
     End If
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.UserView.SelectedChannelNumber, _
-            "The User View selected channel number should be set to the View Model selected channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedDutNumber, _
+            This.UserView.SelectedDutNumber, _
+            "The User View selected DUT number should be set to the View Model selected DUT number.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.DataView.MeasuredChannelNumber, _
-            "The Data View measured channel number should be set to the View Model selected channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedDutNumber, _
+            This.DataView.MeasuredDutNumber, _
+            "The Data View measured DUT number should be set to the View Model selected DUT number.")
     
     Dim p_reading As String
-    Dim p_channelNumber As Integer
+    Dim p_measuredDutNumber As Integer
     Dim p_readingValue As Double
     
     If p_outcome.AssertSuccessful Then
@@ -1253,36 +1255,36 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
         ' get the reading from the observer.
         p_reading = This.DataView.MeasuredReading
         
-        p_channelNumber = This.DataView.MeasuredChannelNumber
+        p_measuredDutNumber = This.DataView.MeasuredDutNumber
 
         p_readingValue = This.DataView.MeasuredValue
         
     End If
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.DataView.MeasuredChannelNumber, _
-            This.ViewModel.MeasuredChannelNumber, _
-            "View Model measured channel number should equal the Data View measured channel.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.DataView.MeasuredDutNumber, _
+            This.ViewModel.MeasuredDutNumber, _
+            "View Model measured DUT number should equal the Data View measured channel.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.MeasuredChannelNumber, _
-            This.ViewModel.MeasuredChannelNumber, _
-            "View Model measured channel number should equal the Observer measured channel.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.MeasuredDutNumber, _
+            This.ViewModel.MeasuredDutNumber, _
+            "View Model measured DUT number should equal the Observer measured channel.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(ExpectedTargetChannelNumber(), _
-            This.ViewModel.SelectedChannelNumber, _
-            "The expected target channel number should equal the selected channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(ExpectedTargetDutNumber(), _
+            This.ViewModel.SelectedDutNumber, _
+            "The expected target DUT number should equal the selected DUT number.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.Observer.SelectedChannelNumber, _
-            "The observer Selected Channel Number should equal the view model selected channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedDutNumber, _
+            This.Observer.SelectedDutNumber, _
+            "The observer Selected DUT number should equal the view model selected DUT number.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.UserView.SelectedChannelNumber, _
-            "The User View Selected Channel Number should equal the view model selected channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedDutNumber, _
+            This.UserView.SelectedDutNumber, _
+            "The User View Selected DUT number should equal the view model selected DUT number.")
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(VBA.vbNullString = p_reading, _
@@ -1491,39 +1493,39 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_mode As cc_isr_Tcp_Sc
             "Observer external trigger monitoring state should be on in trigger monitoring mode.")
     
     ' testing trigger monitoring uses auto increment to detect changes
-    ' in channel number as readings are triggered.
+    ' in DUT number as readings are triggered.
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(a_mode.AutoIncrementChannel, _
-            "Auto increment channel number should be true for testing external trigger monitoring.")
+            "Auto increment DUT number should be true for testing external trigger monitoring.")
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.AutoIncrementChannel, _
-            This.ViewModel.AutoIncrementChannelNoEnabled, _
-            "Auto increment channel number should be as expected.")
+            This.ViewModel.AutoIncrementDutNumberEnabled, _
+            "Auto increment DUT number should be as expected.")
     
-    ' with triggered mode and multiple reading, the Target Channel Number is used to set the
+    ' with triggered mode and multiple reading, the Target DUT number is used to set the
     ' measured channel after a reading is triggered and the measurement event is handled
-    ' by the observer. The target channel number must then be set to between 1 and the
-    ' channel count (see below).
+    ' by the observer. The target DUT number must then be set to between 1 and the
+    ' DUT count (see below).
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.ChannelNumber, This.ViewModel.TargetChannelNumber, _
-            "The View Model Target channel number should equals the settings channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.DutNumber, This.ViewModel.TargetDutNumber, _
+            "The View Model Target DUT number should equals the settings DUT number.")
     
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.TargetChannelNumber > 0, _
-            "The View Model Target channel number '" & VBA.CStr(This.ViewModel.TargetChannelNumber) & _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.TargetDutNumber > 0, _
+            "The View Model Target DUT number '" & VBA.CStr(This.ViewModel.TargetDutNumber) & _
             "' should be positive.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.TargetChannelNumber <= This.ViewModel.ChannelCount, _
-            "The View Model Target channel number '" & VBA.CStr(This.ViewModel.TargetChannelNumber) & _
-            "' should be smaller or equal the channel count '" & VBA.CStr(This.ViewModel.ChannelCount) & ".")
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.TargetDutNumber <= This.ViewModel.DutCount, _
+            "The View Model Target DUT number '" & VBA.CStr(This.ViewModel.TargetDutNumber) & _
+            "' should be smaller or equal the DUT count '" & VBA.CStr(This.ViewModel.DutCount) & ".")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, _
-            This.Observer.TargetChannelNumber, _
-            "Observer Target Channel Number should be set to the selected channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetDutNumber, _
+            This.Observer.TargetDutNumber, _
+            "Observer Target DUT number should be set to the selected DUT number.")
    
     Set AssertMonitoringModeShouldValidate = p_outcome
 
@@ -1540,12 +1542,12 @@ Public Function AssertMeasurementsShouldGetTriggered(ByVal a_assert As cc_isr_Te
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = a_assert
     
     ' Auto increment (multiple readings) is used in triggered measurement tests in which
-    ' case, the target channel number is measured. Following each reading, the target channel
+    ' case, the target DUT number is measured. Following each reading, the target channel
     ' number is incremented in a circular fashion.
     
-    ' get the first channel number
+    ' get the first DUT number
     Dim p_channel As Integer
-    p_channel = This.DataView.MeasuredChannelNumber
+    p_channel = This.DataView.MeasuredDutNumber
     
     Dim p_reading As String
     p_reading = This.DataView.MeasuredReading
@@ -1562,10 +1564,10 @@ Public Function AssertMeasurementsShouldGetTriggered(ByVal a_assert As cc_isr_Te
         
         VBA.DoEvents
     
-        If p_channel <> This.DataView.MeasuredChannelNumber Then
+        If p_channel <> This.DataView.MeasuredDutNumber Then
         
             VBA.DoEvents
-            p_channel = This.DataView.MeasuredChannelNumber
+            p_channel = This.DataView.MeasuredDutNumber
             
             VBA.DoEvents
             p_reading = This.DataView.MeasuredReading
@@ -1573,26 +1575,26 @@ Public Function AssertMeasurementsShouldGetTriggered(ByVal a_assert As cc_isr_Te
             VBA.DoEvents
             Debug.Print p_channel; ": "; p_reading
             
-            ' verify that measured channel numbers propagated correctly.
+            ' verify that measured DUT numbers propagated correctly.
             If p_outcome.AssertSuccessful Then _
-                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.MeasuredChannelNumber, _
-                    This.ViewModel.MeasuredChannelNumber, _
-                    "View Model measured channel number should equal the Observer measured channel.")
+                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.MeasuredDutNumber, _
+                    This.ViewModel.MeasuredDutNumber, _
+                    "View Model measured DUT number should equal the Observer measured channel.")
             
             If p_outcome.AssertSuccessful Then _
-                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.DataView.MeasuredChannelNumber, _
-                    This.ViewModel.MeasuredChannelNumber, _
-                    "View Model measured channel number should equal the Data View measured channel.")
+                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.DataView.MeasuredDutNumber, _
+                    This.ViewModel.MeasuredDutNumber, _
+                    "View Model measured DUT number should equal the Data View measured channel.")
             
             If p_outcome.AssertSuccessful Then _
-                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(ExpectedTargetChannelNumber(), _
-                    This.ViewModel.TargetChannelNumber, _
-                    "The target channel number should equal the expected target channel number after a triggered reading.")
+                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(ExpectedTargetDutNumber(), _
+                    This.ViewModel.TargetDutNumber, _
+                    "The target DUT number should equal the expected target DUT number after a triggered reading.")
             
             If p_outcome.AssertSuccessful Then _
-                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, _
-                    This.Observer.TargetChannelNumber, _
-                    "The observer Target Channel Number should equal the view model target channel number.")
+                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetDutNumber, _
+                    This.Observer.TargetDutNumber, _
+                    "The observer Target DUT number should equal the view model target DUT number.")
 
         End If
     
@@ -1746,8 +1748,8 @@ Public Function AssertMonitoringModeStopShouldValidate(ByVal a_assert As cc_isr_
             "Observer external trigger monitoring state should be off after monitoring stopped.")
             
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, This.Observer.TargetChannelNumber, _
-            "Observer Target Channel Number should be set to the selected channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetDutNumber, This.Observer.TargetDutNumber, _
+            "Observer Target DUT number should be set to the selected DUT number.")
     
     Set AssertMonitoringModeStopShouldValidate = p_outcome
 
@@ -1897,51 +1899,51 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
             "Data View and View Model Last error Messages should equal after clear.")
 
 
-    Dim p_expectedChannelNumber As Integer
+    Dim p_expectedDutNumber As Integer
     Dim p_expectedReading As String
     Dim p_expectedMeasuredValue As Double
     
-    p_expectedChannelNumber = 0
+    p_expectedDutNumber = 0
     p_expectedReading = VBA.vbNullString
     p_expectedMeasuredValue = 0#
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedChannelNumber, This.ViewModel.MeasuredChannelNumber, _
-            "View Model Measured Channel Number should be expected before taking a measurement.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedDutNumber, This.ViewModel.MeasuredDutNumber, _
+            "View Model Measured DUT number should be expected before taking a measurement.")
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedReading, This.ViewModel.MeasuredReading, _
             "Measured Reading should be expected before taking a measurement.")
 
     ' emulate a channel reading
-    p_expectedChannelNumber = 1
+    p_expectedDutNumber = 1
     p_expectedReading = "0.0"
     p_expectedMeasuredValue = 0#
     
-    This.ViewModel.K2700.OnChannelMeasured p_expectedChannelNumber, p_expectedReading
+    This.ViewModel.K2700.OnDutMeasured p_expectedDutNumber, p_expectedReading
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedChannelNumber, This.ViewModel.MeasuredChannelNumber, _
-            "View Model Measured Channel Number should be expected after emulating a measurement.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedDutNumber, This.ViewModel.MeasuredDutNumber, _
+            "View Model Measured DUT number should be expected after emulating a measurement.")
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedReading, This.ViewModel.MeasuredReading, _
             "Measured Reading should be expected after emulating a measurement.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredChannelNumber, This.Observer.MeasuredChannelNumber, _
-            "Observer and View Model Measured Channel Numbers should equal.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredDutNumber, This.Observer.MeasuredDutNumber, _
+            "Observer and View Model Measured DUT numbers should equal.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredChannelNumber, This.DataView.MeasuredChannelNumber, _
-            "Data View and View Model Measured Channel Numbers should equal.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredDutNumber, This.DataView.MeasuredDutNumber, _
+            "Data View and View Model Measured DUT numbers should equal.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.MeasuredReading, This.DataView.MeasuredReading, _
             "Data View and View Model Measured Readings should equal.")
     
     p_expectedReading = VBA.vbNullString
-    This.ViewModel.K2700.OnChannelMeasured p_expectedChannelNumber, p_expectedReading
+    This.ViewModel.K2700.OnDutMeasured p_expectedDutNumber, p_expectedReading
     p_expectedMeasuredValue = cc_isr_Ieee488.Syntax.NotANumber
     
     If p_outcome.AssertSuccessful Then _
@@ -1953,7 +1955,7 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
             "Measured Value should be expected after emulating a failed measurement.")
 
     p_expectedReading = "101"
-    This.ViewModel.K2700.OnChannelMeasured p_expectedChannelNumber, p_expectedReading
+    This.ViewModel.K2700.OnDutMeasured p_expectedDutNumber, p_expectedReading
     p_expectedMeasuredValue = 101
     
     If p_outcome.AssertSuccessful Then _
@@ -1992,28 +1994,28 @@ Public Function TestShouldInitialize() As cc_isr_Test_Fx.Assert
             "User View and View Model Front Inputs Required should equal.")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(1, This.ViewModel.SelectedChannelNumber, _
-            "View Model Selected Channel Numbers should equal 1.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(1, This.ViewModel.SelectedDutNumber, _
+            "View Model Selected DUT numbers should equal 1.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, This.UserView.SelectedChannelNumber, _
-            "User View and View Model Selected Channel Numbers should equal.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedDutNumber, This.UserView.SelectedDutNumber, _
+            "User View and View Model Selected DUT numbers should equal.")
 
-    p_expectedChannelNumber = 2
-    This.UserView.SelectedChannelNumber = p_expectedChannelNumber
+    p_expectedDutNumber = 2
+    This.UserView.SelectedDutNumber = p_expectedDutNumber
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedChannelNumber, This.UserView.SelectedChannelNumber, _
-            "Data View Selected Channel Numbers should equal after expected value.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedDutNumber, This.UserView.SelectedDutNumber, _
+            "Data View Selected DUT numbers should equal after expected value.")
     
-    p_expectedChannelNumber = 1
-    This.UserView.SelectedChannelNumber = p_expectedChannelNumber
+    p_expectedDutNumber = 1
+    This.UserView.SelectedDutNumber = p_expectedDutNumber
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedChannelNumber, This.UserView.SelectedChannelNumber, _
-            "Data View Selected Channel Numbers should equal after expected value after restoring value.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(p_expectedDutNumber, This.UserView.SelectedDutNumber, _
+            "Data View Selected DUT numbers should equal after expected value after restoring value.")
             
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.AutoIncrementChannelNoEnabled, _
-            This.UserView.AutoIncrementChannelNoEnabled, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.AutoIncrementDutNumberEnabled, _
+            This.UserView.AutoIncrementDutNumberEnabled, _
             "Data View and View Model Auto Increment Channel No Enabled should equal.")
 
     If p_outcome.AssertSuccessful Then _
@@ -3280,8 +3282,8 @@ Public Function TestImmediateModeShouldConfigure() As cc_isr_Test_Fx.Assert
     ' by turning auto increment off.
     
     ' With single reading mode (auto increment is off),
-    ' the selected channel number becomes the
-    ' measured channel number after the immediate reading is
+    ' the selected DUT number becomes the
+    ' measured DUT number after the immediate reading is
     ' triggered and the observer event handler handles the
     ' measurement completion event. Thus, start with channel 1 and
     ' turn off auto increment in order to take single readings.
@@ -3290,7 +3292,7 @@ Public Function TestImmediateModeShouldConfigure() As cc_isr_Test_Fx.Assert
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = False
-    p_mode.ChannelNumber = This.UserView.SelectedChannelNumber
+    p_mode.DutNumber = This.UserView.SelectedDutNumber
     p_mode.FrontInputs = This.DataView.ImmediateFrontInputsRequired
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
     p_mode.ReadingOffset = This.UserView.ReadingOffset
@@ -3374,7 +3376,7 @@ Public Function TestExternalModeShouldConfigure() As cc_isr_Test_Fx.Assert
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = True
-    p_mode.ChannelNumber = This.UserView.SelectedChannelNumber
+    p_mode.DutNumber = This.UserView.SelectedDutNumber
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
@@ -3439,8 +3441,8 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
     ' get some data here.
     
     ' get the pre-trigger measured channel
-    Dim p_channel As Integer
-    p_channel = This.DataView.MeasuredChannelNumber
+    Dim p_measuredDutNumber As Integer
+    p_measuredDutNumber = This.DataView.MeasuredDutNumber
     
     ' get the pre-trigger reading
     Dim p_reading As String
@@ -3523,42 +3525,42 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
             
         End If
         
-        ' record reading if the measured channel number changed.
+        ' record reading if the measured DUT number changed.
         
-        If p_channel <> This.DataView.MeasuredChannelNumber Then
+        If p_measuredDutNumber <> This.DataView.MeasuredDutNumber Then
         
             VBA.DoEvents
-            p_channel = This.DataView.MeasuredChannelNumber
+            p_measuredDutNumber = This.DataView.MeasuredDutNumber
             
             VBA.DoEvents
             p_reading = This.DataView.MeasuredReading
             
             VBA.DoEvents
-            Debug.Print p_channel; ": "; p_reading
+            Debug.Print p_measuredDutNumber; ": "; p_reading
 
             ' delay processing the next event by the presumed timer interval.
             ' cc_isr_Core_IO.Factory.NewStopwatch().Wait 500
             
-            ' verify that measured channel numbers propagated correctly.
+            ' verify that measured DUT numbers propagated correctly.
             If p_outcome.AssertSuccessful Then _
-                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.MeasuredChannelNumber, _
-                    This.ViewModel.MeasuredChannelNumber, _
-                    "View Model measured channel number should equal the Observer measured channel.")
+                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.MeasuredDutNumber, _
+                    This.ViewModel.MeasuredDutNumber, _
+                    "View Model measured DUT number should equal the Observer measured channel.")
             
             If p_outcome.AssertSuccessful Then _
-                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.DataView.MeasuredChannelNumber, _
-                    This.ViewModel.MeasuredChannelNumber, _
-                    "View Model measured channel number should equal the Data View measured channel.")
+                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.DataView.MeasuredDutNumber, _
+                    This.ViewModel.MeasuredDutNumber, _
+                    "View Model measured DUT number should equal the Data View measured channel.")
             
             If p_outcome.AssertSuccessful Then _
-                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(ExpectedTargetChannelNumber(), _
-                    This.ViewModel.TargetChannelNumber, _
-                    "The target channel number should equal the expected target channel number after a triggered reading.")
+                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(ExpectedTargetDutNumber(), _
+                    This.ViewModel.TargetDutNumber, _
+                    "The target DUT number should equal the expected target DUT number after a triggered reading.")
             
             If p_outcome.AssertSuccessful Then _
-                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetChannelNumber, _
-                    This.Observer.TargetChannelNumber, _
-                    "The observer Target Channel Number should equal the view model target channel number.")
+                Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.TargetDutNumber, _
+                    This.Observer.TargetDutNumber, _
+                    "The observer Target DUT number should equal the view model target DUT number.")
 
         End If
     
@@ -3586,11 +3588,11 @@ Public Function AssetTriggersShouldPoll(ByVal a_mode As cc_isr_Tcp_Scpi.MeasureM
     ' setup conditions for monitoring
     
     ' Multiple readings (auto increment on) is used for testing
-    ' trigger monitoring. The test checks that channel numbers change
+    ' trigger monitoring. The test checks that DUT numbers change
     ' with each trigger.
     
     ' With multiple readings (auto increment is on),
-    ' channel numbers start with the Target Channel Number.
+    ' DUT numbers start with the Target DUT number.
     ' Start with channel 1
     
     ' start the external trigger mode
@@ -3663,7 +3665,7 @@ Public Function TestTriggerPollingShouldStartStop() As cc_isr_Test_Fx.Assert
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = True
-    p_mode.ChannelNumber = This.UserView.SelectedChannelNumber
+    p_mode.DutNumber = This.UserView.SelectedDutNumber
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
@@ -3755,7 +3757,7 @@ Public Function TestTriggerPollingShouldRead() As cc_isr_Test_Fx.Assert
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = True
-    p_mode.ChannelNumber = This.UserView.SelectedChannelNumber
+    p_mode.DutNumber = This.UserView.SelectedDutNumber
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
@@ -3814,11 +3816,11 @@ Public Function AssetTriggersShouldMonitor(ByVal a_mode As cc_isr_Tcp_Scpi.Measu
     ' setup conditions for monitoring
     
     ' Multiple readings (auto increment on) is used for testing
-    ' trigger monitoring. The test checks that channel numbers change
+    ' trigger monitoring. The test checks that DUT numbers change
     ' with each trigger.
     
     ' With multiple readings (auto increment is on),
-    ' channel numbers start with the Target Channel Number.
+    ' DUT numbers start with the Target DUT number.
     ' Start with channel 1 and
     
     ' start the external trigger mode
@@ -3892,7 +3894,7 @@ Public Function TestTriggerMonitoringShouldStartStop() As cc_isr_Test_Fx.Assert
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = True
-    p_mode.ChannelNumber = This.UserView.SelectedChannelNumber
+    p_mode.DutNumber = This.UserView.SelectedDutNumber
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
@@ -3970,7 +3972,7 @@ Public Function TestTriggerMonitoringShouldRead() As cc_isr_Test_Fx.Assert
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = True
-    p_mode.ChannelNumber = This.UserView.SelectedChannelNumber
+    p_mode.DutNumber = This.UserView.SelectedDutNumber
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
@@ -4041,16 +4043,16 @@ Public Function TestUserViewShouldMeasureImmediately() As cc_isr_Test_Fx.Assert
     ' by turning auto increment off.
     
     ' With single reading mode (auto increment is off),
-    ' the selected channel number becomes the
-    ' measured channel number after the immediate reading is
+    ' the selected DUT number becomes the
+    ' measured DUT number after the immediate reading is
     ' triggered and the observer event handler handles the
     ' measurement completion event. Thus, start with channel 1 and
     ' turn off auto increment in order to take single readings.
     
-    If This.DataView.MeasuredChannelNumber = 1 Then
-        This.UserView.SelectedChannelNumber = 2
+    If This.DataView.MeasuredDutNumber = 1 Then
+        This.UserView.SelectedDutNumber = 2
     Else
-        This.UserView.SelectedChannelNumber = 1
+        This.UserView.SelectedDutNumber = 1
     End If
     
     ' use front inputs for testing.
@@ -4060,7 +4062,7 @@ Public Function TestUserViewShouldMeasureImmediately() As cc_isr_Test_Fx.Assert
     ' start the immediate trigger reading mode
     
     Dim p_reading As String: p_reading = This.DataView.MeasuredReading
-    Dim p_channelNumber As Integer: p_channelNumber = This.DataView.MeasuredChannelNumber
+    Dim p_measuredDutNumber As Integer: p_measuredDutNumber = This.DataView.MeasuredDutNumber
     Dim p_readingValue As Double: p_readingValue = This.DataView.MeasuredValue
     
     ' this needs to be longer than 5 seconds due to the time it takes the instrument to reset
@@ -4069,8 +4071,8 @@ Public Function TestUserViewShouldMeasureImmediately() As cc_isr_Test_Fx.Assert
     
     If p_outcome.AssertSuccessful Then
         
-        ' clear the Data View measured channel number so that we can detected a measurement.
-        This.DataView.MeasuredChannelNumber = -1
+        ' clear the Data View measured DUT number so that we can detected a measurement.
+        This.DataView.MeasuredDutNumber = -1
         
         ' depress the User View, this should start the
         ' immediate trigger mode and take a reading
@@ -4093,11 +4095,11 @@ Public Function TestUserViewShouldMeasureImmediately() As cc_isr_Test_Fx.Assert
             
             VBA.DoEvents
         
-            ' report reading if the selected channel number was measured
-            If This.ViewModel.SelectedChannelNumber = This.DataView.MeasuredChannelNumber Then
+            ' report reading if the selected DUT number was measured
+            If This.ViewModel.SelectedDutNumber = This.DataView.MeasuredDutNumber Then
             
                 VBA.DoEvents
-                Debug.Print This.DataView.MeasuredChannelNumber; ": "; This.DataView.MeasuredReading
+                Debug.Print This.DataView.MeasuredDutNumber; ": "; This.DataView.MeasuredReading
     
                 Exit Do
                 
@@ -4112,29 +4114,29 @@ Public Function TestUserViewShouldMeasureImmediately() As cc_isr_Test_Fx.Assert
             "User View Auto Single toggle button should be released (Value = False).")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.DataView.MeasuredChannelNumber, _
-            This.ViewModel.MeasuredChannelNumber, _
-            "View Model measured channel number should equal the Data View measured channel.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.DataView.MeasuredDutNumber, _
+            This.ViewModel.MeasuredDutNumber, _
+            "View Model measured DUT number should equal the Data View measured channel.")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.MeasuredChannelNumber, _
-            This.ViewModel.MeasuredChannelNumber, _
-            "View Model measured channel number should equal the Observer measured channel.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.Observer.MeasuredDutNumber, _
+            This.ViewModel.MeasuredDutNumber, _
+            "View Model measured DUT number should equal the Observer measured channel.")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(ExpectedTargetChannelNumber(), _
-            This.ViewModel.SelectedChannelNumber, _
-            "The expected target channel number should equal the selected channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(ExpectedTargetDutNumber(), _
+            This.ViewModel.SelectedDutNumber, _
+            "The expected target DUT number should equal the selected DUT number.")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.Observer.SelectedChannelNumber, _
-            "The observer Selected Channel Number should equal the view model selected channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedDutNumber, _
+            This.Observer.SelectedDutNumber, _
+            "The observer Selected DUT number should equal the view model selected DUT number.")
 
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedChannelNumber, _
-            This.UserView.SelectedChannelNumber, _
-            "The User View Selected Channel Number should equal the view model selected channel number.")
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ViewModel.SelectedDutNumber, _
+            This.UserView.SelectedDutNumber, _
+            "The User View Selected DUT number should equal the view model selected DUT number.")
 
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(VBA.vbNullString = This.DataView.MeasuredReading, _
@@ -4200,14 +4202,15 @@ Public Function AssetUserViewShouldMonitor(ByVal a_assert As cc_isr_Test_Fx.Asse
     ' setup conditions for monitoring
     
     ' Multiple readings (auto increment on) is used for testing
-    ' trigger monitoring. The test checks that channel numbers change
+    ' trigger monitoring. The test checks that DUT numbers change
     ' with each trigger.
     
     ' With multiple readings (auto increment is on),
-    ' channel numbers start with the Target Channel Number.
-    ' Start with channel 1 and
+    ' DUT numbers start with the Target DUT number.
+    ' Start with DUT Number 1 and
     
-    This.ViewModel.TargetChannelNumber = 1
+    ' this should be set upon configuration using the Measure Mode.
+    ' This.ViewModel.TargetDutNumber = 1
     
     ' this needs to be longer than 5 seconds due to the time it takes the instrument to reset
     ' and set the immediate mode.
@@ -4217,8 +4220,8 @@ Public Function AssetUserViewShouldMonitor(ByVal a_assert As cc_isr_Test_Fx.Asse
     
     If p_outcome.AssertSuccessful Then
         
-        ' clear the Data View measured channel number so that we can detected a measurement.
-        This.DataView.MeasuredChannelNumber = -1
+        ' clear the Data View measured DUT number so that we can detected a measurement.
+        This.DataView.MeasuredDutNumber = -1
     
         ' depress the manual scan toggle; this will also configure the external triggering
         ' and start monitoring, which takes a bit of time, ergo the wait for the timer to start.

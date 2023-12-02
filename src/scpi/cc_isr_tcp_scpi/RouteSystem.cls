@@ -232,56 +232,56 @@ Public Sub BuildFunctionScanLists(ByVal a_senseFunctionName As String)
     Me.UpdateFunctionalCapacities
 End Sub
 
-''' <summary>   Returns the scan card for the specific channel. </summary>
-''' <param name="a_channelNumber">   The channel number. </param>
+''' <summary>   Returns the scan card for the specified device-level channel number. </summary>
+''' <param name="a_deviceChannelNumber">   [Integer] The device-level channel number. </param>
 ''' <returns>  [<see cref="MultiplexerCard"/>]. </returns>
-Public Function SelectMultiplexerCard(ByVal a_channelNumber As Integer) As MultiplexerCard
+Public Function SelectMultiplexerCard(ByVal a_deviceChannelNumber As Integer) As MultiplexerCard
     Dim p_multiplexerCard As MultiplexerCard
     For Each p_multiplexerCard In This.InstalledCards
-        If p_multiplexerCard.DeviceFirstChannel <= a_channelNumber And _
-            p_multiplexerCard.DeviceLastChannel >= a_channelNumber Then
+        If p_multiplexerCard.DeviceFirstChannel <= a_deviceChannelNumber And _
+            p_multiplexerCard.DeviceLastChannel >= a_deviceChannelNumber Then
             Exit For
         End If
     Next
     If p_multiplexerCard Is Nothing Then
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidArgumentError, _
             ThisWorkbook.VBProject.Name & "." & VBA.Information.TypeName(Me) & ".SelectMultiplexerCard", _
-            "Argument: 'a_ChannelNumber' = " & VBA.CStr(a_channelNumber) & " is out of range for the installed multiplexer cards in this instrument."
+            "Argument: 'a_deviceChannelNumber' = " & VBA.CStr(a_deviceChannelNumber) & " is out of range for the installed multiplexer cards in this instrument."
     End If
     Set SelectMultiplexerCard = p_multiplexerCard
 End Function
 
 ''' <summary>   Returns the route multiple close command,
 '''             e.g., <c>:ROUT:MULT:CLOS (@124,125)</c>. for the multiplexer card
-'''             of the provided device channel number. </summary>
-''' <param name="a_channelNumber">   The channel number. </param>
+'''             of the provided device-level channel number. </summary>
+''' <param name="a_deviceChannelNumber">   The device-level channel number. </param>
 ''' <returns>  The channel list to close. </returns>
-Public Function GetRouteMultipleCloseCommand(ByVal a_channelNumber As Integer) As String
+Public Function GetRouteMultipleCloseCommand(ByVal a_deviceChannelNumber As Integer) As String
 
-    GetRouteMultipleCloseCommand = Me.SelectMultiplexerCard(a_channelNumber).RouteMultipleCloseCommand
+    GetRouteMultipleCloseCommand = Me.SelectMultiplexerCard(a_deviceChannelNumber).RouteMultipleCloseCommand
 
 End Function
 
 ''' <summary>   Returns the route close command,
 '''             e.g., <c>:ROUT:CLOS (@124)</c>. for the multiplexer card
-'''             of the provided device channel number. </summary>
-''' <param name="a_channelNumber">   The channel number. </param>
+'''             of the provided device-level channel number. </summary>
+''' <param name="a_deviceChannelNumber">   [Integer] The device-level channel number. </param>
 ''' <returns>  The channel list to close. </returns>
-Public Function GetRouteCloseCommand(ByVal a_channelNumber As Integer) As String
+Public Function GetRouteCloseCommand(ByVal a_deviceChannelNumber As Integer) As String
 
     GetRouteCloseCommand = _
-        Me.SelectMultiplexerCard(a_channelNumber).BuildChannelRouteCloseCommand(a_channelNumber)
+        Me.SelectMultiplexerCard(a_deviceChannelNumber).BuildChannelRouteCloseCommand(a_deviceChannelNumber)
 
 End Function
 
 ''' <summary>   Returns the channel scan list, e.g., <c>(@113)</c> for a specific
-'''             device channel number. </summary>
-''' <param name="a_channelNumber">   The device channel number. </param>
+'''             device-level channel number. </summary>
+''' <param name="a_deviceChannelNumber">   The device-level channel number. </param>
 ''' <returns>  The scan list. </returns>
-Public Function BuildChannelScanList(ByVal a_channelNumber As Integer) As String
+Public Function BuildChannelScanList(ByVal a_deviceChannelNumber As Integer) As String
 
     BuildChannelScanList = _
-        Me.SelectMultiplexerCard(a_channelNumber).BuildChannelScanList(a_channelNumber)
+        Me.SelectMultiplexerCard(a_deviceChannelNumber).BuildChannelScanList(a_deviceChannelNumber)
     
 End Function
 

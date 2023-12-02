@@ -18,8 +18,8 @@ Attribute m_viewModel.VB_VarHelpID = -1
 
 Private Const m_measurementRow As Integer = 7 ' 2
 Private Const m_measurementCol As Integer = 2 ' 23
-Private Const m_channelRow As Integer = 7 ' 2
-Private Const m_channelCol As Integer = 1 '  24
+Private Const m_dutNumberRow As Integer = 7 ' 2
+Private Const m_dutNumberCol As Integer = 1 '  24
 Private Const m_byRow As Boolean = False ' True
 Private Const m_displayIncrement As Integer = 2
 
@@ -30,7 +30,7 @@ Private Type this_
 
     PrimaryGpibAddress As Integer
     GpibLanControllerPort As Long
-    MaximumChannelNumber As Integer
+    MaximumDutNumber As Integer
     MeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
     BeepAllowed As Boolean
     SessionTimeout As Integer
@@ -41,15 +41,15 @@ Private Type this_
     LastCommandDetails As String
     LastCommandOutcome As Boolean
         
-    ChannelNumberCaptionPrefix As String
+    DutNumberCaptionPrefix As String
     MeasurementRow As Integer
     MeasurementColumn As Integer
-    ChannelRow As Integer
+    DutNumberRow As Integer
     ChannelColumn As Integer
     ChannelCellValue As String
     MeasurementCellValue As String
 
-    MeasuredChannelNumber As Integer
+    MeasuredDutNumber As Integer
     MeasuredReading As String
     MeasuredValue As Double
     
@@ -358,7 +358,7 @@ End Sub
 ''' <summary>   Handles the Clear Messages Button Click Event. </summary>
 Public Sub OnClearReadings()
     If Not This.ViewModel Is Nothing Then
-        This.ViewModel.ClearReadingsCommand UserView.ReadingOffset, 1, Me.MaximumChannelNumber
+        This.ViewModel.ClearReadingsCommand UserView.ReadingOffset, 1, Me.MaximumDutNumber
     End If
 End Sub
 
@@ -402,22 +402,22 @@ Public Property Let GpibLanControllerPort(ByVal a_value As Long)
     End If
 End Property
 
-''' <summary>   Gets the maximum Channel Number. </summary>
+''' <summary>   Gets the maximum DUT number. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get MaximumChannelNumber() As Integer
+Public Property Get MaximumDutNumber() As Integer
     If Not This.DataSheet Is Nothing Then
-        This.MaximumChannelNumber = This.DataSheet.MaxResistanceCount
+        This.MaximumDutNumber = This.DataSheet.MaxDutCount
     End If
-    MaximumChannelNumber = This.MaximumChannelNumber
+    MaximumDutNumber = This.MaximumDutNumber
 End Property
 
-''' <summary>   Sets the maximum Channel Number. </summary>
-''' <param name="a_value">   [Integer] the maximum Channel Number value. </value>
-Public Property Let MaximumChannelNumber(ByVal a_value As Integer)
+''' <summary>   Sets the maximum DUT number. </summary>
+''' <param name="a_value">   [Integer] the maximum DUT number value. </value>
+Public Property Let MaximumDutNumber(ByVal a_value As Integer)
     If Not This.DataSheet Is Nothing Then
-        ' read only: This.DataSheet.MaxResistanceCount = a_value
+        ' read only: This.DataSheet.MaxDutCount = a_value
     End If
-    This.MaximumChannelNumber = a_value
+    This.MaximumDutNumber = a_value
 End Property
 
 ''' <summary>   Gets the instrument beep sound on each reading is enabled. </summary>
@@ -644,40 +644,40 @@ End Property
 ' K2700: Reading
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
 
-''' <summary>   Gets the Channel Number Caption Prefix. </summary>
+''' <summary>   Gets the DUT number Caption Prefix. </summary>
 ''' <value>   [String]. </value>
-Public Property Get ChannelNumberCaptionPrefix() As String
+Public Property Get DutNumberCaptionPrefix() As String
     If Not This.DataSheet Is Nothing Then
-        This.ChannelNumberCaptionPrefix = This.DataSheet.ChannelNumberCaptionPrefix
+        This.DutNumberCaptionPrefix = This.DataSheet.DutNumberCaptionPrefix
     End If
-    ChannelNumberCaptionPrefix = This.ChannelNumberCaptionPrefix
+    DutNumberCaptionPrefix = This.DutNumberCaptionPrefix
 End Property
 
-''' <summary>   Sets the Channel Number Caption Prefix. </summary>
-''' <param name="a_value">   [String] the Channel Number Caption Prefix. </value>
-Public Property Let ChannelNumberCaptionPrefix(ByVal a_value As String)
+''' <summary>   Sets the DUT number Caption Prefix. </summary>
+''' <param name="a_value">   [String] the DUT number Caption Prefix. </value>
+Public Property Let DutNumberCaptionPrefix(ByVal a_value As String)
     If Not This.DataSheet Is Nothing Then
-        ' read only: This.DataSheet.ChannelNumberCaptionPrefix = a_value
+        ' read only: This.DataSheet.DutNumberCaptionPrefix = a_value
     End If
-    This.ChannelNumberCaptionPrefix = a_value
+    This.DutNumberCaptionPrefix = a_value
 End Property
 
-''' <summary>   Gets the Measured Channel Number. </summary>
+''' <summary>   Gets the Measured DUT number. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get MeasuredChannelNumber() As Integer
+Public Property Get MeasuredDutNumber() As Integer
     If Not This.DataSheet Is Nothing Then
-        ' not defined This.MeasuredChannelNumber = This.DataSheet.MeasuredChannelNumber
+        ' not defined This.MeasuredDutNumber = This.DataSheet.MeasuredDutNumber
     End If
-    MeasuredChannelNumber = This.MeasuredChannelNumber
+    MeasuredDutNumber = This.MeasuredDutNumber
 End Property
 
-''' <summary>   Sets the Measured Channel Number. </summary>
-''' <param name="a_value">   [Integer] the Measured Channel Number value. </value>
-Public Property Let MeasuredChannelNumber(ByVal a_value As Integer)
+''' <summary>   Sets the Measured DUT number. </summary>
+''' <param name="a_value">   [Integer] the Measured DUT number value. </value>
+Public Property Let MeasuredDutNumber(ByVal a_value As Integer)
     If Not This.DataSheet Is Nothing Then
-        ' not defined This.DataSheet.MeasuredChannelNumber = a_value
+        ' not defined This.DataSheet.MeasuredDutNumber = a_value
     End If
-    This.MeasuredChannelNumber = a_value
+    This.MeasuredDutNumber = a_value
 End Property
 
 ''' <summary>   Gets the Measured Reading. </summary>
@@ -765,26 +765,26 @@ Public Property Let MeasurementColumn(ByVal a_value As Integer)
     This.MeasurementColumn = a_value
 End Property
 
-''' <summary>   Gets the Channel Row. </summary>
+''' <summary>   Gets the DUT number row. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get ChannelRow() As Integer
-    ChannelRow = This.ChannelRow
+Public Property Get DutNumberRow() As Integer
+    DutNumberRow = This.DutNumberRow
 End Property
 
-''' <summary>   Sets the Channel Row. </summary>
-''' <param name="a_value">   [Integer] the Channel Row. </value>
-Public Property Let ChannelRow(ByVal a_value As Integer)
-    This.ChannelRow = a_value
+''' <summary>   Sets the DUT number row. </summary>
+''' <param name="a_value">   [Integer] the DUT number row. </value>
+Public Property Let DutNumberRow(ByVal a_value As Integer)
+    This.DutNumberRow = a_value
 End Property
 
-''' <summary>   Gets the Channel Column. </summary>
+''' <summary>   Gets the DUT number Column. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get ChannelColumn() As Integer
     ChannelColumn = This.ChannelColumn
 End Property
 
-''' <summary>   Sets the Channel Column. </summary>
-''' <param name="a_value">   [Integer] the Channel Column. </value>
+''' <summary>   Sets the DUT number Column. </summary>
+''' <param name="a_value">   [Integer] the DUT number Column. </value>
 Public Property Let ChannelColumn(ByVal a_value As Integer)
     This.ChannelColumn = a_value
 End Property
@@ -815,7 +815,7 @@ Public Property Get ChannelCellValue() As String
     If This.DataSheet Is Nothing Then
         ChannelCellValue = This.ChannelCellValue
     Else
-        ChannelCellValue = This.DataSheet.Cells(Me.ChannelRow, Me.ChannelColumn).Value
+        ChannelCellValue = This.DataSheet.Cells(Me.DutNumberRow, Me.ChannelColumn).Value
     End If
 End Property
 
@@ -827,33 +827,33 @@ Public Property Let ChannelCellValue(ByVal a_value As String)
         This.ChannelCellValue = a_value
         
         If Not This.DataSheet Is Nothing Then _
-            This.DataSheet.Cells(Me.ChannelRow, Me.ChannelColumn).Value = a_value
+            This.DataSheet.Cells(Me.DutNumberRow, Me.ChannelColumn).Value = a_value
         
     End If
 End Property
 
 ''' <summary>   Sets the Channel display. </summary>
-''' <param name="a_channelNo">   [single] the channel number. </param>
+''' <param name="a_dutNumber">   [single] the DUT number. </param>
 ''' <param name="a_value">       [double] the value. </param>
-Public Sub SetReading(ByVal a_channelNo As Integer, ByVal a_value As Double)
-    SetReading_ a_channelNo, a_value, m_byRow, m_displayIncrement
+Public Sub SetReading(ByVal a_dutNumber As Integer, ByVal a_value As Double)
+    SetReading_ a_dutNumber, a_value, m_byRow, m_displayIncrement
 End Sub
 
 ''' <summary>   Sets the Channel display. </summary>
-''' <param name="a_channelNo">   [single] the channel number. </param>
+''' <param name="a_dutNumber">   [single] the DUT number. </param>
 ''' <param name="a_value">       [double] the value. </param>
 ''' <param name="a_byRow">       [Boolean] true if the next reading goes to the next row. </param>
 ''' <param name="a_increment">   [Integer] the row or column increment. </param>
-Private Sub SetReading_(ByVal a_channelNo As Integer, ByVal a_value As Double, _
+Private Sub SetReading_(ByVal a_dutNumber As Integer, ByVal a_value As Double, _
     ByVal a_byRow As Boolean, ByVal a_increment As Integer)
 
-    Me.MeasurementRow = IIf(a_byRow, m_measurementRow + a_increment * (a_channelNo - 1), m_measurementRow)
-    Me.MeasurementColumn = IIf(a_byRow, m_measurementCol, m_measurementCol + a_increment * (a_channelNo - 1))
+    Me.MeasurementRow = IIf(a_byRow, m_measurementRow + a_increment * (a_dutNumber - 1), m_measurementRow)
+    Me.MeasurementColumn = IIf(a_byRow, m_measurementCol, m_measurementCol + a_increment * (a_dutNumber - 1))
    
-    Me.ChannelRow = IIf(a_byRow, m_channelRow + a_increment * (a_channelNo - 1), m_channelRow)
-    Me.ChannelColumn = IIf(a_byRow, m_channelCol, m_channelCol + a_increment * (a_channelNo - 1))
+    Me.DutNumberRow = IIf(a_byRow, m_dutNumberRow + a_increment * (a_dutNumber - 1), m_dutNumberRow)
+    Me.ChannelColumn = IIf(a_byRow, m_dutNumberCol, m_dutNumberCol + a_increment * (a_dutNumber - 1))
    
-    Me.ChannelCellValue = This.ChannelNumberCaptionPrefix & VBA.CStr(a_channelNo)
+    Me.ChannelCellValue = This.DutNumberCaptionPrefix & VBA.CStr(a_dutNumber)
     Me.MeasurementCellValue = VBA.CStr(a_value)
     
 End Sub
@@ -885,8 +885,8 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
         Case "LastMessage"
             Me.LastMessage = This.ViewModel.LastMessage
             
-        Case "MeasuredChannelNumber"
-            Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
+        Case "MeasuredDutNumber"
+            Me.MeasuredDutNumber = This.ViewModel.MeasuredDutNumber
         Case "MeasuredReading"
             Me.MeasuredReading = This.ViewModel.MeasuredReading
         Case "MeasuredValue"
@@ -924,10 +924,10 @@ Friend Sub Synchronize()
     
     ' these values are now derived in the properties:
     ' set user interface settings
-    ' Me.ChannelNumberCaptionPrefix = This.DataSheet.ChannelNumberCaptionPrefix
+    ' Me.DutNumberCaptionPrefix = This.DataSheet.DutNumberCaptionPrefix
     ' Me.GpibLanControllerPort = This.DataSheet.GpibLanControllerPort
     ' Me.PrimaryGpibAddress = This.DataSheet.PrimaryGpibAddress
-    ' Me.MaximumChannelNumber = This.DataSheet.MaxResistanceCount
+    ' Me.MaximumDutNumber = This.DataSheet.MaxDutCount
     ' Me.SocketAddress = This.DataSheet.SocketAddress
     ' Me.SessionTimeout = This.DataSheet.SessionTimeout
     ' Me.TimerInterval = This.DataSheet.TimerInterval
@@ -939,7 +939,7 @@ Friend Sub Synchronize()
     ' these value are set upon connecting.
     ' This.ViewModel.SessionTimeout = Me.SessionTimeout
     ' This.ViewModel.TimerInterval = Me.TimerInterval
-    ' This.ViewModel.MaximumChannelNumber = Me.MaximumChannelNumber
+    ' This.ViewModel.MaximumDutNumber = Me.MaximumDutNumber
     
     ' this value is set as part of the measurement mode.
     ' Me.ReadingOffset = This.ViewModel.ReadingOffset
@@ -947,7 +947,7 @@ Friend Sub Synchronize()
     ' The initial values must be set for propery change to work.
     Me.LastErrorMessage = This.ViewModel.LastErrorMessage
     Me.LastMessage = This.ViewModel.LastMessage
-    Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
+    Me.MeasuredDutNumber = This.ViewModel.MeasuredDutNumber
     Me.MeasuredReading = This.ViewModel.MeasuredReading
     Me.MeasuredValue = This.ViewModel.MeasuredValue
     Me.MeasurementMode = This.ViewModel.MeasurementMode
@@ -1002,18 +1002,18 @@ err_Handler:
 End Sub
 
 
-''' <summary>   Handles the <see cref=cc_isr_Tcp_Scpi.K2700ViewModel"/>.<see cref="cc_isr_Tcp_Scpi.ChannelMeasured"/> event. </summary>
-''' <param name="a_eventArgs">   [<see cref="cc_isr_Tcp_Scpi.ChannelReadingEventArgs"/>] event arguments. </param>
-Friend Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.ChannelReadingEventArgs)
+''' <summary>   Handles the <see cref=cc_isr_Tcp_Scpi.K2700ViewModel"/>.<see cref="cc_isr_Tcp_Scpi.DutMeasured"/> event. </summary>
+''' <param name="a_eventArgs">   [<see cref="cc_isr_Tcp_Scpi.DutReadingEventArgs"/>] event arguments. </param>
+Friend Sub m_viewModel_DutMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.DutReadingEventArgs)
 
-    Const p_procedureName = "m_viewModel_ChannelMeasured"
+    Const p_procedureName = "m_viewModel_DutMeasured"
     
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
     ' these two are populated by the property changed event.
     ' Me.MeasuredReading = a_eventArgs.Reading
-    ' Me.MeasuredChannelNumber = a_eventArgs.channelnumber
+    ' Me.MeasuredDutNumber = a_eventArgs.channelnumber
     
     ' this is done in the view model
     ' Dim p_value As Double
@@ -1029,7 +1029,7 @@ Friend Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Chan
     ' this is set by the property change event.
     ' Me.MeasuredValue = p_value
     
-    Me.SetReading Me.MeasuredChannelNumber, Me.MeasuredValue
+    Me.SetReading Me.MeasuredDutNumber, Me.MeasuredValue
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:

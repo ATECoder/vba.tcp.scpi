@@ -21,9 +21,9 @@ Implements cc_isr_Core.INotifyPropertyChanged
 ''' <param name="a_eventArgs">   An <see cref="cc_isr_Core.PropertyChangedEventArgs"/> event args. </param>
 Public Event PropertyChanged(ByVal a_eventArgs As cc_isr_Core.PropertyChangedEventArgs)
 
-''' <summary>   The event that is raised upon completion of a channel measurement. </summary>
-''' <param name="a_eventArgs">   An <see cref="cc_isr_Tcp_Scpi.ChannelReadingEventArgs"/> event args. </param>
-Public Event ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.ChannelReadingEventArgs)
+''' <summary>   The event that is raised upon completion of a DUT measurement. </summary>
+''' <param name="a_eventArgs">   An <see cref="cc_isr_Tcp_Scpi.DutReadingEventArgs"/> event args. </param>
+Public Event DutMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.DutReadingEventArgs)
 
 ''' <summary>   Notifies all registered handlers of a measurement state change. </summary>
 ''' <remarks>   The measurment state change is notified once all elements, such as measuring, measurement mode,
@@ -111,10 +111,11 @@ Private Type this_
     FrontInputsValue As Boolean
     FrontInputsHasValue As Boolean
     FrontInputsCaption As String
-    ChannelCount As Integer
-    SelectedChannelNumber As Integer
-    TargetChannelNumber As Integer
-    MeasuredChannelNumber As Integer
+    DutCount As Integer
+    MaximumDutNumber As Integer
+    SelectedDutNumber As Integer
+    TargetDutNumber As Integer
+    MeasuredDutNumber As Integer
     ContinuousSenseFunctionName As String
     ImmediateSenseFunctionName As String
     ImmediateFrontInputsRequired As Boolean
@@ -144,7 +145,7 @@ Private Type this_
 
     ' Service request monitoring properties
     MonitoringState As String
-    AutoIncrementChannelNoEnabled As Boolean
+    AutoIncrementDutNumberEnabled As Boolean
     SingleReadEnabled As Boolean
 
     ' Winsock connection executables
@@ -214,7 +215,7 @@ Private Sub Class_Initialize()
     This.GpibLanControllerPort = 1234
     This.ReadAfterWriteDelay = 1
     This.Termination = VBA.vbLf
-    This.SelectedChannelNumber = 1
+    This.SelectedDutNumber = 1
     
     ' service request monitoring timer control
     This.TimerInterval = 500
@@ -3043,78 +3044,105 @@ End Property
 ' K2700: Channels
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
 
-''' <summary>   Gets the Channel Count. </summary>
+''' <summary>   Gets the number of DUTs that can be tested. </summary>
+Public Function GetDutCount() As Integer
+    If Me.FrontInputsValue Then
+        GetDutCount = Me.MaximumDutNumber
+    Else
+        GetDutCount = IIf(This.K2700.RouteSystem.ChannelCount < Me.MaximumDutNumber, _
+            This.K2700.RouteSystem.ChannelCount, Me.MaximumDutNumber)
+    End If
+End Function
+
+''' <summary>   Gets the number of DUTs that can be tested. The selected
+''' DUT number must be between 1 and this value. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get ChannelCount() As Integer
-    ChannelCount = This.ChannelCount
+Public Property Get DutCount() As Integer
+    DutCount = This.DutCount
 End Property
 
-''' <summary>   Sets the Channel Count. </summary>
-''' <param name="a_value">   [Integer] the Channel Count value. </value>
-Friend Property Let ChannelCount(ByVal a_value As Integer)
-    If This.ChannelCount <> a_value Then
-        This.ChannelCount = a_value
-        Me.OnPropertyChanged "ChannelCount"
+''' <summary>   Gets the number of DUTs that can be tested. The selected
+''' DUT number must be between 1 and this value. </summary>
+''' <param name="a_value">   [Integer] the number of DUTs that can be tested. </param>
+Friend Property Let DutCount(ByVal a_value As Integer)
+    If This.DutCount <> a_value Then
+        This.DutCount = a_value
+        Me.OnPropertyChanged "DutCount"
     End If
 End Property
 
-''' <summary>   Gets the Selected Channel Number. </summary>
+''' <summary>   Gets the maximum number of DUTs that can be tested. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get SelectedChannelNumber() As Integer
-    SelectedChannelNumber = This.SelectedChannelNumber
+Public Property Get MaximumDutNumber() As Integer
+    MaximumDutNumber = This.MaximumDutNumber
 End Property
 
-''' <summary>   Sets the Selected Channel Number. </summary>
-''' <param name="a_value">   [Integer] the Selected Channel Number value. </value>
-Friend Property Let SelectedChannelNumber(ByVal a_value As Integer)
-    If This.SelectedChannelNumber <> a_value Then
-        This.SelectedChannelNumber = a_value
-        Me.OnPropertyChanged "SelectedChannelNumber"
+''' <summary>   Sets the maximum number of DUTs that can be tested. </value>
+''' <param name="a_value">   [Integer] the maximum number of DUTs that can be tested. </param>
+Public Property Let MaximumDutNumber(ByVal a_value As Integer)
+    If This.MaximumDutNumber <> a_value Then
+        This.MaximumDutNumber = a_value
+        Me.OnPropertyChanged "MaximumDutNumber"
     End If
 End Property
 
-''' <summary>   Gets the Target Channel Number. </summary>
+''' <summary>   Gets the selected DUT number. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get TargetChannelNumber() As Integer
-    TargetChannelNumber = This.TargetChannelNumber
+Public Property Get SelectedDutNumber() As Integer
+    SelectedDutNumber = This.SelectedDutNumber
 End Property
 
-''' <summary>   Sets the Target Channel Number. </summary>
-''' <param name="a_value">   [Integer] the Target Channel Number value. </value>
-Friend Property Let TargetChannelNumber(ByVal a_value As Integer)
-    If This.TargetChannelNumber <> a_value Then
-        This.TargetChannelNumber = a_value
-        Me.OnPropertyChanged "TargetChannelNumber"
+''' <summary>   Sets the selected DUT number. </summary>
+''' <param name="a_value">   [Integer] the selected DUT number value. </value>
+Friend Property Let SelectedDutNumber(ByVal a_value As Integer)
+    If This.SelectedDutNumber <> a_value Then
+        This.SelectedDutNumber = a_value
+        Me.OnPropertyChanged "SelectedDutNumber"
     End If
 End Property
 
-''' <summary>   Gets the Measured Channel Number. </summary>
+''' <summary>   Gets the target DUT number. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get MeasuredChannelNumber() As Integer
-    MeasuredChannelNumber = This.MeasuredChannelNumber
+Public Property Get TargetDutNumber() As Integer
+    TargetDutNumber = This.TargetDutNumber
 End Property
 
-''' <summary>   Sets the Measured Channel Number. </summary>
-''' <param name="a_value">   [Integer] the Measured Channel Number value. </value>
-Friend Property Let MeasuredChannelNumber(ByVal a_value As Integer)
-    If This.MeasuredChannelNumber <> a_value Then
-        This.MeasuredChannelNumber = a_value
-        Me.OnPropertyChanged "MeasuredChannelNumber"
+''' <summary>   Sets the target DUT number. </summary>
+''' <param name="a_value">   [Integer] the target DUT number value. </value>
+Friend Property Let TargetDutNumber(ByVal a_value As Integer)
+    If This.TargetDutNumber <> a_value Then
+        This.TargetDutNumber = a_value
+        Me.OnPropertyChanged "TargetDutNumber"
     End If
 End Property
 
-''' <summary>   Gets the Auto Increment Channel Number Enabled. </summary>
+''' <summary>   Gets the measured DUT number. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get MeasuredDutNumber() As Integer
+    MeasuredDutNumber = This.MeasuredDutNumber
+End Property
+
+''' <summary>   Sets the measured DUT number. </summary>
+''' <param name="a_value">   [Integer] the measured DUT number value. </value>
+Friend Property Let MeasuredDutNumber(ByVal a_value As Integer)
+    If This.MeasuredDutNumber <> a_value Then
+        This.MeasuredDutNumber = a_value
+        Me.OnPropertyChanged "MeasuredDutNumber"
+    End If
+End Property
+
+''' <summary>   Gets the auto increment DUT number Enabled. </summary>
 ''' <value>   [Boolean]. </value>
-Public Property Get AutoIncrementChannelNoEnabled() As Boolean
-    AutoIncrementChannelNoEnabled = This.AutoIncrementChannelNoEnabled
+Public Property Get AutoIncrementDutNumberEnabled() As Boolean
+    AutoIncrementDutNumberEnabled = This.AutoIncrementDutNumberEnabled
 End Property
 
-''' <summary>   Sets the Auto Increment Channel Number Enabled. </summary>
-''' <param name="a_value">   [Boolean] the Auto Increment Channel Number Enabled value. </value>
-Friend Property Let AutoIncrementChannelNoEnabled(ByVal a_value As Boolean)
-    If This.AutoIncrementChannelNoEnabled <> a_value Then
-        This.AutoIncrementChannelNoEnabled = a_value
-        Me.OnPropertyChanged "AutoIncrementChannelNoEnabled"
+''' <summary>   Sets the auto increment DUT number Enabled. </summary>
+''' <param name="a_value">   [Boolean] the auto increment DUT number Enabled value. </value>
+Friend Property Let AutoIncrementDutNumberEnabled(ByVal a_value As Boolean)
+    If This.AutoIncrementDutNumberEnabled <> a_value Then
+        This.AutoIncrementDutNumberEnabled = a_value
+        Me.OnPropertyChanged "AutoIncrementDutNumberEnabled"
     End If
 End Property
 
@@ -3183,6 +3211,7 @@ Friend Property Let FrontInputsValue(ByVal a_value As Boolean)
         This.FrontInputsValue = a_value
         Me.OnPropertyChanged "FrontInputsValue"
         Me.FrontInputsCaption = IIf(a_value, "Front", "Rear")
+        Me.DutCount = Me.GetDutCount()
     End If
 End Property
 
@@ -3734,13 +3763,13 @@ Friend Property Let ReadingOffset(ByVal a_value As Double)
 End Property
 
 ''' <summary>   Clears the readings. </summary>
-''' <param name="a_value">          [Double] the value to use for clearing the readings.
-'''                                 This value might represent a probe resistance or
-'''                                 DC offset voltage. </value>
-''' <param name="a_firstChannel">   [Integer] the first channel number. </value>
-''' <param name="a_lastChannel">    [Integer] the last channel number. </value>
+''' <param name="a_value">            [Double] the value to use for clearing the readings.
+'''                                   This value might represent a probe resistance or
+'''                                   DC offset voltage. </value>
+''' <param name="a_firstDutNumber">   [Integer] the first DUT number. </value>
+''' <param name="a_lastDutNumber">    [Integer] the last DUT number. </value>
 Public Sub ClearReadings(ByVal a_value As Double, _
-    ByVal a_firstChannel As Integer, ByVal a_lastChannel As Integer)
+    ByVal a_firstDutNumber As Integer, ByVal a_lastDutNumber As Integer)
 
     Const p_procedureName = "ClearReadings"
 
@@ -3749,11 +3778,11 @@ Public Sub ClearReadings(ByVal a_value As Double, _
     
     Me.ReadingOffset = a_value
     
-    Dim p_channelNumber As Integer
-    For p_channelNumber = a_firstChannel To a_lastChannel
+    Dim p_dutNumber As Integer
+    For p_dutNumber = a_firstDutNumber To a_lastDutNumber
         VBA.DoEvents
-        OnChannelMeasured p_channelNumber, a_value
-    Next p_channelNumber
+        OnDutMeasured p_dutNumber, a_value
+    Next p_dutNumber
   
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -3780,20 +3809,20 @@ err_Handler:
 End Sub
 
 ''' <summary>   Clears the readings. </summary>
-''' <param name="a_value">          [Double] the value to use for clearing the readings.
-'''                                 This value might represent a probe resistance or
-'''                                 DC offset voltage. </value>
-''' <param name="a_firstChannel">   [Integer] the first channel number. </value>
-''' <param name="a_lastChannel">    [Integer] the last channel number. </value>
+''' <param name="a_value">            [Double] the value to use for clearing the readings.
+'''                                   This value might represent a probe resistance or
+'''                                   DC offset voltage. </value>
+''' <param name="a_firstDutNumber">   [Integer] the first DUT number. </value>
+''' <param name="a_lastDutNumber">    [Integer] the last DUT number. </value>
 Public Sub ClearReadingsCommand(ByVal a_value As Double, _
-    ByVal a_firstChannel As Integer, ByVal a_lastChannel As Integer)
+    ByVal a_firstDutNumber As Integer, ByVal a_lastDutNumber As Integer)
 
     Const p_procedureName = "ClearReadingsCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.ClearReadings a_value, a_firstChannel, a_lastChannel
+    Me.ClearReadings a_value, a_firstDutNumber, a_lastDutNumber
   
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -3929,14 +3958,14 @@ Friend Function TryConfigureMeasure(ByVal a_mode As cc_isr_Tcp_Scpi.MeasureMode,
         ' set the sense function
         Me.SenseFunctionName = a_mode.SenseFunction
         Me.SingleReadEnabled = a_mode.SingleRead
-        Me.AutoIncrementChannelNoEnabled = a_mode.AutoIncrementChannel
+        Me.AutoIncrementDutNumberEnabled = a_mode.AutoIncrementChannel
         Me.ReadingBeepEnabled = a_mode.BeepEnabled
         Me.TimerInterval = a_mode.TimerInterval
         
         If a_mode.SingleRead Then
-            Me.SelectedChannelNumber = a_mode.ChannelNumber
+            Me.SelectedDutNumber = a_mode.DutNumber
         Else
-            Me.TargetChannelNumber = a_mode.ChannelNumber
+            Me.TargetDutNumber = a_mode.DutNumber
         End If
         
         Select Case a_mode.Mode
@@ -3949,7 +3978,7 @@ Friend Function TryConfigureMeasure(ByVal a_mode As cc_isr_Tcp_Scpi.MeasureMode,
             
             Case cc_isr_Tcp_Scpi.MeasurementModeOption.External
             
-                Me.TargetChannelNumber = a_mode.ChannelNumber
+                Me.TargetDutNumber = a_mode.DutNumber
                 p_modeCaption = "external trigger mode"
                 ' Configure external triggering reading
                 p_success = This.K2700.TryConfigureExternalTriggerReading(This.SenseFunctionName, p_details)
@@ -4231,29 +4260,29 @@ Public Function TryMeasureImmediately(ByVal a_readingOffset As Double, ByRef a_d
     Dim p_details As String: p_details = VBA.vbNullString
 
     Dim p_reading As String
-    Dim p_channelNumber As Integer
+    Dim p_dutNumber As Integer
 
-    If This.AutoIncrementChannelNoEnabled Then
+    If This.AutoIncrementDutNumberEnabled Then
     
         ' Clear all cells
-        Me.ClearReadings a_readingOffset, 1, Me.ChannelCount
+        Me.ClearReadings a_readingOffset, 1, Me.DutCount
 
         ' scan all channels
-        For p_channelNumber = 1 To Me.ChannelCount
+        For p_dutNumber = 1 To Me.DutCount
     
             ' allow events to occur
             VBA.DoEvents
         
-            ' set the Target Channel Number
-            Me.TargetChannelNumber = p_channelNumber
+            ' set the target DUT number
+            Me.TargetDutNumber = p_dutNumber
         
             Me.RestartStopper
             If This.FrontInputsValue Then
-                p_success = This.K2700.TryTakeFrontReading(p_reading, p_details, p_channelNumber)
+                p_success = This.K2700.TryTakeFrontReading(p_reading, p_details, p_dutNumber)
                 If Not p_success Then _
                     p_details = "Failed taking a front reading; " & p_details
             Else
-                p_success = This.K2700.TryTakeRearReading(p_channelNumber, p_reading, p_details)
+                p_success = This.K2700.TryTakeRearReading(p_dutNumber, p_reading, p_details)
                 If Not p_success Then _
                     p_details = "Failed taking a rear reading; " & p_details
             End If
@@ -4261,20 +4290,20 @@ Public Function TryMeasureImmediately(ByVal a_readingOffset As Double, ByRef a_d
     
             If Not p_success Then Exit For
             
-        Next p_channelNumber
+        Next p_dutNumber
 
     Else
 
-        p_channelNumber = This.SelectedChannelNumber
+        p_dutNumber = This.SelectedDutNumber
     
         Me.RestartStopper
         
         If This.FrontInputsValue Then
-            p_success = This.K2700.TryTakeFrontReading(p_reading, p_details, p_channelNumber)
+            p_success = This.K2700.TryTakeFrontReading(p_reading, p_details, p_dutNumber)
             If Not p_success Then _
                 p_details = "Failed taking a front reading; " & p_details
         Else
-            p_success = This.K2700.TryTakeRearReading(p_channelNumber, p_reading, p_details)
+            p_success = This.K2700.TryTakeRearReading(p_dutNumber, p_reading, p_details)
             If Not p_success Then _
                 p_details = "Failed taking a rear reading; " & p_details
         End If
@@ -4574,25 +4603,25 @@ Public Sub StartMonitoringExternalTriggers(ByVal a_readingOffset As Double, ByVa
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    If This.AutoIncrementChannelNoEnabled Then
+    If This.AutoIncrementDutNumberEnabled Then
     
         ' Clear all readings
-        Me.ClearReadings a_readingOffset, 1, Me.ChannelCount
+        Me.ClearReadings a_readingOffset, 1, Me.DutCount
 
     End If
 
     Me.MonitoringState = "External Trigger On"
 
-    If This.AutoIncrementChannelNoEnabled Then
+    If This.AutoIncrementDutNumberEnabled Then
     
-        ' set the first channel number for manual scan
-        Me.TargetChannelNumber = 1
+        ' set the first DUT number for manual scan
+        Me.TargetDutNumber = 1
     
     Else
 
-        ' set the single reading channel number for manual scan
-        ' to the channel number entered by the operator.
-        Me.TargetChannelNumber = This.SelectedChannelNumber
+        ' set the single reading DUT number for manual scan
+        ' to the DUT number entered by the operator.
+        Me.TargetDutNumber = This.SelectedDutNumber
     
     End If
    
@@ -4948,7 +4977,7 @@ End Property
 
 ''' <summary>   Starts an immediate triggering and take multiple readings. </summary>
 ''' <remarks>   In immeidate scan we have the following settings:
-''' Auto Increment channel number: True;
+''' auto increment DUT number: True;
 ''' Front Inputs Required: False;
 ''' Single Readings: False;
 ''' Triggering Mode: Immediate.
@@ -5016,7 +5045,7 @@ End Function
 
 ''' <summary>   Starts external trigger monitoring in multiple or single readings mode. </summary>
 ''' <remarks>   In manual scan we have the following settings:
-''' Auto Increment channel number: True;
+''' auto increment DUT number: True;
 ''' Front Inputs Required: True;
 ''' Single Readings: False;
 ''' Triggering Mode: External.
@@ -5094,15 +5123,15 @@ End Function
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Raises the <see cref="ChannelMeasured"/> event. </summary>
-''' <para name="a_channelNumber">   [integer] The channel number. </param>
-''' <para name="a_reading">         [double] The reading. </param>
-Private Sub OnChannelMeasured(ByVal a_channelNumber As Integer, ByVal a_reading As String)
+''' <summary>   Raises the <see cref="DutMeasured"/> event. </summary>
+''' <para name="a_dutNumber">   [integer] The DUT number. </param>
+''' <para name="a_reading">     [double] The reading. </param>
+Private Sub OnDutMeasured(ByVal a_dutNumber As Integer, ByVal a_reading As String)
 
-    Const p_procedureName = "OnChannelMeasured"
+    Const p_procedureName = "OnDutMeasured"
 
     ' set the measurement information
-    Me.MeasuredChannelNumber = a_channelNumber
+    Me.MeasuredDutNumber = a_dutNumber
     
     ' this also sets the measured value.
     Me.MeasuredReading = a_reading
@@ -5123,9 +5152,9 @@ Private Sub OnChannelMeasured(ByVal a_channelNumber As Integer, ByVal a_reading 
     End If
     
     ' raise the measurement event.
-    RaiseEvent ChannelMeasured( _
-            cc_isr_Tcp_Scpi.Factory.NewChannelReadingEventArgs.Initialize(a_channelNumber, _
-                                                                          a_reading))
+    RaiseEvent DutMeasured( _
+            cc_isr_Tcp_Scpi.Factory.NewDutReadingEventArgs.Initialize(a_dutNumber, _
+                                                                      a_reading))
     ' allow the event to take place.
     DoEvents
 End Sub
@@ -5166,18 +5195,18 @@ Public Sub HandleTimerEvent()
     ' prevent reentry
     This.HandlingTimerEvent = True
 
-    Dim p_channelNumber As Integer
+    Dim p_dutNumber As Integer
 
     ' check if scan or single
-    If This.AutoIncrementChannelNoEnabled Then
+    If This.AutoIncrementDutNumberEnabled Then
   
-        ' in auto increment mode, use the Target Channel Number
-        p_channelNumber = This.TargetChannelNumber
+        ' in auto increment mode, use the target DUT number
+        p_dutNumber = This.TargetDutNumber
       
     Else
 
-        ' in non auto increment mode, use the Target Channel Number
-        p_channelNumber = This.SelectedChannelNumber
+        ' in non auto increment mode, use the target DUT number
+        p_dutNumber = This.SelectedDutNumber
 
     End If
   
@@ -5189,7 +5218,7 @@ Public Sub HandleTimerEvent()
     Dim p_details As String: p_details = VBA.vbNullString
     Dim p_success As Boolean: p_success = True
 
-    p_success = This.K2700.TryMonitorExternalTrigger(p_channelNumber, p_isDone, p_details)
+    p_success = This.K2700.TryMonitorExternalTrigger(p_dutNumber, p_isDone, p_details)
     
     ' report an error on failure.
     If Not p_success Then
@@ -5488,7 +5517,7 @@ Friend Function TryConfigureInstrumentInitialState(ByRef a_errors As String, _
     
     Me.TopCard = This.K2700.RouteSystem.CardName(1)
     Me.BottomCard = This.K2700.RouteSystem.CardName(2)
-    Me.ChannelCount = This.K2700.RouteSystem.ChannelCount
+    Me.DutCount = Me.GetDutCount()
     
     ' initialize the scan list for immediate trigger.
     If VBA.vbNullString <> This.ImmediateSenseFunctionName Then
@@ -5576,7 +5605,7 @@ Public Function ShouldRestoreSenseFunction(ByVal a_senseFunctionName As String, 
 End Function
 
 ''' <summary>   Returns true and a message if the view model state does not match the expected restore state. </summary>
-''' <remarks>   This is the expected state for making resistance measurements. In future releases
+''' <remarks>   This is the expected state for making measurements. In future releases
 ''' we could define a set of states. </remarks>
 ''' <param name="a_details">   [Out, String] Details why the view model needs to be resotred
 '''                            to its Initial State. </param>
@@ -5791,11 +5820,11 @@ End Sub
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Handles the K2700 <see cref="cc_isr_Tcp_Scpi.ChannelMeasured"/> event. </summary>
-''' <param name="a_eventArgs">   [<see cref="cc_isr_Tcp_Scpi.ChannelReadingEventArgs"/>] event arguments. </param>
-Private Sub m_k2700_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.ChannelReadingEventArgs)
+''' <summary>   Handles the K2700 <see cref="cc_isr_Tcp_Scpi.DutMeasured"/> event. </summary>
+''' <param name="a_eventArgs">   [<see cref="cc_isr_Tcp_Scpi.DutReadingEventArgs"/>] event arguments. </param>
+Private Sub m_k2700_DutMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.DutReadingEventArgs)
 
-    Const p_procedureName = "m_k2700_ChannelMeasured"
+    Const p_procedureName = "m_k2700_DutMeasured"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
@@ -5803,15 +5832,15 @@ Private Sub m_k2700_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Channel
     ' issue a beep if reading beep is enabled
     If This.ReadingBeepEnabled Then VBA.Beep
 
-    ' notify the observer of a channel measurements
-    OnChannelMeasured a_eventArgs.ChannelNumber, a_eventArgs.Reading
+    ' notify the observer of a DUT measurements
+    OnDutMeasured a_eventArgs.DutNumber, a_eventArgs.Reading
 
-    If This.AutoIncrementChannelNoEnabled Then
+    If This.AutoIncrementDutNumberEnabled Then
 
-        ' increment the resistance for the next reading
+        ' increment the DUT number for the next reading
         
-        Me.TargetChannelNumber = IIf(a_eventArgs.ChannelNumber < Me.ChannelCount, _
-            a_eventArgs.ChannelNumber + 1, 1)
+        Me.TargetDutNumber = IIf(a_eventArgs.DutNumber < Me.DutCount, _
+            a_eventArgs.DutNumber + 1, 1)
 
     End If
 

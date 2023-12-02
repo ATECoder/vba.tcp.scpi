@@ -16,8 +16,6 @@ End Type
 
 Private This As this_
 
-
-
 ''' <summary>   Updates this workbook document info. </summary>
 Private Sub UpdateDocumentInfo()
     On Error Resume Next

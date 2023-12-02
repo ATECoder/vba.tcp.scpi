@@ -34,13 +34,14 @@ End Type
 
 Private This As this_
 
-''' <summary>   The event that is raised upon completion of a channel measurement. </summary>
-''' <param name="a_eventArgs">   An <see cref="ChannelReadingEventArgs"/> event args. </param>
-Public Event ChannelMeasured(ByVal a_eventArgs As ChannelReadingEventArgs)
+''' <summary>   The event that is raised upon completion of a DUT measurement. </summary>
+''' <param name="a_eventArgs">   An <see cref="DutReadingEventArgs"/> event args. </param>
+Public Event DutMeasured(ByVal a_eventArgs As DutReadingEventArgs)
 
 ''' <summary>   Initializes the k2700 . </summary>
 Private Sub Class_Initialize()
 
+    ' predefined values
     This.GpibLanControllerPort = 1234
     This.ReadAfterWriteDelay = 1
     This.Termination = VBA.vbLf
@@ -303,12 +304,12 @@ End Sub
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Performs a single read from the front panel. </summary>
-''' <param name="a_reading">         [Out, String] The reading. </param>
-''' <param name="a_details">         [Out, String] Details the failure information if any. </param>
-''' <param name="a_channelNumber">   [Optional, Integer, 0] The channel number. </param>
+''' <param name="a_reading">     [Out, String] The reading. </param>
+''' <param name="a_details">     [Out, String] Details the failure information if any. </param>
+''' <param name="a_dutNumber">   [Optional, Integer, 0] The DUT number. </param>
 ''' <returns>   [Boolean]. </returns>
 Public Function TryTakeFrontReading(ByRef a_reading As String, ByRef a_details As String, _
-    Optional a_channelNumber As Integer = 0) As Boolean
+    Optional a_dutNumber As Integer = 0) As Boolean
 
     Const p_procedureName = "TryTakeFrontReading"
     
@@ -323,7 +324,7 @@ Public Function TryTakeFrontReading(ByRef a_reading As String, ByRef a_details A
     p_length = This.Session.TryQueryLine(p_command, a_reading, p_details)
     p_success = 0 < p_length
     If p_success Then
-        OnChannelMeasured a_channelNumber, a_reading
+        OnDutMeasured a_dutNumber, a_reading
     Else
         a_details = ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName & _
             " failed taking a front reading using the command '" & p_command & "; " & p_details
@@ -333,16 +334,16 @@ Public Function TryTakeFrontReading(ByRef a_reading As String, ByRef a_details A
 
 End Function
 
-''' <summary>   Performs a single scan on the given channel number from the rear panel. </summary>
+''' <summary>   Performs a single scan on the given device-level channel number from the rear panel. </summary>
 ''' <remarks>
 ''' Use this method to get a single value from the instrument using the back panel switches
 ''' </remarks>
-''' <param name="a_channelNumber">   The device channel number. </param>
-''' <param name="a_reading">         [Out, String] The reading or empty if
-''                                   the channel number is out of range for this device. </param>
-''' <param name="a_details">         [Out, String] Details the failure information if any. </param>
+''' <param name="a_deviceChannelNumber">   The device-level channel number. </param>
+''' <param name="a_reading">               [Out, String] The reading or empty if
+''                                         the channel number is out of range for this device. </param>
+''' <param name="a_details">               [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
-Public Function TryTakeRearReading(ByVal a_channelNumber As Integer, _
+Public Function TryTakeRearReading(ByVal a_deviceChannelNumber As Integer, _
     ByRef a_reading As String, ByRef a_details As String) As Boolean
 
     Const p_procedureName = "TryTakeRearReading"
@@ -356,7 +357,7 @@ Public Function TryTakeRearReading(ByVal a_channelNumber As Integer, _
     Dim p_routeCloseCommand As String
     On Error Resume Next
     
-    p_routeCloseCommand = This.RouteSystem.GetRouteCloseCommand(a_channelNumber)
+    p_routeCloseCommand = This.RouteSystem.GetRouteCloseCommand(a_deviceChannelNumber)
     
     On Error GoTo 0
     
@@ -369,7 +370,7 @@ Public Function TryTakeRearReading(ByVal a_channelNumber As Integer, _
         p_length = This.Session.TryQueryLine(p_command, a_reading, p_details)
         p_success = 0 < p_length
         If Not p_success Then _
-            p_details = "Failed closing channel #" & VBA.CStr(a_channelNumber) & _
+            p_details = "Failed closing channel #" & VBA.CStr(a_deviceChannelNumber) & _
                 " using the command '" & p_command & "; " & p_details
         
         If p_success Then
@@ -380,7 +381,7 @@ Public Function TryTakeRearReading(ByVal a_channelNumber As Integer, _
             p_length = This.Session.TryQueryLine(p_command, a_reading, p_details)
             p_success = 0 < p_length
             If p_success Then
-                OnChannelMeasured a_channelNumber, a_reading
+                OnDutMeasured a_deviceChannelNumber, a_reading
             Else
                 p_details = "Failed taking a rear reading using the command '" & p_command & "; " & p_details
             End If
@@ -654,11 +655,11 @@ End Function
 ''' </code>
 ''' Test 10 TestTriggerPollingShouldRead passed. Elapsed time: 20856.2 ms.
 ''' </remarks>
-''' <param name="a_channelNumber">   [Integer] The channel number. </param>
-''' <param name="a_isDone">          [Boolean] True if done. </param>
-''' <param name="a_details">         [Out, String] Details the failure information if any. </param>
+''' <param name="a_deviceChannelNumber">   [Integer] The device-level channel number. </param>
+''' <param name="a_isDone">                [Boolean] True if done. </param>
+''' <param name="a_details">               [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
-Public Function TryMonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVal a_isDone As Boolean, _
+Public Function TryMonitorExternalTrigger(ByVal a_deviceChannelNumber As Integer, ByVal a_isDone As Boolean, _
     ByRef a_details As String) As Boolean
 
     Const p_procedureName = "TryMonitorExternalTrigger"
@@ -758,7 +759,7 @@ Public Function TryMonitorExternalTrigger(ByVal a_channelNumber As Integer, ByVa
                 
                     ' raise the channel measured event.
                     If 0 < VBA.Len(p_reading) Then _
-                        OnChannelMeasured a_channelNumber, p_reading
+                        OnDutMeasured a_deviceChannelNumber, p_reading
                     
                 Else
                 
@@ -859,15 +860,16 @@ End Property
 '
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Raises the <see cref="ChannelMeasured"/> event. </summary>
+''' <summary>   Raises the <see cref="DutMeasured"/> event. </summary>
 ''' <remarks>   Lacking an internal definition for unit testing, this method
 ''' is made public so as the unit test the propagation of measured values and
-''' channel numbers. </remarks>
-''' <para name="a_channelNumber">   [integer] The channel number. </param>
-''' <para name="a_reading">         [double] The reading. </param>
-Public Sub OnChannelMeasured(ByVal a_channelNumber As Integer, ByVal a_reading As String)
-    RaiseEvent ChannelMeasured( _
-            Factory.NewChannelReadingEventArgs.Initialize(a_channelNumber, _
+''' device-level channel numbers. </remarks>
+''' <para name="a_dutNumber">   [integer] The DUT number equaling the device-level
+'''                             channel number. </param>
+''' <para name="a_reading">     [double] The reading. </param>
+Public Sub OnDutMeasured(ByVal a_dutNumber As Integer, ByVal a_reading As String)
+    RaiseEvent DutMeasured( _
+            Factory.NewDutReadingEventArgs.Initialize(a_dutNumber, _
                                                           a_reading))
 End Sub
 

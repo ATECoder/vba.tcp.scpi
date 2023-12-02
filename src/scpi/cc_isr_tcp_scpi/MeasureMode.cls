@@ -29,7 +29,7 @@ End Enum
 Private Type this_
     AutoIncrementChannel As Boolean
     BeepEnabled As Boolean
-    ChannelNumber As Integer
+    DutNumber As Integer
     FrontInputs As Boolean
     Mode As cc_isr_Tcp_Scpi.MeasurementModeOption
     ReadingOffset As Double
@@ -40,14 +40,14 @@ End Type
 
 Private This As this_
 
-''' <summary>   Gets the Auto Increment Channel Number condition. </summary>
+''' <summary>   Gets the auto increment DUT number condition. </summary>
 ''' <value>   [Boolean]. </value>
 Public Property Get AutoIncrementChannel() As Boolean
     AutoIncrementChannel = This.AutoIncrementChannel
 End Property
 
-''' <summary>   Sets the Auto Increment Channel Number condition. </summary>
-''' <param name="a_value">   [Boolean] the Auto Increment Channel Number condition value. </value>
+''' <summary>   Sets the auto increment DUT number condition. </summary>
+''' <param name="a_value">   [Boolean] the auto increment DUT number condition value. </value>
 Public Property Let AutoIncrementChannel(ByVal a_value As Boolean)
     This.AutoIncrementChannel = a_value
 End Property
@@ -64,16 +64,16 @@ Public Property Let BeepEnabled(ByVal a_value As Boolean)
     This.BeepEnabled = a_value
 End Property
 
-''' <summary>   Gets the Channel Number. </summary>
+''' <summary>   Gets the DUT Number. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get ChannelNumber() As Integer
-    ChannelNumber = This.ChannelNumber
+Public Property Get DutNumber() As Integer
+    DutNumber = This.DutNumber
 End Property
 
-''' <summary>   Sets the Channel Number. </summary>
-''' <param name="a_value">   [Integer] the Channel Number value. </value>
-Public Property Let ChannelNumber(ByVal a_value As Integer)
-    This.ChannelNumber = a_value
+''' <summary>   Sets the DUT Number. </summary>
+''' <param name="a_value">   [Integer] the DUT Number value. </value>
+Public Property Let DutNumber(ByVal a_value As Integer)
+    This.DutNumber = a_value
 End Property
 
 ''' <summary>   Gets the Front Inputs condition. </summary>
@@ -103,14 +103,14 @@ Public Property Let Mode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementModeOption)
 End Property
 
 ''' <summary>   Gets the Reading Offset representing, for example,
-''' the probe resistance of voltage bias. </summary>
+''' the probe resistance or voltage bias. </summary>
 ''' <value>   [Double]. </value>
 Public Property Get ReadingOffset() As Double
     ReadingOffset = This.ReadingOffset
 End Property
 
 ''' <summary>   Sets the Reading Offset representing, for example,
-''' the probe resistance of voltage bias. </summary>
+''' the probe resistance or voltage bias. </summary>
 ''' <param name="a_value">   [Double] the Reading Offset. </value>
 Public Property Let ReadingOffset(ByVal a_value As Double)
     This.ReadingOffset = a_value
