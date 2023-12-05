@@ -103,11 +103,12 @@ LogInfo( "opening " + $src)
 $book = $excel.Workbooks.Open($src, $missing, $ReadOnly, $missing, $missing, $missing, $true)
 LogInfo ( "Opened " + $book.Name + " read " + (&{If($ReadOnly) {"only"} Else {"write"}}) + "." )
 
+$ReadOnly = $false
 $excel.EnableEvents = $true;
 
 $src = "C:\my\lib\vba\iot\tcp.scpi\src\scpi.test\cc.isr.tcp.scpi.test.xlsm"
 LogInfo( "opening " + $src)
-$book = $excel.Workbooks.Open($src, $missing, $false, $missing, $missing, $missing, $true)
+$book = $excel.Workbooks.Open($src, $missing, $ReadOnly, $missing, $missing, $missing, $true)
 LogInfo ( "Opened " + $book.Name + " read " + (&{If($ReadOnly) {"only"} Else {"write"}}) + "." )
 
 LogInfo( "project loaded. Script will close in a few seconds" )

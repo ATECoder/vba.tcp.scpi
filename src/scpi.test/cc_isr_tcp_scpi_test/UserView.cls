@@ -240,6 +240,7 @@ Public Sub OnAutoScanToggleButtonChange()
         p_mode.AutoIncrementChannel = True
         p_mode.BeepEnabled = False
         p_mode.DutNumber = 1
+        p_mode.DutCount = This.ViewModel.GetDutCount(This.DataSheet.MaxDutCount)
         p_mode.FrontInputs = This.DataSheet.ImmediateFrontInputsRequired
         p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
         p_mode.ReadingOffset = Me.ReadingOffset
@@ -360,6 +361,7 @@ Public Sub OnAutoSingleToggleButtonChange()
         p_mode.AutoIncrementChannel = False
         p_mode.BeepEnabled = False
         p_mode.DutNumber = This.UserSheet.SelectedDutNumber
+        p_mode.DutCount = This.ViewModel.GetDutCount(This.DataSheet.MaxDutCount)
         p_mode.FrontInputs = This.DataSheet.ImmediateFrontInputsRequired
         p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
         p_mode.ReadingOffset = Me.ReadingOffset
@@ -521,6 +523,7 @@ Public Sub OnManualScanToggleButtonChange()
         p_mode.AutoIncrementChannel = True
         p_mode.BeepEnabled = True
         p_mode.DutNumber = 1
+        p_mode.DutCount = This.ViewModel.GetDutCount(This.DataSheet.MaxDutCount)
         p_mode.FrontInputs = This.DataSheet.ExternalFrontInputsRequired
         p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
         p_mode.ReadingOffset = Me.ReadingOffset
@@ -645,6 +648,7 @@ Public Sub OnManualSingleToggleButtonChange()
         p_mode.AutoIncrementChannel = False
         p_mode.BeepEnabled = True
         p_mode.DutNumber = This.UserSheet.SelectedDutNumber
+        p_mode.DutCount = This.ViewModel.GetDutCount(This.DataSheet.MaxDutCount)
         p_mode.FrontInputs = This.DataSheet.ExternalFrontInputsRequired
         p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
         p_mode.ReadingOffset = Me.ReadingOffset
@@ -1058,7 +1062,7 @@ Friend Sub Synchronize()
     
     ' This.ViewModel.ReadingOffset = Me.ReadingOffset
 
-    ' The initial values must be set for propery change to work.
+    ' The initial values must be set for property change to work.
     Me.MeasurementMode = This.ViewModel.MeasurementMode
     Me.SelectedDutNumber = This.ViewModel.SelectedDutNumber
     Me.SingleReadEnabled = This.ViewModel.SingleReadEnabled

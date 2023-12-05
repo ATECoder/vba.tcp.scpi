@@ -439,6 +439,7 @@ Public Sub OnExternalTriggerOptionChange(ByVal a_value As Boolean)
             p_mode.BeepEnabled = True
             p_mode.AutoIncrementChannel = False
             p_mode.DutNumber = This.SelectedDutNumber
+            p_mode.DutCount = This.ViewModel.GetDutCount(DataView.MaximumDutNumber)
             p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
             p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
             p_mode.ReadingOffset = UserView.ReadingOffset
@@ -469,6 +470,7 @@ Public Sub OnImmediateTriggerOptionChange(ByVal a_value As Boolean)
             p_mode.AutoIncrementChannel = False
             p_mode.BeepEnabled = True
             p_mode.DutNumber = This.SelectedDutNumber
+            p_mode.DutCount = This.ViewModel.GetDutCount(DataView.MaximumDutNumber)
             p_mode.FrontInputs = DataView.ImmediateFrontInputsRequired
             p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
             p_mode.ReadingOffset = UserView.ReadingOffset
@@ -1772,7 +1774,7 @@ Friend Sub Synchronize()
     ' This.ViewModel.TimerInterval = Me.TimerInterval
     ' This.ViewModel.MaximumDutNumber = Me.MaximumDutNumber
 
-    ' The initial values must be set for propery change to work.
+    ' The initial values must be set for property change to work.
     Me.AutoAssertTalk = This.ViewModel.AutoAssertTalk
     Me.AutoIncrementDutNumberEnabled = This.ViewModel.AutoIncrementDutNumberEnabled
     Me.BottomCard = This.ViewModel.BottomCard

@@ -112,7 +112,6 @@ Private Type this_
     FrontInputsHasValue As Boolean
     FrontInputsCaption As String
     DutCount As Integer
-    MaximumDutNumber As Integer
     SelectedDutNumber As Integer
     TargetDutNumber As Integer
     MeasuredDutNumber As Integer
@@ -3044,13 +3043,15 @@ End Property
 ' K2700: Channels
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
 
-''' <summary>   Gets the number of DUTs that can be tested. </summary>
-Public Function GetDutCount() As Integer
+''' <summary>   Gets the number of DUTs that can be tested using either front or
+''' rear channel. </summary>
+''' <param name="a_dutCount">   [Integer] the maximum number of DUTs that can be tested. </param>
+Public Function GetDutCount(ByVal a_dutCount As Integer) As Integer
     If Me.FrontInputsValue Then
-        GetDutCount = Me.MaximumDutNumber
+        GetDutCount = a_dutCount
     Else
-        GetDutCount = IIf(This.K2700.RouteSystem.ChannelCount < Me.MaximumDutNumber, _
-            This.K2700.RouteSystem.ChannelCount, Me.MaximumDutNumber)
+        GetDutCount = IIf(This.K2700.RouteSystem.ChannelCount <= a_dutCount, _
+            This.K2700.RouteSystem.ChannelCount, a_dutCount)
     End If
 End Function
 
@@ -3068,21 +3069,6 @@ Friend Property Let DutCount(ByVal a_value As Integer)
     If This.DutCount <> a_value Then
         This.DutCount = a_value
         Me.OnPropertyChanged "DutCount"
-    End If
-End Property
-
-''' <summary>   Gets the maximum number of DUTs that can be tested. </summary>
-''' <value>   [Integer]. </value>
-Public Property Get MaximumDutNumber() As Integer
-    MaximumDutNumber = This.MaximumDutNumber
-End Property
-
-''' <summary>   Sets the maximum number of DUTs that can be tested. </value>
-''' <param name="a_value">   [Integer] the maximum number of DUTs that can be tested. </param>
-Public Property Let MaximumDutNumber(ByVal a_value As Integer)
-    If This.MaximumDutNumber <> a_value Then
-        This.MaximumDutNumber = a_value
-        Me.OnPropertyChanged "MaximumDutNumber"
     End If
 End Property
 
@@ -3211,7 +3197,6 @@ Friend Property Let FrontInputsValue(ByVal a_value As Boolean)
         This.FrontInputsValue = a_value
         Me.OnPropertyChanged "FrontInputsValue"
         Me.FrontInputsCaption = IIf(a_value, "Front", "Rear")
-        Me.DutCount = Me.GetDutCount()
     End If
 End Property
 
@@ -3955,7 +3940,8 @@ Friend Function TryConfigureMeasure(ByVal a_mode As cc_isr_Tcp_Scpi.MeasureMode,
     Dim p_modeCaption As String: p_modeCaption = VBA.vbNullString
     If p_success Then
     
-        ' set the sense function
+        ' set the measurement conditions
+        Me.DutCount = a_mode.DutCount
         Me.SenseFunctionName = a_mode.SenseFunction
         Me.SingleReadEnabled = a_mode.SingleRead
         Me.AutoIncrementDutNumberEnabled = a_mode.AutoIncrementChannel
@@ -5517,7 +5503,6 @@ Friend Function TryConfigureInstrumentInitialState(ByRef a_errors As String, _
     
     Me.TopCard = This.K2700.RouteSystem.CardName(1)
     Me.BottomCard = This.K2700.RouteSystem.CardName(2)
-    Me.DutCount = Me.GetDutCount()
     
     ' initialize the scan list for immediate trigger.
     If VBA.vbNullString <> This.ImmediateSenseFunctionName Then

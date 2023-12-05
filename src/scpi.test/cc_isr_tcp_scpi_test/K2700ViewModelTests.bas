@@ -7,6 +7,8 @@ Attribute VB_Name = "K2700ViewModelTests"
 
 Option Explicit
 
+Private Const m_debugPrintPrefix As String = "''' "
+
 ''' <summary>   This class properties. </summary>
 Private Type this_
     
@@ -98,7 +100,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 16
+    RunTest 13
     AfterAll
 End Sub
 
@@ -203,8 +205,10 @@ Public Sub RunAllTests()
         VBA.DoEvents
     Next p_testNumber
     AfterAll
-    Debug.Print "Ran " & VBA.CStr(This.RunCount) & " out of " & VBA.CStr(This.TestCount) & " tests."
-    Debug.Print "Passed: " & VBA.CStr(This.PassedCount) & "; Failed: " & VBA.CStr(This.FailedCount) & _
+    Debug.Print m_debugPrintPrefix; _
+        "Ran " & VBA.CStr(This.RunCount) & " out of " & VBA.CStr(This.TestCount) & " tests."
+    Debug.Print m_debugPrintPrefix; _
+        "Passed: " & VBA.CStr(This.PassedCount) & "; Failed: " & VBA.CStr(This.FailedCount) & _
                 "; Inconclusive: " & VBA.CStr(This.InconclusiveCount) & "."
 End Sub
 
@@ -226,6 +230,8 @@ Public Sub BeforeAll()
     ' initialize the current and previous test numbers.
     This.TestNumber = 0
     This.PreviousTestNumber = 0
+    
+    Debug.Print m_debugPrintPrefix; Date; Time
     
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Primed to run all tests.")
 
@@ -1553,7 +1559,7 @@ Public Function AssertMeasurementsShouldGetTriggered(ByVal a_assert As cc_isr_Te
     p_reading = This.DataView.MeasuredReading
     
     VBA.DoEvents
-    Debug.Print "Waiting for trigger...."
+    Debug.Print m_debugPrintPrefix; "Waiting for trigger...."
     
     ' loop for some time waiting for triggered measurements.
     
@@ -1573,7 +1579,7 @@ Public Function AssertMeasurementsShouldGetTriggered(ByVal a_assert As cc_isr_Te
             p_reading = This.DataView.MeasuredReading
             
             VBA.DoEvents
-            Debug.Print p_channel; ": "; p_reading
+            Debug.Print m_debugPrintPrefix; p_channel; ": "; p_reading
             
             ' verify that measured DUT numbers propagated correctly.
             If p_outcome.AssertSuccessful Then _
@@ -2179,7 +2185,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestShouldInitialize = p_outcome
@@ -2805,9 +2812,10 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
-    Debug.Print VBA.vbTab & p_serialPollDetails
+    Debug.Print m_debugPrintPrefix; VBA.vbTab & p_serialPollDetails
     
     Set TestShouldBeConnected = p_outcome
     
@@ -2898,7 +2906,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestShouldReadCards = p_outcome
@@ -3039,7 +3048,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestInitialStateShouldRestore = p_outcome
@@ -3150,9 +3160,10 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
-    Debug.Print VBA.vbTab & p_serialPollDetails
+    Debug.Print m_debugPrintPrefix; VBA.vbTab & p_serialPollDetails
     
     Set TestSyntaxErrorShouldRecover = p_outcome
     
@@ -3232,7 +3243,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestClosedConnectionShouldRestore = p_outcome
@@ -3293,6 +3305,7 @@ Public Function TestImmediateModeShouldConfigure() As cc_isr_Test_Fx.Assert
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = False
     p_mode.DutNumber = This.UserView.SelectedDutNumber
+    p_mode.DutCount = This.ViewModel.GetDutCount(This.DataView.MaximumDutNumber)
     p_mode.FrontInputs = This.DataView.ImmediateFrontInputsRequired
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
     p_mode.ReadingOffset = This.UserView.ReadingOffset
@@ -3327,7 +3340,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestImmediateModeShouldConfigure = p_outcome
@@ -3377,6 +3391,7 @@ Public Function TestExternalModeShouldConfigure() As cc_isr_Test_Fx.Assert
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = True
     p_mode.DutNumber = This.UserView.SelectedDutNumber
+    p_mode.DutCount = This.ViewModel.GetDutCount(This.DataView.MaximumDutNumber)
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
@@ -3405,7 +3420,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestExternalModeShouldConfigure = p_outcome
@@ -3462,7 +3478,7 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
     End If
     
     If p_outcome.AssertSuccessful Then _
-        Debug.Print "Awaiting triggers..."
+        Debug.Print m_debugPrintPrefix; "Awaiting triggers..."
     
     ' loop for some time waiting for triggered measurements.
     Dim p_endTime As Double: p_endTime = cc_isr_Core_IO.CoreExtensions.DaysNow() + _
@@ -3536,7 +3552,7 @@ Public Function AssertTriggeredReadingsShouldPoll(ByVal a_assert As cc_isr_Test_
             p_reading = This.DataView.MeasuredReading
             
             VBA.DoEvents
-            Debug.Print p_measuredDutNumber; ": "; p_reading
+            Debug.Print m_debugPrintPrefix; p_measuredDutNumber; ": "; p_reading
 
             ' delay processing the next event by the presumed timer interval.
             ' cc_isr_Core_IO.Factory.NewStopwatch().Wait 500
@@ -3666,6 +3682,7 @@ Public Function TestTriggerPollingShouldStartStop() As cc_isr_Test_Fx.Assert
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = True
     p_mode.DutNumber = This.UserView.SelectedDutNumber
+    p_mode.DutCount = This.ViewModel.GetDutCount(This.DataView.MaximumDutNumber)
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
@@ -3682,7 +3699,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestTriggerPollingShouldStartStop = p_outcome
@@ -3758,6 +3776,7 @@ Public Function TestTriggerPollingShouldRead() As cc_isr_Test_Fx.Assert
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = True
     p_mode.DutNumber = This.UserView.SelectedDutNumber
+    p_mode.DutCount = This.ViewModel.GetDutCount(This.DataView.MaximumDutNumber)
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
@@ -3774,7 +3793,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestTriggerPollingShouldRead = p_outcome
@@ -3895,6 +3915,7 @@ Public Function TestTriggerMonitoringShouldStartStop() As cc_isr_Test_Fx.Assert
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = True
     p_mode.DutNumber = This.UserView.SelectedDutNumber
+    p_mode.DutCount = This.ViewModel.GetDutCount(This.DataView.MaximumDutNumber)
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
@@ -3911,7 +3932,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestTriggerMonitoringShouldStartStop = p_outcome
@@ -3973,6 +3995,7 @@ Public Function TestTriggerMonitoringShouldRead() As cc_isr_Test_Fx.Assert
     p_mode.BeepEnabled = False
     p_mode.AutoIncrementChannel = True
     p_mode.DutNumber = This.UserView.SelectedDutNumber
+    p_mode.DutCount = This.ViewModel.GetDutCount(This.DataView.MaximumDutNumber)
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
@@ -3989,7 +4012,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestTriggerMonitoringShouldRead = p_outcome
@@ -4099,7 +4123,8 @@ Public Function TestUserViewShouldMeasureImmediately() As cc_isr_Test_Fx.Assert
             If This.ViewModel.SelectedDutNumber = This.DataView.MeasuredDutNumber Then
             
                 VBA.DoEvents
-                Debug.Print This.DataView.MeasuredDutNumber; ": "; This.DataView.MeasuredReading
+                Debug.Print m_debugPrintPrefix; This.DataView.MeasuredDutNumber; ": "; _
+                    This.DataView.MeasuredReading
     
                 Exit Do
                 
@@ -4163,7 +4188,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestUserViewShouldMeasureImmediately = p_outcome
@@ -4411,7 +4437,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestUserViewMonitoringShouldStartStop = p_outcome
@@ -4480,7 +4507,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestUserViewMonitoringShouldRead = p_outcome
@@ -4545,7 +4573,8 @@ Public Function TestOpenConnectionWithPowerOnResetShouldConnect() As Assert
     If p_outcome.AssertSuccessful Then
     
         Dim p_delay As Double: p_delay = 3
-        Debug.Print VBA.Format$(Now, "h:mm:ss"); " Power on reset starting. This could take "; _
+        Debug.Print m_debugPrintPrefix; VBA.Format$(Now, "h:mm:ss"); _
+            " Power on reset starting. This could take "; _
             VBA.CStr(p_delay); " seconds. Please wait..."
         
         p_success = This.ViewModel.TryOpenConnectionPowerOnReset(This.DataView.SocketAddress, _
@@ -4554,7 +4583,7 @@ Public Function TestOpenConnectionWithPowerOnResetShouldConnect() As Assert
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(p_success, _
             "View Model should open connection with power on reset; " & p_details)
             
-        Debug.Print VBA.Format$(Now, "h:mm:ss"); " done power on reset."
+        Debug.Print m_debugPrintPrefix; VBA.Format$(Now, "h:mm:ss"); " done power on reset."
     End If
 
     If p_outcome.AssertSuccessful Then _
@@ -4578,7 +4607,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestOpenConnectionWithPowerOnResetShouldConnect = p_outcome
@@ -4600,6 +4630,5 @@ err_Handler:
     GoTo exit_Handler
     
 End Function
-
 
 

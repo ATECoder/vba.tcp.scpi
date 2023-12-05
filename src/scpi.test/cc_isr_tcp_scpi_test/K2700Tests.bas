@@ -5,6 +5,8 @@ Attribute VB_Name = "K2700Tests"
 
 Option Explicit
 
+Private Const m_debugPrintPrefix As String = "''' "
+
 ''' <summary>   This class properties. </summary>
 Private Type this_
     Name As String
@@ -64,10 +66,11 @@ End Sub
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' Test 01 TestOperationCompletionShouldQuery passed. Elapsed time: 23.6 ms.
-''' Test 02 TestShouldRecoverFromSyntaxFromError passed. Elapsed time: 138.4 ms.
-''' Test 03 TestShouldRestoreFromClosedConnection passed. Elapsed time: 2964.4 ms.
-''' Test 04 TestSelectiveDeviceShouldClear passed. Elapsed time: 36.4 ms.
+''' 12/4/2023 3:15:11 PM
+''' Test 01 TestOperationCompletionShouldQuery passed. Elapsed time: 23.0 ms.
+''' Test 02 TestShouldRecoverFromSyntaxFromError passed. Elapsed time: 139.2 ms.
+''' Test 03 TestShouldRestoreFromClosedConnection passed. Elapsed time: 2965.5 ms.
+''' Test 04 TestSelectiveDeviceShouldClear passed. Elapsed time: 36.6 ms.
 ''' Ran 4 out of 4 tests.
 ''' Passed: 4; Failed: 0; Inconclusive: 0.
 ''' </code>
@@ -96,8 +99,10 @@ Public Sub RunAllTests()
         VBA.DoEvents
     Next p_testNumber
     AfterAll
-    Debug.Print "Ran " & VBA.CStr(This.RunCount) & " out of " & VBA.CStr(This.TestCount) & " tests."
-    Debug.Print "Passed: " & VBA.CStr(This.PassedCount) & "; Failed: " & VBA.CStr(This.FailedCount) & _
+    Debug.Print m_debugPrintPrefix; _
+        "Ran " & VBA.CStr(This.RunCount) & " out of " & VBA.CStr(This.TestCount) & " tests."
+    Debug.Print m_debugPrintPrefix; _
+        "Passed: " & VBA.CStr(This.PassedCount) & "; Failed: " & VBA.CStr(This.FailedCount) & _
                 "; Inconclusive: " & VBA.CStr(This.InconclusiveCount) & "."
 End Sub
 
@@ -119,6 +124,8 @@ Public Sub BeforeAll()
     ' initialize the current and previous test numbers.
     This.TestNumber = 0
     This.PreviousTestNumber = 0
+    
+    Debug.Print m_debugPrintPrefix; Date; Time
     
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Primed to run all tests.")
 
@@ -484,7 +491,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestOperationCompletionShouldQuery = p_outcome
@@ -568,7 +576,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestShouldRecoverFromSyntaxFromError = p_outcome
@@ -652,7 +661,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestShouldRestoreFromClosedConnection = p_outcome
@@ -723,7 +733,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestSelectiveDeviceShouldClear = p_outcome
@@ -745,7 +756,5 @@ err_Handler:
     GoTo exit_Handler
 
 End Function
-
-
 
 

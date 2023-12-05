@@ -5,6 +5,8 @@ Attribute VB_Name = "RouteSystemTests"
 
 Option Explicit
 
+Private Const m_debugPrintPrefix As String = "''' "
+
 ''' <summary>   This class properties. </summary>
 Private Type this_
     Name As String
@@ -57,18 +59,11 @@ End Sub
 ''' <summary>   Runs all tests. </summary>
 ''' <remarks>
 ''' <code>
-''' Test7700CardsShouldBePopulated passed. in 10.4 ms.
-'''
-''' Test7700CardsShouldBePopulated passed. in 0.1 ms.
-''' Test7700CardsShouldSelected passed. in 4.2 ms.
-''' Test7700CardsShouldBuildScanLists passed. in 3.5 ms.
-''' Test7700CardsShouldBuild4WireScanLists passed. in 0.4 ms.
-''' Ran 4 out of 4 tests.
-''' Passed: 4; Failed: 0; Inconclusive: 0.
-''' Test7700CardsShouldBePopulated passed. in 0.1 ms.
-''' Test7700CardsShouldSelected passed. in 0.1 ms.
-''' Test7700CardsShouldBuildScanLists passed. in 0.2 ms.
-''' Test7700CardsShouldBuild4WireScanLists passed. in 0.1 ms.
+''' 12/4/2023 3:17:16 PM
+''' Test 01 Test7700CardsShouldBePopulated passed. Elapsed time: 0.1 ms.
+''' Test 02 Test7700CardsShouldSelected passed. Elapsed time: 0.1 ms.
+''' Test 03 Test7700CardsShouldBuildScanLists passed. Elapsed time: 0.3 ms.
+''' Test 04 Test7700CardsShouldBuild4WireScanLists passed. Elapsed time: 0.6 ms.
 ''' Ran 4 out of 4 tests.
 ''' Passed: 4; Failed: 0; Inconclusive: 0.
 ''' </code>
@@ -97,8 +92,10 @@ Public Sub RunAllTests()
         VBA.DoEvents
     Next p_testNumber
     AfterAll
-    Debug.Print "Ran " & VBA.CStr(This.RunCount) & " out of " & VBA.CStr(This.TestCount) & " tests."
-    Debug.Print "Passed: " & VBA.CStr(This.PassedCount) & "; Failed: " & VBA.CStr(This.FailedCount) & _
+    Debug.Print m_debugPrintPrefix; _
+        "Ran " & VBA.CStr(This.RunCount) & " out of " & VBA.CStr(This.TestCount) & " tests."
+    Debug.Print m_debugPrintPrefix; _
+        "Passed: " & VBA.CStr(This.PassedCount) & "; Failed: " & VBA.CStr(This.FailedCount) & _
                 "; Inconclusive: " & VBA.CStr(This.InconclusiveCount) & "."
 End Sub
 
@@ -121,6 +118,8 @@ Public Sub BeforeAll()
     This.TestNumber = 0
     This.PreviousTestNumber = 0
 
+    Debug.Print m_debugPrintPrefix; Date; Time
+    
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Primed to run all tests.")
 
     This.Name = "RouteSystemTests"
@@ -404,7 +403,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldBePopulated = p_outcome
@@ -574,7 +574,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldSelected = p_outcome
@@ -809,7 +810,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldBuildScanLists = p_outcome
@@ -865,7 +867,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set Test7700CardsShouldBuild4WireScanLists = p_outcome
@@ -887,16 +890,4 @@ err_Handler:
     GoTo exit_Handler
 
 End Function
-
-
-
-
-
-
-
-
-
-
-
-
 

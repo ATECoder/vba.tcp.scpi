@@ -38,7 +38,7 @@ Private This As this_
 ''' <summary>   Initializes and returns an instance of this object. </summary>
 Public Function Initialize() As UserSheet
     
-    This.DutNumberCaptionPrefix = "ch"
+    This.DutNumberCaptionPrefix = "r"
     Me.AutoScanToggleExecutable = False
     Me.AutoScanToggleValue = False
     Me.AutoSingleToggleExecutable = False
@@ -136,7 +136,8 @@ Public Property Let SelectedDutNumber(ByVal a_value As Integer)
         ' select this cell as the active cell
         Me.GetSelectedDutNumberRange(a_value).Activate
         ' set the active cell number.
-        ActiveCell.Value = DataView.DutNumberCaptionPrefix & VBA.CStr(a_value)
+        ' 20231204: Prevent writing the DUT number.
+        ' ActiveCell.Value = DataView.DutNumberCaptionPrefix & VBA.CStr(a_value)
     End If
 
 End Property

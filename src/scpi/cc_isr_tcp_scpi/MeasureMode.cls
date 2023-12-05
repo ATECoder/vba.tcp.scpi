@@ -29,6 +29,7 @@ End Enum
 Private Type this_
     AutoIncrementChannel As Boolean
     BeepEnabled As Boolean
+    DutCount As Integer
     DutNumber As Integer
     FrontInputs As Boolean
     Mode As cc_isr_Tcp_Scpi.MeasurementModeOption
@@ -64,16 +65,28 @@ Public Property Let BeepEnabled(ByVal a_value As Boolean)
     This.BeepEnabled = a_value
 End Property
 
-''' <summary>   Gets the DUT Number. </summary>
+''' <summary>   Gets the DUT number. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get DutNumber() As Integer
     DutNumber = This.DutNumber
 End Property
 
-''' <summary>   Sets the DUT Number. </summary>
-''' <param name="a_value">   [Integer] the DUT Number value. </value>
+''' <summary>   Sets the DUT number. </summary>
+''' <param name="a_value">   [Integer] the DUT number value. </value>
 Public Property Let DutNumber(ByVal a_value As Integer)
     This.DutNumber = a_value
+End Property
+
+''' <summary>   Gets the number of DUTs that can be measured. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get DutCount() As Integer
+    DutCount = This.DutCount
+End Property
+
+''' <summary>   Sets the number of DUTs that can be measured. </summary>
+''' <param name="a_value">   [Integer] the DUT count value. </value>
+Public Property Let DutCount(ByVal a_value As Integer)
+    This.DutCount = a_value
 End Property
 
 ''' <summary>   Gets the Front Inputs condition. </summary>

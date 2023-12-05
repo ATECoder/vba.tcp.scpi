@@ -57,7 +57,7 @@ Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As DataSheet
     Set This.ViewModel = a_viewModel
     
     ' set the initial values that are provided by the user interface
-    This.DutNumberCaptionPrefix = "ch"
+    This.DutNumberCaptionPrefix = "r"
     
     If DataView.Initialized Then DataView.Dispose
     If UserView.Initialized Then UserView.Dispose

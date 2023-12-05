@@ -42,23 +42,24 @@ Private Const m_bottomCardCell As String = "C24"
 Private Const m_topCardScanListCell As String = "C25"
 Private Const m_bottomCardScanListCell As String = "C26"
 Private Const m_inputsCell As String = "C27"
-Private Const m_channelNumberCell As String = "C28"
-Private Const m_targetChannelNumberCell As String = "D28"
+Private Const m_dutNumberCell As String = "C28"
+Private Const m_targetDutNumberCell As String = "D28"
 Private Const m_functionNameCell As String = "B29"
 Private Const m_functionValueCell As String = "C29"
 Private Const m_functionUnitCell As String = "D29"
 Private Const m_functionUnicodeCell As String = "E29"
-Private Const m_channelCountCell As String = "C30"
+Private Const m_dutCountCell As String = "C30"
+Private Const m_maximumDutNumberCell As String = "D30"
 Private Const m_monitoringStateCell As String = "C31"
 Private Const m_triggerModeCell As String = "C32"
-Private Const m_measuredChannelNumberCell As String = "E28"
+Private Const m_MeasuredDutNumberCell As String = "E28"
 
 Private Const m_readingOffsetCell As String = "L4"
 
 Private Const m_measurementRow As Integer = 2
 Private Const m_measurementCol As Integer = 14 ' 2
-Private Const m_channelRow As Integer = 2 ' 7
-Private Const m_channelCol As Integer = 13 ' 1
+Private Const m_dutNumberRow As Integer = 2 ' 7
+Private Const m_dutNumberCol As Integer = 13 ' 1
 Private Const m_byRow As Boolean = True ' False
 Private Const m_displayIncrement As Integer = 1 '  2
 
@@ -77,7 +78,7 @@ Private Type this_
     
     ' Initial User inputs
     GpibLanControllerPort As Long
-    MaximumChannelNumber As Integer
+    MaximumDutNumber As Integer
     
     ' IEEE488
     ScpiCommands As VBA.Collection
@@ -97,11 +98,11 @@ Private Type this_
     
     MeasurementRow As Integer
     MeasurementColumn As Integer
-    ChannelRow As Integer
-    ChannelColumn As Integer
+    DutNumberRow As Integer
+    DutNumberColumn As Integer
     ChannelCellValue As String
     MeasurementCellValue As String
-    ChannelNumberCaptionPrefix As String
+    DutNumberCaptionPrefix As String
     MeasureMode As cc_isr_Tcp_Scpi.MeasureMode
     
 End Type
@@ -129,8 +130,8 @@ Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As K2700Sheet
     ' set the initial values that are provided by the user interface
     Me.SocketAddress = Me.Host & ":" & VBA.CStr(Me.Port)
     Me.GpibLanControllerPort = 1234
-    This.ChannelNumberCaptionPrefix = "ch"
-    Me.MaximumChannelNumber = 48
+    This.DutNumberCaptionPrefix = "dut"
+    Me.MaximumDutNumber = 48
     Me.FrontInputsRequired = True
     Me.SingleReadEnabled = True
     
@@ -1096,46 +1097,46 @@ Public Property Let TimerIntervalSet(ByVal a_value As Integer)
     End If
 End Property
 
-''' <summary>   Gets the Channel Count. </summary>
+''' <summary>   Gets the DUT count. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get ChannelCount() As Integer
-    If 0 = Len(Me.Range(m_channelCountCell).Value) Then Me.Range(m_channelCountCell).Value = 0
-    ChannelCount = VBA.CInt(Me.Range(m_channelCountCell).Value)
+Public Property Get DutCount() As Integer
+    If 0 = Len(Me.Range(m_dutCountCell).Value) Then Me.Range(m_dutCountCell).Value = 0
+    DutCount = VBA.CInt(Me.Range(m_dutCountCell).Value)
 End Property
 
-''' <summary>   Sets the Channel Count. </summary>
-''' <param name="a_value">   [Integer] the Channel Count value. </value>
-Public Property Let ChannelCount(ByVal a_value As Integer)
-    If Me.ChannelCount <> a_value Then
-        Me.Range(m_channelCountCell).Value = a_value
+''' <summary>   Sets the DUT count. </summary>
+''' <param name="a_value">   [Integer] the DUT count value. </value>
+Public Property Let DutCount(ByVal a_value As Integer)
+    If Me.DutCount <> a_value Then
+        Me.Range(m_dutCountCell).Value = a_value
     End If
 End Property
 
-''' <summary>   Gets the selected channel number from the active cell value. </summary>
+''' <summary>   Gets the selected DUT number from the active cell value. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get SelectedChannelNumber() As Integer
-    If 0 = Len(Me.Range(m_channelNumberCell).Value) Then Me.Range(m_channelNumberCell).Value = 1
-    SelectedChannelNumber = VBA.CInt(Me.Range(m_channelNumberCell).Value)
+Public Property Get SelectedDutNumber() As Integer
+    If 0 = Len(Me.Range(m_dutNumberCell).Value) Then Me.Range(m_dutNumberCell).Value = 1
+    SelectedDutNumber = VBA.CInt(Me.Range(m_dutNumberCell).Value)
 End Property
 
-''' <summary>   Sets the selected channel number. </summary>
-''' <param name="a_value">   [Integer] the selected channel number. </param>
-Public Property Let SelectedChannelNumber(ByVal a_value As Integer)
-    Me.Range(m_channelNumberCell).Value = a_value
+''' <summary>   Sets the selected DUT number. </summary>
+''' <param name="a_value">   [Integer] the selected DUT number. </param>
+Public Property Let SelectedDutNumber(ByVal a_value As Integer)
+    Me.Range(m_dutNumberCell).Value = a_value
 End Property
 
-''' <summary>   Gets the Target channel number. </summary>
+''' <summary>   Gets the target DUT number. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get TargetChannelNumber() As Integer
-    If 0 = Len(Me.Range(m_targetChannelNumberCell).Value) Then Me.Range(m_targetChannelNumberCell).Value = 0
-    TargetChannelNumber = VBA.CInt(Me.Range(m_targetChannelNumberCell).Value)
+Public Property Get TargetDutNumber() As Integer
+    If 0 = Len(Me.Range(m_targetDutNumberCell).Value) Then Me.Range(m_targetDutNumberCell).Value = 0
+    TargetDutNumber = VBA.CInt(Me.Range(m_targetDutNumberCell).Value)
 End Property
 
-''' <summary>   Sets the Target channel number. </summary>
-''' <param name="a_value">   [Integer] the Target channel number. </param>
-Public Property Let TargetChannelNumber(ByVal a_value As Integer)
-    If Me.TargetChannelNumber <> a_value Then
-        Me.Range(m_targetChannelNumberCell).Value = a_value
+''' <summary>   Sets the target DUT number. </summary>
+''' <param name="a_value">   [Integer] the target DUT number. </param>
+Public Property Let TargetDutNumber(ByVal a_value As Integer)
+    If Me.TargetDutNumber <> a_value Then
+        Me.Range(m_targetDutNumberCell).Value = a_value
     End If
 End Property
 
@@ -1229,17 +1230,18 @@ End Property
 ' Data Acquisition properties
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Gets the maximum Channel Number. </summary>
+''' <summary>   Gets the maximum DUT number; equals to the muximum number of DUTs that can be tested. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get MaximumChannelNumber() As Integer
-    MaximumChannelNumber = This.MaximumChannelNumber
+Public Property Get MaximumDutNumber() As Integer
+    If 0 = Len(Me.Range(m_maximumDutNumberCell).Value) Then Me.Range(m_maximumDutNumberCell).Value = This.MaximumDutNumber
+    MaximumDutNumber = VBA.CInt(Me.Range(m_maximumDutNumberCell).Value)
 End Property
 
-''' <summary>   Sets the maximum Channel Number. </summary>
-''' <param name="a_value">   [Integer] the maximum Channel Number value. </value>
-Public Property Let MaximumChannelNumber(ByVal a_value As Integer)
-    If This.MaximumChannelNumber <> a_value Then
-        This.MaximumChannelNumber = a_value
+''' <summary>   Sets the Naximum DUT Number. </summary>
+''' <param name="a_value">   [Integer] the maximum DUT number. </value>
+Public Property Let MaximumDutNumber(ByVal a_value As Integer)
+    If Me.MaximumDutNumber <> a_value Then
+        Me.Range(m_maximumDutNumberCell).Value = a_value
     End If
 End Property
 
@@ -1383,18 +1385,18 @@ Public Property Let SenseFunctionUnicode(ByVal a_value As Integer)
     End If
 End Property
 
-''' <summary>   Gets the Measured channel number from the active cell value. </summary>
+''' <summary>   Gets the measured DUT number from the active cell value. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get MeasuredChannelNumber() As Integer
-    If 0 = Len(Me.Range(m_measuredChannelNumberCell).Value) Then Me.Range(m_measuredChannelNumberCell).Value = -1
-    MeasuredChannelNumber = VBA.CInt(Me.Range(m_measuredChannelNumberCell).Value)
+Public Property Get MeasuredDutNumber() As Integer
+    If 0 = Len(Me.Range(m_MeasuredDutNumberCell).Value) Then Me.Range(m_MeasuredDutNumberCell).Value = -1
+    MeasuredDutNumber = VBA.CInt(Me.Range(m_MeasuredDutNumberCell).Value)
 End Property
 
-''' <summary>   Sets the Measured channel number. </summary>
-''' <param name="a_value">   [Integer] the Measured channel number. </param>
-Public Property Let MeasuredChannelNumber(ByVal a_value As Integer)
-    If Me.MeasuredChannelNumber <> a_value Then
-        Me.Range(m_measuredChannelNumberCell).Value = a_value
+''' <summary>   Sets the measured DUT number. </summary>
+''' <param name="a_value">   [Integer] the measured DUT number. </param>
+Public Property Let MeasuredDutNumber(ByVal a_value As Integer)
+    If Me.MeasuredDutNumber <> a_value Then
+        Me.Range(m_MeasuredDutNumberCell).Value = a_value
     End If
 End Property
 
@@ -1459,16 +1461,16 @@ End Property
 ' K2700 Control
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Gets the Auto Increment Channel Number Enabled. </summary>
+''' <summary>   Gets the auto increment DUT number Enabled. </summary>
 ''' <remarks>   Indicates that front inputs are Value for this mode. </remarks>
 ''' <value>   [Boolean]. </value>
-Public Property Get AutoIncrementChannelNoEnabled() As Boolean
-    AutoIncrementChannelNoEnabled = Me.AutoIncrementCheckBox.Value
+Public Property Get AutoIncrementDutNumberEnabled() As Boolean
+    AutoIncrementDutNumberEnabled = Me.AutoIncrementCheckBox.Value
 End Property
 
-''' <summary>   Sets the Auto Increment Channel Number Enabled. </summary>
-''' <param name="a_value">   [Boolean] the Auto Increment Channel Number Enabled value. </value>
-Public Property Let AutoIncrementChannelNoEnabled(ByVal a_value As Boolean)
+''' <summary>   Sets the auto increment DUT number Enabled. </summary>
+''' <param name="a_value">   [Boolean] the auto increment DUT number Enabled value. </value>
+Public Property Let AutoIncrementDutNumberEnabled(ByVal a_value As Boolean)
     If Me.AutoIncrementCheckBox.Value <> a_value Then
         Me.AutoIncrementCheckBox.Value = a_value
     End If
@@ -1492,12 +1494,12 @@ Private Sub AutoIncrementCheckBox_Change()
         On Error GoTo 0
         ' Commands for click
         ' If Not This.ViewModel Is Nothing Then _
-        '   This.ViewModel.AutoIncrementChannelNoEnabled = Me.AutoIncrementCheckBox.Value
+        '   This.ViewModel.AutoIncrementDutNumberEnabled = Me.AutoIncrementCheckBox.Value
     Else
         On Error GoTo 0
         ' Commands for change from within the sheet
         ' If Not This.ViewModel Is Nothing Then _
-        '   This.ViewModel.AutoIncrementChannelNoEnabled = Me.AutoIncrementCheckBox.Value
+        '   This.ViewModel.AutoIncrementDutNumberEnabled = Me.AutoIncrementCheckBox.Value
     End If
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -1513,14 +1515,14 @@ err_Handler:
     
     ' Commands for change from outside the sheet
     ' If Not This.ViewModel Is Nothing Then _
-    '   This.ViewModel.AutoIncrementChannelNoEnabled = Me.AutoIncrementCheckBox.Value
+    '   This.ViewModel.AutoIncrementDutNumberEnabled = Me.AutoIncrementCheckBox.Value
     
 End Sub
 
 ''' <summary>   Handles the click event of the Clear Radings button. </summary>
 Private Sub ClearReadingsButton_Click()
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.ClearReadingsCommand Me.ReadingOffset, 1, Me.MaximumChannelNumber
+        This.ViewModel.ClearReadingsCommand Me.ReadingOffset, 1, Me.MaximumDutNumber
 End Sub
 
 ''' <summary>   Handles the external trigger option button affirmative action event. </summary>
@@ -1530,9 +1532,9 @@ Public Function OnExternalTriggerOption(ByRef a_details As String) As Boolean
 
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
-    p_mode.AutoIncrementChannel = Me.AutoIncrementChannelNoEnabled
+    p_mode.AutoIncrementChannel = Me.AutoIncrementDutNumberEnabled
     p_mode.BeepEnabled = False
-    p_mode.ChannelNumber = Me.SelectedChannelNumber
+    p_mode.DutNumber = Me.SelectedDutNumber
     p_mode.FrontInputs = Me.FrontInputsRequired
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = Me.ReadingOffset
@@ -1557,9 +1559,9 @@ Public Function OnImmediateTriggerOption(ByRef a_details As String) As Boolean
 
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
-    p_mode.AutoIncrementChannel = Me.AutoIncrementChannelNoEnabled
+    p_mode.AutoIncrementChannel = Me.AutoIncrementDutNumberEnabled
     p_mode.BeepEnabled = False
-    p_mode.ChannelNumber = Me.SelectedChannelNumber
+    p_mode.DutNumber = Me.SelectedDutNumber
     p_mode.FrontInputs = Me.FrontInputsRequired
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
     p_mode.ReadingOffset = Me.ReadingOffset
@@ -1605,7 +1607,7 @@ End Sub
 Private Sub StartMonitoringButton_Click()
     If Not This.ViewModel Is Nothing Then _
         This.ViewModel.StartMonitoringExternalTriggersCommand This.MeasureMode.ReadingOffset, _
-            This.MeasureMode.TimerIntervalGet
+            This.MeasureMode.TimerInterval
 End Sub
 
 ''' <summary>   Handles the stop monitoring button click event. </summary>
@@ -1901,16 +1903,16 @@ End Property
 ' Measurments View
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Gets the Channel Number Caption Prefix. </summary>
+''' <summary>   Gets the DUT number caption prefix. </summary>
 ''' <value>   [String]. </value>
-Public Property Get ChannelNumberCaptionPrefix() As String
-    ChannelNumberCaptionPrefix = This.ChannelNumberCaptionPrefix
+Public Property Get DutNumberCaptionPrefix() As String
+    DutNumberCaptionPrefix = This.DutNumberCaptionPrefix
 End Property
 
-''' <summary>   Sets the Channel Number Caption Prefix. </summary>
-''' <param name="a_value">   [String] the Channel Number Caption Prefix. </value>
-Public Property Let ChannelNumberCaptionPrefix(ByVal a_value As String)
-    This.ChannelNumberCaptionPrefix = a_value
+''' <summary>   Sets the DUT number caption prefix. </summary>
+''' <param name="a_value">   [String] the DUT number caption prefix. </value>
+Public Property Let DutNumberCaptionPrefix(ByVal a_value As String)
+    This.DutNumberCaptionPrefix = a_value
 End Property
 
 ''' <summary>   Gets the Measurement Row. </summary>
@@ -1941,31 +1943,31 @@ Public Property Let MeasurementColumn(ByVal a_value As Integer)
     End If
 End Property
 
-''' <summary>   Gets the Channel Row. </summary>
+''' <summary>   Gets the DUT number row. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get ChannelRow() As Integer
-    ChannelRow = This.ChannelRow
+Public Property Get DutNumberRow() As Integer
+    DutNumberRow = This.DutNumberRow
 End Property
 
-''' <summary>   Sets the Channel Row. </summary>
-''' <param name="a_value">   [Integer] the Channel Row. </value>
-Public Property Let ChannelRow(ByVal a_value As Integer)
-    If This.ChannelRow <> a_value Then
-        This.ChannelRow = a_value
+''' <summary>   Sets the DUT number row. </summary>
+''' <param name="a_value">   [Integer] the DUT number row. </value>
+Public Property Let DutNumberRow(ByVal a_value As Integer)
+    If This.DutNumberRow <> a_value Then
+        This.DutNumberRow = a_value
     End If
 End Property
 
-''' <summary>   Gets the Channel Column. </summary>
+''' <summary>   Gets the DUT number Column. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get ChannelColumn() As Integer
-    ChannelColumn = This.ChannelColumn
+Public Property Get DutNumberColumn() As Integer
+    DutNumberColumn = This.DutNumberColumn
 End Property
 
-''' <summary>   Sets the Channel Column. </summary>
-''' <param name="a_value">   [Integer] the Channel Column. </value>
-Public Property Let ChannelColumn(ByVal a_value As Integer)
-    If This.ChannelColumn <> a_value Then
-        This.ChannelColumn = a_value
+''' <summary>   Sets the DUT number Column. </summary>
+''' <param name="a_value">   [Integer] the DUT number Column. </value>
+Public Property Let DutNumberColumn(ByVal a_value As Integer)
+    If This.DutNumberColumn <> a_value Then
+        This.DutNumberColumn = a_value
     End If
 End Property
 
@@ -1987,7 +1989,7 @@ End Property
 ''' <summary>   Gets the channel cell Value. </summary>
 ''' <value>   [String]. </value>
 Public Property Get ChannelCellValue() As String
-    ChannelCellValue = Me.Cells(Me.ChannelRow, Me.ChannelColumn).Value
+    ChannelCellValue = Me.Cells(Me.DutNumberRow, Me.DutNumberColumn).Value
 End Property
 
 ''' <summary>   Sets the channel cell value. </summary>
@@ -1995,36 +1997,36 @@ End Property
 Public Property Let ChannelCellValue(ByVal a_value As String)
     If Me.ChannelCellValue <> a_value Then
         This.ChannelCellValue = a_value
-        Me.Cells(Me.ChannelRow, Me.ChannelColumn).Value = a_value
+        Me.Cells(Me.DutNumberRow, Me.DutNumberColumn).Value = a_value
     End If
 End Property
 
 ''' <summary>   Sets the Channel display. </summary>
-''' <param name="a_channelNo">   [single] the channel number. </param>
+''' <param name="a_dutNumber">   [single] the DUT number. </param>
 ''' <param name="a_value">       [double] the value. </param>
-Public Sub SetReading(ByVal a_channelNo As Integer, ByVal a_value As Double)
-    SetReading_ a_channelNo, a_value, m_byRow, m_displayIncrement
+Public Sub SetReading(ByVal a_dutNumber As Integer, ByVal a_value As Double)
+    SetReading_ a_dutNumber, a_value, m_byRow, m_displayIncrement
 End Sub
 
 ''' <summary>   Sets the Channel display. </summary>
-''' <param name="a_channelNo">   [single] the channel number. </param>
+''' <param name="a_dutNumber">   [single] the DUT number. </param>
 ''' <param name="a_value">       [double] the value. </param>
 ''' <param name="a_byRow">       [Boolean] true if the next reading goes to the next row. </param>
 ''' <param name="a_increment">   [Integer] the row or column increment. </param>
-Private Sub SetReading_(ByVal a_channelNo As Integer, ByVal a_value As Double, _
+Private Sub SetReading_(ByVal a_dutNumber As Integer, ByVal a_value As Double, _
     ByVal a_byRow As Boolean, ByVal a_increment As Integer)
 
-    Me.MeasurementRow = IIf(a_byRow, m_measurementRow + a_increment * (a_channelNo - 1), _
+    Me.MeasurementRow = IIf(a_byRow, m_measurementRow + a_increment * (a_dutNumber - 1), _
         m_measurementRow)
     Me.MeasurementColumn = IIf(a_byRow, m_measurementCol, _
-        m_measurementCol + a_increment * (a_channelNo - 1))
+        m_measurementCol + a_increment * (a_dutNumber - 1))
    
-    Me.ChannelRow = IIf(a_byRow, m_channelRow + a_increment * (a_channelNo - 1), _
-        m_channelRow)
-    Me.ChannelColumn = IIf(a_byRow, m_channelCol, _
-        m_channelCol + a_increment * (a_channelNo - 1))
+    Me.DutNumberRow = IIf(a_byRow, m_dutNumberRow + a_increment * (a_dutNumber - 1), _
+        m_dutNumberRow)
+    Me.DutNumberColumn = IIf(a_byRow, m_dutNumberCol, _
+        m_dutNumberCol + a_increment * (a_dutNumber - 1))
    
-    Me.ChannelCellValue = This.ChannelNumberCaptionPrefix & VBA.CStr(a_channelNo)
+    Me.ChannelCellValue = This.DutNumberCaptionPrefix & VBA.CStr(a_dutNumber)
     Me.MeasurementCellValue = VBA.CStr(a_value)
     
 End Sub
@@ -2033,18 +2035,18 @@ End Sub
 ' View Model Events
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 
-''' <summary>   Handles the K2700 <see cref="cc_isr_Tcp_Scpi.ChannelMeasured"/> event. </summary>
-''' <param name="a_eventArgs">   [<see cref="cc_isr_Tcp_Scpi.ChannelReadingEventArgs"/>] event arguments. </param>
-Private Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.ChannelReadingEventArgs)
+''' <summary>   Handles the K2700 <see cref="cc_isr_Tcp_Scpi.DutMeasured"/> event. </summary>
+''' <param name="a_eventArgs">   [<see cref="cc_isr_Tcp_Scpi.DutReadingEventArgs"/>] event arguments. </param>
+Private Sub m_viewModel_DutMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.DutReadingEventArgs)
 
-    Const p_procedureName = "m_viewModel_ChannelMeasured"
+    Const p_procedureName = "m_viewModel_DutMeasured"
     
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
     ' these two are populated by the property changed event.
     ' Me.MeasuredReading = a_eventArgs.Reading
-    ' Me.MeasuredChannelNumber = a_eventArgs.channelnumber
+    ' Me.MeasuredDutNumber = a_eventArgs.channelnumber
     
     ' this is done in the view model
     ' Dim p_value As Double
@@ -2060,7 +2062,7 @@ Private Sub m_viewModel_ChannelMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.Cha
     ' this is set by the property change event.
     ' Me.MeasuredValue = p_value
     
-    Me.SetReading Me.MeasuredChannelNumber, Me.MeasuredValue
+    Me.SetReading Me.MeasuredDutNumber, Me.MeasuredValue
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -2084,19 +2086,23 @@ err_Handler:
     
 End Sub
 
+''' <summary>   Synchronizes the sheet values with the view model. </summary>
 Public Sub Synchronize()
 
     Const p_procedureName = "Synchronize"
 
     This.ViewModel.GpibLanControllerPort = This.GpibLanControllerPort
+    This.ViewModel.MaximumDutNumber = Me.MaximumDutNumber
     
     If This.ViewModel.FrontInputsHasValue Then
         Me.FrontInputsValue = This.ViewModel.FrontInputsValue
         Me.FrontInputsCaption = This.ViewModel.FrontInputsCaption
     End If
+    
     If This.ViewModel.GpibAddress > 0 Then
         Me.PrimaryGpibAddress = This.ViewModel.GpibAddress
     End If
+    
     If This.ViewModel.HasValidSocketAddress Then
         Me.SocketAddress = This.ViewModel.SocketAddress
         Me.Host = This.ViewModel.Host
@@ -2107,10 +2113,10 @@ Public Sub Synchronize()
         Me.ReadingOffset = This.ViewModel.ReadingOffset
     
     Me.AutoAssertTalk = This.ViewModel.AutoAssertTalk
-    Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
+    Me.AutoIncrementDutNumberEnabled = This.ViewModel.AutoIncrementDutNumberEnabled
     Me.BottomCard = This.ViewModel.BottomCard
     Me.BottomCardFunctionScanList = This.ViewModel.BottomCardFunctionScanList
-    Me.ChannelCount = This.ViewModel.ChannelCount
+    Me.DutCount = This.ViewModel.DutCount
     Me.Connected = This.ViewModel.Connected
     Me.ElapsedTime = This.ViewModel.ElapsedTime
     Me.ElapsedTimeFormat = This.ViewModel.ElapsedTimeFormat
@@ -2118,7 +2124,7 @@ Public Sub Synchronize()
     Me.FrontInputsRequired = This.ViewModel.FrontInputsRequired
     Me.LastErrorMessage = This.ViewModel.LastErrorMessage
     Me.LastMessage = This.ViewModel.LastMessage
-    Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
+    Me.MeasuredDutNumber = This.ViewModel.MeasuredDutNumber
     Me.MeasuredReading = This.ViewModel.MeasuredReading
     Me.MeasuredValueFormat = This.ViewModel.MeasuredValueFormat
     Me.MeasuredValue = This.ViewModel.MeasuredValue
@@ -2128,7 +2134,7 @@ Public Sub Synchronize()
     Me.ReceivedMessage = This.ViewModel.ReceivedMessage
     Me.ReceivedMessageLength = This.ViewModel.ReceivedMessageLength
     Me.ScpiCommands = This.ViewModel.ScpiCommands
-    Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
+    Me.SelectedDutNumber = This.ViewModel.SelectedDutNumber
     Me.SenseFunctionName = This.ViewModel.SenseFunctionName
     Me.SenseFunctionCaption = This.ViewModel.SenseFunctionCaption
     Me.SenseFunctions = This.ViewModel.SenseFunctions
@@ -2141,7 +2147,7 @@ Public Sub Synchronize()
     Me.StandardByte = This.ViewModel.StandardByte
     Me.StatusByte = This.ViewModel.StatusByte
     Me.StopRequested = This.ViewModel.StopRequested
-    Me.TargetChannelNumber = This.ViewModel.TargetChannelNumber
+    Me.TargetDutNumber = This.ViewModel.TargetDutNumber
     Me.TopCard = This.ViewModel.TopCard
     Me.TopCardFunctionScanList = This.ViewModel.TopCardFunctionScanList
     
@@ -2248,14 +2254,14 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.FrontInputsValue = This.ViewModel.FrontInputsValue
         Case "FrontInputsCaption"
             Me.FrontInputsCaption = This.ViewModel.FrontInputsCaption
-        Case "SelectedChannelNumber"
-            Me.SelectedChannelNumber = This.ViewModel.SelectedChannelNumber
-        Case "ChannelCount"
-            Me.ChannelCount = This.ViewModel.ChannelCount
-        Case "TargetChannelNumber"
-            Me.TargetChannelNumber = This.ViewModel.TargetChannelNumber
-        Case "MeasuredChannelNumber"
-            Me.MeasuredChannelNumber = This.ViewModel.MeasuredChannelNumber
+        Case "SelectedDutNumber"
+            Me.SelectedDutNumber = This.ViewModel.SelectedDutNumber
+        Case "DutCount"
+            Me.DutCount = This.ViewModel.DutCount
+        Case "TargetDutNumber"
+            Me.TargetDutNumber = This.ViewModel.TargetDutNumber
+        Case "MeasuredDutNumber"
+            Me.MeasuredDutNumber = This.ViewModel.MeasuredDutNumber
         Case "SenseFunctionName"
             Me.SenseFunctionName = This.ViewModel.SenseFunctionName
         Case "SenseFunctionCaption"
@@ -2273,8 +2279,8 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.MeasuredValueFormat = This.ViewModel.MeasuredValueFormat
         Case "MonitoringState"
             Me.MonitoringState = This.ViewModel.MonitoringState
-        Case "AutoIncrementChannelNoEnabled"
-            Me.AutoIncrementChannelNoEnabled = This.ViewModel.AutoIncrementChannelNoEnabled
+        Case "AutoIncrementDutNumberEnabled"
+            Me.AutoIncrementDutNumberEnabled = This.ViewModel.AutoIncrementDutNumberEnabled
         Case "SingleReadEnabled"
             Me.SingleReadEnabled = This.ViewModel.SingleReadEnabled
         Case "SenseFunctions"
@@ -2411,6 +2417,8 @@ Private Sub OnWorksheetChange(ByVal a_range As Excel.Range)
         
         Case m_readingFormatCell
             This.ViewModel.MeasuredValueFormat = Me.MeasuredValueFormat
+        Case m_maximumDutNumberCell
+            This.ViewModel.MaximumDutNumber = Me.MaximumDutNumber
 
     End Select
 
@@ -2428,4 +2436,3 @@ Private Sub Worksheet_Change(ByVal a_range As Excel.Range)
 
 End Sub
 
- 

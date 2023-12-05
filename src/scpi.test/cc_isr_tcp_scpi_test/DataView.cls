@@ -45,8 +45,8 @@ Private Type this_
     MeasurementRow As Integer
     MeasurementColumn As Integer
     DutNumberRow As Integer
-    ChannelColumn As Integer
-    ChannelCellValue As String
+    DutNumberColumn As Integer
+    DutNumberCellValue As String
     MeasurementCellValue As String
 
     MeasuredDutNumber As Integer
@@ -779,14 +779,14 @@ End Property
 
 ''' <summary>   Gets the DUT number Column. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get ChannelColumn() As Integer
-    ChannelColumn = This.ChannelColumn
+Public Property Get DutNumberColumn() As Integer
+    DutNumberColumn = This.DutNumberColumn
 End Property
 
 ''' <summary>   Sets the DUT number Column. </summary>
 ''' <param name="a_value">   [Integer] the DUT number Column. </value>
-Public Property Let ChannelColumn(ByVal a_value As Integer)
-    This.ChannelColumn = a_value
+Public Property Let DutNumberColumn(ByVal a_value As Integer)
+    This.DutNumberColumn = a_value
 End Property
 
 ''' <summary>   Gets the Measurement Cell Value. </summary>
@@ -809,25 +809,42 @@ Public Property Let MeasurementCellValue(ByVal a_value As String)
     End If
 End Property
         
-''' <summary>   Gets the channel cell Value. </summary>
-''' <value>   [String]. </value>
-Public Property Get ChannelCellValue() As String
+Friend Function GetDutNumberCellRow(ByVal a_dutNumber As Integer)
+    GetDutNumberCellRow = IIf(m_byRow, m_dutNumberRow + m_increment * (a_dutNumber - 1), m_dutNumberRow)
+End Function
+        
+Friend Function GetDutNumberCellColumn(ByVal a_dutNumber As Integer)
+    GetDutNumberCellColumn = IIf(m_byRow, m_dutNumberCol, m_dutNumberCol + m_increment * (m_dutNumber - 1))
+End Function
+        
+Public Function GetDutNumberCellValue(ByVal a_dutNumber As Integer) As String
     If This.DataSheet Is Nothing Then
-        ChannelCellValue = This.ChannelCellValue
+        GetDutNumberCellValue = VBA.vbNullString
     Else
-        ChannelCellValue = This.DataSheet.Cells(Me.DutNumberRow, Me.ChannelColumn).Value
+        GetDutNumberCellValue = This.DataSheet.Cells(Me.GetDutNumberCellRow(a_dutNumber), _
+            Me.GetDutNumberCellColumn(a_dutNumber)).Value
+    End If
+End Function
+        
+''' <summary>   Gets the DUT number cell value. </summary>
+''' <value>   [String]. </value>
+Public Property Get DutNumberCellValue() As String
+    If This.DataSheet Is Nothing Then
+        DutNumberCellValue = This.DutNumberCellValue
+    Else
+        DutNumberCellValue = This.DataSheet.Cells(Me.DutNumberRow, Me.DutNumberColumn).Value
     End If
 End Property
 
-''' <summary>   Sets the channel cell value. </summary>
-''' <param name="a_value">   [String] the channel cell value. </value>
-Public Property Let ChannelCellValue(ByVal a_value As String)
-    If Me.ChannelCellValue <> a_value Then
+''' <summary>   Sets the DUT number cell value. </summary>
+''' <param name="a_value">   [String] the DUT number cell value. </value>
+Public Property Let DutNumberCellValue(ByVal a_value As String)
+    If Me.DutNumberCellValue <> a_value Then
         
-        This.ChannelCellValue = a_value
+        This.DutNumberCellValue = a_value
         
         If Not This.DataSheet Is Nothing Then _
-            This.DataSheet.Cells(Me.DutNumberRow, Me.ChannelColumn).Value = a_value
+            This.DataSheet.Cells(Me.DutNumberRow, Me.DutNumberColumn).Value = a_value
         
     End If
 End Property
@@ -851,9 +868,9 @@ Private Sub SetReading_(ByVal a_dutNumber As Integer, ByVal a_value As Double, _
     Me.MeasurementColumn = IIf(a_byRow, m_measurementCol, m_measurementCol + a_increment * (a_dutNumber - 1))
    
     Me.DutNumberRow = IIf(a_byRow, m_dutNumberRow + a_increment * (a_dutNumber - 1), m_dutNumberRow)
-    Me.ChannelColumn = IIf(a_byRow, m_dutNumberCol, m_dutNumberCol + a_increment * (a_dutNumber - 1))
+    Me.DutNumberColumn = IIf(a_byRow, m_dutNumberCol, m_dutNumberCol + a_increment * (a_dutNumber - 1))
    
-    Me.ChannelCellValue = This.DutNumberCaptionPrefix & VBA.CStr(a_dutNumber)
+    Me.DutNumberCellValue = This.DutNumberCaptionPrefix & VBA.CStr(a_dutNumber)
     Me.MeasurementCellValue = VBA.CStr(a_value)
     
 End Sub
@@ -944,7 +961,7 @@ Friend Sub Synchronize()
     ' this value is set as part of the measurement mode.
     ' Me.ReadingOffset = This.ViewModel.ReadingOffset
 
-    ' The initial values must be set for propery change to work.
+    ' The initial values must be set for property change to work.
     Me.LastErrorMessage = This.ViewModel.LastErrorMessage
     Me.LastMessage = This.ViewModel.LastMessage
     Me.MeasuredDutNumber = This.ViewModel.MeasuredDutNumber
@@ -1010,24 +1027,6 @@ Friend Sub m_viewModel_DutMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.DutReadi
     
     ' Trap errors to the error handler
     On Error GoTo err_Handler
-    
-    ' these two are populated by the property changed event.
-    ' Me.MeasuredReading = a_eventArgs.Reading
-    ' Me.MeasuredDutNumber = a_eventArgs.channelnumber
-    
-    ' this is done in the view model
-    ' Dim p_value As Double
-    ' Dim p_details As String
-    ' If VBA.vbNullString = a_eventArgs.Reading Then
-    '     p_value = cc_isr_Ieee488.Syntax.NotANumber
-    ' Else
-    '   If Not cc_isr_Core.StringExtensions.TryParseDouble(a_eventArgs.Reading, p_value, p_details) Then
-    '         p_value = cc_isr_Ieee488.Syntax.NotANumber
-    '     End If
-    ' End If
-    
-    ' this is set by the property change event.
-    ' Me.MeasuredValue = p_value
     
     Me.SetReading Me.MeasuredDutNumber, Me.MeasuredValue
     

@@ -1,7 +1,11 @@
 # Change log
 All notable changes to these libraries will be documented in this file in a format based on [Keep a Change log]
 
+## [1.0.8738] - 2023-12-04
+* Add DUT Count to the measure mode and use it to set the DUT count.
+
 ## [1.0.8735] - 2023-12-01
+* Open the beta 202312 branch.
 * Add enumerating DUT.
 * Set manual mode Maximum DUT number to 48.
 

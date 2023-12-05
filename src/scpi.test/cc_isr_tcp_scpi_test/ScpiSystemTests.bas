@@ -5,6 +5,8 @@ Attribute VB_Name = "ScpiSystemTests"
 
 Option Explicit
 
+Private Const m_debugPrintPrefix As String = "''' "
+
 ''' <summary>   This class properties. </summary>
 Private Type this_
     Name As String
@@ -57,7 +59,8 @@ End Sub
 ''' <remarks>
 ''' <code>
 ''' With 1ms read after write delay.
-''' TestFrontInputStateShouldRead passed. in 32.5 ms.
+''' 12/4/2023 3:18:27 PM
+''' Test 01 TestFrontInputStateShouldRead passed. Elapsed time: 59.6 ms.
 ''' Ran 1 out of 1 tests.
 ''' Passed: 1; Failed: 0; Inconclusive: 0.
 ''' </code>
@@ -86,8 +89,10 @@ Public Sub RunAllTests()
         VBA.DoEvents
     Next p_testNumber
     AfterAll
-    Debug.Print "Ran " & VBA.CStr(This.RunCount) & " out of " & VBA.CStr(This.TestCount) & " tests."
-    Debug.Print "Passed: " & VBA.CStr(This.PassedCount) & "; Failed: " & VBA.CStr(This.FailedCount) & _
+    Debug.Print m_debugPrintPrefix; _
+        "Ran " & VBA.CStr(This.RunCount) & " out of " & VBA.CStr(This.TestCount) & " tests."
+    Debug.Print m_debugPrintPrefix; _
+        "Passed: " & VBA.CStr(This.PassedCount) & "; Failed: " & VBA.CStr(This.FailedCount) & _
                 "; Inconclusive: " & VBA.CStr(This.InconclusiveCount) & "."
 End Sub
 
@@ -109,6 +114,8 @@ Public Sub BeforeAll()
     ' initialize the current and previous test numbers.
     This.TestNumber = 0
     This.PreviousTestNumber = 0
+    
+    Debug.Print m_debugPrintPrefix; Date; Time
     
     Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Primed to run all tests.")
 
@@ -496,7 +503,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestFrontInputStateShouldRead = p_outcome

@@ -5,6 +5,8 @@ Attribute VB_Name = "K2700SenseSystemTests"
 
 Option Explicit
 
+Private Const m_debugPrintPrefix As String = "''' "
+
 ''' <summary>   This class properties. </summary>
 Private Type this_
     Name As String
@@ -58,9 +60,10 @@ End Sub
 ''' <summary>   Runs all tests. </summary>
 ''' <remarks>
 ''' <code>
-''' With 1ms read after write delay.
-''' TestInitialSenseFunctionShouldGet passed. in 22.3 ms.
-''' TestSenseFunctionShouldSet passed. in 294.5 ms.
+''' With 1ms read after write delay
+''' 12/4/2023 2:58:50 PM
+''' Test 01 TestInitialSenseFunctionShouldGet passed. Elapsed time: 21.8 ms.
+''' Test 02 TestSenseFunctionShouldSet passed. Elapsed time: 292.8 ms.
 ''' Ran 2 out of 2 tests.
 ''' Passed: 2; Failed: 0; Inconclusive: 0.
 ''' </code>
@@ -89,8 +92,10 @@ Public Sub RunAllTests()
         VBA.DoEvents
     Next p_testNumber
     AfterAll
-    Debug.Print "Ran " & VBA.CStr(This.RunCount) & " out of " & VBA.CStr(This.TestCount) & " tests."
-    Debug.Print "Passed: " & VBA.CStr(This.PassedCount) & "; Failed: " & VBA.CStr(This.FailedCount) & _
+    Debug.Print m_debugPrintPrefix; _
+        "Ran " & VBA.CStr(This.RunCount) & " out of " & VBA.CStr(This.TestCount) & " tests."
+    Debug.Print m_debugPrintPrefix; _
+        "Passed: " & VBA.CStr(This.PassedCount) & "; Failed: " & VBA.CStr(This.FailedCount) & _
                 "; Inconclusive: " & VBA.CStr(This.InconclusiveCount) & "."
 End Sub
 
@@ -108,6 +113,8 @@ Public Sub BeforeAll()
     
     ' Trap errors to the error handler
     On Error GoTo err_Handler
+
+    Debug.Print m_debugPrintPrefix; Date; Time
 
     ' initialize the current and previous test numbers.
     This.TestNumber = 0
@@ -494,7 +501,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestInitialSenseFunctionShouldGet = p_outcome
@@ -575,7 +583,8 @@ exit_Handler:
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = This.ErrTracer.AssertLeftoverErrors
     
-    Debug.Print "Test " & Format(This.TestNumber, "00") & " " & p_outcome.BuildReport(p_procedureName) & _
+    Debug.Print m_debugPrintPrefix; "Test " & Format(This.TestNumber, "00") & " " & _
+        p_outcome.BuildReport(p_procedureName) & _
         " Elapsed time: " & VBA.Format$(This.TestStopper.ElapsedMilliseconds, "0.0") & " ms."
     
     Set TestSenseFunctionShouldSet = p_outcome
@@ -597,7 +606,5 @@ err_Handler:
     GoTo exit_Handler
 
 End Function
-
-
 
 
