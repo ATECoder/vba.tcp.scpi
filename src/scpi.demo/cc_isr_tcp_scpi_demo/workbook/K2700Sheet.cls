@@ -1532,10 +1532,12 @@ Public Function OnExternalTriggerOption(ByRef a_details As String) As Boolean
 
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
-    p_mode.AutoIncrementChannel = Me.AutoIncrementDutNumberEnabled
+    p_mode.AutoIncrement = Me.AutoIncrementDutNumberEnabled
     p_mode.BeepEnabled = False
-    p_mode.DutNumber = Me.SelectedDutNumber
     p_mode.FrontInputs = Me.FrontInputsRequired
+    p_mode.DutNumber = Me.SelectedDutNumber
+    p_mode.MaximumDutCount = Me.MaximumDutNumber
+    p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = Me.ReadingOffset
     p_mode.SenseFunction = Me.SenseFunctionComboBox.Text
@@ -1559,10 +1561,12 @@ Public Function OnImmediateTriggerOption(ByRef a_details As String) As Boolean
 
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
-    p_mode.AutoIncrementChannel = Me.AutoIncrementDutNumberEnabled
+    p_mode.AutoIncrement = Me.AutoIncrementDutNumberEnabled
     p_mode.BeepEnabled = False
-    p_mode.DutNumber = Me.SelectedDutNumber
     p_mode.FrontInputs = Me.FrontInputsRequired
+    p_mode.DutNumber = Me.SelectedDutNumber
+    p_mode.MaximumDutCount = Me.MaximumDutNumber
+    p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
     p_mode.ReadingOffset = Me.ReadingOffset
     p_mode.SenseFunction = Me.SenseFunctionComboBox.Text
@@ -1600,14 +1604,13 @@ End Property
 Private Sub MeasureButton_Click()
     ' make an immediate measure of one or all channels.
     If Not This.ViewModel Is Nothing Then _
-        This.LastCommandOutcome = This.ViewModel.MeasureImmediatelyCommand(This.MeasureMode.ReadingOffset, This.LastCommandDetails)
+        This.LastCommandOutcome = This.ViewModel.MeasureImmediatelyCommand(This.LastCommandDetails)
 End Sub
 
 ''' <summary>   Handles the start monitoring button click event. </summary>
 Private Sub StartMonitoringButton_Click()
     If Not This.ViewModel Is Nothing Then _
-        This.ViewModel.StartMonitoringExternalTriggersCommand This.MeasureMode.ReadingOffset, _
-            This.MeasureMode.TimerInterval
+        This.ViewModel.StartMonitoringExternalTriggersCommand
 End Sub
 
 ''' <summary>   Handles the stop monitoring button click event. </summary>
@@ -2092,7 +2095,6 @@ Public Sub Synchronize()
     Const p_procedureName = "Synchronize"
 
     This.ViewModel.GpibLanControllerPort = This.GpibLanControllerPort
-    This.ViewModel.MaximumDutNumber = Me.MaximumDutNumber
     
     If This.ViewModel.FrontInputsHasValue Then
         Me.FrontInputsValue = This.ViewModel.FrontInputsValue
@@ -2417,8 +2419,6 @@ Private Sub OnWorksheetChange(ByVal a_range As Excel.Range)
         
         Case m_readingFormatCell
             This.ViewModel.MeasuredValueFormat = Me.MeasuredValueFormat
-        Case m_maximumDutNumberCell
-            This.ViewModel.MaximumDutNumber = Me.MaximumDutNumber
 
     End Select
 

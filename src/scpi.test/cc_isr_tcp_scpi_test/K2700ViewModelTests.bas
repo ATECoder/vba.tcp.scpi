@@ -725,11 +725,11 @@ Public Function AssertExternalModeShouldValidate(ByVal a_mode As cc_isr_Tcp_Scpi
     ' testing trigger monitoring uses auto increment to detect changes
     ' in DUT number as readings are triggered.
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(a_mode.AutoIncrementChannel, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(a_mode.AutoIncrement, _
             "Auto increment DUT number should be true for testing external trigger monitoring.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.AutoIncrementChannel, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.AutoIncrement, _
             This.ViewModel.AutoIncrementDutNumberEnabled, _
             "View Model Auto Increment Channel No Enabled should equal the expected value.")
     
@@ -1013,11 +1013,11 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_mode As cc_isr_Tcp_Scp
             "User View measurement mode should equal expected value for immediate trigger reading mode.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(a_mode.AutoIncrementChannel, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsFalse(a_mode.AutoIncrement, _
             "Auto increment DUT number should be False for testing immeidate trigger monitoring.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.AutoIncrementChannel, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.AutoIncrement, _
             This.ViewModel.AutoIncrementDutNumberEnabled, _
             "View Model Auto Increment Channel No Enabled should equal the expected value.")
     
@@ -1143,7 +1143,7 @@ Public Function AssertImmediateModeShouldValidate(ByVal a_mode As cc_isr_Tcp_Scp
             "Observer external trigger monitoring state should be off in immediate mode.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.AutoIncrementChannel, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.AutoIncrement, _
             This.ViewModel.AutoIncrementDutNumberEnabled, _
             "Auto increment DUT number should be as expected.")
     
@@ -1228,7 +1228,7 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
     
     ' take a reading
     If p_outcome.AssertSuccessful Then _
-        p_success = This.ViewModel.MeasureImmediatelyCommand(This.UserView.ReadingOffset, p_details)
+        p_success = This.ViewModel.MeasureImmediatelyCommand(p_details)
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(p_success, p_details)
     
     If p_outcome.AssertSuccessful Then
@@ -1335,7 +1335,7 @@ Public Function AssertMonitoringModeShouldStart(ByVal a_mode As cc_isr_Tcp_Scpi.
     
     If p_outcome.AssertSuccessful Then
     
-        This.ViewModel.StartMonitoringExternalTriggers a_mode.ReadingOffset, a_mode.TimerInterval
+        This.ViewModel.StartMonitoringExternalTriggers
         
         ' allow the monitoring to commence.
         cc_isr_Core_IO.Factory.NewStopwatch().Wait 10
@@ -1501,11 +1501,11 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_mode As cc_isr_Tcp_Sc
     ' testing trigger monitoring uses auto increment to detect changes
     ' in DUT number as readings are triggered.
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(a_mode.AutoIncrementChannel, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(a_mode.AutoIncrement, _
             "Auto increment DUT number should be true for testing external trigger monitoring.")
     
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.AutoIncrementChannel, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.AutoIncrement, _
             This.ViewModel.AutoIncrementDutNumberEnabled, _
             "Auto increment DUT number should be as expected.")
     
@@ -3303,10 +3303,11 @@ Public Function TestImmediateModeShouldConfigure() As cc_isr_Test_Fx.Assert
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.BeepEnabled = False
-    p_mode.AutoIncrementChannel = False
-    p_mode.DutNumber = This.UserView.SelectedDutNumber
-    p_mode.DutCount = This.ViewModel.GetDutCount(This.DataView.MaximumDutNumber)
+    p_mode.AutoIncrement = False
     p_mode.FrontInputs = This.DataView.ImmediateFrontInputsRequired
+    p_mode.MaximumDutCount = This.DataView.MaximumDutNumber
+    p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
+    p_mode.DutNumber = This.UserView.GetSelectedDutNumber(p_mode.DutCount)
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
     p_mode.ReadingOffset = This.UserView.ReadingOffset
     p_mode.SenseFunction = This.DataView.ImmediateSenseFunctionName
@@ -3389,10 +3390,11 @@ Public Function TestExternalModeShouldConfigure() As cc_isr_Test_Fx.Assert
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.BeepEnabled = False
-    p_mode.AutoIncrementChannel = True
-    p_mode.DutNumber = This.UserView.SelectedDutNumber
-    p_mode.DutCount = This.ViewModel.GetDutCount(This.DataView.MaximumDutNumber)
+    p_mode.AutoIncrement = True
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
+    p_mode.MaximumDutCount = This.DataView.MaximumDutNumber
+    p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
+    p_mode.DutNumber = This.UserView.GetSelectedDutNumber(p_mode.DutCount)
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
     p_mode.SenseFunction = This.DataView.ExternalSenseFunctionName
@@ -3680,10 +3682,11 @@ Public Function TestTriggerPollingShouldStartStop() As cc_isr_Test_Fx.Assert
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.BeepEnabled = False
-    p_mode.AutoIncrementChannel = True
-    p_mode.DutNumber = This.UserView.SelectedDutNumber
-    p_mode.DutCount = This.ViewModel.GetDutCount(This.DataView.MaximumDutNumber)
+    p_mode.AutoIncrement = True
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
+    p_mode.MaximumDutCount = This.DataView.MaximumDutNumber
+    p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
+    p_mode.DutNumber = This.UserView.GetSelectedDutNumber(p_mode.DutCount)
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
     p_mode.SenseFunction = This.DataView.ExternalSenseFunctionName
@@ -3774,10 +3777,11 @@ Public Function TestTriggerPollingShouldRead() As cc_isr_Test_Fx.Assert
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.BeepEnabled = False
-    p_mode.AutoIncrementChannel = True
-    p_mode.DutNumber = This.UserView.SelectedDutNumber
-    p_mode.DutCount = This.ViewModel.GetDutCount(This.DataView.MaximumDutNumber)
+    p_mode.AutoIncrement = True
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
+    p_mode.DutNumber = This.UserView.SelectedDutNumber
+    p_mode.MaximumDutCount = This.DataView.MaximumDutNumber
+    p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
     p_mode.SenseFunction = This.DataView.ExternalSenseFunctionName
@@ -3913,10 +3917,11 @@ Public Function TestTriggerMonitoringShouldStartStop() As cc_isr_Test_Fx.Assert
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.BeepEnabled = False
-    p_mode.AutoIncrementChannel = True
-    p_mode.DutNumber = This.UserView.SelectedDutNumber
-    p_mode.DutCount = This.ViewModel.GetDutCount(This.DataView.MaximumDutNumber)
+    p_mode.AutoIncrement = True
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
+    p_mode.DutNumber = This.UserView.SelectedDutNumber
+    p_mode.MaximumDutCount = This.DataView.MaximumDutNumber
+    p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
     p_mode.SenseFunction = This.DataView.ExternalSenseFunctionName
@@ -3993,10 +3998,11 @@ Public Function TestTriggerMonitoringShouldRead() As cc_isr_Test_Fx.Assert
     Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
     Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
     p_mode.BeepEnabled = False
-    p_mode.AutoIncrementChannel = True
-    p_mode.DutNumber = This.UserView.SelectedDutNumber
-    p_mode.DutCount = This.ViewModel.GetDutCount(This.DataView.MaximumDutNumber)
+    p_mode.AutoIncrement = True
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
+    p_mode.DutNumber = This.UserView.SelectedDutNumber
+    p_mode.MaximumDutCount = This.DataView.MaximumDutNumber
+    p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
     p_mode.SenseFunction = This.DataView.ExternalSenseFunctionName

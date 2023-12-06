@@ -30,7 +30,6 @@ Private Const m_displayIncrement As Integer = 1
 Private Type this_
     FocusedControlName As String
     DesignMode As Boolean
-    DutNumberCaptionPrefix As String
 End Type
 
 Private This As this_
@@ -38,7 +37,6 @@ Private This As this_
 ''' <summary>   Initializes and returns an instance of this object. </summary>
 Public Function Initialize() As UserSheet
     
-    This.DutNumberCaptionPrefix = "r"
     Me.AutoScanToggleExecutable = False
     Me.AutoScanToggleValue = False
     Me.AutoSingleToggleExecutable = False
@@ -52,12 +50,6 @@ Public Function Initialize() As UserSheet
     Set Initialize = Me
 
 End Function
-
-''' <summary>   Gets the DUT number Caption Prefix. </summary>
-''' <value>   [String]. </value>
-Public Property Get DutNumberCaptionPrefix() As String
-    DutNumberCaptionPrefix = This.DutNumberCaptionPrefix
-End Property
 
 ''' <summary>   Gets the design mode for unit testing and restoration of state. </summary>
 ''' <value>   [Boolean]. </value>
@@ -118,15 +110,11 @@ Public Function GetSelectedDutNumberRange(ByVal a_dutNumber As Integer) As Excel
     
 End Function
 
-''' <summary>   Gets the selected DUT number from the active cell value. </summary>
-''' <value>   [Integer]. </value>
-Public Property Get SelectedDutNumber() As Integer
-    SelectedDutNumber = Me.GetActiveCellDutNumber
-End Property
-
-''' <summary>   Sets the selected DUT number. </summary>
+''' <summary>   Sets the active cell corresponding to the dut number. </summary>
 ''' <param name="a_value">   [Integer] the selected DUT number. </param>
-Public Property Let SelectedDutNumber(ByVal a_value As Integer)
+Public Sub SetActiveDutNumberCell(ByVal a_value As Integer)
+
+    Const p_procedureName = "SetActiveDutNumberCell"
 
     If (0 <> a_value) And Not Me.ProtectContents Then
         If ThisWorkbook.ActiveSheet.Name <> UserSheet.Name Then
@@ -140,23 +128,25 @@ Public Property Let SelectedDutNumber(ByVal a_value As Integer)
         ' ActiveCell.Value = DataView.DutNumberCaptionPrefix & VBA.CStr(a_value)
     End If
 
-End Property
+End Sub
 
 ''' <summary>   Parses the DUT number value from the value of the active cell. </summary>
+''' <param name="a_maximumDutNumber">   [Integer] the maximum DUT number. </param>
 ''' <returns>   [Integer] Returns 0 if invalid resistance cell was selected. </returns>
-Public Function GetActiveCellDutNumber() As Integer
+Public Function GetSelectedDutNumber(ByVal a_maximumDutNumber As Integer) As Integer
 
-    Const p_procedureName = "GetActiveCellDutNumber"
+    Const p_procedureName = "GetSelectedDutNumber"
     
     Dim p_details As String: p_details = VBA.vbNullString
     Dim p_dutNumber As Integer
-    p_dutNumber = UserView.TryParseSelectedDutNumber(VBA.UCase$(ActiveCell.Value), p_details)
+    p_dutNumber = UserView.TryParseSelectedDutNumber(VBA.UCase$(ActiveCell.Value), _
+        a_maximumDutNumber, p_details)
     If 0 = p_dutNumber Then
         MsgBox p_details, VBA.VbMsgBoxStyle.vbOKOnly Or VBA.VbMsgBoxStyle.vbExclamation, _
             "Invalid device under test number"
     End If
     
-    GetActiveCellDutNumber = p_dutNumber
+    GetSelectedDutNumber = p_dutNumber
   
 End Function
 

@@ -34,6 +34,7 @@ Private Type this_
     ImmediateSenseFunctionName As String
     ExternalSenseFunctionName As String
     DutNumberCaptionPrefix As String
+    DutTitle As String
 End Type
 
 Private This As this_
@@ -58,6 +59,7 @@ Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As DataSheet
     
     ' set the initial values that are provided by the user interface
     This.DutNumberCaptionPrefix = "r"
+    This.DutTitle = "resistance"
     
     If DataView.Initialized Then DataView.Dispose
     If UserView.Initialized Then UserView.Dispose
@@ -194,6 +196,12 @@ End Property
 ''' <value>   [String]. </value>
 Public Property Get DutNumberCaptionPrefix() As String
     DutNumberCaptionPrefix = This.DutNumberCaptionPrefix
+End Property
+
+''' <summary>   Gets the DUT title. </summary>
+''' <value>   [String]. </value>
+Public Property Get DutTitle() As String
+    DutTitle = This.DutNumberCaptionPrefix
 End Property
 
 ''' <summary>   Gets the Last Error Message. </summary>

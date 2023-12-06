@@ -41,7 +41,6 @@ Private Type this_
     LastCommandDetails As String
     LastCommandOutcome As Boolean
         
-    DutNumberCaptionPrefix As String
     MeasurementRow As Integer
     MeasurementColumn As Integer
     DutNumberRow As Integer
@@ -641,26 +640,34 @@ Public Property Let ExternalFrontInputsRequired(ByVal a_value As Boolean)
 End Property
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
-' K2700: Reading
+' K2700: DUT Selection
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
 
 ''' <summary>   Gets the DUT number Caption Prefix. </summary>
 ''' <value>   [String]. </value>
 Public Property Get DutNumberCaptionPrefix() As String
-    If Not This.DataSheet Is Nothing Then
-        This.DutNumberCaptionPrefix = This.DataSheet.DutNumberCaptionPrefix
+    If This.DataSheet Is Nothing Then
+        ' this will cause a failure
+        DutNumberCaptionPrefix = VBA.vbNullString
+    Else
+        DutNumberCaptionPrefix = This.DataSheet.DutNumberCaptionPrefix
     End If
-    DutNumberCaptionPrefix = This.DutNumberCaptionPrefix
 End Property
 
-''' <summary>   Sets the DUT number Caption Prefix. </summary>
-''' <param name="a_value">   [String] the DUT number Caption Prefix. </value>
-Public Property Let DutNumberCaptionPrefix(ByVal a_value As String)
-    If Not This.DataSheet Is Nothing Then
-        ' read only: This.DataSheet.DutNumberCaptionPrefix = a_value
+''' <summary>   Gets the DUT title. </summary>
+''' <value>   [String]. </value>
+Public Property Get DutTitle() As String
+    If This.DataSheet Is Nothing Then
+        ' this will cause a failure
+        DutTitle = VBA.vbNullString
+    Else
+        DutTitle = This.DataSheet.DutTitle
     End If
-    This.DutNumberCaptionPrefix = a_value
 End Property
+
+' . . . . . . . . . . . . . . . . . . . . . . . . .
+' K2700: Reading
+' . . . . . . . . . . . . . . . . . . . . . . . . .
 
 ''' <summary>   Gets the Measured DUT number. </summary>
 ''' <value>   [Integer]. </value>
@@ -810,11 +817,13 @@ Public Property Let MeasurementCellValue(ByVal a_value As String)
 End Property
         
 Friend Function GetDutNumberCellRow(ByVal a_dutNumber As Integer)
-    GetDutNumberCellRow = IIf(m_byRow, m_dutNumberRow + m_increment * (a_dutNumber - 1), m_dutNumberRow)
+    GetDutNumberCellRow = IIf(m_byRow, m_dutNumberRow + m_displayIncrement * (a_dutNumber - 1), _
+        m_dutNumberRow)
 End Function
         
 Friend Function GetDutNumberCellColumn(ByVal a_dutNumber As Integer)
-    GetDutNumberCellColumn = IIf(m_byRow, m_dutNumberCol, m_dutNumberCol + m_increment * (m_dutNumber - 1))
+    GetDutNumberCellColumn = IIf(m_byRow, m_dutNumberCol, _
+        m_dutNumberCol + m_displayIncrement * (a_dutNumber - 1))
 End Function
         
 Public Function GetDutNumberCellValue(ByVal a_dutNumber As Integer) As String
@@ -870,7 +879,7 @@ Private Sub SetReading_(ByVal a_dutNumber As Integer, ByVal a_value As Double, _
     Me.DutNumberRow = IIf(a_byRow, m_dutNumberRow + a_increment * (a_dutNumber - 1), m_dutNumberRow)
     Me.DutNumberColumn = IIf(a_byRow, m_dutNumberCol, m_dutNumberCol + a_increment * (a_dutNumber - 1))
    
-    Me.DutNumberCellValue = This.DutNumberCaptionPrefix & VBA.CStr(a_dutNumber)
+    Me.DutNumberCellValue = This.DataSheet.DutNumberCaptionPrefix & VBA.CStr(a_dutNumber)
     Me.MeasurementCellValue = VBA.CStr(a_value)
     
 End Sub

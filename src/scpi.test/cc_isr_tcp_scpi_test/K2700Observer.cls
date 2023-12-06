@@ -415,7 +415,7 @@ End Sub
 
 Public Sub OnClearReadings()
     If This.ClearReadingsExecutable Then
-        This.ViewModel.ClearReadingsCommand This.ReadingOffset, 1, This.DutCount
+        This.ViewModel.ClearReadingsCommand This.ReadingOffset, 1, This.MaximumDutNumber
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnClearReadings", _
@@ -437,10 +437,11 @@ Public Sub OnExternalTriggerOptionChange(ByVal a_value As Boolean)
             Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
             Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
             p_mode.BeepEnabled = True
-            p_mode.AutoIncrementChannel = False
-            p_mode.DutNumber = This.SelectedDutNumber
-            p_mode.DutCount = This.ViewModel.GetDutCount(DataView.MaximumDutNumber)
+            p_mode.AutoIncrement = False
             p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
+            p_mode.DutNumber = This.SelectedDutNumber
+            p_mode.MaximumDutCount = DataView.MaximumDutNumber
+            p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
             p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
             p_mode.ReadingOffset = UserView.ReadingOffset
             p_mode.SenseFunction = DataView.ExternalSenseFunctionName
@@ -467,11 +468,12 @@ Public Sub OnImmediateTriggerOptionChange(ByVal a_value As Boolean)
             
             Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
             Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
-            p_mode.AutoIncrementChannel = False
+            p_mode.AutoIncrement = False
             p_mode.BeepEnabled = True
-            p_mode.DutNumber = This.SelectedDutNumber
-            p_mode.DutCount = This.ViewModel.GetDutCount(DataView.MaximumDutNumber)
             p_mode.FrontInputs = DataView.ImmediateFrontInputsRequired
+            p_mode.DutNumber = This.SelectedDutNumber
+            p_mode.MaximumDutCount = DataView.MaximumDutNumber
+            p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
             p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
             p_mode.ReadingOffset = UserView.ReadingOffset
             p_mode.SenseFunction = DataView.ImmediateSenseFunctionName
@@ -492,7 +494,7 @@ End Sub
 Public Sub OnMeasure()
     If This.MeasureExecutable Then
         ' make an immediate measure of one or all channels.
-        Me.LastCommandOutcome = This.ViewModel.MeasureImmediatelyCommand(This.ReadingOffset, Me.LastCommandDetails)
+        Me.LastCommandOutcome = This.ViewModel.MeasureImmediatelyCommand(Me.LastCommandDetails)
     Else
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
             ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & "OnMeasure", _
@@ -503,7 +505,7 @@ End Sub
 ''' <summary>   Handles the external trigger toggle button. </summary>
 Public Sub OnMonitorExtTrigToggleButtonChange(ByVal a_value As Boolean)
     If This.StartMonitoringExecutable Then
-        This.ViewModel.StartMonitoringExternalTriggersCommand This.ReadingOffset, This.TimerInterval
+        This.ViewModel.StartMonitoringExternalTriggersCommand
     ElseIf This.StopMonitoringExecutable Then
         This.ViewModel.StopMonitoringExternalTriggersCommand
     Else

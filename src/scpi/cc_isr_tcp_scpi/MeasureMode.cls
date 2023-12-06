@@ -27,11 +27,12 @@ Public Enum MeasurementModeOption
 End Enum
 
 Private Type this_
-    AutoIncrementChannel As Boolean
+    AutoIncrement As Boolean
     BeepEnabled As Boolean
     DutCount As Integer
     DutNumber As Integer
     FrontInputs As Boolean
+    MaximumDutCount As Integer
     Mode As cc_isr_Tcp_Scpi.MeasurementModeOption
     ReadingOffset As Double
     SenseFunction As String
@@ -43,14 +44,15 @@ Private This As this_
 
 ''' <summary>   Gets the auto increment DUT number condition. </summary>
 ''' <value>   [Boolean]. </value>
-Public Property Get AutoIncrementChannel() As Boolean
-    AutoIncrementChannel = This.AutoIncrementChannel
+Public Property Get AutoIncrement() As Boolean
+    AutoIncrement = This.AutoIncrement
 End Property
 
 ''' <summary>   Sets the auto increment DUT number condition. </summary>
-''' <param name="a_value">   [Boolean] the auto increment DUT number condition value. </value>
-Public Property Let AutoIncrementChannel(ByVal a_value As Boolean)
-    This.AutoIncrementChannel = a_value
+''' <param name="a_value">   [Boolean] True to increment the DUT number
+''' upon the completion of each measurement. </value>
+Public Property Let AutoIncrement(ByVal a_value As Boolean)
+    This.AutoIncrement = a_value
 End Property
 
 ''' <summary>   Gets the beep enabled on read condition. </summary>
@@ -77,16 +79,28 @@ Public Property Let DutNumber(ByVal a_value As Integer)
     This.DutNumber = a_value
 End Property
 
-''' <summary>   Gets the number of DUTs that can be measured. </summary>
+''' <summary>   Gets the number of DUTs to be measured. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get DutCount() As Integer
     DutCount = This.DutCount
 End Property
 
-''' <summary>   Sets the number of DUTs that can be measured. </summary>
-''' <param name="a_value">   [Integer] the DUT count value. </value>
+''' <summary>   Sets the number of DUTs to be measured. </summary>
+''' <param name="a_value">   [Integer] the number of DUT to be measured. </value>
 Public Property Let DutCount(ByVal a_value As Integer)
     This.DutCount = a_value
+End Property
+
+''' <summary>   Gets the maximum number of DUTs. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get MaximumDutCount() As Integer
+    MaximumDutCount = This.MaximumDutCount
+End Property
+
+''' <summary>   Sets the maximum number of DUTs. </summary>
+''' <param name="a_value">   [Integer] the maximum number of DUTs. </value>
+Public Property Let MaximumDutCount(ByVal a_value As Integer)
+    This.MaximumDutCount = a_value
 End Property
 
 ''' <summary>   Gets the Front Inputs condition. </summary>

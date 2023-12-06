@@ -112,6 +112,7 @@ Private Type this_
     FrontInputsHasValue As Boolean
     FrontInputsCaption As String
     DutCount As Integer
+    MaximumDutCount As Integer
     SelectedDutNumber As Integer
     TargetDutNumber As Integer
     MeasuredDutNumber As Integer
@@ -3040,35 +3041,52 @@ Friend Property Let BottomCardFunctionScanList(ByVal a_value As String)
 End Property
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
-' K2700: Channels
+' K2700: Device Under Test
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
 
-''' <summary>   Gets the number of DUTs that can be tested using either front or
-''' rear channel. </summary>
-''' <param name="a_dutCount">   [Integer] the maximum number of DUTs that can be tested. </param>
-Public Function GetDutCount(ByVal a_dutCount As Integer) As Integer
-    If Me.FrontInputsValue Then
-        GetDutCount = a_dutCount
+''' <summary>   Gets the number of DUTs that can be tested using either the front inputs or
+''' the rear channels. </summary>
+''' <param name="a_frontInputs">       [Boolean] True to take readings from the front inputs; otherwise,
+'''                                    readings are taken from the rear inputs. </param>
+''' <param name="a_maximumDutCount">   [Integer] the maximum number of DUTs that can be tested. </param>
+Public Function GetDutCount(ByVal a_frontInputs As Boolean, ByVal a_maximumDutCount As Integer) As Integer
+    If a_frontInputs Then
+        GetDutCount = a_maximumDutCount
     Else
-        GetDutCount = IIf(This.K2700.RouteSystem.ChannelCount <= a_dutCount, _
-            This.K2700.RouteSystem.ChannelCount, a_dutCount)
+        GetDutCount = IIf(This.K2700.RouteSystem.ChannelCount <= a_maximumDutCount, _
+            This.K2700.RouteSystem.ChannelCount, a_maximumDutCount)
     End If
 End Function
 
-''' <summary>   Gets the number of DUTs that can be tested. The selected
+''' <summary>   Gets the number of DUTs to be tested. The selected
 ''' DUT number must be between 1 and this value. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get DutCount() As Integer
     DutCount = This.DutCount
 End Property
 
-''' <summary>   Gets the number of DUTs that can be tested. The selected
+''' <summary>   Gets the number of DUTs to be tested. The selected
 ''' DUT number must be between 1 and this value. </summary>
-''' <param name="a_value">   [Integer] the number of DUTs that can be tested. </param>
+''' <param name="a_value">   [Integer] the number of DUTs to be tested. </param>
 Friend Property Let DutCount(ByVal a_value As Integer)
     If This.DutCount <> a_value Then
         This.DutCount = a_value
         Me.OnPropertyChanged "DutCount"
+    End If
+End Property
+
+''' <summary>   Gets the maximum number of DUTs. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get MaximumDutCount() As Integer
+    MaximumDutCount = This.MaximumDutCount
+End Property
+
+''' <summary>   Gets the maximum number of DUTs. </summary>
+''' <param name="a_value">   [Integer] the maximum number of DUTs. </param>
+Friend Property Let MaximumDutCount(ByVal a_value As Integer)
+    If This.MaximumDutCount <> a_value Then
+        This.MaximumDutCount = a_value
+        Me.OnPropertyChanged "MaximumDutCount"
     End If
 End Property
 
@@ -3101,6 +3119,63 @@ Friend Property Let TargetDutNumber(ByVal a_value As Integer)
         Me.OnPropertyChanged "TargetDutNumber"
     End If
 End Property
+
+''' <summary>   Gets a DUT number from the DUT number caption. </summary>
+''' <param name="a_value">                [String] the selected DUT number caption, e.g., R2. </value>
+''' <param name="a_prefix">               [String] the DUT number caption prefix, e.g., R. </value>
+''' <param name="a_title">                [String] the DUT number title, e.g., resistance. </value>
+''' <param name="a_maximumDutNumber">     [Integer] the maxiimum DUT number. </value>
+''' <param name="a_details">              [Out, String] Details the failure information if any. </param>
+''' <returns>   [Integer] Returns 0 if invalid DUT number caption was selected. </returns>
+Public Function TryParseDutNumberCaption(ByVal a_value As String, ByVal a_prefix As String, _
+    ByVal a_title As String, ByVal a_maximumDutNumber As Integer, ByRef a_details As String) As Integer
+
+    Const p_procedureName = "TryParseSelectedDutNumber"
+    
+    Dim p_dutNumber As Integer: p_dutNumber = 0
+    
+    If 0 >= VBA.InStr(1, VBA.Left$(a_value, VBA.Len(a_prefix)), _
+        a_prefix, VBA.VbCompareMethod.vbTextCompare) Then
+     
+        a_details = "The selected value '" & a_value & _
+               "' is not a valid " & a_title & _
+               " number. Please select a valid " & a_title & _
+               " number, e.g., " & a_prefix & "2, and try again."
+  
+    Else
+    
+        p_dutNumber = VBA.CInt(Mid$(a_value, VBA.Len(a_prefix) + 1))
+        
+        If a_maximumDutNumber < 1 Then
+        
+            TryParseDutNumberCaption = 0
+            a_details = "Failed parsing DUT number caption; The maxumum dut number was not set."
+            cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+                ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
+                " " & a_details
+        
+        ElseIf p_dutNumber > 0 And p_dutNumber <= a_maximumDutNumber Then
+        
+            a_details = "The selected value '" & a_value & _
+                   "' yields an out of range " & a_title & _
+                   " number. Valid " & a_title & "numbers are between 1 and " & _
+                   VBA.CStr(a_maximumDutNumber) & _
+                   ". Please select a valid " & a_title & _
+                   " number, e.g., " & a_prefix & "2, and try again."
+            
+            p_dutNumber = 0
+            
+        End If
+    
+    End If
+  
+    TryParseDutNumberCaption = p_dutNumber
+  
+End Function
+
+' . . . . . . . . . . . . . . . . . . . . . . . . .
+' K2700: Measured Device Under Test
+' . . . . . . . . . . . . . . . . . . . . . . . . .
 
 ''' <summary>   Gets the measured DUT number. </summary>
 ''' <value>   [Integer]. </value>
@@ -3942,9 +4017,11 @@ Friend Function TryConfigureMeasure(ByVal a_mode As cc_isr_Tcp_Scpi.MeasureMode,
     
         ' set the measurement conditions
         Me.DutCount = a_mode.DutCount
+        Me.MaximumDutCount = a_mode.MaximumDutCount
+        Me.ReadingOffset = a_mode.ReadingOffset
         Me.SenseFunctionName = a_mode.SenseFunction
         Me.SingleReadEnabled = a_mode.SingleRead
-        Me.AutoIncrementDutNumberEnabled = a_mode.AutoIncrementChannel
+        Me.AutoIncrementDutNumberEnabled = a_mode.AutoIncrement
         Me.ReadingBeepEnabled = a_mode.BeepEnabled
         Me.TimerInterval = a_mode.TimerInterval
         
@@ -4235,10 +4312,9 @@ End Property
 ''' <summary>   Tries to measure immediately. </summary>
 ''' <remarks>   This method assumes that the inputs were validated before configuring the
 ''' measurement state. </remarks>
-''' <param name="a_readingOffset">   [Double] the zero reading. </param>
 ''' <param name="a_details">         [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
-Public Function TryMeasureImmediately(ByVal a_readingOffset As Double, ByRef a_details As String) As Boolean
+Public Function TryMeasureImmediately(ByRef a_details As String) As Boolean
 
     Const p_procedureName = "TryMeasureImmediately"
     
@@ -4251,7 +4327,7 @@ Public Function TryMeasureImmediately(ByVal a_readingOffset As Double, ByRef a_d
     If This.AutoIncrementDutNumberEnabled Then
     
         ' Clear all cells
-        Me.ClearReadings a_readingOffset, 1, Me.DutCount
+        Me.ClearReadings Me.ReadingOffset, 1, Me.MaximumDutCount
 
         ' scan all channels
         For p_dutNumber = 1 To Me.DutCount
@@ -4310,10 +4386,9 @@ End Function
 ''' <summary>   Takes a single or multiple readings from the front or rear panel. </summary>
 ''' <remarks>   This method assumes that the inputs were verified upon configuring the
 ''' measurement mode. </remarks>
-''' <param name="a_readingOffset">   [Double] the zero reading. </param>
 ''' <param name="a_details">         [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
-Public Function MeasureImmediatelyCommand(ByVal a_readingOffset As Double, ByRef a_details As String) As Boolean
+Public Function MeasureImmediatelyCommand(ByRef a_details As String) As Boolean
 
     Const p_procedureName = "MeasureImmediatelyCommand"
 
@@ -4334,7 +4409,7 @@ Public Function MeasureImmediatelyCommand(ByVal a_readingOffset As Double, ByRef
         Me.ExternalTriggerOptionExecutable = False
     
         ' throw an error if measurement failed
-        p_success = Me.TryMeasureImmediately(a_readingOffset, p_details)
+        p_success = Me.TryMeasureImmediately(p_details)
         
         If Not p_success Then
         
@@ -4391,12 +4466,10 @@ err_Handler:
 End Function
 
 ''' <summary>   Validates the Inputs and takes a single or multiple readings from the front or rear panel. </summary>
-''' <param name="a_readingOffset">   [Double] the zero reading. </param>
 ''' <param name="a_frontInputs">     [Boolean] True if readings are made from the front inputs. </param>
 ''' <param name="a_details">         [Out, String] Details the failure information if any. </param>
 ''' <returns>   [Boolean]. </returns>
-Public Function ValidateInputsAndMeasureCommand(ByVal a_readingOffset As Double, _
-    ByVal a_frontInputs As Boolean, a_details As String) As Boolean
+Public Function ValidateInputsAndMeasureCommand(ByVal a_frontInputs As Boolean, a_details As String) As Boolean
 
     Const p_procedureName = "ValidateInputsAndMeasureCommand"
 
@@ -4432,7 +4505,7 @@ Public Function ValidateInputsAndMeasureCommand(ByVal a_readingOffset As Double,
         Me.ExternalTriggerOptionExecutable = False
     
         ' throw an error if measurement failed
-        p_success = Me.TryMeasureImmediately(a_readingOffset, p_details)
+        p_success = Me.TryMeasureImmediately(p_details)
         
         If Not p_success Then
         
@@ -4580,9 +4653,7 @@ Public Property Get MonitoringState() As String
 End Property
 
 ''' <summary>   Internal. Starts monitoring the instrument for external triggered measurements. </summary>
-''' <param name="a_readingOffset">   [Double] the Reading Offset value. </value>
-''' <param name="a_timerInterval">   [Integer] the timer interval; 0 if contolled with polling for unit testing. </value>
-Public Sub StartMonitoringExternalTriggers(ByVal a_readingOffset As Double, ByVal a_timerInterval As Integer)
+Public Sub StartMonitoringExternalTriggers()
 
     Const p_procedureName = "StartMonitoringExternalTriggers"
 
@@ -4592,7 +4663,7 @@ Public Sub StartMonitoringExternalTriggers(ByVal a_readingOffset As Double, ByVa
     If This.AutoIncrementDutNumberEnabled Then
     
         ' Clear all readings
-        Me.ClearReadings a_readingOffset, 1, Me.DutCount
+        Me.ClearReadings Me.ReadingOffset, 1, Me.MaximumDutCount
 
     End If
 
@@ -4614,7 +4685,6 @@ Public Sub StartMonitoringExternalTriggers(ByVal a_readingOffset As Double, ByVa
     ' initiate awaiting for the external trigger
     ' this is handled by the K2700.MonitorExternalTrigger method.
     ' This.Session.WriteLine ":INIT;*CLS"
-    Me.TimerInterval = a_timerInterval
 
     If Me.TimerControlled Then
     
@@ -4660,17 +4730,14 @@ err_Handler:
 End Sub
 
 ''' <summary>   Starts monitoring the instrument for external triggered measurements. </summary>
-''' <param name="a_readingOffset">   [Double] the Reading Offset value. </value>
-''' <param name="a_timerInterval">   [Integer] the timer interval; 0 if contolled with polling for unit testing. </value>
-Public Sub StartMonitoringExternalTriggersCommand(ByVal a_readingOffset As Double, _
-    ByVal a_timerInterval As Integer)
+Public Sub StartMonitoringExternalTriggersCommand()
 
     Const p_procedureName = "StartMonitoringExternalTriggersCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
-    Me.StartMonitoringExternalTriggers a_readingOffset, a_timerInterval
+    Me.StartMonitoringExternalTriggers
  
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -4991,7 +5058,7 @@ Public Function StartMeasureCommand(ByVal a_mode As cc_isr_Tcp_Scpi.MeasureMode,
     
         If Me.MeasureExecutable Then
             ' make an immediate measure of one or all channels.
-            p_success = Me.MeasureImmediatelyCommand(a_mode.ReadingOffset, p_details)
+            p_success = Me.MeasureImmediatelyCommand(p_details)
         Else
             cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
                 ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
@@ -5058,7 +5125,7 @@ Public Function StartMonitoringCommand(ByVal a_mode As cc_isr_Tcp_Scpi.MeasureMo
         ' next start external trigger monitoring
         ' this should wait for monitoring to commence or raise an error.
         If Me.StartMonitoringExecutable Then
-            Me.StartMonitoringExternalTriggersCommand a_mode.ReadingOffset, a_mode.TimerInterval
+            Me.StartMonitoringExternalTriggersCommand
         Else
             cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
                 ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
