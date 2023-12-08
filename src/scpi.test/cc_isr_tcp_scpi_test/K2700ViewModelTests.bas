@@ -3307,7 +3307,14 @@ Public Function TestImmediateModeShouldConfigure() As cc_isr_Test_Fx.Assert
     p_mode.FrontInputs = This.DataView.ImmediateFrontInputsRequired
     p_mode.MaximumDutCount = This.DataView.MaximumDutNumber
     p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
-    p_mode.DutNumber = This.UserView.GetSelectedDutNumber(p_mode.DutCount)
+    
+    Dim p_details As String
+    p_mode.DutNumber = This.UserView.GetSelectedDutNumber(p_mode.DutCount, p_details)
+    If p_mode.DutNumber <= 0 Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & This.Name & "." & p_procedureName, _
+            " " & p_details
+    
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
     p_mode.ReadingOffset = This.UserView.ReadingOffset
     p_mode.SenseFunction = This.DataView.ImmediateSenseFunctionName
@@ -3394,7 +3401,13 @@ Public Function TestExternalModeShouldConfigure() As cc_isr_Test_Fx.Assert
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
     p_mode.MaximumDutCount = This.DataView.MaximumDutNumber
     p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
-    p_mode.DutNumber = This.UserView.GetSelectedDutNumber(p_mode.DutCount)
+    
+    p_mode.DutNumber = This.UserView.GetSelectedDutNumber(p_mode.DutCount, p_details)
+    If p_mode.DutNumber <= 0 Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & This.Name & "." & p_procedureName, _
+            " " & p_details
+    
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
     p_mode.SenseFunction = This.DataView.ExternalSenseFunctionName
@@ -3686,7 +3699,13 @@ Public Function TestTriggerPollingShouldStartStop() As cc_isr_Test_Fx.Assert
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
     p_mode.MaximumDutCount = This.DataView.MaximumDutNumber
     p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
-    p_mode.DutNumber = This.UserView.GetSelectedDutNumber(p_mode.DutCount)
+    
+    p_mode.DutNumber = This.UserView.GetSelectedDutNumber(p_mode.DutCount, p_details)
+    If p_mode.DutNumber <= 0 Then _
+        cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
+            ThisWorkbook.VBProject.Name & "." & This.Name & "." & p_procedureName, _
+            " " & p_details
+    
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
     p_mode.SenseFunction = This.DataView.ExternalSenseFunctionName

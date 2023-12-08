@@ -22,7 +22,7 @@ Private Const m_socketAddressCell As String = "B2"
 Private Const m_timerIntervalCell As String = "B3"
 Private Const m_lastMessageCell As String = "B4"
 Private Const m_lastErrorMessageCell As String = "B16"
-Private Const m_MaxDutCount As Integer = 48
+Private Const m_maximumDutNumber As Integer = 48
 Private Const m_gpibLanControllerPort As Long = 1234
 Private Const m_primaryGpibAddress As Integer = 16
 
@@ -180,10 +180,10 @@ Public Property Get GpibLanControllerPort() As Long
     GpibLanControllerPort = m_gpibLanControllerPort
 End Property
 
-''' <summary>   Gets the maximum Dut  Count. </summary>
+''' <summary>   Gets the maximum DUT number. </summary>
 ''' <value>   [Integer]. </value>
-Public Property Get MaxDutCount() As Integer
-    MaxDutCount = m_MaxDutCount
+Public Property Get MaximumDutNumber() As Integer
+    MaximumDutNumber = m_maximumDutNumber
 End Property
 
 ''' <summary>   Gets the status of the Beep Allowed condition. </summary>

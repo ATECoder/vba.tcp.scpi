@@ -31,6 +31,7 @@ Private Type this_
     
     ReadingOffset As Double
     
+    MaximumDutNumber As Integer
     SelectedDutNumber As Integer
     SelectedDutNumberCaption As String
     MeasurementMode As cc_isr_Tcp_Scpi.MeasurementModeOption
@@ -236,7 +237,7 @@ Public Sub OnAutoScanToggleButtonChange()
         p_mode.BeepEnabled = False
         p_mode.DutNumber = 1
         p_mode.FrontInputs = This.DataSheet.ImmediateFrontInputsRequired
-        p_mode.MaximumDutCount = This.DataSheet.MaxDutCount
+        p_mode.MaximumDutCount = Me.MaximumDutNumber
         p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
         p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
         p_mode.ReadingOffset = Me.ReadingOffset
@@ -350,23 +351,32 @@ Public Sub OnAutoSingleToggleButtonChange()
     If Me.AutoSingleToggleValue And This.ViewModel.ImmediateTriggerOptionExecutable And _
         Not Me.Measuring Then
     
-        This.UserSheet.DisplayStartDateTime
-        
         Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
         Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
         p_mode.AutoIncrement = False
         p_mode.BeepEnabled = False
         p_mode.FrontInputs = This.DataSheet.ImmediateFrontInputsRequired
-        p_mode.MaximumDutCount = This.DataSheet.MaxDutCount
+        p_mode.MaximumDutCount = Me.MaximumDutNumber
         p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
-        p_mode.DutNumber = Me.GetSelectedDutNumber(p_mode.DutCount)
-        p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
-        p_mode.ReadingOffset = Me.ReadingOffset
-        p_mode.SenseFunction = This.DataSheet.ImmediateSenseFunctionName
-        p_mode.SingleRead = True
-        p_mode.TimerInterval = This.DataSheet.TimerInterval
-
-        Me.LastCommandOutcome = This.ViewModel.StartMeasureCommand(p_mode, Me.LastCommandDetails)
+        
+        Dim p_details As String
+        p_mode.DutNumber = Me.GetSelectedDutNumber(p_mode.DutCount, p_details)
+        If 0 < p_mode.DutNumber Then
+        
+            p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
+            p_mode.ReadingOffset = Me.ReadingOffset
+            p_mode.SenseFunction = This.DataSheet.ImmediateSenseFunctionName
+            p_mode.SingleRead = True
+            p_mode.TimerInterval = This.DataSheet.TimerInterval
+    
+            This.UserSheet.DisplayStartDateTime
+            Me.LastCommandOutcome = This.ViewModel.StartMeasureCommand(p_mode, Me.LastCommandDetails)
+        
+        Else
+            Me.AutoSingleToggleValue = False
+            MsgBox p_details, VBA.VbMsgBoxStyle.vbOKOnly Or VBA.VbMsgBoxStyle.vbExclamation, _
+                "Invalid device under test number"
+        End If
         
     End If
     
@@ -521,7 +531,7 @@ Public Sub OnManualScanToggleButtonChange()
         p_mode.BeepEnabled = True
         p_mode.FrontInputs = This.DataSheet.ExternalFrontInputsRequired
         p_mode.DutNumber = 1
-        p_mode.MaximumDutCount = This.DataSheet.MaxDutCount
+        p_mode.MaximumDutCount = Me.MaximumDutNumber
         p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
         p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
         p_mode.ReadingOffset = Me.ReadingOffset
@@ -639,24 +649,33 @@ Public Sub OnManualSingleToggleButtonChange()
     If Me.ManualSingleToggleValue And This.ViewModel.ExternalTriggerOptionExecutable And _
         Not This.Measuring Then
     
-        This.UserSheet.DisplayStartDateTime
-        
         Dim p_mode As cc_isr_Tcp_Scpi.MeasureMode
         Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
         p_mode.AutoIncrement = False
         p_mode.BeepEnabled = True
         p_mode.FrontInputs = This.DataSheet.ExternalFrontInputsRequired
-        p_mode.MaximumDutCount = This.DataSheet.MaxDutCount
+        p_mode.MaximumDutCount = Me.MaximumDutNumber
         p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
-        p_mode.DutNumber = Me.GetSelectedDutNumber(p_mode.DutCount)
-        p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
-        p_mode.ReadingOffset = Me.ReadingOffset
-        p_mode.SenseFunction = This.DataSheet.ExternalSenseFunctionName
-        p_mode.SingleRead = True
-        p_mode.TimerInterval = This.DataSheet.TimerInterval
-
-        Me.LastCommandOutcome = This.ViewModel.StartMonitoringCommand(p_mode, Me.LastCommandDetails)
-
+        
+        Dim p_details As String
+        p_mode.DutNumber = Me.GetSelectedDutNumber(p_mode.DutCount, p_details)
+        If 0 < p_mode.DutNumber Then
+        
+            p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
+            p_mode.ReadingOffset = Me.ReadingOffset
+            p_mode.SenseFunction = This.DataSheet.ExternalSenseFunctionName
+            p_mode.SingleRead = True
+            p_mode.TimerInterval = This.DataSheet.TimerInterval
+    
+            This.UserSheet.DisplayStartDateTime
+            Me.LastCommandOutcome = This.ViewModel.StartMonitoringCommand(p_mode, Me.LastCommandDetails)
+    
+        Else
+            Me.ManualSingleToggleValue = False
+            MsgBox p_details, VBA.VbMsgBoxStyle.vbOKOnly Or VBA.VbMsgBoxStyle.vbExclamation, _
+                "Invalid device under test number"
+        End If
+    
     ElseIf Not Me.ManualSingleToggleValue And This.ViewModel.StopMonitoringExecutable And _
         This.Measuring Then
     
@@ -800,51 +819,13 @@ Public Property Let FrontInputsRequired(ByVal a_value As Boolean)
     This.FrontInputsRequired = a_value
 End Property
 
-''' <summary>   Gets the Selected DUT number Caption. </summary>
-''' <value>   [String]. </value>
-Public Property Get SelectedDutNumberCaption() As String
-    SelectedDutNumberCaption = This.SelectedDutNumberCaption
+''' <summary>   Gets the maximum DUT number. </summary>
+''' <value>   [Integer]. </value>
+Public Property Get MaximumDutNumber() As String
+    If Not This.DataSheet Is Nothing Then _
+        This.MaximumDutNumber = This.DataSheet.MaximumDutNumber
+    MaximumDutNumber = This.MaximumDutNumber
 End Property
-
-Public Property Let SelectedDutNumberCaption(ByVal a_value As String)
-    If Not This.ViewModel Is Nothing Then
-        If This.SelectedDutNumberCaption <> a_value Then
-            This.SelectedDutNumberCaption = a_value
-            Dim p_details As String: p_details = VBA.vbNullString
-            Dim p_dutNumber As Integer
-            p_dutNumber = Me.TryParseSelectedDutNumber(a_value, This.DataSheet.MaxDutCount, p_details)
-            If 0 < p_dutNumber Then
-                Me.SelectedDutNumber = p_dutNumber
-            Else
-                MsgBox p_details, VBA.VbMsgBoxStyle.vbOKOnly Or VBA.VbMsgBoxStyle.vbExclamation, _
-                    "Invalid " & This.DataSheet.DutTitle & " selected"
-            End If
-        End If
-    End If
-End Property
-
-''' <summary>   Gets a DUT number from the DUT number caption. </summary>
-''' <param name="a_value">              [String] the selected DUT number caption, e.g., R2. </value>
-''' <param name="a_maximumDutNumber">   [Integer] the maximum DUT number. </value>
-''' <param name="a_details">            [Out, String] Details the failure information if any. </param>
-''' <returns>   [Integer] Returns 0 if invalid DUT number caption was selected. </returns>
-Public Function TryParseSelectedDutNumber(ByVal a_value As String, _
-    ByVal a_maximumDutNumber As Integer, ByRef a_details As String) As Integer
-
-    Const p_procedureName = "TryParseSelectedDutNumber"
-    
-    TryParseSelectedDutNumber = This.ViewModel.TryParseDutNumberCaption(a_value, _
-        Me.DutNumberCaptionPrefix, Me.DutTitle, a_maximumDutNumber, a_details)
-    
-End Function
-
-''' <summary>   Gets the Selected DUT number. </summary>
-''' <param name="a_maximumDutNumber">   [Integer] the maximum DUT number. </value>
-''' <returns>   [Integer]. </returns>
-Public Function GetSelectedDutNumber(ByVal a_maximumDutNumber As Integer) As Integer
-    This.SelectedDutNumber = This.UserSheet.GetSelectedDutNumber(a_maximumDutNumber)
-    GetSelectedDutNumber = This.SelectedDutNumber
-End Function
 
 ''' <summary>   Gets the Selected DUT number. </summary>
 ''' <value>   [Integer]. </value>
@@ -861,16 +842,43 @@ Public Property Let SelectedDutNumber(ByVal a_value As Integer)
         This.SelectedDutNumber = a_value
         
         ' emulate selecting a DUT number if within range.
-        If a_value < 0 And a_value < This.DataSheet.MaxDutCount Then _
-            Me.SelectedDutNumberCaption = This.DataSheet.DutNumberCaptionPrefix & VBA.CStr(a_value)
+        If a_value > 0 And a_value <= This.MaximumDutNumber Then
+            Dim p_caption As String
+            p_caption = This.DataSheet.DutNumberCaptionPrefix & VBA.CStr(a_value)
+            This.SelectedDutNumberCaption = p_caption
+            If Not This.UserSheet Is Nothing Then
+                This.UserSheet.ActivateDutNumberCaption a_value
+            End If
+        End If
         
-        If a_value < 0 And a_value < This.DataSheet.MaxDutCount And _
-            Not This.UserSheet Is Nothing Then _
-            This.UserSheet.SetActiveDutNumberCell a_value
-
     End If
 
 End Property
+
+''' <summary>   Gets the Selected DUT number Caption. </summary>
+''' <value>   [String]. </value>
+Public Property Get SelectedDutNumberCaption() As String
+    If Not This.UserSheet Is Nothing Then _
+        This.SelectedDutNumberCaption = This.UserSheet.SelectedDutNumberCaption
+    SelectedDutNumberCaption = This.SelectedDutNumberCaption
+End Property
+
+''' <summary>   Gets a DUT number from the active DUT number caption. </summary>
+''' <param name="a_dutCount">   [Integer] The number of DUTs that is to be tested, which
+'''                             also set the top (max) DUT Number of this test. </param>
+''' <param name="a_details">    [Out, String] Details the failure information if any. </param>
+''' <returns>   [Integer] Returns 0 if invalid DUT number caption was selected. </returns>
+Public Function GetSelectedDutNumber(ByVal a_dutCount As Integer, _
+    ByRef a_details As String) As Integer
+
+    Dim p_number As Integer
+    p_number = This.ViewModel.TryParseDutNumberCaption(Me.SelectedDutNumberCaption, _
+        Me.DutNumberCaptionPrefix, Me.DutTitle, a_dutCount, a_details)
+    This.SelectedDutNumber = p_number
+    GetSelectedDutNumber = p_number
+    
+End Function
+
 
 ''' <summary>   Gets the Single Read Enabled. </summary>
 ''' <remarks>   Indicates that front inputs are Value for this mode. </remarks>

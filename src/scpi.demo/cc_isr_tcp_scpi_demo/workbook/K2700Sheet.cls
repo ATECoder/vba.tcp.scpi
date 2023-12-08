@@ -2034,6 +2034,27 @@ Private Sub SetReading_(ByVal a_dutNumber As Integer, ByVal a_value As Double, _
     
 End Sub
 
+Public Function GetDutNumberCaptionRow(ByVal a_dutNumber As Integer) As Integer
+    GetDutNumberCaptionRow = IIf(m_byRow, m_dutNumberRow + m_displayIncrement * (a_dutNumber - 1), _
+        m_dutNumberRow)
+End Function
+
+Public Function GetDutNumberCaptionColum(ByVal a_dutNumber As Integer) As Integer
+    GetDutNumberCaptionColum = IIf(m_byRow, m_dutNumberCol, _
+        m_dutNumberCol + m_displayIncrement * (a_dutNumber - 1))
+End Function
+
+Public Function GetMeasurementRow(ByVal a_dutNumber As Integer) As Integer
+    GetMeasurementRow = IIf(m_byRow, m_dutNumberRow + m_displayIncrement * (a_dutNumber - 1), _
+        m_dutNumberRow)
+End Function
+
+Public Function GetMeasurementColum(ByVal a_dutNumber As Integer) As Integer
+    GetMeasurementColum = IIf(m_byRow, m_measurementCol, _
+        m_measurementCol + m_displayIncrement * (a_dutNumber - 1))
+End Function
+
+
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
 ' View Model Events
 ' + + + + + + + + + + + + + + + + + + + + + + + + + + + + +

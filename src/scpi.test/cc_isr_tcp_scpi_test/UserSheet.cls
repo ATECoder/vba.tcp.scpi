@@ -110,7 +110,7 @@ Public Function GetDutNumberCaptionRange(ByVal a_dutNumber As Integer) As Excel.
     
 End Function
 
-''' <summary>   Activates the DUT caption cell of the specified DUT number. </summary>
+''' <summary>   Activates DUT capttion cell of the specified DUT number. </summary>
 ''' <param name="a_value">   [Integer] the DUT number. </param>
 Public Sub ActivateDutNumberCaption(ByVal a_value As Integer)
 
@@ -163,8 +163,7 @@ End Property
 ''' <summary>   Sets the action state of the Auto Scan Toggle command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let AutoScanToggleValue(ByVal a_value As Boolean)
-    If Me.AutoScanToggleButton.Value <> a_value Then _
-        Me.AutoScanToggleButton.Value = a_value
+    Me.AutoScanToggleButton.Value = a_value
 End Property
 
 ''' <summary>   Handles the Got Focus event of the Auto Scan toggle button.  </summary>
@@ -247,8 +246,7 @@ End Property
 ''' <summary>   Sets the action state of the Auto Single Toggle command. </summary>
 ''' <param name="a_value">   [Boolean] true if the command is active. </param>
 Public Property Let AutoSingleToggleValue(ByVal a_value As Boolean)
-    If Me.AutoSingleToggleButton.Value <> a_value Then _
-        Me.AutoSingleToggleButton.Value = a_value
+    Me.AutoSingleToggleButton.Value = a_value
 End Property
 
 ''' <summary>   Handles the Got Focus event of the Auto Single toggle button.  </summary>

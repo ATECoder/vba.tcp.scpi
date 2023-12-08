@@ -357,6 +357,7 @@ End Sub
 ''' <summary>   Handles the Clear Messages Button Click Event. </summary>
 Public Sub OnClearReadings()
     If Not This.ViewModel Is Nothing Then
+        This.ViewModel.OnError VBA.vbNullString
         This.ViewModel.ClearReadingsCommand UserView.ReadingOffset, 1, Me.MaximumDutNumber
     End If
 End Sub
@@ -405,7 +406,7 @@ End Property
 ''' <value>   [Integer]. </value>
 Public Property Get MaximumDutNumber() As Integer
     If Not This.DataSheet Is Nothing Then
-        This.MaximumDutNumber = This.DataSheet.MaxDutCount
+        This.MaximumDutNumber = This.DataSheet.MaximumDutNumber
     End If
     MaximumDutNumber = This.MaximumDutNumber
 End Property
@@ -414,7 +415,7 @@ End Property
 ''' <param name="a_value">   [Integer] the maximum DUT number value. </value>
 Public Property Let MaximumDutNumber(ByVal a_value As Integer)
     If Not This.DataSheet Is Nothing Then
-        ' read only: This.DataSheet.MaxDutCount = a_value
+        ' read only: This.DataSheet.MaximumDutNumber = a_value
     End If
     This.MaximumDutNumber = a_value
 End Property
@@ -672,63 +673,42 @@ End Property
 ''' <summary>   Gets the Measured DUT number. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get MeasuredDutNumber() As Integer
-    If Not This.DataSheet Is Nothing Then
-        ' not defined This.MeasuredDutNumber = This.DataSheet.MeasuredDutNumber
-    End If
     MeasuredDutNumber = This.MeasuredDutNumber
 End Property
 
 ''' <summary>   Sets the Measured DUT number. </summary>
 ''' <param name="a_value">   [Integer] the Measured DUT number value. </value>
 Public Property Let MeasuredDutNumber(ByVal a_value As Integer)
-    If Not This.DataSheet Is Nothing Then
-        ' not defined This.DataSheet.MeasuredDutNumber = a_value
-    End If
     This.MeasuredDutNumber = a_value
 End Property
 
 ''' <summary>   Gets the Measured Reading. </summary>
 ''' <value>   [String]. </value>
 Public Property Get MeasuredReading() As String
-    If Not This.DataSheet Is Nothing Then
-        ' not defined This.MeasuredReading = This.DataSheet.MeasuredReading
-    End If
     MeasuredReading = This.MeasuredReading
 End Property
 
 ''' <summary>   Sets the Measured Reading. </summary>
 ''' <param name="a_value">   [String] the Measured Reading value. </value>
 Public Property Let MeasuredReading(ByVal a_value As String)
-    If Not This.DataSheet Is Nothing Then
-        ' not defined This.DataSheet.MeasuredReading = a_value
-    End If
     This.MeasuredReading = a_value
 End Property
 
 ''' <summary>   Gets the Measured Value. </summary>
 ''' <value>   [Double]. </value>
 Public Property Get MeasuredValue() As Double
-    If Not This.DataSheet Is Nothing Then
-        ' not defined This.MeasuredValue = This.DataSheet.MeasuredValue
-    End If
     MeasuredValue = This.MeasuredValue
 End Property
 
 ''' <summary>   Sets the Measured Value. </summary>
 ''' <param name="a_value">   [Double] the Measured Value. </value>
 Public Property Let MeasuredValue(ByVal a_value As Double)
-    If Not This.DataSheet Is Nothing Then
-        ' not defined This.DataSheet.MeasuredValue = a_value
-    End If
     This.MeasuredValue = a_value
 End Property
 
 ''' <summary>   Gets the measurement mode. </summary>
 ''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
 Public Property Get MeasurementMode() As cc_isr_Tcp_Scpi.MeasurementModeOption
-    If Not This.DataSheet Is Nothing Then
-        ' not defined This.MeasurementMode = This.DataSheet.MeasurementMode
-    End If
     MeasurementMode = This.MeasurementMode
 End Property
 
@@ -736,9 +716,6 @@ End Property
 ''' <param name=-"a_value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>] the value. </param>
 ''' <value>   [<see cref="cc_isr_Tcp_Scpi.MeasurementModeOption"/>]. </value>
 Public Property Let MeasurementMode(ByVal a_value As cc_isr_Tcp_Scpi.MeasurementModeOption)
-    If Not This.DataSheet Is Nothing Then
-        ' not defined This.DataSheet.MeasurementMode = a_value
-    End If
     This.MeasurementMode = a_value
 End Property
 
@@ -947,29 +924,9 @@ Friend Sub Synchronize()
     Const p_procedureName = "Synchronize"
 
     ' set the view model settings that come from the ViewModel user interface
-    
-    ' these values are now derived in the properties:
-    ' set user interface settings
-    ' Me.DutNumberCaptionPrefix = This.DataSheet.DutNumberCaptionPrefix
-    ' Me.GpibLanControllerPort = This.DataSheet.GpibLanControllerPort
-    ' Me.PrimaryGpibAddress = This.DataSheet.PrimaryGpibAddress
-    ' Me.MaximumDutNumber = This.DataSheet.MaxDutCount
-    ' Me.SocketAddress = This.DataSheet.SocketAddress
-    ' Me.SessionTimeout = This.DataSheet.SessionTimeout
-    ' Me.TimerInterval = This.DataSheet.TimerInterval
-    ' Me.BeepAllowed = This.DataSheet.BeepAllowed
-    
-    ' This.ViewModel.SocketAddress = This.SocketAddress
     This.ViewModel.GpibLanControllerPort = Me.GpibLanControllerPort
+    This.ViewModel.GpibAddress = Me.PrimaryGpibAddress
     
-    ' these value are set upon connecting.
-    ' This.ViewModel.SessionTimeout = Me.SessionTimeout
-    ' This.ViewModel.TimerInterval = Me.TimerInterval
-    ' This.ViewModel.MaximumDutNumber = Me.MaximumDutNumber
-    
-    ' this value is set as part of the measurement mode.
-    ' Me.ReadingOffset = This.ViewModel.ReadingOffset
-
     ' The initial values must be set for property change to work.
     Me.LastErrorMessage = This.ViewModel.LastErrorMessage
     Me.LastMessage = This.ViewModel.LastMessage
@@ -1037,7 +994,11 @@ Friend Sub m_viewModel_DutMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.DutReadi
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Me.SetReading Me.MeasuredDutNumber, Me.MeasuredValue
+    ' these values are set by property changes.
+    ' Me.MeasuredReading = a_eventArgs.Reading
+    ' Me.MeasuredDutNumber = a_eventArgs.DutNumber
+    ' Me.MeasuredValue = This.ViewModel.MeasuredValue
+    Me.SetReading This.MeasuredDutNumber, This.MeasuredValue
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
