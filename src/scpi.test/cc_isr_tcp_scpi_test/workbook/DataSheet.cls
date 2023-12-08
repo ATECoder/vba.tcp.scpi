@@ -13,9 +13,8 @@ Attribute VB_Exposed = True
 
 Option Explicit
 
-Private Const m_continuousSenseFunctionName As String = "FRES"
-Private Const m_immediateSenseFunctionName As String = "RES"
-Private Const m_externalSenseFunctionName As String = "FRES"
+Private Const m_rearInputsSenseFunctionName As String = "RES"
+Private Const m_frontInputsSenseFunctionName As String = "FRES"
 
 Private Const m_sessionTimeoutCell As String = "B1"
 Private Const m_socketAddressCell As String = "B2"
@@ -30,9 +29,8 @@ Private Type this_
     ViewModel As cc_isr_Tcp_Scpi.K2700ViewModel
     ViewModelOwner As Boolean
     FocusedControlName As String
-    ContinuousSenseFunctionName As String
-    ImmediateSenseFunctionName As String
-    ExternalSenseFunctionName As String
+    RearInputsSenseFunctionName As String
+    FrontInputsSenseFunctionName As String
     DutNumberCaptionPrefix As String
     DutTitle As String
 End Type
@@ -314,39 +312,29 @@ Private Sub OnPowerOnReset()
 End Sub
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
-' K2700: Measurement Mode: Continuous
+' K2700: Measurement Mode: Sense Functions
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
 
-''' <summary>   Gets the Sense Function Name for continuous mode. </summary>
+''' <summary>   Gets the Sense Function Name for rear inputs. </summary>
 ''' <value>   [String]. </value>
-Public Property Get ContinuousSenseFunctionName() As String
-    ContinuousSenseFunctionName = m_continuousSenseFunctionName
+Public Property Get RearInputsSenseFunctionName() As String
+    RearInputsSenseFunctionName = m_rearInputsSenseFunctionName
+End Property
+
+''' <summary>   Gets the Sense Function Name for front inputs. </summary>
+''' <value>   [String]. </value>
+Public Property Get FrontInputsSenseFunctionName() As String
+    FrontInputsSenseFunctionName = m_frontInputsSenseFunctionName
 End Property
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
-' K2700: Measurement Mode: Immediate
+' K2700: Measurement Mode: Inputs
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
 
-''' <summary>   Gets the Sense Function Name for Immediate trigger mode. </summary>
-''' <value>   [String]. </value>
-Public Property Get ImmediateSenseFunctionName() As String
-    ImmediateSenseFunctionName = m_immediateSenseFunctionName
-End Property
-
-''' <summary>   Gets the Front Inputs Required for Immediate trigger mode. </summary>
+''' <summary>   Gets the Front Inputs Required for immediate trigger mode. </summary>
 ''' <value>   [Boolean]. </value>
 Public Property Get ImmediateFrontInputsRequired() As Boolean
     ImmediateFrontInputsRequired = Me.FrontAutoScanCheckBox.Value
-End Property
-
-' . . . . . . . . . . . . . . . . . . . . . . . . .
-' K2700: Measurement Mode: External Trigger
-' . . . . . . . . . . . . . . . . . . . . . . . . .
-
-''' <summary>   Gets the Sense Function Name for External trigger mode. </summary>
-''' <value>   [String]. </value>
-Public Property Get ExternalSenseFunctionName() As String
-    ExternalSenseFunctionName = m_externalSenseFunctionName
 End Property
 
 ''' <summary>   Gets the Front Inputs Required for External trigger mode. </summary>

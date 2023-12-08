@@ -57,10 +57,9 @@ Private Type this_
     OpenConnectionExecutable As Boolean
     DesignMode As Boolean
     
-    ContinuousSenseFunctionName As String
-    ImmediateSenseFunctionName As String
+    RearInputsSenseFunctionName As String
     ImmediateFrontInputsRequired As Boolean
-    ExternalSenseFunctionName As String
+    FrontInputsSenseFunctionName As String
     ExternalFrontInputsRequired As Boolean
     
 End Type
@@ -542,45 +541,40 @@ Public Property Let LastMessage(ByVal a_value As String)
 End Property
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
-' K2700: Measurement Mode: Continuous
+' K2700: Measurement Mode: Sense functions
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
 
-''' <summary>   Gets the Sense Function Name for continuous mode. </summary>
+''' <summary>   Gets the Sense Function Name for rear inputs. </summary>
 ''' <value>   [String]. </value>
-Public Property Get ContinuousSenseFunctionName() As String
-    If Not This.DataSheet Is Nothing Then
-        This.ContinuousSenseFunctionName = This.DataSheet.ContinuousSenseFunctionName
-    End If
-    ContinuousSenseFunctionName = This.ContinuousSenseFunctionName
+Public Property Get RearInputsSenseFunctionName() As String
+    If Not This.DataSheet Is Nothing Then _
+        This.RearInputsSenseFunctionName = This.DataSheet.RearInputsSenseFunctionName
+    RearInputsSenseFunctionName = This.RearInputsSenseFunctionName
 End Property
 
-''' <summary>   Sets the Sense Function Name for continuous mode. </summary>
-''' <param name="a_value">   [String] the Continuous Sense Function Name. </value>
-Friend Property Let ContinuousSenseFunctionName(ByVal a_value As String)
-    This.ContinuousSenseFunctionName = a_value
+''' <summary>   Sets the Sense Function Name for rear inputs. </summary>
+''' <param name="a_value">   [String] the Sense Function Name. </value>
+Public Property Let RearInputsSenseFunctionName(ByVal a_value As String)
+    This.RearInputsSenseFunctionName = a_value
+End Property
+
+''' <summary>   Gets the Sense Function Name for front inputs. </summary>
+''' <value>   [String]. </value>
+Public Property Get FrontInputsSenseFunctionName() As String
+    If Not This.DataSheet Is Nothing Then _
+        This.FrontInputsSenseFunctionName = This.DataSheet.FrontInputsSenseFunctionName
+    FrontInputsSenseFunctionName = This.FrontInputsSenseFunctionName
+End Property
+
+''' <summary>   Sets the Sense Function Name for front inputs. </summary>
+''' <param name="a_value">   [String] the Sense Function Name. </value>
+Public Property Let FrontInputsSenseFunctionName(ByVal a_value As String)
+    This.FrontInputsSenseFunctionName = a_value
 End Property
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
 ' K2700: Measurement Mode: Immediate
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
-
-''' <summary>   Gets the Sense Function Name for Immediate trigger mode. </summary>
-''' <value>   [String]. </value>
-Public Property Get ImmediateSenseFunctionName() As String
-    If Not This.DataSheet Is Nothing Then
-        This.ImmediateSenseFunctionName = This.DataSheet.ImmediateSenseFunctionName
-    End If
-    ImmediateSenseFunctionName = This.ImmediateSenseFunctionName
-End Property
-
-''' <summary>   Sets the Sense Function Name for Immediate trigger  mode. </summary>
-''' <param name="a_value">   [String] the Sense Function Name. </value>
-Public Property Let ImmediateSenseFunctionName(ByVal a_value As String)
-    If Not This.DataSheet Is Nothing Then
-        ' read only: This.DataSheet.ImmediateSenseFunctionName = a_value
-    End If
-    This.ImmediateSenseFunctionName = a_value
-End Property
 
 ''' <summary>   Gets the Front Inputs Required for Immediate trigger mode. </summary>
 ''' <value>   [Boolean]. </value>
@@ -603,24 +597,6 @@ End Property
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
 ' K2700: Measurement Mode: External Trigger
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
-
-''' <summary>   Gets the Sense Function Name for External trigger mode. </summary>
-''' <value>   [String]. </value>
-Public Property Get ExternalSenseFunctionName() As String
-    If Not This.DataSheet Is Nothing Then
-        This.ExternalSenseFunctionName = This.DataSheet.ExternalSenseFunctionName
-    End If
-    ExternalSenseFunctionName = This.ExternalSenseFunctionName
-End Property
-
-''' <summary>   Sets the Sense Function Name for External trigger mode. </summary>
-''' <param name="a_value">   [String] the Sense Function Name. </value>
-Public Property Let ExternalSenseFunctionName(ByVal a_value As String)
-    If Not This.DataSheet Is Nothing Then
-        ' read only: This.DataSheet.ExternalSenseFunctionName = a_value
-    End If
-    This.ExternalSenseFunctionName = a_value
-End Property
 
 ''' <summary>   Gets the Front Inputs Required for External trigger mode. </summary>
 ''' <value>   [Boolean]. </value>
@@ -896,12 +872,10 @@ Friend Sub HandleViewModelPropertyChanged(ByVal a_propertyName As String)
             Me.MeasuredValue = This.ViewModel.MeasuredValue
         Case "MeasurementMode"
             Me.MeasurementMode = This.ViewModel.MeasurementMode
-        Case "ContinuousSenseFunctionName"
-            Me.ContinuousSenseFunctionName = This.ViewModel.ContinuousSenseFunctionName
-        Case "ImmediateSenseFunctionName"
-            Me.ImmediateSenseFunctionName = This.ViewModel.ImmediateSenseFunctionName
-        Case "ExternalSenseFunctionName"
-            Me.ExternalSenseFunctionName = This.ViewModel.ExternalSenseFunctionName
+        Case "RearInputsSenseFunctionName"
+            Me.RearInputsSenseFunctionName = This.ViewModel.RearInputsSenseFunctionName
+        Case "FrontInputsSenseFunctionName"
+            Me.FrontInputsSenseFunctionName = This.ViewModel.FrontInputsSenseFunctionName
         
         Case "ClearReadingsExecutable"
             Me.ClearReadingsExecutable = This.ViewModel.ClearReadingsExecutable

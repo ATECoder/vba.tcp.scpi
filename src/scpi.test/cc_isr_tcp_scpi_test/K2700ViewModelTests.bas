@@ -35,9 +35,8 @@ Private Type this_
     ViewModel As cc_isr_Tcp_Scpi.K2700ViewModel
     
     ' initial observer settings
-    ContinuousSenseFunctionName As String
-    ImmediateSenseFunctionName As String
-    ExternalSenseFunctionName As String
+    RearInputsSenseFunctionName As String
+    FrontInputsSenseFunctionName As String
     
     ' known information
     TopCard As String
@@ -243,9 +242,8 @@ Public Sub BeforeAll()
     ' initialize known data.
     This.TopCard = "7700"
     This.BottomCard = VBA.vbNullString
-    This.ContinuousSenseFunctionName = "FRES"
-    This.ImmediateSenseFunctionName = "RES"
-    This.ExternalSenseFunctionName = "FRES"
+    This.RearInputsSenseFunctionName = "RES"
+    This.FrontInputsSenseFunctionName = "FRES"
     
     ' set a temporary error tracer
     Dim p_errTrace As New DeviceErrorsTracer
@@ -755,7 +753,7 @@ Public Function AssertExternalModeShouldValidate(ByVal a_mode As cc_isr_Tcp_Scpi
     
     If p_outcome.AssertSuccessful Then
         
-        Dim p_expectedSenseFunctionName As String: p_expectedSenseFunctionName = This.ExternalSenseFunctionName
+        Dim p_expectedSenseFunctionName As String: p_expectedSenseFunctionName = This.FrontInputsSenseFunctionName
         Dim p_actualSenseFunctionName As String
         p_actualSenseFunctionName = This.ViewModel.K2700.SenseSystem.SenseSystem.SenseFunctionGetter()
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqualString(p_expectedSenseFunctionName, p_actualSenseFunctionName, _
@@ -2862,7 +2860,7 @@ Public Function AssertShouldReadCards() As cc_isr_Test_Fx.Assert
 
     ' the view module initializes in continuous mode.
     If p_outcome.AssertSuccessful Then _
-        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.ContinuousSenseFunctionName, _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.FrontInputsSenseFunctionName, _
             This.ViewModel.SenseFunctionName, _
             "View Model should set the sense function name.")
 
@@ -3317,7 +3315,8 @@ Public Function TestImmediateModeShouldConfigure() As cc_isr_Test_Fx.Assert
     
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
     p_mode.ReadingOffset = This.UserView.ReadingOffset
-    p_mode.SenseFunction = This.DataView.ImmediateSenseFunctionName
+    p_mode.SenseFunction = IIf(p_mode.FrontInputs, This.DataView.FrontInputsSenseFunctionName, _
+        This.DataView.RearInputsSenseFunctionName)
     p_mode.SingleRead = True
     p_mode.TimerInterval = This.DataView.TimerInterval
     
@@ -3410,7 +3409,8 @@ Public Function TestExternalModeShouldConfigure() As cc_isr_Test_Fx.Assert
     
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
-    p_mode.SenseFunction = This.DataView.ExternalSenseFunctionName
+    p_mode.SenseFunction = IIf(p_mode.FrontInputs, This.DataView.FrontInputsSenseFunctionName, _
+        This.DataView.RearInputsSenseFunctionName)
     p_mode.SingleRead = False
     p_mode.TimerInterval = This.DataView.TimerInterval
     
@@ -3708,7 +3708,8 @@ Public Function TestTriggerPollingShouldStartStop() As cc_isr_Test_Fx.Assert
     
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
-    p_mode.SenseFunction = This.DataView.ExternalSenseFunctionName
+    p_mode.SenseFunction = IIf(p_mode.FrontInputs, This.DataView.FrontInputsSenseFunctionName, _
+        This.DataView.RearInputsSenseFunctionName)
     p_mode.SingleRead = False
     p_mode.TimerInterval = 0 ' this uses polling rather than timer
     
@@ -3803,7 +3804,8 @@ Public Function TestTriggerPollingShouldRead() As cc_isr_Test_Fx.Assert
     p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
-    p_mode.SenseFunction = This.DataView.ExternalSenseFunctionName
+    p_mode.SenseFunction = IIf(p_mode.FrontInputs, This.DataView.FrontInputsSenseFunctionName, _
+        This.DataView.RearInputsSenseFunctionName)
     p_mode.SingleRead = False
     p_mode.TimerInterval = 0 ' this uses polling rather than timer
     
@@ -3943,7 +3945,8 @@ Public Function TestTriggerMonitoringShouldStartStop() As cc_isr_Test_Fx.Assert
     p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
-    p_mode.SenseFunction = This.DataView.ExternalSenseFunctionName
+    p_mode.SenseFunction = IIf(p_mode.FrontInputs, This.DataView.FrontInputsSenseFunctionName, _
+        This.DataView.RearInputsSenseFunctionName)
     p_mode.SingleRead = False
     p_mode.TimerInterval = This.DataView.TimerInterval
     
@@ -4024,7 +4027,8 @@ Public Function TestTriggerMonitoringShouldRead() As cc_isr_Test_Fx.Assert
     p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
-    p_mode.SenseFunction = This.DataView.ExternalSenseFunctionName
+    p_mode.SenseFunction = IIf(p_mode.FrontInputs, This.DataView.FrontInputsSenseFunctionName, _
+        This.DataView.RearInputsSenseFunctionName)
     p_mode.SingleRead = False
     p_mode.TimerInterval = This.DataView.TimerInterval
     

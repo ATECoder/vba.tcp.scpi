@@ -241,7 +241,8 @@ Public Sub OnAutoScanToggleButtonChange()
         p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
         p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
         p_mode.ReadingOffset = Me.ReadingOffset
-        p_mode.SenseFunction = This.DataSheet.ImmediateSenseFunctionName
+        p_mode.SenseFunction = IIf(p_mode.FrontInputs, This.DataSheet.FrontInputsSenseFunctionName, _
+            This.DataSheet.RearInputsSenseFunctionName)
         p_mode.SingleRead = False
         p_mode.TimerInterval = This.DataSheet.TimerInterval
         
@@ -365,7 +366,8 @@ Public Sub OnAutoSingleToggleButtonChange()
         
             p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
             p_mode.ReadingOffset = Me.ReadingOffset
-            p_mode.SenseFunction = This.DataSheet.ImmediateSenseFunctionName
+            p_mode.SenseFunction = IIf(p_mode.FrontInputs, This.DataSheet.FrontInputsSenseFunctionName, _
+                This.DataSheet.RearInputsSenseFunctionName)
             p_mode.SingleRead = True
             p_mode.TimerInterval = This.DataSheet.TimerInterval
     
@@ -535,7 +537,8 @@ Public Sub OnManualScanToggleButtonChange()
         p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
         p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
         p_mode.ReadingOffset = Me.ReadingOffset
-        p_mode.SenseFunction = This.DataSheet.ExternalSenseFunctionName
+        p_mode.SenseFunction = IIf(p_mode.FrontInputs, This.DataSheet.FrontInputsSenseFunctionName, _
+            This.DataSheet.RearInputsSenseFunctionName)
         p_mode.SingleRead = False
         p_mode.TimerInterval = This.DataSheet.TimerInterval
 
@@ -663,7 +666,8 @@ Public Sub OnManualSingleToggleButtonChange()
         
             p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
             p_mode.ReadingOffset = Me.ReadingOffset
-            p_mode.SenseFunction = This.DataSheet.ExternalSenseFunctionName
+            p_mode.SenseFunction = IIf(p_mode.FrontInputs, This.DataSheet.FrontInputsSenseFunctionName, _
+                This.DataSheet.RearInputsSenseFunctionName)
             p_mode.SingleRead = True
             p_mode.TimerInterval = This.DataSheet.TimerInterval
     

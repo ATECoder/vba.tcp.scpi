@@ -6,6 +6,7 @@ All notable changes to these libraries will be documented in this file in a form
 * Add maximum DUT count to the Measure Mode class and set the View Model value upon configuration.
 * Remove Reading Offset and Timer Interval from the command arguments as these are set upon configurations.
 * Update selecting and parsing the selected DUT number.
+* Define rear and front input sense functions.
 
 ## [1.0.8735] - 2023-12-01
 * Open the beta 202312 branch.

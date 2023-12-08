@@ -76,9 +76,8 @@ Private Type this_
     SelectedDutNumber As Integer
     TargetDutNumber As Integer
     MeasuredDutNumber As Integer
-    ContinuousSenseFunctionName As String
-    ImmediateSenseFunctionName As String
-    ExternalSenseFunctionName As String
+    RearInputsSenseFunctionName As String
+    FrontInputsSenseFunctionName As String
     SenseFunctionName As String
     SenseFunctionCaption As String
     SenseFunctionUnit As String
@@ -444,7 +443,8 @@ Public Sub OnExternalTriggerOptionChange(ByVal a_value As Boolean)
             p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
             p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
             p_mode.ReadingOffset = UserView.ReadingOffset
-            p_mode.SenseFunction = DataView.ExternalSenseFunctionName
+            p_mode.SenseFunction = IIf(p_mode.FrontInputs, DataView.FrontInputsSenseFunctionName, _
+                DataView.RearInputsSenseFunctionName)
             p_mode.SingleRead = True
             p_mode.TimerInterval = DataView.TimerInterval
         
@@ -476,7 +476,8 @@ Public Sub OnImmediateTriggerOptionChange(ByVal a_value As Boolean)
             p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
             p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
             p_mode.ReadingOffset = UserView.ReadingOffset
-            p_mode.SenseFunction = DataView.ImmediateSenseFunctionName
+            p_mode.SenseFunction = IIf(p_mode.FrontInputs, DataView.FrontInputsSenseFunctionName, _
+                DataView.RearInputsSenseFunctionName)
             p_mode.SingleRead = True
             p_mode.TimerInterval = DataView.TimerInterval
             
@@ -988,40 +989,28 @@ Public Property Let MeasuredDutNumber(ByVal a_value As Integer)
     This.MeasuredDutNumber = a_value
 End Property
 
-''' <summary>   Gets the Sense Function Name for continuous mode. </summary>
-''' <value>   [String]. </value>
-Public Property Get ContinuousSenseFunctionName() As String
-    ContinuousSenseFunctionName = This.ContinuousSenseFunctionName
-End Property
-
-''' <summary>   Sets the Sense Function Name for continuous mode. </summary>
-''' <param name="a_value">   [String] the Sense Function Name. </value>
-Public Property Let ContinuousSenseFunctionName(ByVal a_value As String)
-    This.ContinuousSenseFunctionName = a_value
-End Property
-
 ''' <summary>   Gets the Sense Function Name for Immediate trigger mode. </summary>
 ''' <value>   [String]. </value>
-Public Property Get ImmediateSenseFunctionName() As String
-    ImmediateSenseFunctionName = This.ImmediateSenseFunctionName
+Public Property Get RearInputsSenseFunctionName() As String
+    RearInputsSenseFunctionName = This.RearInputsSenseFunctionName
 End Property
 
-''' <summary>   Sets the Sense Function Name for Immediate trigger  mode. </summary>
+''' <summary>   Sets the Sense Function Name for rear inputs. </summary>
 ''' <param name="a_value">   [String] the Sense Function Name. </value>
-Public Property Let ImmediateSenseFunctionName(ByVal a_value As String)
-    This.ImmediateSenseFunctionName = a_value
+Public Property Let RearInputsSenseFunctionName(ByVal a_value As String)
+    This.RearInputsSenseFunctionName = a_value
 End Property
 
-''' <summary>   Gets the Sense Function Name for External trigger mode. </summary>
+''' <summary>   Gets the Sense Function Name for front inputs. </summary>
 ''' <value>   [String]. </value>
-Public Property Get ExternalSenseFunctionName() As String
-    ExternalSenseFunctionName = This.ExternalSenseFunctionName
+Public Property Get FrontInputsSenseFunctionName() As String
+    FrontInputsSenseFunctionName = This.FrontInputsSenseFunctionName
 End Property
 
-''' <summary>   Sets the Sense Function Name for External trigger mode. </summary>
+''' <summary>   Sets the Sense Function Name for front inputs. </summary>
 ''' <param name="a_value">   [String] the Sense Function Name. </value>
-Public Property Let ExternalSenseFunctionName(ByVal a_value As String)
-    This.ExternalSenseFunctionName = a_value
+Public Property Let FrontInputsSenseFunctionName(ByVal a_value As String)
+    This.FrontInputsSenseFunctionName = a_value
 End Property
 
 ''' <summary>   Gets the Sense Function Name. </summary>

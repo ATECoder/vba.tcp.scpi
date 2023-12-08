@@ -116,10 +116,9 @@ Private Type this_
     SelectedDutNumber As Integer
     TargetDutNumber As Integer
     MeasuredDutNumber As Integer
-    ContinuousSenseFunctionName As String
-    ImmediateSenseFunctionName As String
+    FrontInputsSenseFunctionName As String
+    RearInputsSenseFunctionName As String
     ImmediateFrontInputsRequired As Boolean
-    ExternalSenseFunctionName As String
     ExternalFrontInputsRequired As Boolean
     SenseFunctionName As String
     SenseFunctionCaption As String
@@ -205,11 +204,10 @@ Private Sub Class_Initialize()
     This.SessionTimeout = 3000
    
     ' 2700 properties
-    This.ContinuousSenseFunctionName = "FRES"
-    This.ImmediateSenseFunctionName = "RES"
-    This.ExternalSenseFunctionName = "FRES"
+    This.RearInputsSenseFunctionName = "RES"
+    This.FrontInputsSenseFunctionName = "FRES"
     This.ImmediateFrontInputsRequired = False
-    This.ExternalSenseFunctionName = "FRES"
+    This.FrontInputsSenseFunctionName = "FRES"
     This.ExternalFrontInputsRequired = True
     This.MeasuredValueFormat = "0.0"
     This.GpibLanControllerPort = 1234
@@ -4177,8 +4175,8 @@ Friend Function TryConfigureIntitialTriggerMode(ByRef a_details As String) As Bo
     
     If p_success Then
     
-        ' default to continuous sense function
-        Me.SenseFunctionName = This.ContinuousSenseFunctionName
+        ' default to front inputs sense function
+        Me.SenseFunctionName = This.FrontInputsSenseFunctionName
 
         ' configure measuring a single value on each read.
         p_success = This.K2700.TryConfigureContinuousFunctionAutoRange(This.SenseFunctionName, p_details)
@@ -4257,42 +4255,42 @@ err_Handler:
 End Sub
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
-' K2700: Measurement Mode: Continuous
+' K2700: Measurement Mode: Function Names
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
 
-''' <summary>   Gets the Sense Function Name for continuous mode. </summary>
+''' <summary>   Gets the Sense Function Name for rear inputs. </summary>
 ''' <value>   [String]. </value>
-Public Property Get ContinuousSenseFunctionName() As String
-    ContinuousSenseFunctionName = This.ContinuousSenseFunctionName
+Public Property Get RearInputsSenseFunctionName() As String
+    RearInputsSenseFunctionName = This.RearInputsSenseFunctionName
 End Property
 
-''' <summary>   Sets the Sense Function Name for continuous mode. </summary>
-''' <param name="a_value">   [String] the Continuous Sense Function Name. </value>
-Friend Property Let ContinuousSenseFunctionName(ByVal a_value As String)
-    If This.ContinuousSenseFunctionName <> a_value Then
-        This.ContinuousSenseFunctionName = a_value
-        Me.OnPropertyChanged "ContinuousSenseFunctionName"
+''' <summary>   Sets the Sense Function Name for rear inputs. </summary>
+''' <param name="a_value">   [String] the Sense Function Name. </value>
+Friend Property Let RearInputsSenseFunctionName(ByVal a_value As String)
+    If This.RearInputsSenseFunctionName <> a_value Then
+        This.RearInputsSenseFunctionName = a_value
+        Me.OnPropertyChanged "RearInputsSenseFunctionName"
+    End If
+End Property
+
+''' <summary>   Gets the Sense Function Name for front inputs. </summary>
+''' <value>   [String]. </value>
+Public Property Get FrontInputsSenseFunctionName() As String
+    FrontInputsSenseFunctionName = This.FrontInputsSenseFunctionName
+End Property
+
+''' <summary>   Sets the Sense Function Name for front inputs. </summary>
+''' <param name="a_value">   [String] the Sense Function Name. </value>
+Friend Property Let FrontInputsSenseFunctionName(ByVal a_value As String)
+    If This.FrontInputsSenseFunctionName <> a_value Then
+        This.FrontInputsSenseFunctionName = a_value
+        Me.OnPropertyChanged "FrontInputsSenseFunctionName"
     End If
 End Property
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
 ' K2700: Measurement Mode: Immediate
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
-
-''' <summary>   Gets the Sense Function Name for Immediate trigger mode. </summary>
-''' <value>   [String]. </value>
-Public Property Get ImmediateSenseFunctionName() As String
-    ImmediateSenseFunctionName = This.ImmediateSenseFunctionName
-End Property
-
-''' <summary>   Sets the Sense Function Name for Immediate trigger  mode. </summary>
-''' <param name="a_value">   [String] the Sense Function Name. </value>
-Friend Property Let ImmediateSenseFunctionName(ByVal a_value As String)
-    If This.ImmediateSenseFunctionName <> a_value Then
-        This.ImmediateSenseFunctionName = a_value
-        Me.OnPropertyChanged "ImmediateSenseFunctionName"
-    End If
-End Property
 
 ''' <summary>   Gets the Front Inputs Required for Immediate trigger mode. </summary>
 ''' <value>   [Boolean]. </value>
@@ -4594,21 +4592,6 @@ End Property
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
 ' K2700: Measurement Mode: External Trigger
 ' . . . . . . . . . . . . . . . . . . . . . . . . .
-
-''' <summary>   Gets the Sense Function Name for External trigger mode. </summary>
-''' <value>   [String]. </value>
-Public Property Get ExternalSenseFunctionName() As String
-    ExternalSenseFunctionName = This.ExternalSenseFunctionName
-End Property
-
-''' <summary>   Sets the Sense Function Name for External trigger mode. </summary>
-''' <param name="a_value">   [String] the Sense Function Name. </value>
-Friend Property Let ExternalSenseFunctionName(ByVal a_value As String)
-    If This.ExternalSenseFunctionName <> a_value Then
-        This.ExternalSenseFunctionName = a_value
-        Me.OnPropertyChanged "ExternalSenseFunctionName"
-    End If
-End Property
 
 ''' <summary>   Gets the Front Inputs Required for External trigger mode. </summary>
 ''' <value>   [Boolean]. </value>
@@ -5571,11 +5554,11 @@ Friend Function TryConfigureInstrumentInitialState(ByRef a_errors As String, _
     Me.TopCard = This.K2700.RouteSystem.CardName(1)
     Me.BottomCard = This.K2700.RouteSystem.CardName(2)
     
-    ' initialize the scan list for immediate trigger.
-    If VBA.vbNullString <> This.ImmediateSenseFunctionName Then
+    ' initialize the scan list for rear inputs.
+    If VBA.vbNullString <> This.RearInputsSenseFunctionName Then
     
         ' set the instrument function scan list
-        This.K2700.RouteSystem.DefineFunctionScanLists This.ImmediateSenseFunctionName
+        This.K2700.RouteSystem.DefineFunctionScanLists This.RearInputsSenseFunctionName
     
         ' show the results.
         Me.TopCardFunctionScanList = This.K2700.RouteSystem.FunctionScanList(1)
@@ -5641,14 +5624,12 @@ End Function
 Public Function ShouldRestoreSenseFunction(ByVal a_senseFunctionName As String, _
     ByRef a_details As String) As Boolean
 
-    If Not ((1 = InStr(1, This.ContinuousSenseFunctionName, a_senseFunctionName, vbTextCompare)) Or _
-            (1 = InStr(1, This.ImmediateSenseFunctionName, a_senseFunctionName, vbTextCompare)) Or _
-            (1 = InStr(1, This.ExternalSenseFunctionName, a_senseFunctionName, vbTextCompare))) Then
+    If Not ((1 = InStr(1, This.RearInputsSenseFunctionName, a_senseFunctionName, vbTextCompare)) Or _
+            (1 = InStr(1, This.FrontInputsSenseFunctionName, a_senseFunctionName, vbTextCompare))) Then
         a_details = "The K2700 device sense function '" & a_senseFunctionName & _
             "' is not expected; it must be either " & _
-            This.ContinuousSenseFunctionName & " or " & _
-            This.ImmediateSenseFunctionName & " or " & _
-            This.ExternalSenseFunctionName & "."
+            This.RearInputsSenseFunctionName & " or " & _
+            This.FrontInputsSenseFunctionName & "."
         ShouldRestoreSenseFunction = True
     Else
         ShouldRestoreSenseFunction = False

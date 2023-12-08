@@ -1330,9 +1330,8 @@ End Property
 ''' <summary>   Sets the Stop Requested condition. </summary>
 ''' <param name="a_value">   [Boolean] the Stop Requested value. </value>
 Friend Property Let StopRequested(ByVal a_value As Boolean)
-    If This.StopRequested <> a_value Then
+    If This.StopRequested <> a_value Then _
         This.StopRequested = a_value
-    End If
 End Property
 
 ''' <summary>   Gets the Sense Function Name. </summary>
@@ -1344,9 +1343,8 @@ End Property
 ''' <summary>   Sets the Sense Function Name. </summary>
 ''' <param name="a_value">   [String] the Sense Function Name. </value>
 Public Property Let SenseFunctionName(ByVal a_value As String)
-    If Me.SenseFunctionName <> a_value Then
+    If Me.SenseFunctionName <> a_value Then _
         Me.SenseFunctionComboBox.Text = a_value
-    End If
 End Property
 
 ''' <summary>   Gets the  Sense Function Caption. </summary>
