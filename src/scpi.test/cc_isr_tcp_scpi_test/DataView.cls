@@ -195,7 +195,7 @@ Public Sub OnPowerOneResetButtonClick()
     If This.ViewModel Is Nothing Then Exit Sub
 
     ' issue a power on reset.
-    This.ViewModel.PowerOnResetCommand
+    This.ViewModel.PowerOnResetCommand This.DataSheet.SocketAddress, This.DataSheet.SessionTimeout
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:

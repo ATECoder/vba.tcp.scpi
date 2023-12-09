@@ -2,11 +2,6 @@
 
 ## GIT
 
-Test:
-Update validation of auto button executable state in case read inputs do not exist.
-Add connection information to the power on reset command.
-Add initialize data sheet to the power on reset command.
-
 ## TODO
 
 Test:

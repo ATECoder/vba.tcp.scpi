@@ -258,10 +258,50 @@ End Property
 ''' <summary>   Handles the open Connection command event. </summary>
 Private Sub OnOpenConnection()
 
+    Const p_procedureName As String = "BeforeAll"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    ' clear the error state.
+    cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
+
+    ' force initialization
+    DataView.Dispose
+
     ' initialize the views if necessary
     Initialize_
     
+    DataView.OnClearMessages
+    
     DataView.OnOpenConnectionButtonClick
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    
+    ' display the error message
+    If Not This.ViewModel Is Nothing Then
+        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+        
+      Me.PowerOnResetButton.Enabled = Not This.ViewModel.Connected
+      Me.OpenConnectionButton.Enabled = Not This.ViewModel.Connected
+      Me.CloseConnectionButton.Enabled = This.ViewModel.Connected
+      Me.ClearReadingsButton.Enabled = This.ViewModel.Connected
+        
+    End If
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
 
 End Sub
 
@@ -325,7 +365,8 @@ Private Sub OnPowerOnReset()
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
 
-    PowerOnResetButton.Enabled = True
+    Me.PowerOnResetButton.Enabled = True
+    Me.OpenConnectionButton.Enabled = True
     On Error GoTo 0
     Exit Sub
 
