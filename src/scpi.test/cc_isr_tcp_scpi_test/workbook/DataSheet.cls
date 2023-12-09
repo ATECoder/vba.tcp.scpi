@@ -85,7 +85,7 @@ exit_Handler:
 err_Handler:
   
     ' append the error source
-    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, TypeName(Me), ThisWorkbook
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
     
     ' display the error message
     If Not This.ViewModel Is Nothing Then _
@@ -304,10 +304,44 @@ End Sub
 ''' <summary>   Handles the power on reset command event. </summary>
 Private Sub OnPowerOnReset()
 
+    Const p_procedureName As String = "BeforeAll"
+    
+    ' Trap errors to the error handler
+    On Error GoTo err_Handler
+    
+    ' clear the error state.
+    cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
+
+    ' force initialization
+    DataView.Dispose
+
     ' initialize the views if necessary
     Initialize_
     
+    DataView.OnClearMessages
+    
     DataView.OnPowerOneResetButtonClick
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+exit_Handler:
+
+    PowerOnResetButton.Enabled = True
+    On Error GoTo 0
+    Exit Sub
+
+' . . . . . . . . . . . . . . . . . . . . . . . . . . .
+err_Handler:
+  
+    ' append the error source
+    cc_isr_Core_IO.ErrorMessageBuilder.AppendErrSource p_procedureName, Me.Name, ThisWorkbook
+    
+    ' display the error message
+    If Not This.ViewModel Is Nothing Then _
+        This.ViewModel.OnError cc_isr_Core_IO.ErrorMessageBuilder.BuildStandardErrorMessage()
+    
+    ' exit this procedure (not an active handler)
+    On Error Resume Next
+    GoTo exit_Handler
 
 End Sub
 

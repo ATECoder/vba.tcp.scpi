@@ -666,7 +666,6 @@ err_Handler:
 
 End Sub
 
-
 ''' <summary>   Handles the open connection command event. </summary>
 ''' <param name="a_socketAddress">    [String] the socket dotted address and
 '''                                   port number, e.g., <c>192.168.0.252:1234</c>. </value>
@@ -2735,13 +2734,19 @@ Public Function TryPowerOnReset(ByRef a_details As String, ByVal a_delay As Doub
 End Function
 
 ''' <summary>   Handles the power on reset command event. </summary>
-Public Sub PowerOnResetCommand()
+''' <param name="a_socketAddress">    [String] the socket dotted address and
+'''                                   port number, e.g., <c>192.168.0.252:1234</c>. </value>
+''' <param name="a_sessionTimeout">   [Integer] the timeout value in milliseconds. </value>
+Public Sub PowerOnResetCommand(ByVal a_socketAddress As String, ByVal a_sessionTimeout As Long)
 
     Const p_procedureName = "PowerOnResetCommand"
 
     ' Trap errors to the error handler
     On Error GoTo err_Handler
 
+    This.SocketAddress = a_socketAddress
+    This.SessionTimeout = a_sessionTimeout
+    
     Me.RestartStopper
     
     Me.LastMessage = "Resetting the controller to its power on state; please wait..."
