@@ -4,6 +4,18 @@
 
 ## TODO
 
+Test:
++ Run all unit tests with cards.
+* Run all tests from the user sheet with cards.
+* Run all unit tests without cards.
+* Run all tests from the user sheet without cards.
+Demo:
+* Run all unit tests with and without cards.
+* Test using the user interface with and without cards.
+Flying:
+* Test with and without cards.
+
+
 ## Tests
 
 ## Fixes

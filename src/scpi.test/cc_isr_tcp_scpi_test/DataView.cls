@@ -404,18 +404,14 @@ End Property
 ''' <summary>   Gets the maximum DUT number. </summary>
 ''' <value>   [Integer]. </value>
 Public Property Get MaximumDutNumber() As Integer
-    If Not This.DataSheet Is Nothing Then
+    If Not This.DataSheet Is Nothing Then _
         This.MaximumDutNumber = This.DataSheet.MaximumDutNumber
-    End If
     MaximumDutNumber = This.MaximumDutNumber
 End Property
 
 ''' <summary>   Sets the maximum DUT number. </summary>
 ''' <param name="a_value">   [Integer] the maximum DUT number value. </value>
 Public Property Let MaximumDutNumber(ByVal a_value As Integer)
-    If Not This.DataSheet Is Nothing Then
-        ' read only: This.DataSheet.MaximumDutNumber = a_value
-    End If
     This.MaximumDutNumber = a_value
 End Property
 
@@ -899,7 +895,7 @@ Friend Sub Synchronize()
 
     ' set the view model settings that come from the ViewModel user interface
     This.ViewModel.GpibLanControllerPort = Me.GpibLanControllerPort
-    This.ViewModel.GpibAddress = Me.PrimaryGpibAddress
+    ' This.ViewModel.GpibAddress = Me.PrimaryGpibAddress
     
     ' The initial values must be set for property change to work.
     Me.LastErrorMessage = This.ViewModel.LastErrorMessage

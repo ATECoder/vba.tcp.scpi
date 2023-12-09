@@ -186,12 +186,9 @@ End Property
 ''' <summary>   Gets the design mode for unit testing and restoration of state. </summary>
 ''' <value>   [Boolean]. </value>
 Public Property Get DesignMode() As Boolean
-    
-    If Not This.UserSheet Is Nothing Then
+    If Not This.UserSheet Is Nothing Then _
         This.DesignMode = This.UserSheet.DesignMode
-    End If
     DesignMode = This.DesignMode
-
 End Property
 
 ''' <summary>   Sets the design mode for unit testing and restoration of state. </summary>
@@ -235,10 +232,13 @@ Public Sub OnAutoScanToggleButtonChange()
         Set p_mode = cc_isr_Tcp_Scpi.Factory.NewMeasureMode
         p_mode.AutoIncrement = True
         p_mode.BeepEnabled = False
-        p_mode.DutNumber = 1
         p_mode.FrontInputs = This.DataSheet.ImmediateFrontInputsRequired
         p_mode.MaximumDutCount = Me.MaximumDutNumber
         p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
+        
+        Me.SelectedDutNumber = 1
+        p_mode.DutNumber = Me.SelectedDutNumber
+        
         p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
         p_mode.ReadingOffset = Me.ReadingOffset
         p_mode.SenseFunction = IIf(p_mode.FrontInputs, This.DataSheet.FrontInputsSenseFunctionName, _
@@ -846,7 +846,7 @@ Public Property Let SelectedDutNumber(ByVal a_value As Integer)
         This.SelectedDutNumber = a_value
         
         ' emulate selecting a DUT number if within range.
-        If a_value > 0 And a_value <= This.MaximumDutNumber Then
+        If a_value > 0 And a_value <= Me.MaximumDutNumber Then
             Dim p_caption As String
             p_caption = This.DataSheet.DutNumberCaptionPrefix & VBA.CStr(a_value)
             This.SelectedDutNumberCaption = p_caption

@@ -206,9 +206,10 @@ Private Sub Class_Initialize()
     ' 2700 properties
     This.RearInputsSenseFunctionName = "RES"
     This.FrontInputsSenseFunctionName = "FRES"
+    
     This.ImmediateFrontInputsRequired = False
-    This.FrontInputsSenseFunctionName = "FRES"
     This.ExternalFrontInputsRequired = True
+    
     This.MeasuredValueFormat = "0.0"
     This.GpibLanControllerPort = 1234
     This.ReadAfterWriteDelay = 1
@@ -3147,16 +3148,16 @@ Public Function TryParseDutNumberCaption(ByVal a_value As String, ByVal a_prefix
         If a_maximumDutNumber < 1 Then
         
             TryParseDutNumberCaption = 0
-            a_details = "Failed parsing DUT number caption; The maxumum dut number was not set."
+            a_details = "Failed parsing DUT number caption; The maxumum DUT number was not set."
             cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
                 ThisWorkbook.VBProject.Name & "." & TypeName(Me) & "." & p_procedureName, _
                 " " & a_details
         
-        ElseIf p_dutNumber > 0 And p_dutNumber <= a_maximumDutNumber Then
+        ElseIf p_dutNumber <= 0 Or p_dutNumber > a_maximumDutNumber Then
         
             a_details = "The selected value '" & a_value & _
                    "' yields an out of range " & a_title & _
-                   " number. Valid " & a_title & "numbers are between 1 and " & _
+                   " number. Valid " & a_title & " numbers are between 1 and " & _
                    VBA.CStr(a_maximumDutNumber) & _
                    ". Please select a valid " & a_title & _
                    " number, e.g., " & a_prefix & "2, and try again."
@@ -4048,14 +4049,6 @@ Friend Function TryConfigureMeasure(ByVal a_mode As cc_isr_Tcp_Scpi.MeasureMode,
             
                 p_modeCaption = "immediate trigger mode"
             
-                ' set the instrument function scan list; this updates only if the
-                ' function changed.
-                This.K2700.RouteSystem.DefineFunctionScanLists This.SenseFunctionName
-            
-                ' show the results.
-                Me.TopCardFunctionScanList = This.K2700.RouteSystem.FunctionScanList(1)
-                Me.BottomCardFunctionScanList = This.K2700.RouteSystem.FunctionScanList(2)
-            
                 ' configure measuring a single value on each read.
                 p_success = This.K2700.TryConfigureSingleFunctionReading(This.SenseFunctionName, p_details)
             
@@ -4652,18 +4645,25 @@ Public Sub StartMonitoringExternalTriggers()
 
     Me.MonitoringState = "External Trigger On"
 
-    If This.AutoIncrementDutNumberEnabled Then
-    
-        ' set the first DUT number for manual scan
-        Me.TargetDutNumber = 1
-    
-    Else
-
+    If This.SingleReadEnabled Then
         ' set the single reading DUT number for manual scan
         ' to the DUT number entered by the operator.
         Me.TargetDutNumber = This.SelectedDutNumber
-    
+    Else
+        ' set the first DUT number for manual scan
+        Me.TargetDutNumber = 1
     End If
+
+#If False Then
+    If This.AutoIncrementDutNumberEnabled Then
+        ' set the first DUT number for manual scan
+        Me.TargetDutNumber = 1
+    Else
+        ' set the single reading DUT number for manual scan
+        ' to the DUT number entered by the operator.
+        Me.TargetDutNumber = This.SelectedDutNumber
+    End If
+#End If
    
     ' initiate awaiting for the external trigger
     ' this is handled by the K2700.MonitorExternalTrigger method.

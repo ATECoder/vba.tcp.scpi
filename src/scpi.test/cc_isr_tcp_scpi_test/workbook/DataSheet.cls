@@ -199,7 +199,7 @@ End Property
 ''' <summary>   Gets the DUT title. </summary>
 ''' <value>   [String]. </value>
 Public Property Get DutTitle() As String
-    DutTitle = This.DutNumberCaptionPrefix
+    DutTitle = This.DutTitle
 End Property
 
 ''' <summary>   Gets the Last Error Message. </summary>

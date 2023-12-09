@@ -438,9 +438,11 @@ Public Sub OnExternalTriggerOptionChange(ByVal a_value As Boolean)
             p_mode.BeepEnabled = True
             p_mode.AutoIncrement = False
             p_mode.FrontInputs = DataView.ExternalFrontInputsRequired
-            p_mode.DutNumber = This.SelectedDutNumber
             p_mode.MaximumDutCount = DataView.MaximumDutNumber
             p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
+            
+            p_mode.DutNumber = This.SelectedDutNumber
+            
             p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
             p_mode.ReadingOffset = UserView.ReadingOffset
             p_mode.SenseFunction = IIf(p_mode.FrontInputs, DataView.FrontInputsSenseFunctionName, _
@@ -471,9 +473,11 @@ Public Sub OnImmediateTriggerOptionChange(ByVal a_value As Boolean)
             p_mode.AutoIncrement = False
             p_mode.BeepEnabled = True
             p_mode.FrontInputs = DataView.ImmediateFrontInputsRequired
-            p_mode.DutNumber = This.SelectedDutNumber
             p_mode.MaximumDutCount = DataView.MaximumDutNumber
             p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
+            
+            p_mode.DutNumber = This.SelectedDutNumber
+            
             p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.Immediate
             p_mode.ReadingOffset = UserView.ReadingOffset
             p_mode.SenseFunction = IIf(p_mode.FrontInputs, DataView.FrontInputsSenseFunctionName, _
@@ -1537,20 +1541,8 @@ Friend Sub m_viewModel_DutMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.DutReadi
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    Me.MeasuredReading = a_eventArgs.Reading
-    Me.MeasuredDutNumber = a_eventArgs.DutNumber
-        
-    Dim p_value As Double
-    Dim p_details As String
-    
-    If VBA.vbNullString = a_eventArgs.Reading Then
-        p_value = -1#
-    Else
-        If Not cc_isr_Core.StringExtensions.TryParseDouble(a_eventArgs.Reading, p_value, p_details) Then
-            p_value = -1#
-        End If
-    End If
-    Me.MeasuredValue = p_value
+    ' these values are set by property changes.
+    ' Debug.Print "DUT #" * VBA.CStr(Me.MeasuredDutNumber) & " reading '" & Me.MeasuredReading & " value is " & VBA.CStr(Me.MeasuredValue)
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:

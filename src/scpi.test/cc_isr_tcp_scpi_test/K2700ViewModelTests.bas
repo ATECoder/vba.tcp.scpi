@@ -99,7 +99,7 @@ End Function
 ''' <summary>   Runs a single test. </summary>
 Public Sub RunOneTest()
     BeforeAll
-    RunTest 13
+    RunTest 3
     AfterAll
 End Sub
 
@@ -1225,9 +1225,10 @@ Public Function AssertMeasureImmediatelyShouldReadValue(ByVal a_assert As cc_isr
     ' proceed with test assertions.
     
     ' take a reading
-    If p_outcome.AssertSuccessful Then _
+    If p_outcome.AssertSuccessful Then
         p_success = This.ViewModel.MeasureImmediatelyCommand(p_details)
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(p_success, p_details)
+    End If
     
     If p_outcome.AssertSuccessful Then
         
@@ -1511,10 +1512,14 @@ Public Function AssertMonitoringModeShouldValidate(ByVal a_mode As cc_isr_Tcp_Sc
     ' measured channel after a reading is triggered and the measurement event is handled
     ' by the observer. The target DUT number must then be set to between 1 and the
     ' DUT count (see below).
-    If p_outcome.AssertSuccessful Then _
+    If p_outcome.AssertSuccessful And a_mode.SingleRead Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(a_mode.DutNumber, This.ViewModel.TargetDutNumber, _
             "The View Model Target DUT number should equals the settings DUT number.")
     
+    ' in scan mode, the target dut number starts at 1.
+    If p_outcome.AssertSuccessful And Not a_mode.SingleRead Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(1, This.ViewModel.TargetDutNumber, _
+            "The View Model Target DUT number should equals the settings DUT number.")
     
     If p_outcome.AssertSuccessful Then _
         Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.ViewModel.TargetDutNumber > 0, _
@@ -2838,6 +2843,43 @@ End Function
 ''' <summary>   Asserts that view model should read cards. </summary>
 ''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
 ''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
+Public Function AssertShouldEnableUserControls() As cc_isr_Test_Fx.Assert
+
+    Const p_procedureName As String = "AssertShouldEnableUserControls"
+
+    Dim p_outcome As cc_isr_Test_Fx.Assert: Set p_outcome = This.BeforeEachAssert
+    
+    If p_outcome.AssertSuccessful Then
+        Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
+    End If
+    
+    ' proceed with test assertions.
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.ManualScanToggleExecutable, _
+            "User View Manual Scan should be enabled.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.IsTrue(This.UserView.ManualSingleToggleExecutable, _
+            "User View Manual Single should be enabled.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.UserView.AutoScanToggleExecutable, _
+            This.ViewModel.K2700.RouteSystem.ChannelCount > 0, _
+            "User View Auto Scan should be enabled if the 2700 has valid scan cards.")
+    
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = cc_isr_Test_Fx.Assert.AreEqual(This.UserView.AutoSingleToggleExecutable, _
+            This.ViewModel.K2700.RouteSystem.ChannelCount > 0, _
+            "User View Auto Single should be enabled if the 2700 has valid scan cards.")
+
+    Set AssertShouldEnableUserControls = p_outcome
+
+End Function
+
+''' <summary>   Asserts that view model should read cards. </summary>
+''' <returns>   [<see cref="cc_isr_Test_Fx.Assert"/>] instance where
+''' <see cref="Assert.AssertSuccessful"/> is <c>True</c> if the test passed. </returns>
 Public Function AssertShouldReadCards() As cc_isr_Test_Fx.Assert
 
     Const p_procedureName As String = "AssertShouldReadCards"
@@ -2894,9 +2936,11 @@ Public Function TestShouldReadCards() As cc_isr_Test_Fx.Assert
         Set p_outcome = cc_isr_Test_Fx.Assert.Pass("Entered the " & p_procedureName & " test.")
     End If
     
-    If p_outcome.AssertSuccessful Then
+    If p_outcome.AssertSuccessful Then _
         Set p_outcome = AssertShouldReadCards()
-    End If
+
+    If p_outcome.AssertSuccessful Then _
+        Set p_outcome = AssertShouldEnableUserControls()
 
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
 exit_Handler:
@@ -3306,6 +3350,9 @@ Public Function TestImmediateModeShouldConfigure() As cc_isr_Test_Fx.Assert
     p_mode.MaximumDutCount = This.DataView.MaximumDutNumber
     p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
     
+    ' select a DUT number for testing at random
+    This.UserView.SelectedDutNumber = VBA.Int((p_mode.DutCount - 1) * VBA.Rnd + 1)
+    
     Dim p_details As String
     p_mode.DutNumber = This.UserView.GetSelectedDutNumber(p_mode.DutCount, p_details)
     If p_mode.DutNumber <= 0 Then _
@@ -3400,6 +3447,9 @@ Public Function TestExternalModeShouldConfigure() As cc_isr_Test_Fx.Assert
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
     p_mode.MaximumDutCount = This.DataView.MaximumDutNumber
     p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
+    
+    ' select a DUT number for testing at random
+    This.UserView.SelectedDutNumber = VBA.Int((p_mode.DutCount - 1) * VBA.Rnd + 1)
     
     p_mode.DutNumber = This.UserView.GetSelectedDutNumber(p_mode.DutCount, p_details)
     If p_mode.DutNumber <= 0 Then _
@@ -3700,6 +3750,9 @@ Public Function TestTriggerPollingShouldStartStop() As cc_isr_Test_Fx.Assert
     p_mode.MaximumDutCount = This.DataView.MaximumDutNumber
     p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
     
+    ' select a DUT number for testing at random
+    This.UserView.SelectedDutNumber = VBA.Int((p_mode.DutCount - 1) * VBA.Rnd + 1)
+    
     p_mode.DutNumber = This.UserView.GetSelectedDutNumber(p_mode.DutCount, p_details)
     If p_mode.DutNumber <= 0 Then _
         cc_isr_Core_IO.UserDefinedErrors.RaiseError cc_isr_Core_IO.UserDefinedErrors.InvalidOperationError, _
@@ -3799,9 +3852,14 @@ Public Function TestTriggerPollingShouldRead() As cc_isr_Test_Fx.Assert
     p_mode.BeepEnabled = False
     p_mode.AutoIncrement = True
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
-    p_mode.DutNumber = This.UserView.SelectedDutNumber
     p_mode.MaximumDutCount = This.DataView.MaximumDutNumber
     p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
+    
+    ' select a DUT number for testing at random
+    This.UserView.SelectedDutNumber = VBA.Int((p_mode.DutCount - 1) * VBA.Rnd + 1)
+    
+    p_mode.DutNumber = This.UserView.SelectedDutNumber
+    
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
     p_mode.SenseFunction = IIf(p_mode.FrontInputs, This.DataView.FrontInputsSenseFunctionName, _
@@ -3940,9 +3998,14 @@ Public Function TestTriggerMonitoringShouldStartStop() As cc_isr_Test_Fx.Assert
     p_mode.BeepEnabled = False
     p_mode.AutoIncrement = True
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
-    p_mode.DutNumber = This.UserView.SelectedDutNumber
     p_mode.MaximumDutCount = This.DataView.MaximumDutNumber
     p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
+    
+    ' select a DUT number for testing at random
+    This.UserView.SelectedDutNumber = VBA.Int((p_mode.DutCount - 1) * VBA.Rnd + 1)
+    
+    p_mode.DutNumber = This.UserView.SelectedDutNumber
+    
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
     p_mode.SenseFunction = IIf(p_mode.FrontInputs, This.DataView.FrontInputsSenseFunctionName, _
@@ -4022,9 +4085,14 @@ Public Function TestTriggerMonitoringShouldRead() As cc_isr_Test_Fx.Assert
     p_mode.BeepEnabled = False
     p_mode.AutoIncrement = True
     p_mode.FrontInputs = This.DataView.ExternalFrontInputsRequired
-    p_mode.DutNumber = This.UserView.SelectedDutNumber
     p_mode.MaximumDutCount = This.DataView.MaximumDutNumber
     p_mode.DutCount = This.ViewModel.GetDutCount(p_mode.FrontInputs, p_mode.MaximumDutCount)
+    
+    ' select a DUT number for testing at random
+    This.UserView.SelectedDutNumber = VBA.Int((p_mode.DutCount - 1) * VBA.Rnd + 1)
+    
+    p_mode.DutNumber = This.UserView.SelectedDutNumber
+    
     p_mode.Mode = cc_isr_Tcp_Scpi.MeasurementModeOption.External
     p_mode.ReadingOffset = This.UserView.ReadingOffset
     p_mode.SenseFunction = IIf(p_mode.FrontInputs, This.DataView.FrontInputsSenseFunctionName, _
