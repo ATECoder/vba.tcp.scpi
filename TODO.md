@@ -2,20 +2,20 @@
 
 ## GIT
 
+Modify View Model DUT Measured event handler to allow updating the DUT number in manual single mode.
+Data View: Select the DUT number upon the measured event in manual single mode.
+Test Data Sheet: Clear errors on initialization.
+
+Flying:
+Data View: Select the DUT number upon the measured event in manual single mode.
+
+
 ## TODO
 
 Test:
-+ Run all unit tests with cards.
-+ Run all tests from the user sheet with cards.
-+ Run all tests from the user sheet without cards.
-* test connecting and power on after running a unit test.
+* Test from the user interface without cards.
 
 Flying:
-
-Fix power on reset per test data view.
-Add connection information to the power on reset command.
-Add initialize data sheet to the power on reset command.
-
 * Test with and without cards.
 
 

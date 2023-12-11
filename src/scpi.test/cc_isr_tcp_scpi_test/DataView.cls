@@ -964,9 +964,36 @@ Friend Sub m_viewModel_DutMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.DutReadi
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
+    Dim p_DutNumber As Integer: p_DutNumber = a_eventArgs.DutNumber
+    
+    If UserSheet.ManualSingleToggleValue Then
+    
+        ' in manual single scan mode, it is expected for the
+        ' operator to select a new DUT after the operation is
+        ' configured. This DUT needs to be set as the current DUT and the event arguments need
+        ' to be modified accordingly.
+        
+        Dim p_dutCount As Integer
+        p_dutCount = This.ViewModel.GetDutCount(This.ViewModel.FrontInputsValue, Me.MaximumDutNumber)
+        
+        Dim p_details As String
+        p_DutNumber = UserView.GetSelectedDutNumber(p_dutCount, p_details)
+        
+        If p_DutNumber <= 0 Then
+            This.ViewModel.OnError p_details
+            MsgBox p_details, VBA.VbMsgBoxStyle.vbOKOnly Or VBA.VbMsgBoxStyle.vbExclamation, _
+                "Invalid device under test number"
+        Else
+            Me.MeasuredDutNumber = p_DutNumber
+        End If
+    Else
+        Me.MeasuredDutNumber = p_DutNumber
+    End If
+    
+    a_eventArgs.Initialize p_DutNumber, a_eventArgs.Reading
+    
     ' these values are set by property changes.
     ' Me.MeasuredReading = a_eventArgs.Reading
-    ' Me.MeasuredDutNumber = a_eventArgs.DutNumber
     ' Me.MeasuredValue = This.ViewModel.MeasuredValue
     Me.SetReading This.MeasuredDutNumber, This.MeasuredValue
     

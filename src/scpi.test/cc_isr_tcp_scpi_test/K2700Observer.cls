@@ -1541,7 +1541,9 @@ Friend Sub m_viewModel_DutMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.DutReadi
     ' Trap errors to the error handler
     On Error GoTo err_Handler
     
-    ' these values are set by property changes.
+    ' other measured values are set by property changes.
+    Me.MeasuredDutNumber = a_eventArgs.DutNumber
+    
     ' Debug.Print "DUT #" * VBA.CStr(Me.MeasuredDutNumber) & " reading '" & Me.MeasuredReading & " value is " & VBA.CStr(Me.MeasuredValue)
     
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .

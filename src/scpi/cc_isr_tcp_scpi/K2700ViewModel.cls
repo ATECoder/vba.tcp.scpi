@@ -3841,11 +3841,12 @@ Public Sub ClearReadings(ByVal a_value As Double, _
     On Error GoTo err_Handler
     
     Me.ReadingOffset = a_value
-    
+    Dim e_eventArgs As cc_isr_Tcp_Scpi.DutReadingEventArgs
+    e_eventArgs = cc_isr_Tcp_Scpi.Factory.NewDutReadingEventArgs.Initialize(0, VBA.vbNullString)
     Dim p_dutNumber As Integer
     For p_dutNumber = a_firstDutNumber To a_lastDutNumber
         VBA.DoEvents
-        OnDutMeasured p_dutNumber, a_value
+        OnDutMeasured e_eventArgs.Initialize(p_dutNumber, VBA.CStr(a_value))
     Next p_dutNumber
   
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -5165,25 +5166,23 @@ End Function
 ' + + + + + + + + + + + + + + + + + + + + + + + + +
 
 ''' <summary>   Raises the <see cref="DutMeasured"/> event. </summary>
-''' <para name="a_dutNumber">   [integer] The DUT number. </param>
-''' <para name="a_reading">     [double] The reading. </param>
-Private Sub OnDutMeasured(ByVal a_dutNumber As Integer, ByVal a_reading As String)
+''' <para name="a_eventArgs">   [<see cref=""/>] The DUT reading event arguments. </param>
+Private Sub OnDutMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.DutReadingEventArgs)
 
     Const p_procedureName = "OnDutMeasured"
 
-    ' set the measurement information
-    Me.MeasuredDutNumber = a_dutNumber
+    Dim p_reading As String: p_reading = a_eventArgs.Reading
     
-    ' this also sets the measured value.
-    Me.MeasuredReading = a_reading
+    ' set the measured value.
+    Me.MeasuredReading = a_eventArgs.Reading
     
     Dim p_value As Double
-    If VBA.Len(a_reading) = 0 Then
+    If VBA.Len(p_reading) = 0 Then
         p_value = cc_isr_Ieee488.Syntax.NotANumber
         Me.MeasuredValue = cc_isr_Ieee488.Syntax.NotANumber
     Else
         Dim p_details As String
-        If cc_isr_Core.StringExtensions.TryParseDouble(a_reading, p_value, p_details) Then
+        If cc_isr_Core.StringExtensions.TryParseDouble(p_reading, p_value, p_details) Then
             Me.MeasuredValue = p_value
         Else
             Me.MeasuredValue = cc_isr_Ieee488.Syntax.NotANumber
@@ -5191,13 +5190,19 @@ Private Sub OnDutMeasured(ByVal a_dutNumber As Integer, ByVal a_reading As Strin
                 " Failed parsing reading; " & p_details
         End If
     End If
-    
+
     ' raise the measurement event.
-    RaiseEvent DutMeasured( _
-            cc_isr_Tcp_Scpi.Factory.NewDutReadingEventArgs.Initialize(a_dutNumber, _
-                                                                      a_reading))
+    RaiseEvent DutMeasured(a_eventArgs)
+                                                                      
     ' allow the event to take place.
     DoEvents
+    
+    ' update the event arguments in case changes were made.
+    a_eventArgs.Initialize a_eventArgs.DutNumber, a_eventArgs.Reading
+
+    ' set the DUT number
+    Me.MeasuredDutNumber = a_eventArgs.DutNumber
+                                                                      
 End Sub
 
 ''' <summary>   Notifies all observers of a property change. </summary>
@@ -5871,7 +5876,7 @@ Private Sub m_k2700_DutMeasured(ByVal a_eventArgs As cc_isr_Tcp_Scpi.DutReadingE
     If This.ReadingBeepEnabled Then VBA.Beep
 
     ' notify the observer of a DUT measurements
-    OnDutMeasured a_eventArgs.DutNumber, a_eventArgs.Reading
+    OnDutMeasured a_eventArgs
 
     If This.AutoIncrementDutNumberEnabled Then
 

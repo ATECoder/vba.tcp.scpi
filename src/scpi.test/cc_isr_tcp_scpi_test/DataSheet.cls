@@ -55,13 +55,6 @@ Public Function Initialize(ByVal a_viewModel As K2700ViewModel) As DataSheet
     
     Set This.ViewModel = a_viewModel
     
-    ' clear the error state.
-    cc_isr_Core_IO.UserDefinedErrors.ClearErrorState
-
-    ' clear any messages
-    Me.LastErrorMessage = VBA.vbNullString
-    Me.LastMessage = VBA.vbNullString
-    
     ' set the initial values that are provided by the user interface
     This.DutNumberCaptionPrefix = "r"
     This.DutTitle = "resistance"
