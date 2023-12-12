@@ -2,22 +2,7 @@
 
 ## GIT
 
-Modify View Model DUT Measured event handler to allow updating the DUT number in manual single mode.
-Data View: Select the DUT number upon the measured event in manual single mode.
-Test Data Sheet: Clear errors on initialization.
-
-Flying:
-Data View: Select the DUT number upon the measured event in manual single mode.
-
-
 ## TODO
-
-Test:
-* Test from the user interface without cards.
-
-Flying:
-* Test with and without cards.
-
 
 ## Tests
 

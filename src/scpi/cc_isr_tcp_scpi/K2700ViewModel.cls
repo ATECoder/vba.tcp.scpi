@@ -3841,12 +3841,12 @@ Public Sub ClearReadings(ByVal a_value As Double, _
     On Error GoTo err_Handler
     
     Me.ReadingOffset = a_value
-    Dim e_eventArgs As cc_isr_Tcp_Scpi.DutReadingEventArgs
-    e_eventArgs = cc_isr_Tcp_Scpi.Factory.NewDutReadingEventArgs.Initialize(0, VBA.vbNullString)
+    Dim p_eventArgs As cc_isr_Tcp_Scpi.DutReadingEventArgs
+    Set p_eventArgs = cc_isr_Tcp_Scpi.Factory.NewDutReadingEventArgs.Initialize(0, VBA.vbNullString)
     Dim p_dutNumber As Integer
     For p_dutNumber = a_firstDutNumber To a_lastDutNumber
         VBA.DoEvents
-        OnDutMeasured e_eventArgs.Initialize(p_dutNumber, VBA.CStr(a_value))
+        OnDutMeasured p_eventArgs.Initialize(p_dutNumber, VBA.CStr(a_value))
     Next p_dutNumber
   
 ' . . . . . . . . . . . . . . . . . . . . . . . . . . .

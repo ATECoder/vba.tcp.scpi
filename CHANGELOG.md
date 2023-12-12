@@ -1,12 +1,13 @@
 # Change log
 All notable changes to these libraries will be documented in this file in a format based on [Keep a Change log]
 
-## [1.0.8743] - 2023-12-09
+## [1.0.8746] - 2023-12-12
 * Add DUT Count to the measure mode and use it to set the DUT count.
 * Add maximum DUT count to the Measure Mode class and set the View Model value upon configuration.
 * Remove Reading Offset and Timer Interval from the command arguments as these are set upon configurations.
 * Update selecting and parsing the selected DUT number.
 * Define rear and front input sense functions.
+* Select DUT upon the DUT measured event in manual single reading mode.
 
 ## [1.0.8735] - 2023-12-01
 * Open the beta 202312 branch.
@@ -48,6 +49,6 @@ All notable changes to these libraries will be documented in this file in a form
 
 &copy;  2023 Integrated Scientific Resources, Inc. All rights reserved.
 
-[1.0.8743]: https://github.com/ATECoder/vba.tcp.scpi
+[1.0.8746]: https://github.com/ATECoder/vba.tcp.scpi
 [Keep a Change log]: https://keepachangelog.com/en/1.0.0/
 [VBA IOT TCP]: https://github.com/ATECoder/vba.iot.tcp
