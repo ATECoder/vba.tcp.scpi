@@ -1,0 +1,6 @@
+RemoteRepoName,LocalRepoName,RemoteRepoURL,TargetDirectory
+vba.core,core,https://github.com/ATECoder/vba.core.git,lib\vba\core
+vba.mvvm,mvvm,https://github.com/ATECoder/vba.mvvm.git,lib\vba\core
+vba.winsock,winsock,https://github.com/ATECoder/vba.winsock.git,lib\vba\iot
+vba.tcp.ieee488,tcp.ieee488,https://github.com/ATECoder/vba.tcp.ieee488.git,lib\vba\iot
+vba.tcp.scpi,tcp.scpi,https://github.com/ATECoder/vba.tcp.scpi.git,lib\vba\iot
